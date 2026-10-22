@@ -1,0 +1,130 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/spaces/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/spaces/README.md",
+      "summary": "Package guide for @packmind/spaces describing its hexagonal layers, space creation and membership features, SpacesHexa setup with TypeORM schemas, ISpacesPort usage examples, data models and created tables.",
+      "tags": [
+        "documentation",
+        "readme",
+        "hexagonal-architecture",
+        "spaces",
+        "usage-guide"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/spaces/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/spaces/package.json",
+      "summary": "Package manifest for the private @packmind/spaces workspace library (space management within organizations), a CommonJS package depending on @packmind/logger, node-utils, types, accounts, TypeORM, slug and uuid.",
+      "tags": [
+        "configuration",
+        "package-manifest",
+        "dependencies",
+        "workspace"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/spaces/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/spaces/project.json",
+      "summary": "Nx project definition for the spaces library: env:node tag, SWC build to dist/packages/spaces from src/index.ts, and a typecheck override that also checks tsconfig.spec.json.",
+      "tags": ["configuration", "nx", "build-system", "typecheck"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/spaces/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/spaces/tsconfig.json",
+      "summary": "Root TypeScript config for the spaces package, extending tsconfig.base.effective.json with CommonJS module output and referencing the lib and spec tsconfigs.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system",
+        "project-references"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/spaces/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/spaces/tsconfig.lib.json",
+      "summary": "Library build TypeScript config for spaces: emits declarations to dist/out-tsc and compiles src/**/*.ts while excluding spec and test files.",
+      "tags": ["configuration", "typescript", "build-system", "library"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/spaces/package.json",
+      "target": "file:packages/spaces/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/spaces/project.json",
+      "target": "file:packages/spaces/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/spaces/tsconfig.json",
+      "target": "file:packages/spaces/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/spaces/tsconfig.lib.json",
+      "target": "file:packages/spaces/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/spaces/project.json",
+      "target": "config:packages/spaces/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/spaces/project.json",
+      "target": "config:packages/spaces/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/spaces/tsconfig.lib.json",
+      "target": "config:packages/spaces/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/spaces/README.md",
+      "target": "file:packages/spaces/src/SpacesHexa.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/spaces/README.md",
+      "target": "file:packages/spaces/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

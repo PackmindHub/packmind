@@ -1,0 +1,629 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/app/components/RouteErrorBoundary.tsx",
+      "type": "file",
+      "name": "RouteErrorBoundary.tsx",
+      "filePath": "apps/frontend/app/components/RouteErrorBoundary.tsx",
+      "summary": "Route-level React Router error boundary that reports errors to Sentry and renders branded 404/route-error or generic error pages.",
+      "tags": ["component", "error-handling", "react-router", "monitoring"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/entry.client.tsx",
+      "type": "file",
+      "name": "entry.client.tsx",
+      "filePath": "apps/frontend/app/entry.client.tsx",
+      "summary": "React Router client entry that hydrates the document with HydratedRouter inside StrictMode.",
+      "tags": ["entry-point", "hydration", "react-router", "bootstrap"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/entry.server.tsx",
+      "type": "file",
+      "name": "entry.server.tsx",
+      "filePath": "apps/frontend/app/entry.server.tsx",
+      "summary": "React Router server entry that streams the app via renderToPipeableStream, waiting for full content for bots and SPA-mode renders.",
+      "tags": ["entry-point", "ssr", "streaming", "react-router"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/nx-welcome.tsx",
+      "type": "file",
+      "name": "nx-welcome.tsx",
+      "filePath": "apps/frontend/app/nx-welcome.tsx",
+      "summary": "Nx-generated welcome page scaffold component with inline styles and getting-started content; leftover boilerplate from app generation.",
+      "tags": ["component", "boilerplate", "nx", "scaffold"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/app/routes.tsx",
+      "type": "file",
+      "name": "routes.tsx",
+      "filePath": "apps/frontend/app/routes.tsx",
+      "summary": "React Router route config using flatRoutes file-system routing while ignoring co-located spec and test files.",
+      "tags": ["config", "routing", "react-router", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.sign-up._index.tsx",
+      "type": "file",
+      "name": "_public.sign-up._index.tsx",
+      "filePath": "apps/frontend/app/routes/_public.sign-up._index.tsx",
+      "summary": "Index route of the public sign-up section that redirects to the create-account step.",
+      "tags": ["route", "redirect", "sign-up", "react-router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.tsx",
+      "type": "file",
+      "name": "_public.tsx",
+      "filePath": "apps/frontend/app/routes/_public.tsx",
+      "summary": "Layout route for public (unauthenticated) pages showing the Packmind logo above a centered content card with an Outlet.",
+      "tags": ["route", "layout", "public", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.settings._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx",
+      "summary": "Settings index route whose client loader redirects to the users settings page.",
+      "tags": ["route", "redirect", "settings", "react-router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.setup._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup._index.tsx",
+      "summary": "Setup index route whose client loader validates the org slug and redirects to the CLI setup page.",
+      "tags": ["route", "redirect", "onboarding", "react-router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.tsx",
+      "summary": "Space-scoped commands layout route rendering an Outlet for nested command routes.",
+      "tags": ["route", "layout", "commands", "react-router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.edit.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.edit.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.edit.tsx",
+      "summary": "Route module for editing a package, reading org/space/package params and rendering PackageEditForm.",
+      "tags": ["route", "packages", "edit-form", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.new.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.new.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.new.tsx",
+      "summary": "Route module for creating a package, wrapping CreatePackagePage in a titled PMPage.",
+      "tags": ["route", "packages", "create", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.tsx",
+      "summary": "Space-scoped skills layout route rendering an Outlet for nested skill routes.",
+      "tags": ["route", "layout", "skills", "react-router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.tsx",
+      "summary": "Space-scoped standards layout route rendering an Outlet for nested standard routes.",
+      "tags": ["route", "layout", "standards", "react-router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/global.d.ts",
+      "type": "file",
+      "name": "global.d.ts",
+      "filePath": "apps/frontend/global.d.ts",
+      "summary": "Ambient type declaration for the build-time __PACKMIND_EDITION__ constant (oss or proprietary).",
+      "tags": ["type-definition", "global", "edition", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/react-router.config.ts",
+      "type": "file",
+      "name": "react-router.config.ts",
+      "filePath": "apps/frontend/react-router.config.ts",
+      "summary": "React Router framework config disabling SSR (SPA mode) and enabling optimized dependency pre-bundling.",
+      "tags": ["config", "react-router", "spa", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/StepHeader.tsx",
+      "type": "file",
+      "name": "StepHeader.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/StepHeader.tsx",
+      "summary": "Small presentational header showing a step title and description in the local environment setup flow.",
+      "tags": ["component", "presentational", "onboarding", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/SignUpOptions.tsx",
+      "type": "file",
+      "name": "SignUpOptions.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/SignUpOptions.tsx",
+      "summary": "Sign-up options screen presenting account creation choices as cards with feature badges, tooltips, and navigation buttons.",
+      "tags": ["component", "sign-up", "accounts", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/accounts/components/index.ts",
+      "summary": "Barrel re-exporting account components: sign-in/up, password reset, organization home, settings, profile, users, and invitations.",
+      "tags": ["barrel", "entry-point", "accounts", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/api/queries/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/index.ts",
+      "summary": "Empty placeholder barrel for command API query hooks.",
+      "tags": ["barrel", "placeholder", "commands", "api"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CommandsList.styles.scss",
+      "type": "file",
+      "name": "CommandsList.styles.scss",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandsList.styles.scss",
+      "summary": "Placeholder SCSS stylesheet for the commands list container with no active rules.",
+      "tags": ["styles", "scss", "placeholder", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/commands/components/index.ts",
+      "summary": "Barrel re-exporting the CommandsList and CommandDetails components.",
+      "tags": ["barrel", "entry-point", "commands", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/ArtifactsView/index.ts",
+      "summary": "Barrel re-exporting the ArtifactsView deployment component module.",
+      "tags": ["barrel", "deployments", "component", "exports"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/CommandCentricView/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/CommandCentricView/index.ts",
+      "summary": "Barrel re-exporting the CommandCentricView deployment view.",
+      "tags": ["barrel", "deployments", "component", "exports"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/CommandDistributionsList/index.ts",
+      "summary": "Barrel re-exporting the CommandDistributionsList deployment component module.",
+      "tags": ["barrel", "deployments", "component", "exports"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/components/RouteErrorBoundary.tsx:ErrorPageLayout",
+      "type": "function",
+      "name": "ErrorPageLayout",
+      "filePath": "apps/frontend/app/components/RouteErrorBoundary.tsx",
+      "lineRange": [20, 37],
+      "summary": "Shared layout wrapping error content in UIProvider with a centered Packmind logo.",
+      "tags": ["layout", "error-handling", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/components/RouteErrorBoundary.tsx:RouteErrorBoundary",
+      "type": "function",
+      "name": "RouteErrorBoundary",
+      "filePath": "apps/frontend/app/components/RouteErrorBoundary.tsx",
+      "lineRange": [39, 112],
+      "summary": "Captures the route error to Sentry and renders status-specific or generic error messaging with a home link.",
+      "tags": ["error-handling", "component", "monitoring"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/entry.server.tsx:handleRequest",
+      "type": "function",
+      "name": "handleRequest",
+      "filePath": "apps/frontend/app/entry.server.tsx",
+      "lineRange": [18, 74],
+      "summary": "Streams the server-rendered router to a Response with bot-aware readiness, timeout abort, and error handling.",
+      "tags": ["ssr", "streaming", "request-handler"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/nx-welcome.tsx:NxWelcome",
+      "type": "function",
+      "name": "NxWelcome",
+      "filePath": "apps/frontend/app/nx-welcome.tsx",
+      "lineRange": [8, 854],
+      "summary": "Large Nx scaffold welcome component rendering styled getting-started sections.",
+      "tags": ["component", "boilerplate", "nx"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.sign-up._index.tsx:SignUpIndexRedirect",
+      "type": "function",
+      "name": "SignUpIndexRedirect",
+      "filePath": "apps/frontend/app/routes/_public.sign-up._index.tsx",
+      "lineRange": [3, 5],
+      "summary": "Navigates to /sign-up/create-account with replace.",
+      "tags": ["redirect", "route", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.tsx:PublicPageLayout",
+      "type": "function",
+      "name": "PublicPageLayout",
+      "filePath": "apps/frontend/app/routes/_public.tsx",
+      "lineRange": [5, 21],
+      "summary": "Renders logo and bordered container around the public route Outlet.",
+      "tags": ["layout", "route", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx",
+      "lineRange": [3, 5],
+      "summary": "Redirects the settings index to the users subpage.",
+      "tags": ["loader", "redirect", "route"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx:SettingsIndexRouteModule",
+      "type": "function",
+      "name": "SettingsIndexRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx",
+      "lineRange": [7, 9],
+      "summary": "Renders an Outlet for the settings index route.",
+      "tags": ["route", "component", "layout"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup._index.tsx",
+      "lineRange": [3, 11],
+      "summary": "Throws if orgSlug is missing, otherwise redirects to /org/:orgSlug/setup/cli.",
+      "tags": ["loader", "redirect", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.tsx:CommandsRouteModule",
+      "type": "function",
+      "name": "CommandsRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.tsx",
+      "lineRange": [3, 5],
+      "summary": "Renders an Outlet for nested command routes.",
+      "tags": ["route", "layout", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.edit.tsx:EditPackageRouteModule",
+      "type": "function",
+      "name": "EditPackageRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.edit.tsx",
+      "lineRange": [5, 23],
+      "summary": "Reads route params and renders PackageEditForm when all are present.",
+      "tags": ["route", "component", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.new.tsx:CreatePackageRouteModule",
+      "type": "function",
+      "name": "CreatePackageRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.new.tsx",
+      "lineRange": [5, 21],
+      "summary": "Renders a Create Package page hosting CreatePackagePage with org and space slugs.",
+      "tags": ["route", "component", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.tsx:SkillsRouteModule",
+      "type": "function",
+      "name": "SkillsRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.tsx",
+      "lineRange": [3, 5],
+      "summary": "Renders an Outlet for nested skill routes.",
+      "tags": ["route", "layout", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.tsx:StandardsRouteModule",
+      "type": "function",
+      "name": "StandardsRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.tsx",
+      "lineRange": [3, 5],
+      "summary": "Renders an Outlet for nested standard routes.",
+      "tags": ["route", "layout", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/StepHeader.tsx:StepHeader",
+      "type": "function",
+      "name": "StepHeader",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/StepHeader.tsx",
+      "lineRange": [9, 19],
+      "summary": "Renders a heading and tertiary description for a setup step.",
+      "tags": ["component", "presentational", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/SignUpOptions.tsx:SignUpOptions",
+      "type": "function",
+      "name": "SignUpOptions",
+      "filePath": "apps/frontend/src/domain/accounts/components/SignUpOptions.tsx",
+      "lineRange": [26, 121],
+      "summary": "Displays sign-up option cards and navigates to account creation.",
+      "tags": ["component", "sign-up", "ui"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/app/components/RouteErrorBoundary.tsx",
+      "target": "function:apps/frontend/app/components/RouteErrorBoundary.tsx:ErrorPageLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/components/RouteErrorBoundary.tsx",
+      "target": "function:apps/frontend/app/components/RouteErrorBoundary.tsx:RouteErrorBoundary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/components/RouteErrorBoundary.tsx",
+      "target": "function:apps/frontend/app/components/RouteErrorBoundary.tsx:RouteErrorBoundary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/entry.server.tsx",
+      "target": "function:apps/frontend/app/entry.server.tsx:handleRequest",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/entry.server.tsx",
+      "target": "function:apps/frontend/app/entry.server.tsx:handleRequest",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/nx-welcome.tsx",
+      "target": "function:apps/frontend/app/nx-welcome.tsx:NxWelcome",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/nx-welcome.tsx",
+      "target": "function:apps/frontend/app/nx-welcome.tsx:NxWelcome",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up._index.tsx",
+      "target": "function:apps/frontend/app/routes/_public.sign-up._index.tsx:SignUpIndexRedirect",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up._index.tsx",
+      "target": "function:apps/frontend/app/routes/_public.sign-up._index.tsx:SignUpIndexRedirect",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.tsx",
+      "target": "function:apps/frontend/app/routes/_public.tsx:PublicPageLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.tsx",
+      "target": "function:apps/frontend/app/routes/_public.tsx:PublicPageLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx:SettingsIndexRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings._index.tsx:SettingsIndexRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.tsx:CommandsRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.tsx:CommandsRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.edit.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.edit.tsx:EditPackageRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.edit.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.edit.tsx:EditPackageRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.new.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.new.tsx:CreatePackageRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.new.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.new.tsx:CreatePackageRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.tsx:SkillsRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.tsx:SkillsRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.tsx:StandardsRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.tsx:StandardsRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/StepHeader.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/StepHeader.tsx:StepHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/StepHeader.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/StepHeader.tsx:StepHeader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignUpOptions.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignUpOptions.tsx:SignUpOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignUpOptions.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignUpOptions.tsx:SignUpOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.edit.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.new.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.styles.scss",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

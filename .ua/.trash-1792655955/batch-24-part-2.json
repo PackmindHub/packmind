@@ -1,0 +1,985 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "type": "file",
+      "name": "GitHubAppConnection.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "summary": "GitHub App connection UI for the manage-provider dialog: install slot, OSS self-registration button with org input, and current installation status.",
+      "tags": ["component", "github-app", "authentication", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx",
+      "type": "file",
+      "name": "GitProviderAdvancedPanel.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx",
+      "summary": "Advanced settings panel of the manage-provider dialog offering revocation of a GitHub App installation.",
+      "tags": ["component", "github-app", "settings", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "type": "file",
+      "name": "GitProviderConnection.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "summary": "Form for creating or editing a git provider connection (vendor, URL, token or GitHub App) with submission and error handling.",
+      "tags": ["component", "form", "git-providers", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "type": "file",
+      "name": "RepositoriesManagement.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "summary": "Lists repositories attached to a git provider and allows adding them via the repository selector or removing them.",
+      "tags": ["component", "repository-management", "git", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "type": "file",
+      "name": "RepositorySelector.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "summary": "Searchable selector of available provider repositories with branch choice (including custom branch autocomplete) for adding repos to a provider.",
+      "tags": ["component", "repository-selection", "search", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx",
+      "type": "file",
+      "name": "ManageGitProviderDialog.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx",
+      "summary": "Dialog composing provider connection, repositories management and advanced panels for creating or editing a git provider.",
+      "tags": ["component", "dialog", "git-providers", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/git/components/index.ts",
+      "summary": "Barrel exporting the git domain's public UI components (providers page/list, manage dialog, repository selector and management).",
+      "tags": ["barrel", "entry-point", "exports"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "type": "file",
+      "name": "CliManagedTable.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "summary": "Table of repositories managed through the CLI (no web connection), grouped by provider with vendor marks and CLI tags.",
+      "tags": ["component", "table", "cli-managed", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx",
+      "type": "file",
+      "name": "ConnectionsEmptyState.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx",
+      "summary": "Empty state for the git connections list showing supported vendor tiles and an add-connection call to action.",
+      "tags": ["component", "empty-state", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "type": "file",
+      "name": "ConnectionsTable.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "summary": "Table of web-managed git connections with status pills, last distribution date, refresh probe button and row actions including delete.",
+      "tags": ["component", "table", "git-connection", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx",
+      "type": "file",
+      "name": "ConnectionStatusPill.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx",
+      "summary": "Status pill rendering a connection's derived health (connected, checking, failing, unknown) with a tooltip describing failures.",
+      "tags": ["component", "status", "ui", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:GitHubAppInstallSlot",
+      "type": "function",
+      "name": "GitHubAppInstallSlot",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "lineRange": [31, 131],
+      "summary": "Fetches the GitHub App install URL and redirects the user to install the App.",
+      "tags": ["component", "github-app", "redirect"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:OssConnectButton",
+      "type": "function",
+      "name": "OssConnectButton",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "lineRange": [139, 208],
+      "summary": "OSS self-hosted flow: registers a GitHub App via manifest for an optional organization.",
+      "tags": ["component", "github-app", "oss"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:GitHubAppConnection",
+      "type": "function",
+      "name": "GitHubAppConnection",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "lineRange": [210, 273],
+      "summary": "Shows GitHub App connection state and the relevant install or connect action.",
+      "tags": ["component", "github-app", "status"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx:GitProviderAdvancedPanel",
+      "type": "function",
+      "name": "GitProviderAdvancedPanel",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx",
+      "lineRange": [19, 31],
+      "summary": "Advanced panel container for provider settings.",
+      "tags": ["component", "settings"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx:RevokeGithubAppSection",
+      "type": "function",
+      "name": "RevokeGithubAppSection",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx",
+      "lineRange": [33, 95],
+      "summary": "Confirms and revokes the GitHub App installation of a provider.",
+      "tags": ["component", "github-app", "destructive-action"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx:GitProviderConnection",
+      "type": "function",
+      "name": "GitProviderConnection",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "lineRange": [33, 356],
+      "summary": "Provider create/edit form with vendor-specific fields and token or App auth.",
+      "tags": ["component", "form", "git-providers"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx:RepositoriesManagement",
+      "type": "function",
+      "name": "RepositoriesManagement",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "lineRange": [27, 164],
+      "summary": "Lists and removes provider repositories, opening the selector to add new ones.",
+      "tags": ["component", "repository-management"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx:RepositorySelector",
+      "type": "function",
+      "name": "RepositorySelector",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "lineRange": [39, 300],
+      "summary": "Debounced search over available repositories with branch selection and add mutation.",
+      "tags": ["component", "search", "repository-selection"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx:CustomBranchAutocomplete",
+      "type": "function",
+      "name": "CustomBranchAutocomplete",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "lineRange": [303, 341],
+      "summary": "Autocomplete input for choosing or entering a custom branch name.",
+      "tags": ["component", "autocomplete", "input"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx:ManageGitProviderDialog",
+      "type": "function",
+      "name": "ManageGitProviderDialog",
+      "filePath": "apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx",
+      "lineRange": [24, 140],
+      "summary": "Dialog orchestrating provider connection, repositories and advanced panels.",
+      "tags": ["component", "dialog"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:CliManagedTable",
+      "type": "function",
+      "name": "CliManagedTable",
+      "filePath": "apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "lineRange": [18, 86],
+      "summary": "Renders the CLI-managed repositories table or empty state.",
+      "tags": ["component", "table"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:TableHeader",
+      "type": "function",
+      "name": "TableHeader",
+      "filePath": "apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "lineRange": [88, 112],
+      "summary": "Header row of the CLI-managed table.",
+      "tags": ["component", "table", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:ProviderRow",
+      "type": "function",
+      "name": "ProviderRow",
+      "filePath": "apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "lineRange": [120, 239],
+      "summary": "Row for one CLI-managed provider with its repositories and branches.",
+      "tags": ["component", "table-row", "git"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:CliTag",
+      "type": "function",
+      "name": "CliTag",
+      "filePath": "apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "lineRange": [241, 258],
+      "summary": "Tag marking a provider as managed by the CLI.",
+      "tags": ["component", "badge"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:EmptyState",
+      "type": "function",
+      "name": "EmptyState",
+      "filePath": "apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "lineRange": [260, 290],
+      "summary": "Empty state explaining how CLI-managed repositories appear.",
+      "tags": ["component", "empty-state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx:ConnectionsEmptyState",
+      "type": "function",
+      "name": "ConnectionsEmptyState",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx",
+      "lineRange": [10, 41],
+      "summary": "Empty state inviting to add a first git connection with vendor tiles.",
+      "tags": ["component", "empty-state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx:VendorTile",
+      "type": "function",
+      "name": "VendorTile",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx",
+      "lineRange": [48, 68],
+      "summary": "Tile showing a vendor icon and label.",
+      "tags": ["component", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:ConnectionsTable",
+      "type": "function",
+      "name": "ConnectionsTable",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "lineRange": [31, 56],
+      "summary": "Renders the table of web-managed connections.",
+      "tags": ["component", "table"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:TableHeader",
+      "type": "function",
+      "name": "TableHeader",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "lineRange": [58, 82],
+      "summary": "Header row of the connections table.",
+      "tags": ["component", "table", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:ConnectionRow",
+      "type": "function",
+      "name": "ConnectionRow",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "lineRange": [91, 189],
+      "summary": "Row for a connection showing vendor, derived status, repos and actions.",
+      "tags": ["component", "table-row", "status"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:LastDistributionCell",
+      "type": "function",
+      "name": "LastDistributionCell",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "lineRange": [195, 213],
+      "summary": "Cell showing the date of the last distribution through a connection.",
+      "tags": ["component", "table-cell"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:RefreshStatusButton",
+      "type": "function",
+      "name": "RefreshStatusButton",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "lineRange": [220, 268],
+      "summary": "Button that re-runs the connection auth probe.",
+      "tags": ["component", "action", "status"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:RowActionsMenu",
+      "type": "function",
+      "name": "RowActionsMenu",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "lineRange": [279, 322],
+      "summary": "Row action menu with edit and delete entries.",
+      "tags": ["component", "menu"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:DeleteMenuItem",
+      "type": "function",
+      "name": "DeleteMenuItem",
+      "filePath": "apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "lineRange": [329, 371],
+      "summary": "Menu item confirming and deleting a git connection.",
+      "tags": ["component", "destructive-action"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx:ConnectionStatusPill",
+      "type": "function",
+      "name": "ConnectionStatusPill",
+      "filePath": "apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx",
+      "lineRange": [30, 82],
+      "summary": "Renders a colored status pill with a failure description tooltip.",
+      "tags": ["component", "status"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:GitHubAppInstallSlot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:GitHubAppInstallSlot",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:OssConnectButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:GitHubAppConnection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:GitHubAppConnection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx:GitProviderAdvancedPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx:GitProviderAdvancedPanel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx:RevokeGithubAppSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx:GitProviderConnection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx:GitProviderConnection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx:RepositoriesManagement",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx:RepositoriesManagement",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx:RepositorySelector",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx:RepositorySelector",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx:CustomBranchAutocomplete",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx:ManageGitProviderDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx:ManageGitProviderDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:CliManagedTable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:CliManagedTable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:TableHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:ProviderRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:CliTag",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:EmptyState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx:ConnectionsEmptyState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx:ConnectionsEmptyState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx:VendorTile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:ConnectionsTable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:ConnectionsTable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:TableHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:ConnectionRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:LastDistributionCell",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:RefreshStatusButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:RowActionsMenu",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:DeleteMenuItem",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx:ConnectionStatusPill",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx:ConnectionStatusPill",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "target": "file:apps/frontend/src/shared/utils/navigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "target": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "target": "file:apps/frontend/src/domain/git/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "target": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "target": "file:apps/frontend/src/domain/git/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "target": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderAdvancedPanel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:OssConnectButton",
+      "target": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:isGithubOrgValid",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:OssConnectButton",
+      "target": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:githubOrgForRegistration",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx:GitHubAppInstallSlot",
+      "target": "function:apps/frontend/src/shared/utils/navigation.ts:redirectTo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx:GitProviderConnection",
+      "target": "function:apps/frontend/src/domain/git/utils/errorUtils.ts:extractErrorMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx:RepositoriesManagement",
+      "target": "function:apps/frontend/src/domain/git/utils/errorUtils.ts:extractErrorMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx:RepositorySelector",
+      "target": "function:apps/frontend/src/domain/git/utils/errorUtils.ts:extractErrorMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx:ProviderRow",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx:ConnectionsEmptyState",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorIcon",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx:ConnectionsEmptyState",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:ConnectionRow",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:deriveConnectionStatus",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:ConnectionRow",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:toStatusBucket",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx:ConnectionRow",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx:ConnectionStatusPill",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:describeFailure",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx:ConnectionStatusPill",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:toStatusBucket",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/index.ts",
+      "target": "file:apps/frontend/src/domain/git/components/GitProvidersPage.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/index.ts",
+      "target": "file:apps/frontend/src/domain/git/components/ManageGitProviderDialog.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/index.ts",
+      "target": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/index.ts",
+      "target": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositorySelector.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/index.ts",
+      "target": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitProviderConnection.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/index.ts",
+      "target": "file:apps/frontend/src/domain/git/components/ManageGitProvider/RepositoriesManagement.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

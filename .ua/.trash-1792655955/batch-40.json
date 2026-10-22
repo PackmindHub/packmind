@@ -1,0 +1,1288 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/standards/src/domain/errors/RuleNotFoundError.ts",
+      "type": "file",
+      "name": "RuleNotFoundError.ts",
+      "filePath": "packages/standards/src/domain/errors/RuleNotFoundError.ts",
+      "summary": "Domain error raised when a rule id does not resolve, mapped to a not_found StandardsError with rule_not_found reason.",
+      "tags": ["error-handling", "domain-error", "standards", "not-found"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/RuleNotFoundError.ts:RuleNotFoundError",
+      "type": "class",
+      "name": "RuleNotFoundError",
+      "filePath": "packages/standards/src/domain/errors/RuleNotFoundError.ts",
+      "lineRange": [10, 20],
+      "summary": "Thrown when a rule id is unknown; not_found kind with rule id context.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/RuleNotInSpaceError.ts",
+      "type": "file",
+      "name": "RuleNotInSpaceError.ts",
+      "filePath": "packages/standards/src/domain/errors/RuleNotInSpaceError.ts",
+      "summary": "Domain error raised when a rule exists but does not belong to the requested space, hiding cross-space existence behind a not_found answer.",
+      "tags": ["error-handling", "domain-error", "standards", "access-control"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/RuleNotInSpaceError.ts:RuleNotInSpaceError",
+      "type": "class",
+      "name": "RuleNotInSpaceError",
+      "filePath": "packages/standards/src/domain/errors/RuleNotInSpaceError.ts",
+      "lineRange": [13, 23],
+      "summary": "Thrown when a rule is outside the requested space; reports not_found to avoid leaking existence.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/StandardNotFoundError.ts",
+      "type": "file",
+      "name": "StandardNotFoundError.ts",
+      "filePath": "packages/standards/src/domain/errors/StandardNotFoundError.ts",
+      "summary": "Domain error raised when a standard id cannot be found, carrying the standard id in its typed context.",
+      "tags": ["error-handling", "domain-error", "standards", "not-found"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/StandardNotFoundError.ts:StandardNotFoundError",
+      "type": "class",
+      "name": "StandardNotFoundError",
+      "filePath": "packages/standards/src/domain/errors/StandardNotFoundError.ts",
+      "lineRange": [12, 22],
+      "summary": "Thrown when a standard id is unknown; not_found kind with standard id context.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/StandardSlugNotFoundError.ts",
+      "type": "file",
+      "name": "StandardSlugNotFoundError.ts",
+      "filePath": "packages/standards/src/domain/errors/StandardSlugNotFoundError.ts",
+      "summary": "Domain error for an unknown standard slug or a slug living in another space, deliberately indistinguishable so callers (often MCP agents) cannot probe other spaces.",
+      "tags": ["error-handling", "domain-error", "standards", "not-found"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/StandardSlugNotFoundError.ts:StandardSlugNotFoundError",
+      "type": "class",
+      "name": "StandardSlugNotFoundError",
+      "filePath": "packages/standards/src/domain/errors/StandardSlugNotFoundError.ts",
+      "lineRange": [15, 25],
+      "summary": "Thrown for an unknown or out-of-space standard slug, keeping slug and space in context.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts",
+      "type": "file",
+      "name": "StandardSpaceNotAccessibleError.ts",
+      "filePath": "packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts",
+      "summary": "Domain error raised when the caller cannot access the space a standard lives in.",
+      "tags": ["error-handling", "domain-error", "standards", "access-control"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts:StandardSpaceNotAccessibleError",
+      "type": "class",
+      "name": "StandardSpaceNotAccessibleError",
+      "filePath": "packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts",
+      "lineRange": [15, 25],
+      "summary": "Thrown when the caller lacks access to the space of a standard.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/StandardSpaceRequiredError.ts",
+      "type": "file",
+      "name": "StandardSpaceRequiredError.ts",
+      "filePath": "packages/standards/src/domain/errors/StandardSpaceRequiredError.ts",
+      "summary": "Domain error raised when a standards operation is invoked without the mandatory space id.",
+      "tags": ["error-handling", "domain-error", "standards", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/StandardSpaceRequiredError.ts:StandardSpaceRequiredError",
+      "type": "class",
+      "name": "StandardSpaceRequiredError",
+      "filePath": "packages/standards/src/domain/errors/StandardSpaceRequiredError.ts",
+      "lineRange": [9, 19],
+      "summary": "Thrown when a space id is required but missing.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/StandardVersionMissingError.ts",
+      "type": "file",
+      "name": "StandardVersionMissingError.ts",
+      "filePath": "packages/standards/src/domain/errors/StandardVersionMissingError.ts",
+      "summary": "Internal invariant error raised when an existing standard has lost its version record.",
+      "tags": ["error-handling", "internal-error", "standards", "invariant"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/StandardVersionMissingError.ts:StandardVersionMissingError",
+      "type": "class",
+      "name": "StandardVersionMissingError",
+      "filePath": "packages/standards/src/domain/errors/StandardVersionMissingError.ts",
+      "lineRange": [10, 19],
+      "summary": "Internal error for a standard whose version record is missing.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts",
+      "type": "file",
+      "name": "StandardsAdapterPortsMissingError.ts",
+      "filePath": "packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts",
+      "summary": "Internal invariant error raised when the StandardsAdapter is used before its required ports are wired.",
+      "tags": [
+        "error-handling",
+        "internal-error",
+        "standards",
+        "dependency-injection"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts:StandardsAdapterPortsMissingError",
+      "type": "class",
+      "name": "StandardsAdapterPortsMissingError",
+      "filePath": "packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts",
+      "lineRange": [10, 19],
+      "summary": "Internal error listing missing adapter ports in its context.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "file",
+      "name": "StandardsError.ts",
+      "filePath": "packages/standards/src/domain/errors/StandardsError.ts",
+      "summary": "Base class for user-facing standards domain errors, carrying a DomainErrorKind (driving the HTTP status), a literal reason union and a typed id context.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "base-class",
+        "standards",
+        "type-definition"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "class",
+      "name": "StandardsError",
+      "filePath": "packages/standards/src/domain/errors/StandardsError.ts",
+      "lineRange": [26, 43],
+      "summary": "Base domain error with kind, reason and typed context, implementing DomainError.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts",
+      "type": "file",
+      "name": "StandardsHexaDependencyMissingError.ts",
+      "filePath": "packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts",
+      "summary": "Internal invariant error raised when StandardsHexa cannot resolve a required hexa dependency during initialization.",
+      "tags": [
+        "error-handling",
+        "internal-error",
+        "standards",
+        "dependency-injection"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts:StandardsHexaDependencyMissingError",
+      "type": "class",
+      "name": "StandardsHexaDependencyMissingError",
+      "filePath": "packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts",
+      "lineRange": [9, 18],
+      "summary": "Internal error naming the hexa dependency that could not be resolved.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/StandardsInternalError.ts",
+      "type": "file",
+      "name": "StandardsInternalError.ts",
+      "filePath": "packages/standards/src/domain/errors/StandardsInternalError.ts",
+      "summary": "Base class for standards broken-invariant errors on top of PackmindInternalError: always 500, logged with stack, message withheld from clients.",
+      "tags": ["error-handling", "internal-error", "base-class", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/StandardsInternalError.ts:StandardsInternalError",
+      "type": "class",
+      "name": "StandardsInternalError",
+      "filePath": "packages/standards/src/domain/errors/StandardsInternalError.ts",
+      "lineRange": [26, 35],
+      "summary": "Base internal error extending PackmindInternalError with standards-specific reasons.",
+      "tags": ["error-handling", "domain-error", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/standards/src/domain/errors/index.ts",
+      "summary": "Barrel re-exporting every standards domain and internal error class.",
+      "tags": ["barrel", "error-handling", "standards", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "file",
+      "name": "IRuleExampleRepository.ts",
+      "filePath": "packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "summary": "Repository port for rule examples: lookup by rule id(s), space-scoped lookup and partial updates.",
+      "tags": [
+        "repository",
+        "port",
+        "interface",
+        "standards",
+        "type-definition"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/repositories/IRuleExampleRepository.ts:IRuleExampleRepository",
+      "type": "class",
+      "name": "IRuleExampleRepository",
+      "filePath": "packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "lineRange": [9, 17],
+      "summary": "Repository port for rule examples: lookup by rule id(s), space-scoped lookup and partial updates.",
+      "tags": ["interface", "port", "repository"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "file",
+      "name": "IRuleRepository.ts",
+      "filePath": "packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "summary": "Repository port for rules: lookup by standard version id(s) and space-scoped lookup by rule id.",
+      "tags": [
+        "repository",
+        "port",
+        "interface",
+        "standards",
+        "type-definition"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/repositories/IRuleRepository.ts:IRuleRepository",
+      "type": "class",
+      "name": "IRuleRepository",
+      "filePath": "packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "lineRange": [9, 19],
+      "summary": "Repository port for rules: lookup by standard version id(s) and space-scoped lookup by rule id.",
+      "tags": ["interface", "port", "repository"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/repositories/IStandardRepository.ts",
+      "type": "file",
+      "name": "IStandardRepository.ts",
+      "filePath": "packages/standards/src/domain/repositories/IStandardRepository.ts",
+      "summary": "Repository port for standards: slug, space and user lookups, per-space counts and moving a standard to another space.",
+      "tags": [
+        "repository",
+        "port",
+        "interface",
+        "standards",
+        "type-definition"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/repositories/IStandardRepository.ts:IStandardRepository",
+      "type": "class",
+      "name": "IStandardRepository",
+      "filePath": "packages/standards/src/domain/repositories/IStandardRepository.ts",
+      "lineRange": [11, 26],
+      "summary": "Repository port for standards: slug, space and user lookups, per-space counts and moving a standard to another space.",
+      "tags": ["interface", "port", "repository"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "type": "file",
+      "name": "IStandardVersionRepository.ts",
+      "filePath": "packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "summary": "Repository port for standard versions: history by standard, latest version (single and batched), batch by ids and space-guarded version lookup.",
+      "tags": ["repository", "port", "interface", "standards", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/repositories/IStandardVersionRepository.ts:IStandardVersionRepository",
+      "type": "class",
+      "name": "IStandardVersionRepository",
+      "filePath": "packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "lineRange": [9, 29],
+      "summary": "Repository port for standard versions: history by standard, latest version (single and batched), batch by ids and space-guarded version lookup.",
+      "tags": ["interface", "port", "repository"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "type": "file",
+      "name": "IStandardsRepositories.ts",
+      "filePath": "packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "summary": "Aggregate port exposing accessors for the four standards repositories (standard, version, rule, rule example).",
+      "tags": ["repository", "port", "interface", "aggregate", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/repositories/IStandardsRepositories.ts:IStandardsRepositories",
+      "type": "class",
+      "name": "IStandardsRepositories",
+      "filePath": "packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "lineRange": [6, 11],
+      "summary": "Aggregate port exposing accessors for the four standards repositories (standard, version, rule, rule example).",
+      "tags": ["interface", "port", "repository"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/useCases/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/standards/src/domain/useCases/index.ts",
+      "summary": "One-line barrel re-exporting the IGetRuleExamples use case contract.",
+      "tags": ["barrel", "use-case", "standards", "type-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/infra/repositories/RuleExampleRepository.ts",
+      "type": "file",
+      "name": "RuleExampleRepository.ts",
+      "filePath": "packages/standards/src/infra/repositories/RuleExampleRepository.ts",
+      "summary": "TypeORM adapter for rule examples implementing space-scoped lookups, batched rule-id queries and partial updates with RuleExampleNotFound handling.",
+      "tags": ["repository", "typeorm", "persistence", "standards", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/infra/repositories/RuleExampleRepository.ts:RuleExampleRepository",
+      "type": "class",
+      "name": "RuleExampleRepository",
+      "filePath": "packages/standards/src/infra/repositories/RuleExampleRepository.ts",
+      "lineRange": [11, 129],
+      "summary": "TypeORM repository for RuleExample with space-scoped and batched lookups plus updateById.",
+      "tags": ["repository", "typeorm", "persistence"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/infra/repositories/RuleRepository.ts",
+      "type": "file",
+      "name": "RuleRepository.ts",
+      "filePath": "packages/standards/src/infra/repositories/RuleRepository.ts",
+      "summary": "TypeORM adapter for rules, querying by standard version ids and joining through standard version and standard to enforce space scoping.",
+      "tags": ["repository", "typeorm", "persistence", "standards", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/infra/repositories/RuleRepository.ts:RuleRepository",
+      "type": "class",
+      "name": "RuleRepository",
+      "filePath": "packages/standards/src/infra/repositories/RuleRepository.ts",
+      "lineRange": [10, 102],
+      "summary": "TypeORM repository for Rule with version-based and space-scoped lookups.",
+      "tags": ["repository", "typeorm", "persistence"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/infra/repositories/StandardRepository.ts",
+      "type": "file",
+      "name": "StandardRepository.ts",
+      "filePath": "packages/standards/src/infra/repositories/StandardRepository.ts",
+      "summary": "TypeORM adapter for standards supporting slug/space/user lookups, per-space counts and a transactional mark-as-moved soft delete.",
+      "tags": ["repository", "typeorm", "persistence", "standards", "adapter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/standards/src/infra/repositories/StandardRepository.ts:StandardRepository",
+      "type": "class",
+      "name": "StandardRepository",
+      "filePath": "packages/standards/src/infra/repositories/StandardRepository.ts",
+      "lineRange": [19, 252],
+      "summary": "TypeORM repository for Standard with slug, space, user lookups, counts and markAsMoved transaction.",
+      "tags": ["repository", "typeorm", "persistence"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/standards/src/infra/repositories/StandardVersionRepository.ts",
+      "type": "file",
+      "name": "StandardVersionRepository.ts",
+      "filePath": "packages/standards/src/infra/repositories/StandardVersionRepository.ts",
+      "summary": "TypeORM adapter for standard versions, including a DISTINCT ON batched latest-version query and a space-guarded version lookup.",
+      "tags": ["repository", "typeorm", "persistence", "versioning", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/infra/repositories/StandardVersionRepository.ts:StandardVersionRepository",
+      "type": "class",
+      "name": "StandardVersionRepository",
+      "filePath": "packages/standards/src/infra/repositories/StandardVersionRepository.ts",
+      "lineRange": [14, 213],
+      "summary": "TypeORM repository for StandardVersion with latest-version queries and space-guarded version fetch.",
+      "tags": ["repository", "typeorm", "persistence"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "type": "file",
+      "name": "StandardsRepositories.ts",
+      "filePath": "packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "summary": "Composition root that instantiates the four TypeORM standards repositories from a DataSource and exposes them through IStandardsRepositories.",
+      "tags": [
+        "repository",
+        "factory",
+        "dependency-injection",
+        "standards",
+        "typeorm"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/infra/repositories/StandardsRepositories.ts:StandardsRepositories",
+      "type": "class",
+      "name": "StandardsRepositories",
+      "filePath": "packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "lineRange": [17, 64],
+      "summary": "Factory/holder creating and exposing all standards repositories from a DataSource.",
+      "tags": ["repository", "typeorm", "persistence"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/infra/schemas/RuleExampleSchema.ts",
+      "type": "file",
+      "name": "RuleExampleSchema.ts",
+      "filePath": "packages/standards/src/infra/schemas/RuleExampleSchema.ts",
+      "summary": "TypeORM EntitySchema for the RuleExample table: language, positive/negative code, many-to-one to Rule, indexes on rule and language.",
+      "tags": [
+        "data-model",
+        "typeorm",
+        "schema-definition",
+        "database",
+        "standards"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/infra/schemas/RuleSchema.ts",
+      "type": "file",
+      "name": "RuleSchema.ts",
+      "filePath": "packages/standards/src/infra/schemas/RuleSchema.ts",
+      "summary": "TypeORM EntitySchema for the Rule table linked many-to-one to StandardVersion with a standard_version_id index.",
+      "tags": [
+        "data-model",
+        "typeorm",
+        "schema-definition",
+        "database",
+        "standards"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/infra/schemas/StandardSchema.ts",
+      "type": "file",
+      "name": "StandardSchema.ts",
+      "filePath": "packages/standards/src/infra/schemas/StandardSchema.ts",
+      "summary": "TypeORM EntitySchema for the Standard table: name, slug, scope, user, space, moved_to, relations to versions and GitCommit.",
+      "tags": [
+        "data-model",
+        "typeorm",
+        "schema-definition",
+        "database",
+        "standards"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/infra/schemas/StandardVersionSchema.ts",
+      "type": "file",
+      "name": "StandardVersionSchema.ts",
+      "filePath": "packages/standards/src/infra/schemas/StandardVersionSchema.ts",
+      "summary": "TypeORM EntitySchema for the StandardVersion table linked to Standard, Rules and GitCommit, with a unique (standard, version) index.",
+      "tags": [
+        "data-model",
+        "typeorm",
+        "schema-definition",
+        "versioning",
+        "database"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/infra/schemas/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/standards/src/infra/schemas/index.ts",
+      "summary": "Barrel exporting the standards TypeORM entity schemas and the standardsSchemas array used to register them with the DataSource.",
+      "tags": ["barrel", "typeorm", "schema-definition", "entry-point"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleNotFoundError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleNotFoundError.ts",
+      "target": "class:packages/standards/src/domain/errors/RuleNotFoundError.ts:RuleNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleNotFoundError.ts",
+      "target": "class:packages/standards/src/domain/errors/RuleNotFoundError.ts:RuleNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleNotInSpaceError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleNotInSpaceError.ts",
+      "target": "class:packages/standards/src/domain/errors/RuleNotInSpaceError.ts:RuleNotInSpaceError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleNotInSpaceError.ts",
+      "target": "class:packages/standards/src/domain/errors/RuleNotInSpaceError.ts:RuleNotInSpaceError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardNotFoundError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardNotFoundError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardNotFoundError.ts:StandardNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardNotFoundError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardNotFoundError.ts:StandardNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardSlugNotFoundError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardSlugNotFoundError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardSlugNotFoundError.ts:StandardSlugNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardSlugNotFoundError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardSlugNotFoundError.ts:StandardSlugNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts:StandardSpaceNotAccessibleError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts:StandardSpaceNotAccessibleError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardSpaceRequiredError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardSpaceRequiredError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardSpaceRequiredError.ts:StandardSpaceRequiredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardSpaceRequiredError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardSpaceRequiredError.ts:StandardSpaceRequiredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardVersionMissingError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardVersionMissingError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardVersionMissingError.ts:StandardVersionMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardVersionMissingError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardVersionMissingError.ts:StandardVersionMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts:StandardsAdapterPortsMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts:StandardsAdapterPortsMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts:StandardsHexaDependencyMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts:StandardsHexaDependencyMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardsInternalError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardsInternalError.ts:StandardsInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/StandardsInternalError.ts",
+      "target": "class:packages/standards/src/domain/errors/StandardsInternalError.ts:StandardsInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "target": "class:packages/standards/src/domain/repositories/IRuleExampleRepository.ts:IRuleExampleRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "target": "class:packages/standards/src/domain/repositories/IRuleExampleRepository.ts:IRuleExampleRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "target": "class:packages/standards/src/domain/repositories/IRuleRepository.ts:IRuleRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "target": "class:packages/standards/src/domain/repositories/IRuleRepository.ts:IRuleRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IStandardRepository.ts",
+      "target": "class:packages/standards/src/domain/repositories/IStandardRepository.ts:IStandardRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IStandardRepository.ts",
+      "target": "class:packages/standards/src/domain/repositories/IStandardRepository.ts:IStandardRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "target": "class:packages/standards/src/domain/repositories/IStandardVersionRepository.ts:IStandardVersionRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "target": "class:packages/standards/src/domain/repositories/IStandardVersionRepository.ts:IStandardVersionRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "target": "class:packages/standards/src/domain/repositories/IStandardsRepositories.ts:IStandardsRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "target": "class:packages/standards/src/domain/repositories/IStandardsRepositories.ts:IStandardsRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/RuleExampleRepository.ts",
+      "target": "file:packages/standards/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/RuleExampleRepository.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/RuleExampleRepository.ts",
+      "target": "file:packages/standards/src/infra/schemas/RuleExampleSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/RuleExampleRepository.ts",
+      "target": "class:packages/standards/src/infra/repositories/RuleExampleRepository.ts:RuleExampleRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/RuleExampleRepository.ts",
+      "target": "class:packages/standards/src/infra/repositories/RuleExampleRepository.ts:RuleExampleRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/RuleRepository.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/RuleRepository.ts",
+      "target": "file:packages/standards/src/infra/schemas/RuleSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/RuleRepository.ts",
+      "target": "class:packages/standards/src/infra/repositories/RuleRepository.ts:RuleRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/RuleRepository.ts",
+      "target": "class:packages/standards/src/infra/repositories/RuleRepository.ts:RuleRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardRepository.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardRepository.ts",
+      "target": "file:packages/standards/src/infra/schemas/StandardSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardRepository.ts",
+      "target": "file:packages/standards/src/infra/schemas/StandardVersionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardRepository.ts",
+      "target": "class:packages/standards/src/infra/repositories/StandardRepository.ts:StandardRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardRepository.ts",
+      "target": "class:packages/standards/src/infra/repositories/StandardRepository.ts:StandardRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardVersionRepository.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardVersionRepository.ts",
+      "target": "file:packages/standards/src/infra/schemas/StandardVersionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardVersionRepository.ts",
+      "target": "class:packages/standards/src/infra/repositories/StandardVersionRepository.ts:StandardVersionRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardVersionRepository.ts",
+      "target": "class:packages/standards/src/infra/repositories/StandardVersionRepository.ts:StandardVersionRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/infra/repositories/RuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/infra/repositories/RuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/infra/repositories/StandardRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/infra/repositories/StandardVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/infra/schemas/RuleExampleSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/infra/schemas/RuleSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/infra/schemas/StandardSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/infra/schemas/StandardVersionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "class:packages/standards/src/infra/repositories/StandardsRepositories.ts:StandardsRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "class:packages/standards/src/infra/repositories/StandardsRepositories.ts:StandardsRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/infra/schemas/index.ts",
+      "target": "file:packages/standards/src/infra/schemas/RuleExampleSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/schemas/index.ts",
+      "target": "file:packages/standards/src/infra/schemas/RuleSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/schemas/index.ts",
+      "target": "file:packages/standards/src/infra/schemas/StandardSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/infra/schemas/index.ts",
+      "target": "file:packages/standards/src/infra/schemas/StandardVersionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/RuleNotFoundError.ts:RuleNotFoundError",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/RuleNotInSpaceError.ts:RuleNotInSpaceError",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/StandardNotFoundError.ts:StandardNotFoundError",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/StandardSlugNotFoundError.ts:StandardSlugNotFoundError",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts:StandardSpaceNotAccessibleError",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/StandardSpaceRequiredError.ts:StandardSpaceRequiredError",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/StandardVersionMissingError.ts:StandardVersionMissingError",
+      "target": "class:packages/standards/src/domain/errors/StandardsInternalError.ts:StandardsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts:StandardsAdapterPortsMissingError",
+      "target": "class:packages/standards/src/domain/errors/StandardsInternalError.ts:StandardsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts:StandardsHexaDependencyMissingError",
+      "target": "class:packages/standards/src/domain/errors/StandardsInternalError.ts:StandardsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/infra/repositories/RuleExampleRepository.ts:RuleExampleRepository",
+      "target": "class:packages/standards/src/domain/repositories/IRuleExampleRepository.ts:IRuleExampleRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/infra/repositories/RuleRepository.ts:RuleRepository",
+      "target": "class:packages/standards/src/domain/repositories/IRuleRepository.ts:IRuleRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/infra/repositories/StandardRepository.ts:StandardRepository",
+      "target": "class:packages/standards/src/domain/repositories/IStandardRepository.ts:IStandardRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/infra/repositories/StandardVersionRepository.ts:StandardVersionRepository",
+      "target": "class:packages/standards/src/domain/repositories/IStandardVersionRepository.ts:IStandardVersionRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/standards/src/infra/repositories/StandardsRepositories.ts:StandardsRepositories",
+      "target": "class:packages/standards/src/domain/repositories/IStandardsRepositories.ts:IStandardsRepositories",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/RuleNotFoundError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/RuleNotInSpaceError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardNotFoundError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardSlugNotFoundError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardSpaceRequiredError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardVersionMissingError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsAdapterPortsMissingError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsHexaDependencyMissingError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/index.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsInternalError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "target": "file:packages/standards/src/infra/repositories/StandardRepository.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

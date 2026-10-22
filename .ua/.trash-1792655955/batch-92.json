@@ -1,0 +1,85 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/accounts/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/accounts/README.md",
+      "summary": "Documentation for @packmind/accounts covering its hexagonal architecture, user and organization management features, security practices, setup and usage examples, and data models.",
+      "tags": [
+        "documentation",
+        "accounts",
+        "user-management",
+        "organization-management",
+        "hexagonal-architecture"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/accounts/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/accounts/package.json",
+      "summary": "Package manifest for the private @packmind/accounts CommonJS library, declaring its workspace dependencies.",
+      "tags": ["configuration", "package-manifest", "accounts", "dependencies"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/accounts/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/accounts/project.json",
+      "summary": "Nx project definition for the accounts library (env:node tag) with an SWC build target and a typecheck override that also type-checks spec files and test factories.",
+      "tags": ["configuration", "nx", "build-system", "typecheck", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/accounts/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/accounts/tsconfig.json",
+      "summary": "Root TypeScript config for the accounts package, extending the base config and referencing the lib and spec tsconfigs.",
+      "tags": ["configuration", "typescript", "build-system", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/accounts/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/accounts/tsconfig.lib.json",
+      "summary": "TypeScript library compilation settings for accounts source files, excluding specs and test helpers.",
+      "tags": ["configuration", "typescript", "build-system", "accounts"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/accounts/tsconfig.json",
+      "target": "config:packages/accounts/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/accounts/project.json",
+      "target": "config:packages/accounts/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/accounts/project.json",
+      "target": "config:packages/accounts/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/accounts/README.md",
+      "target": "config:packages/accounts/package.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

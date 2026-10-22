@@ -1,0 +1,363 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "type": "file",
+      "name": "ApplyPlaybookUseCase.ts",
+      "filePath": "packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "summary": "Core use case that validates and applies a batch of playbook change proposals (create, update, remove of standards, commands and skills) transactionally, grouping updates per artefact and rolling back on failure.",
+      "tags": ["use-case", "service", "playbook", "transaction", "rollback"],
+      "complexity": "complex",
+      "languageNotes": "Extends AbstractMemberUseCase; uses discriminated unions (ExecutionStep, RollbackEntry) to model the execution plan and compensating actions."
+    },
+    {
+      "id": "class:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts:ApplyPlaybookUseCase",
+      "type": "class",
+      "name": "ApplyPlaybookUseCase",
+      "filePath": "packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "lineRange": [97, 669],
+      "summary": "Member-scoped use case that validates spaces and proposal types, builds an execution plan, delegates updates to typed appliers, creates new artefacts (including skill files and SKILL.md content), and rolls back created/updated artefacts on error.",
+      "tags": [
+        "use-case",
+        "playbook",
+        "change-proposal",
+        "rollback",
+        "orchestration"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts",
+      "type": "file",
+      "name": "PlaybookChangeApplierAdapter.ts",
+      "filePath": "packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts",
+      "summary": "Port adapter implementing IPlaybookChangeApplierPort that wires domain ports into ApplyPlaybookUseCase and instruments it for OpenTelemetry.",
+      "tags": ["adapter", "port", "hexagonal", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts:PlaybookChangeApplierAdapter",
+      "type": "class",
+      "name": "PlaybookChangeApplierAdapter",
+      "filePath": "packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts",
+      "lineRange": [14, 46],
+      "summary": "Lazily builds the ApplyPlaybookUseCase from injected accounts/skills/standards/commands/spaces ports and exposes applyPlaybook to other domains.",
+      "tags": ["adapter", "port", "hexagonal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/playbook-change-applier/src/PlaybookChangeApplierHexa.ts",
+      "type": "file",
+      "name": "PlaybookChangeApplierHexa.ts",
+      "filePath": "packages/playbook-change-applier/src/PlaybookChangeApplierHexa.ts",
+      "summary": "Hexa module entry for the playbook-change-applier package, registering and exposing its adapter through the BaseHexa registry.",
+      "tags": ["entry-point", "hexagonal", "module-registration", "factory"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/playbook-change-applier/src/PlaybookChangeApplierHexa.ts:PlaybookChangeApplierHexa",
+      "type": "class",
+      "name": "PlaybookChangeApplierHexa",
+      "filePath": "packages/playbook-change-applier/src/PlaybookChangeApplierHexa.ts",
+      "lineRange": [19, 58],
+      "summary": "BaseHexa subclass that instantiates the PlaybookChangeApplierAdapter, initializes it with resolved ports, and provides adapter/port-name accessors and teardown.",
+      "tags": ["hexagonal", "module-registration", "lifecycle"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts",
+      "type": "file",
+      "name": "CommandChangesApplier.ts",
+      "filePath": "packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts",
+      "summary": "Command-specific change proposal applier that loads the current command version and persists a new version via the commands port.",
+      "tags": ["applier", "command", "change-proposal", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts:CommandChangesApplier",
+      "type": "class",
+      "name": "CommandChangesApplier",
+      "filePath": "packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts",
+      "lineRange": [12, 66],
+      "summary": "Extends CommandChangeProposalApplier to fetch command (recipe) versions and save updated name/content as a new version through ICommandsPort.",
+      "tags": ["applier", "command", "versioning", "persistence"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts",
+      "type": "file",
+      "name": "IChangesProposalApplier.ts",
+      "filePath": "packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts",
+      "summary": "Generic interface contract for artefact-specific change proposal appliers: applicability check, version fetch, proposal application and new version persistence.",
+      "tags": ["type-definition", "interface", "applier", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts:IChangesProposalApplier",
+      "type": "class",
+      "name": "IChangesProposalApplier",
+      "filePath": "packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts",
+      "lineRange": [10, 25],
+      "summary": "Generic interface parameterized by artefact version type defining areChangesApplicable, getVersion, applyChangeProposals and saveNewVersion.",
+      "tags": ["interface", "type-definition", "applier", "generics"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts",
+      "type": "file",
+      "name": "SkillChangesApplier.ts",
+      "filePath": "packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts",
+      "summary": "Skill-specific change proposal applier that loads a skill version with its files and saves updated versions through the skills port.",
+      "tags": ["applier", "skill", "change-proposal", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts:SkillChangesApplier",
+      "type": "class",
+      "name": "SkillChangesApplier",
+      "filePath": "packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts",
+      "lineRange": [13, 69],
+      "summary": "Extends SkillChangeProposalApplier to fetch skill versions with files and persist new skill versions via ISkillsPort.",
+      "tags": ["applier", "skill", "versioning", "persistence"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts",
+      "type": "file",
+      "name": "StandardChangesApplier.ts",
+      "filePath": "packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts",
+      "summary": "Standard-specific change proposal applier that loads the current standard version and persists a new version via the standards port.",
+      "tags": ["applier", "standard", "change-proposal", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts:StandardChangesApplier",
+      "type": "class",
+      "name": "StandardChangesApplier",
+      "filePath": "packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts",
+      "lineRange": [14, 66],
+      "summary": "Extends StandardChangeProposalApplier to fetch standard versions and save updated standards (with rules) as new versions through IStandardsPort.",
+      "tags": ["applier", "standard", "versioning", "persistence"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "target": "class:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts:ApplyPlaybookUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "target": "class:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts:ApplyPlaybookUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts",
+      "target": "class:packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts:PlaybookChangeApplierAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts",
+      "target": "class:packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts:PlaybookChangeApplierAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/PlaybookChangeApplierHexa.ts",
+      "target": "class:packages/playbook-change-applier/src/PlaybookChangeApplierHexa.ts:PlaybookChangeApplierHexa",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/PlaybookChangeApplierHexa.ts",
+      "target": "class:packages/playbook-change-applier/src/PlaybookChangeApplierHexa.ts:PlaybookChangeApplierHexa",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts",
+      "target": "class:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts:CommandChangesApplier",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts",
+      "target": "class:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts:CommandChangesApplier",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts",
+      "target": "class:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts:IChangesProposalApplier",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts",
+      "target": "class:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts:IChangesProposalApplier",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts",
+      "target": "class:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts:SkillChangesApplier",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts",
+      "target": "class:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts:SkillChangesApplier",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts",
+      "target": "class:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts:StandardChangesApplier",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts",
+      "target": "class:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts:StandardChangesApplier",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "target": "file:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "target": "file:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "target": "file:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "target": "file:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts",
+      "target": "file:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/PlaybookChangeApplierHexa.ts",
+      "target": "file:packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts",
+      "target": "file:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts",
+      "target": "file:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts",
+      "target": "file:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts:CommandChangesApplier",
+      "target": "class:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts:IChangesProposalApplier",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts:SkillChangesApplier",
+      "target": "class:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts:IChangesProposalApplier",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts:StandardChangesApplier",
+      "target": "class:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts:IChangesProposalApplier",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts:PlaybookChangeApplierAdapter",
+      "target": "class:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts:ApplyPlaybookUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/playbook-change-applier/src/PlaybookChangeApplierHexa.ts:PlaybookChangeApplierHexa",
+      "target": "class:packages/playbook-change-applier/src/PlaybookChangeApplierAdapter.ts:PlaybookChangeApplierAdapter",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts:ApplyPlaybookUseCase",
+      "target": "class:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts:CommandChangesApplier",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts:ApplyPlaybookUseCase",
+      "target": "class:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts:SkillChangesApplier",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts:ApplyPlaybookUseCase",
+      "target": "class:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts:StandardChangesApplier",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

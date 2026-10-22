@@ -1,0 +1,775 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/queries/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/index.ts",
+      "summary": "Barrel re-exporting the main account query hooks, query options and query keys.",
+      "tags": ["barrel", "react-query", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/ActivationForm.tsx",
+      "type": "file",
+      "name": "ActivationForm.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/ActivationForm.tsx",
+      "summary": "Form component for activating an invited user's account by choosing and confirming a password, with validation and error display.",
+      "tags": [
+        "component",
+        "form",
+        "authentication",
+        "invitation",
+        "validation"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/ActivationForm.tsx:ActivationForm",
+      "type": "function",
+      "name": "ActivationForm",
+      "filePath": "apps/frontend/src/domain/accounts/components/ActivationForm.tsx",
+      "lineRange": [19, 214],
+      "summary": "Form for setting a password to activate an invited account.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx",
+      "type": "file",
+      "name": "CliAuthentication.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/CliAuthentication.tsx",
+      "summary": "Component guiding users to authenticate the Packmind CLI via a generated login code command or an API key, showing expiration details.",
+      "tags": ["component", "cli", "authentication", "api-key"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx:CliAuthentication",
+      "type": "function",
+      "name": "CliAuthentication",
+      "filePath": "apps/frontend/src/domain/accounts/components/CliAuthentication.tsx",
+      "lineRange": [42, 195],
+      "summary": "Displays CLI login command and API key options for authenticating the Packmind CLI.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx",
+      "type": "file",
+      "name": "ForgotPasswordForm.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx",
+      "summary": "Form component requesting a password reset email, with validation and success/error feedback.",
+      "tags": ["component", "form", "password-reset", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx:ForgotPasswordForm",
+      "type": "function",
+      "name": "ForgotPasswordForm",
+      "filePath": "apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx",
+      "lineRange": [15, 130],
+      "summary": "Form submitting an email to request a password reset link.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/GoToOrganization.tsx",
+      "type": "file",
+      "name": "GoToOrganization.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/GoToOrganization.tsx",
+      "summary": "Form component that checks an organization exists by name and redirects to sign-in, otherwise shows an error.",
+      "tags": ["component", "form", "organizations", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/GoToOrganization.tsx:GoToOrganization",
+      "type": "function",
+      "name": "GoToOrganization",
+      "filePath": "apps/frontend/src/domain/accounts/components/GoToOrganization.tsx",
+      "lineRange": [13, 78],
+      "summary": "Form that verifies an organization name and navigates to sign-in.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx",
+      "type": "file",
+      "name": "LocalEnvironmentSetup.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx",
+      "summary": "Container component composing the CLI install and authenticate steps for setting up a local Packmind environment.",
+      "tags": ["component", "onboarding", "cli", "container"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx:LocalEnvironmentSetup",
+      "type": "function",
+      "name": "LocalEnvironmentSetup",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx",
+      "lineRange": [12, 46],
+      "summary": "Renders the local environment setup steps using a CLI login code.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx",
+      "type": "file",
+      "name": "ApiKeyGenerator.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx",
+      "summary": "Component to generate or regenerate a Packmind API key, displaying it with copy controls and expiration date.",
+      "tags": ["component", "api-key", "cli", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx:ApiKeyGenerator",
+      "type": "function",
+      "name": "ApiKeyGenerator",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx",
+      "lineRange": [12, 122],
+      "summary": "Generates and displays an API key with copy and regenerate controls.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/AuthMethodSelector.tsx",
+      "type": "file",
+      "name": "AuthMethodSelector.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/AuthMethodSelector.tsx",
+      "summary": "Radio selector component letting the user choose between login-command and API-key CLI authentication methods.",
+      "tags": ["component", "form", "cli", "selector"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/AuthMethodSelector.tsx:AuthMethodSelector",
+      "type": "function",
+      "name": "AuthMethodSelector",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/AuthMethodSelector.tsx",
+      "lineRange": [10, 34],
+      "summary": "Radio group to pick the CLI authentication method.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/OsRadioSelector.tsx",
+      "type": "file",
+      "name": "OsRadioSelector.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/OsRadioSelector.tsx",
+      "summary": "Radio selector component for choosing the user's operating system to tailor CLI install instructions.",
+      "tags": ["component", "form", "selector", "onboarding"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/OsRadioSelector.tsx:OsRadioSelector",
+      "type": "function",
+      "name": "OsRadioSelector",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/OsRadioSelector.tsx",
+      "lineRange": [10, 33],
+      "summary": "Radio group to pick the operating system.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/SectionCard.tsx",
+      "type": "file",
+      "name": "SectionCard.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/SectionCard.tsx",
+      "summary": "Presentational card wrapper used to frame sections of the local environment setup flow.",
+      "tags": ["component", "layout", "presentational"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/SectionCard.tsx:SectionCard",
+      "type": "function",
+      "name": "SectionCard",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/SectionCard.tsx",
+      "lineRange": [10, 38],
+      "summary": "Card container used for setup sections.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/index.ts",
+      "summary": "Barrel exporting the local environment setup UI building blocks (SectionCard, StepHeader, selectors, ApiKeyGenerator).",
+      "tags": ["barrel", "component", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/index.ts",
+      "summary": "Barrel exporting the useCliLoginCode and useApiKey hooks.",
+      "tags": ["barrel", "hook", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts",
+      "type": "file",
+      "name": "useApiKey.ts",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts",
+      "summary": "Hook combining current API key query and generation mutation, exposing the key, its expiry and loading/error state.",
+      "tags": ["hook", "api-key", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts:useApiKey",
+      "type": "function",
+      "name": "useApiKey",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts",
+      "lineRange": [9, 55],
+      "summary": "Hook exposing current API key data and a generate action.",
+      "tags": ["hook", "react", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts",
+      "type": "file",
+      "name": "useCliLoginCode.ts",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts",
+      "summary": "Hook that requests a CLI login code via mutation on mount and exposes the code, expiry and regeneration handler.",
+      "tags": ["hook", "cli", "authentication", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts:useCliLoginCode",
+      "type": "function",
+      "name": "useCliLoginCode",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts",
+      "lineRange": [4, 25],
+      "summary": "Hook generating a CLI login code and exposing it with expiry and a regenerate callback.",
+      "tags": ["hook", "react", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "type": "file",
+      "name": "AuthenticateStep.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "summary": "Setup step letting users authenticate the CLI either with a copyable login command or a generated API key.",
+      "tags": ["component", "onboarding", "cli", "authentication"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:LoginCommandContent",
+      "type": "function",
+      "name": "LoginCommandContent",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "lineRange": [14, 27],
+      "summary": "Renders the copyable CLI login command with its expiration.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:ApiKeyContent",
+      "type": "function",
+      "name": "ApiKeyContent",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "lineRange": [29, 40],
+      "summary": "Renders the API key generator inside the authenticate step.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:AuthenticateStep",
+      "type": "function",
+      "name": "AuthenticateStep",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "lineRange": [42, 61],
+      "summary": "Step component switching between login-command and API-key authentication content.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/DistributeStep.tsx",
+      "type": "file",
+      "name": "DistributeStep.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/DistributeStep.tsx",
+      "summary": "Setup step listing available packages with copyable CLI install commands for distributing them to a repository.",
+      "tags": ["component", "onboarding", "cli", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/DistributeStep.tsx:DistributeStep",
+      "type": "function",
+      "name": "DistributeStep",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/DistributeStep.tsx",
+      "lineRange": [23, 77],
+      "summary": "Step component listing packages with copyable install commands.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ActivationForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ActivationForm.tsx:ActivationForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ActivationForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ActivationForm.tsx:ActivationForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx:CliAuthentication",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx:CliAuthentication",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx:ForgotPasswordForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx:ForgotPasswordForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/GoToOrganization.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/GoToOrganization.tsx:GoToOrganization",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/GoToOrganization.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/GoToOrganization.tsx:GoToOrganization",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/GoToOrganization.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/GoToOrganization.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx:LocalEnvironmentSetup",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx:LocalEnvironmentSetup",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx:ApiKeyGenerator",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx:ApiKeyGenerator",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/AuthMethodSelector.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/AuthMethodSelector.tsx:AuthMethodSelector",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/AuthMethodSelector.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/AuthMethodSelector.tsx:AuthMethodSelector",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/AuthMethodSelector.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/OsRadioSelector.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/OsRadioSelector.tsx:OsRadioSelector",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/OsRadioSelector.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/OsRadioSelector.tsx:OsRadioSelector",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/OsRadioSelector.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/SectionCard.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/SectionCard.tsx:SectionCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/SectionCard.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/SectionCard.tsx:SectionCard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/SectionCard.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts:useApiKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts:useApiKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts:useCliLoginCode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts:useCliLoginCode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:LoginCommandContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:ApiKeyContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:AuthenticateStep",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:AuthenticateStep",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/DistributeStep.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/DistributeStep.tsx:DistributeStep",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/DistributeStep.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/DistributeStep.tsx:DistributeStep",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/DistributeStep.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/DistributeStep.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx:ForgotPasswordForm",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useRequestPasswordResetMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx:CliAuthentication",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/CliAuthentication.tsx:CliAuthentication",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useCreateCliLoginCodeMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts:useApiKey",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useGetCurrentApiKeyQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts:useApiKey",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useGenerateApiKeyMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts:useApiKey",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts:useCliLoginCode",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useCreateCliLoginCodeMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx:LocalEnvironmentSetup",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts:useCliLoginCode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx:LocalEnvironmentSetup",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:AuthenticateStep",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/LocalEnvironmentSetup.tsx:LocalEnvironmentSetup",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx:InstallCliStep",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:ApiKeyContent",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts:useApiKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:ApiKeyContent",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/ApiKeyGenerator.tsx:ApiKeyGenerator",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:AuthenticateStep",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/AuthMethodSelector.tsx:AuthMethodSelector",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/AuthenticateStep.tsx:LoginCommandContent",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildCliLoginCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

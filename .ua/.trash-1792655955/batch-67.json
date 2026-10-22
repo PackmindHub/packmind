@@ -1,0 +1,180 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/commands/src/domain/errors/CommandNotFoundError.ts",
+      "type": "file",
+      "name": "CommandNotFoundError.ts",
+      "filePath": "packages/commands/src/domain/errors/CommandNotFoundError.ts",
+      "summary": "Domain error raised when a requested command cannot be found, extending the commands base error.",
+      "tags": ["error-handling", "domain-error", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/domain/errors/CommandNotFoundError.ts:CommandNotFoundError",
+      "type": "class",
+      "name": "CommandNotFoundError",
+      "filePath": "packages/commands/src/domain/errors/CommandNotFoundError.ts",
+      "lineRange": [12, 22],
+      "summary": "Error class carrying the missing command identifier in its message.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/domain/errors/CommandSlugAlreadyExistsError.ts",
+      "type": "file",
+      "name": "CommandSlugAlreadyExistsError.ts",
+      "filePath": "packages/commands/src/domain/errors/CommandSlugAlreadyExistsError.ts",
+      "summary": "Domain error raised when creating or renaming a command to a slug already used in the space.",
+      "tags": ["error-handling", "domain-error", "commands", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/domain/errors/CommandSlugAlreadyExistsError.ts:CommandSlugAlreadyExistsError",
+      "type": "class",
+      "name": "CommandSlugAlreadyExistsError",
+      "filePath": "packages/commands/src/domain/errors/CommandSlugAlreadyExistsError.ts",
+      "lineRange": [10, 23],
+      "summary": "Error class signalling a command slug conflict.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/domain/errors/CommandSpaceNotAccessibleError.ts",
+      "type": "file",
+      "name": "CommandSpaceNotAccessibleError.ts",
+      "filePath": "packages/commands/src/domain/errors/CommandSpaceNotAccessibleError.ts",
+      "summary": "Domain error raised when a user attempts to access a command in a space they cannot access.",
+      "tags": ["error-handling", "domain-error", "commands", "authorization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/domain/errors/CommandSpaceNotAccessibleError.ts:CommandSpaceNotAccessibleError",
+      "type": "class",
+      "name": "CommandSpaceNotAccessibleError",
+      "filePath": "packages/commands/src/domain/errors/CommandSpaceNotAccessibleError.ts",
+      "lineRange": [15, 25],
+      "summary": "Error class signalling forbidden access to a command space.",
+      "tags": ["error-handling", "authorization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/domain/errors/CommandsError.ts",
+      "type": "file",
+      "name": "CommandsError.ts",
+      "filePath": "packages/commands/src/domain/errors/CommandsError.ts",
+      "summary": "Abstract base error class for the commands domain package, giving all command errors a common type and name.",
+      "tags": ["error-handling", "base-class", "commands", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/domain/errors/CommandsError.ts:CommandsError",
+      "type": "class",
+      "name": "CommandsError",
+      "filePath": "packages/commands/src/domain/errors/CommandsError.ts",
+      "lineRange": [21, 38],
+      "summary": "Base Error subclass for commands-domain errors, setting the error name and prototype chain.",
+      "tags": ["error-handling", "base-class"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandNotFoundError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandNotFoundError.ts:CommandNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandNotFoundError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandNotFoundError.ts:CommandNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandSlugAlreadyExistsError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandSlugAlreadyExistsError.ts:CommandSlugAlreadyExistsError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandSlugAlreadyExistsError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandSlugAlreadyExistsError.ts:CommandSlugAlreadyExistsError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandSpaceNotAccessibleError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandSpaceNotAccessibleError.ts:CommandSpaceNotAccessibleError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandSpaceNotAccessibleError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandSpaceNotAccessibleError.ts:CommandSpaceNotAccessibleError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandsError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandsError.ts:CommandsError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandsError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandsError.ts:CommandsError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandNotFoundError.ts",
+      "target": "file:packages/commands/src/domain/errors/CommandsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandSlugAlreadyExistsError.ts",
+      "target": "file:packages/commands/src/domain/errors/CommandsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandSpaceNotAccessibleError.ts",
+      "target": "file:packages/commands/src/domain/errors/CommandsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "direction": "forward",
+      "source": "class:packages/commands/src/domain/errors/CommandNotFoundError.ts:CommandNotFoundError",
+      "target": "class:packages/commands/src/domain/errors/CommandsError.ts:CommandsError",
+      "type": "inherits",
+      "weight": 0.9
+    },
+    {
+      "direction": "forward",
+      "source": "class:packages/commands/src/domain/errors/CommandSlugAlreadyExistsError.ts:CommandSlugAlreadyExistsError",
+      "target": "class:packages/commands/src/domain/errors/CommandsError.ts:CommandsError",
+      "type": "inherits",
+      "weight": 0.9
+    },
+    {
+      "direction": "forward",
+      "source": "class:packages/commands/src/domain/errors/CommandSpaceNotAccessibleError.ts:CommandSpaceNotAccessibleError",
+      "target": "class:packages/commands/src/domain/errors/CommandsError.ts:CommandsError",
+      "type": "inherits",
+      "weight": 0.9
+    }
+  ]
+}

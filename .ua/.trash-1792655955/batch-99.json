@@ -1,0 +1,124 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/frontend/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "packages/frontend/CLAUDE.md",
+      "summary": "Agent guidance for the frontend-lib package, which holds only data-testid string enums shared between apps/frontend components and apps/e2e-tests page objects, and explains how to add a test id through the barrel chain.",
+      "tags": [
+        "documentation",
+        "agent-instructions",
+        "e2e-testing",
+        "test-ids"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/frontend/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/frontend/package.json",
+      "summary": "Package manifest for @packmind/frontend, an ES module library with no runtime dependencies and only react/react-dom peer dependencies.",
+      "tags": [
+        "configuration",
+        "workspace-package",
+        "esm",
+        "peer-dependencies"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/frontend/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/frontend/project.json",
+      "summary": "Nx project definition naming the package frontend-lib (env:browser) with default typecheck and an SWC build target.",
+      "tags": ["configuration", "nx", "build-system", "env-browser"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/frontend/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/frontend/tsconfig.json",
+      "summary": "Solution-style TypeScript config for the frontend-lib package with react-jsx, ESNext modules and bundler resolution, referencing the lib and spec projects.",
+      "tags": ["configuration", "typescript", "react", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/frontend/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/frontend/tsconfig.lib.json",
+      "summary": "TypeScript library build config for frontend-lib compiling src .ts and .tsx files with declarations while excluding spec and test files.",
+      "tags": ["configuration", "typescript", "build-system", "library"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:packages/frontend/CLAUDE.md",
+      "target": "file:packages/frontend/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/frontend/CLAUDE.md",
+      "target": "file:packages/frontend/src/domains/account/components/UsersPageDataTestIds.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/frontend/CLAUDE.md",
+      "target": "document:packages/CLAUDE.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/frontend/package.json",
+      "target": "file:packages/frontend/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/frontend/project.json",
+      "target": "config:packages/frontend/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/frontend/project.json",
+      "target": "file:packages/frontend/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/frontend/project.json",
+      "target": "config:packages/frontend/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/frontend/tsconfig.lib.json",
+      "target": "config:packages/frontend/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/frontend/tsconfig.lib.json",
+      "target": "file:packages/frontend/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

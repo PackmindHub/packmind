@@ -1,0 +1,526 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/git/src/domain/repositories/IGitProviderFactory.ts",
+      "type": "file",
+      "name": "IGitProviderFactory.ts",
+      "filePath": "packages/git/src/domain/repositories/IGitProviderFactory.ts",
+      "summary": "Port for a factory that builds an IGitProvider from stored provider credentials, with the GitProviderCredentials type.",
+      "tags": ["type-definition", "port", "factory", "git-provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/repositories/IGitProviderRepository.ts",
+      "type": "file",
+      "name": "IGitProviderRepository.ts",
+      "filePath": "packages/git/src/domain/repositories/IGitProviderRepository.ts",
+      "summary": "Repository port for GitProvider entities with lookups by organization and app installation, update and conditional delete.",
+      "tags": ["type-definition", "port", "repository", "git-provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/repositories/IGitRepo.ts",
+      "type": "file",
+      "name": "IGitRepo.ts",
+      "filePath": "packages/git/src/domain/repositories/IGitRepo.ts",
+      "summary": "Port abstracting operations on a remote git repository: committing files, reading/listing files and directories, branch management, pull requests and branch comparison.",
+      "tags": [
+        "type-definition",
+        "port",
+        "git-repository",
+        "pull-request",
+        "hexagonal-architecture"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/domain/repositories/IGitRepoFactory.ts",
+      "type": "file",
+      "name": "IGitRepoFactory.ts",
+      "filePath": "packages/git/src/domain/repositories/IGitRepoFactory.ts",
+      "summary": "Port for a factory creating an IGitRepo client from a GitRepo and its GitProvider.",
+      "tags": ["type-definition", "port", "factory", "git-repository"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/repositories/IGitRepoRepository.ts",
+      "type": "file",
+      "name": "IGitRepoRepository.ts",
+      "filePath": "packages/git/src/domain/repositories/IGitRepoRepository.ts",
+      "summary": "Repository port for GitRepo entities with owner/repo/branch lookups, tracking state management and provider reassignment.",
+      "tags": [
+        "type-definition",
+        "port",
+        "repository",
+        "git-repository",
+        "tracking"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/domain/repositories/IGitRepositories.ts",
+      "type": "file",
+      "name": "IGitRepositories.ts",
+      "filePath": "packages/git/src/domain/repositories/IGitRepositories.ts",
+      "summary": "Aggregate port exposing all git package repositories and factories (providers, repos, commits, GitHub apps).",
+      "tags": ["type-definition", "port", "repository", "aggregate"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/repositories/IGithubTokenResolver.ts",
+      "type": "file",
+      "name": "IGithubTokenResolver.ts",
+      "filePath": "packages/git/src/domain/repositories/IGithubTokenResolver.ts",
+      "summary": "Port for resolving a GitHub bearer token (PAT or App installation), with unauthorized-refresh hook and token kind.",
+      "tags": ["type-definition", "port", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/repositories/IOrganizationGitHubAppRepository.ts",
+      "type": "file",
+      "name": "IOrganizationGitHubAppRepository.ts",
+      "filePath": "packages/git/src/domain/repositories/IOrganizationGitHubAppRepository.ts",
+      "summary": "Repository port for organization-level GitHub App records with active lookup, revocation and upsert.",
+      "tags": ["type-definition", "port", "repository", "github-app"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "type": "file",
+      "name": "FetchFileContentJobFactory.ts",
+      "filePath": "packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "summary": "BullMQ job factory that builds the fetch-file-content queue and wires the FetchFileContentDelayedJob with its git services and use case.",
+      "tags": ["factory", "background-job", "bullmq", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts:FetchFileContentJobFactory",
+      "type": "class",
+      "name": "FetchFileContentJobFactory",
+      "filePath": "packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "lineRange": [20, 72],
+      "summary": "Creates the BullMQ queue and delayed job for fetching repository file contents.",
+      "tags": ["factory", "background-job", "bullmq"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/infra/repositories/GitCommitRepository.ts",
+      "type": "file",
+      "name": "GitCommitRepository.ts",
+      "filePath": "packages/git/src/infra/repositories/GitCommitRepository.ts",
+      "summary": "TypeORM repository adapter that stores and fetches GitCommit records.",
+      "tags": ["repository", "typeorm", "persistence", "git-commit"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/infra/repositories/GitCommitRepository.ts:GitCommitRepository",
+      "type": "class",
+      "name": "GitCommitRepository",
+      "filePath": "packages/git/src/infra/repositories/GitCommitRepository.ts",
+      "lineRange": [8, 26],
+      "summary": "TypeORM-backed implementation of IGitCommitRepository (add/get).",
+      "tags": ["repository", "typeorm", "persistence"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "type": "file",
+      "name": "GitProviderFactory.ts",
+      "filePath": "packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "summary": "Factory adapter creating GithubProvider or GitlabProvider instances from provider credentials, resolving GitHub tokens via GithubTokenResolverFactory.",
+      "tags": ["factory", "git-provider", "github", "gitlab", "infrastructure"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/infra/repositories/GitProviderFactory.ts:GitProviderFactory",
+      "type": "class",
+      "name": "GitProviderFactory",
+      "filePath": "packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "lineRange": [23, 48],
+      "summary": "Creates the concrete GitHub or GitLab provider for given credentials.",
+      "tags": ["factory", "infrastructure", "git-provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/infra/repositories/GitProviderRepository.ts",
+      "type": "file",
+      "name": "GitProviderRepository.ts",
+      "filePath": "packages/git/src/infra/repositories/GitProviderRepository.ts",
+      "summary": "TypeORM repository for GitProvider entities that encrypts/decrypts tokens, supports lookups by organization or app installation, updates, and soft-deletes providers holding no repositories.",
+      "tags": [
+        "repository",
+        "typeorm",
+        "encryption",
+        "persistence",
+        "git-provider"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/git/src/infra/repositories/GitProviderRepository.ts:GitProviderRepository",
+      "type": "class",
+      "name": "GitProviderRepository",
+      "filePath": "packages/git/src/infra/repositories/GitProviderRepository.ts",
+      "lineRange": [20, 285],
+      "summary": "Encrypted TypeORM persistence for git providers with org/app-installation lookups and conditional delete.",
+      "tags": ["repository", "typeorm", "persistence"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "type": "file",
+      "name": "GitRepoFactory.ts",
+      "filePath": "packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "summary": "Factory adapter creating GithubRepository or GitlabRepository clients for a GitRepo based on its provider source.",
+      "tags": [
+        "factory",
+        "git-repository",
+        "github",
+        "gitlab",
+        "infrastructure"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/infra/repositories/GitRepoFactory.ts:GitRepoFactory",
+      "type": "class",
+      "name": "GitRepoFactory",
+      "filePath": "packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "lineRange": [22, 58],
+      "summary": "Creates the concrete GitHub or GitLab repository client for a git repo.",
+      "tags": ["factory", "infrastructure", "git-provider"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/git/src/domain/repositories/IGitProviderFactory.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/repositories/IGitRepoFactory.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitRepo.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/repositories/IGitRepositories.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitCommitRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/repositories/IGitRepositories.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitProviderFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/repositories/IGitRepositories.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitProviderRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/repositories/IGitRepositories.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitRepoFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/repositories/IGitRepositories.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitRepoRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/repositories/IGitRepositories.ts",
+      "target": "file:packages/git/src/domain/repositories/IOrganizationGitHubAppRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "target": "class:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts:FetchFileContentJobFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "target": "class:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts:FetchFileContentJobFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "target": "file:packages/git/src/application/jobs/FetchFileContentDelayedJob.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "target": "file:packages/git/src/application/services/ResolvedGitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "target": "file:packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "target": "file:packages/git/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/jobs/FetchFileContentJobFactory.ts",
+      "target": "file:packages/git/src/domain/jobs/FetchFileContent.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitCommitRepository.ts",
+      "target": "class:packages/git/src/infra/repositories/GitCommitRepository.ts:GitCommitRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitCommitRepository.ts",
+      "target": "class:packages/git/src/infra/repositories/GitCommitRepository.ts:GitCommitRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitCommitRepository.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitCommitRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitCommitRepository.ts",
+      "target": "file:packages/git/src/infra/schemas/GitCommitSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "target": "class:packages/git/src/infra/repositories/GitProviderFactory.ts:GitProviderFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "target": "class:packages/git/src/infra/repositories/GitProviderFactory.ts:GitProviderFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "target": "file:packages/git/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitProviderFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "target": "file:packages/git/src/infra/repositories/github/GithubProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "target": "file:packages/git/src/infra/repositories/github/auth/GithubTokenResolverFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderFactory.ts",
+      "target": "file:packages/git/src/infra/repositories/gitlab/GitlabProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderRepository.ts",
+      "target": "class:packages/git/src/infra/repositories/GitProviderRepository.ts:GitProviderRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderRepository.ts",
+      "target": "class:packages/git/src/infra/repositories/GitProviderRepository.ts:GitProviderRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderRepository.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitProviderRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderRepository.ts",
+      "target": "file:packages/git/src/infra/schemas/GitProviderSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitProviderRepository.ts",
+      "target": "file:packages/git/src/infra/schemas/GitRepoSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "target": "class:packages/git/src/infra/repositories/GitRepoFactory.ts:GitRepoFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "target": "class:packages/git/src/infra/repositories/GitRepoFactory.ts:GitRepoFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "target": "file:packages/git/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitRepo.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitRepoFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "target": "file:packages/git/src/infra/repositories/github/GithubRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "target": "file:packages/git/src/infra/repositories/github/auth/GithubTokenResolverFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/GitRepoFactory.ts",
+      "target": "file:packages/git/src/infra/repositories/gitlab/GitlabRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/git/src/infra/repositories/GitRepoFactory.ts:GitRepoFactory",
+      "target": "class:packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts:UnsupportedGitProviderSourceError",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/git/src/infra/repositories/GitCommitRepository.ts:GitCommitRepository",
+      "target": "file:packages/git/src/domain/repositories/IGitCommitRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/git/src/infra/repositories/GitProviderFactory.ts:GitProviderFactory",
+      "target": "file:packages/git/src/domain/repositories/IGitProviderFactory.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/git/src/infra/repositories/GitProviderRepository.ts:GitProviderRepository",
+      "target": "file:packages/git/src/domain/repositories/IGitProviderRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/git/src/infra/repositories/GitRepoFactory.ts:GitRepoFactory",
+      "target": "file:packages/git/src/domain/repositories/IGitRepoFactory.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/git/src/infra/repositories/GitProviderFactory.ts:GitProviderFactory",
+      "target": "class:packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts:UnsupportedGitProviderSourceError",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

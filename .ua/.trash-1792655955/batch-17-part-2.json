@@ -1,0 +1,1154 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "file",
+      "name": "execName.ts",
+      "filePath": "apps/cli/src/infra/utils/execName.ts",
+      "summary": "Resolves the CLI executable name from argv (canonical vs legacy name) and exposes EXEC_NAME used in messages and help output.",
+      "tags": ["utility", "cli", "configuration", "backward-compatibility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/execName.ts:resolveExecName",
+      "type": "function",
+      "name": "resolveExecName",
+      "filePath": "apps/cli/src/infra/utils/execName.ts",
+      "lineRange": [66, 81],
+      "summary": "Resolves the effective executable name from argv.",
+      "tags": ["utility", "cli", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/execName.ts:isLegacyExecName",
+      "type": "function",
+      "name": "isLegacyExecName",
+      "filePath": "apps/cli/src/infra/utils/execName.ts",
+      "lineRange": [86, 91],
+      "summary": "Tells whether the CLI was invoked via the legacy executable name.",
+      "tags": ["utility", "cli", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts",
+      "type": "file",
+      "name": "groupArtefactsBySpaces.ts",
+      "filePath": "apps/cli/src/infra/utils/groupArtefactsBySpaces.ts",
+      "summary": "Groups listed artefacts by their space for grouped CLI listing output.",
+      "tags": ["utility", "grouping", "spaces", "listing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts:groupArtefactBySpaces",
+      "type": "function",
+      "name": "groupArtefactBySpaces",
+      "filePath": "apps/cli/src/infra/utils/groupArtefactsBySpaces.ts",
+      "lineRange": [3, 30],
+      "summary": "Groups artefacts into a map keyed by space.",
+      "tags": ["utility", "grouping", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/listDirectoryFiles.ts",
+      "type": "file",
+      "name": "listDirectoryFiles.ts",
+      "filePath": "apps/cli/src/infra/utils/listDirectoryFiles.ts",
+      "summary": "Recursively lists files under a directory, returning relative paths.",
+      "tags": ["utility", "filesystem", "recursion"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/listDirectoryFiles.ts:listDirectoryFiles",
+      "type": "function",
+      "name": "listDirectoryFiles",
+      "filePath": "apps/cli/src/infra/utils/listDirectoryFiles.ts",
+      "lineRange": [8, 22],
+      "summary": "Recursively collects relative file paths in a directory.",
+      "tags": ["utility", "filesystem", "recursion"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/permissions.ts",
+      "type": "file",
+      "name": "permissions.ts",
+      "filePath": "apps/cli/src/infra/utils/permissions.ts",
+      "summary": "Converts between Unix file mode bits and rwx permission strings, with platform detection for Unix permission support.",
+      "tags": ["utility", "filesystem", "permissions", "serialization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/permissions.ts:supportsUnixPermissions",
+      "type": "function",
+      "name": "supportsUnixPermissions",
+      "filePath": "apps/cli/src/infra/utils/permissions.ts",
+      "lineRange": [7, 9],
+      "summary": "Returns true when running on a platform supporting Unix permissions.",
+      "tags": ["utility", "filesystem", "permissions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/permissions.ts:modeToPermissionString",
+      "type": "function",
+      "name": "modeToPermissionString",
+      "filePath": "apps/cli/src/infra/utils/permissions.ts",
+      "lineRange": [15, 23],
+      "summary": "Converts a numeric file mode to an rwx string.",
+      "tags": ["utility", "filesystem", "permissions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/permissions.ts:modeToPermissionStringOrDefault",
+      "type": "function",
+      "name": "modeToPermissionStringOrDefault",
+      "filePath": "apps/cli/src/infra/utils/permissions.ts",
+      "lineRange": [29, 34],
+      "summary": "Converts mode to rwx string, falling back to a default on unsupported platforms.",
+      "tags": ["utility", "filesystem", "permissions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/permissions.ts:parsePermissionString",
+      "type": "function",
+      "name": "parsePermissionString",
+      "filePath": "apps/cli/src/infra/utils/permissions.ts",
+      "lineRange": [40, 48],
+      "summary": "Parses an rwx permission string back into a numeric mode.",
+      "tags": ["utility", "filesystem", "permissions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/readSkillDirectory.ts",
+      "type": "file",
+      "name": "readSkillDirectory.ts",
+      "filePath": "apps/cli/src/infra/utils/readSkillDirectory.ts",
+      "summary": "Reads every file of a skill directory (honoring a blacklist), normalizing line endings and encoding binaries as base64 with size and permission metadata for upload.",
+      "tags": ["utility", "skills", "filesystem", "serialization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/readSkillDirectory.ts:readSkillDirectory",
+      "type": "function",
+      "name": "readSkillDirectory",
+      "filePath": "apps/cli/src/infra/utils/readSkillDirectory.ts",
+      "lineRange": [55, 108],
+      "summary": "Reads all non-blacklisted files of a skill directory into upload-ready file descriptors.",
+      "tags": ["utility", "skills", "filesystem"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/resolveEditor.ts",
+      "type": "file",
+      "name": "resolveEditor.ts",
+      "filePath": "apps/cli/src/infra/utils/resolveEditor.ts",
+      "summary": "Resolves the user's editor from VISUAL/EDITOR or common fallbacks, checking availability on PATH.",
+      "tags": ["utility", "editor", "environment", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/resolveEditor.ts:resolveEditor",
+      "type": "function",
+      "name": "resolveEditor",
+      "filePath": "apps/cli/src/infra/utils/resolveEditor.ts",
+      "lineRange": [18, 37],
+      "summary": "Picks an available editor from env variables or fallbacks.",
+      "tags": ["utility", "editor", "environment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/spaceFilterUtils.ts",
+      "type": "file",
+      "name": "spaceFilterUtils.ts",
+      "filePath": "apps/cli/src/infra/utils/spaceFilterUtils.ts",
+      "summary": "Resolves the space filter value from CLI command arguments.",
+      "tags": ["utility", "spaces", "cli-args"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/spaceFilterUtils.ts:resolveSpaceFromArgs",
+      "type": "function",
+      "name": "resolveSpaceFromArgs",
+      "filePath": "apps/cli/src/infra/utils/spaceFilterUtils.ts",
+      "lineRange": [3, 10],
+      "summary": "Extracts the space slug filter from command args.",
+      "tags": ["utility", "spaces", "cli-args"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/stringUtils.ts",
+      "type": "file",
+      "name": "stringUtils.ts",
+      "filePath": "apps/cli/src/infra/utils/stringUtils.ts",
+      "summary": "Tiny string helper providing capitalize().",
+      "tags": ["utility", "string", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/stringUtils.ts:capitalize",
+      "type": "function",
+      "name": "capitalize",
+      "filePath": "apps/cli/src/infra/utils/stringUtils.ts",
+      "lineRange": [1, 3],
+      "summary": "Uppercases the first character of a string.",
+      "tags": ["utility", "string", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts",
+      "type": "file",
+      "name": "stripFullStandardLinkFooter.ts",
+      "filePath": "apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts",
+      "summary": "Removes the \"full standard\" link footer from rendered standard content, used for home-directory installs.",
+      "tags": ["utility", "standards", "content-transform"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts:stripFullStandardLinkFooter",
+      "type": "function",
+      "name": "stripFullStandardLinkFooter",
+      "filePath": "apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts",
+      "lineRange": [7, 12],
+      "summary": "Strips the trailing full-standard link footer from content.",
+      "tags": ["utility", "standards", "content-transform"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "type": "file",
+      "name": "urlBuilderUtils.ts",
+      "filePath": "apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "summary": "Builds a frontend URL builder from the decoded API key host so CLI listings can print links to the Packmind web app.",
+      "tags": ["utility", "url", "credentials"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/urlBuilderUtils.ts:resolveUrlBuilder",
+      "type": "function",
+      "name": "resolveUrlBuilder",
+      "filePath": "apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "lineRange": [9, 19],
+      "summary": "Creates a frontend URL builder from the stored API key host.",
+      "tags": ["utility", "url", "credentials"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts",
+      "type": "file",
+      "name": "FileVersionCacheProvider.ts",
+      "filePath": "apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts",
+      "summary": "File-based implementation of IVersionCacheProvider storing the latest known CLI version check result in the user cache directory.",
+      "tags": ["cache", "adapter", "filesystem", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts:FileVersionCacheProvider",
+      "type": "class",
+      "name": "FileVersionCacheProvider",
+      "filePath": "apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts",
+      "lineRange": [22, 78],
+      "summary": "Reads and writes the cached CLI version-check JSON file.",
+      "tags": ["cache", "adapter", "filesystem", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/main.ts",
+      "type": "file",
+      "name": "main.ts",
+      "filePath": "apps/cli/src/main.ts",
+      "summary": "CLI entry point: loads .env from the nearest ancestor up to the git root, extracts embedded WASM parsers, handles --version and registers all cmd-ts subcommands with global error reporting.",
+      "tags": ["entry-point", "cli", "bootstrap", "command-registry"],
+      "complexity": "moderate",
+      "languageNotes": "Uses cmd-ts subcommands plus process-level uncaughtException/unhandledRejection handlers as last-resort error reporting."
+    },
+    {
+      "id": "function:apps/cli/src/main.ts:findEnvFile",
+      "type": "function",
+      "name": "findEnvFile",
+      "filePath": "apps/cli/src/main.ts",
+      "lineRange": [46, 76],
+      "summary": "Searches parent directories up to the git root for a .env file.",
+      "tags": ["utility", "cli", "bootstrap"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "type": "file",
+      "name": "createMockGateways.ts",
+      "filePath": "apps/cli/src/mocks/createMockGateways.ts",
+      "summary": "Test helpers creating jest-mocked Packmind, linter and deployment gateways with all sub-gateways stubbed.",
+      "tags": ["test", "mock", "factory", "gateway"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/mocks/createMockGateways.ts:createMockPackmindGateway",
+      "type": "function",
+      "name": "createMockPackmindGateway",
+      "filePath": "apps/cli/src/mocks/createMockGateways.ts",
+      "lineRange": [38, 54],
+      "summary": "Builds a mocked IPackmindGateway with all sub-gateways mocked.",
+      "tags": ["test", "mock", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/mocks/createMockGateways.ts:createMockLinterGateway",
+      "type": "function",
+      "name": "createMockLinterGateway",
+      "filePath": "apps/cli/src/mocks/createMockGateways.ts",
+      "lineRange": [57, 61],
+      "summary": "Builds a mocked linter gateway.",
+      "tags": ["test", "mock", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/mocks/createMockGateways.ts:createMockDeploymentGateway",
+      "type": "function",
+      "name": "createMockDeploymentGateway",
+      "filePath": "apps/cli/src/mocks/createMockGateways.ts",
+      "lineRange": [64, 68],
+      "summary": "Builds a mocked deployment gateway.",
+      "tags": ["test", "mock", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "type": "file",
+      "name": "createMockRepositories.ts",
+      "filePath": "apps/cli/src/mocks/createMockRepositories.ts",
+      "summary": "Test helpers creating mocked IPackmindRepositories (gateway, config/lock file repos) and a mocked IOutput.",
+      "tags": ["test", "mock", "factory", "repository"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/mocks/createMockRepositories.ts:createMockPackmindRepositories",
+      "type": "function",
+      "name": "createMockPackmindRepositories",
+      "filePath": "apps/cli/src/mocks/createMockRepositories.ts",
+      "lineRange": [24, 34],
+      "summary": "Builds a mocked repositories bundle.",
+      "tags": ["test", "mock", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/mocks/createMockRepositories.ts:createMockOutput",
+      "type": "function",
+      "name": "createMockOutput",
+      "filePath": "apps/cli/src/mocks/createMockRepositories.ts",
+      "lineRange": [37, 42],
+      "summary": "Builds a mocked IOutput.",
+      "tags": ["test", "mock", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/mocks/createMockServices.ts",
+      "type": "file",
+      "name": "createMockServices.ts",
+      "filePath": "apps/cli/src/mocks/createMockServices.ts",
+      "summary": "Test helper creating a mocked IPackmindServices bundle (git, list files, diff filter, space service).",
+      "tags": ["test", "mock", "factory", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/mocks/createMockServices.ts:createMockServices",
+      "type": "function",
+      "name": "createMockServices",
+      "filePath": "apps/cli/src/mocks/createMockServices.ts",
+      "lineRange": [20, 31],
+      "summary": "Builds a mocked services bundle.",
+      "tags": ["test", "mock", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/wasm-runtime.ts",
+      "type": "file",
+      "name": "wasm-runtime.ts",
+      "filePath": "apps/cli/src/wasm-runtime.ts",
+      "summary": "Extracts embedded tree-sitter WASM files to a temp directory at runtime for standalone CLI executables.",
+      "tags": ["wasm", "runtime", "filesystem", "bootstrap"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/wasm-runtime.ts:hasEmbeddedWasmFiles",
+      "type": "function",
+      "name": "hasEmbeddedWasmFiles",
+      "filePath": "apps/cli/src/wasm-runtime.ts",
+      "lineRange": [17, 19],
+      "summary": "Returns true when WASM files are embedded in the executable.",
+      "tags": ["utility", "runtime", "filesystem"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/wasm-runtime.ts:extractWasmFiles",
+      "type": "function",
+      "name": "extractWasmFiles",
+      "filePath": "apps/cli/src/wasm-runtime.ts",
+      "lineRange": [25, 59],
+      "summary": "Writes embedded WASM files to a temp directory once and returns it.",
+      "tags": ["utility", "runtime", "filesystem"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/infra/utils/execName.ts",
+      "target": "function:apps/cli/src/infra/utils/execName.ts:resolveExecName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/execName.ts",
+      "target": "function:apps/cli/src/infra/utils/execName.ts:resolveExecName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/execName.ts",
+      "target": "function:apps/cli/src/infra/utils/execName.ts:isLegacyExecName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/execName.ts",
+      "target": "function:apps/cli/src/infra/utils/execName.ts:isLegacyExecName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts",
+      "target": "function:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts:groupArtefactBySpaces",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts",
+      "target": "function:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts:groupArtefactBySpaces",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/listDirectoryFiles.ts",
+      "target": "function:apps/cli/src/infra/utils/listDirectoryFiles.ts:listDirectoryFiles",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/listDirectoryFiles.ts",
+      "target": "function:apps/cli/src/infra/utils/listDirectoryFiles.ts:listDirectoryFiles",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/permissions.ts",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:supportsUnixPermissions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/permissions.ts",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:supportsUnixPermissions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/permissions.ts",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:modeToPermissionString",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/permissions.ts",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:modeToPermissionString",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/permissions.ts",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:modeToPermissionStringOrDefault",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/permissions.ts",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:modeToPermissionStringOrDefault",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/permissions.ts",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:parsePermissionString",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/permissions.ts",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:parsePermissionString",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/readSkillDirectory.ts",
+      "target": "file:apps/cli/src/infra/utils/binaryDetection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/readSkillDirectory.ts",
+      "target": "file:apps/cli/src/infra/utils/permissions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/readSkillDirectory.ts",
+      "target": "function:apps/cli/src/infra/utils/readSkillDirectory.ts:readSkillDirectory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/readSkillDirectory.ts",
+      "target": "function:apps/cli/src/infra/utils/readSkillDirectory.ts:readSkillDirectory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/resolveEditor.ts",
+      "target": "function:apps/cli/src/infra/utils/resolveEditor.ts:resolveEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/resolveEditor.ts",
+      "target": "function:apps/cli/src/infra/utils/resolveEditor.ts:resolveEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/spaceFilterUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/spaceFilterUtils.ts:resolveSpaceFromArgs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/spaceFilterUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/spaceFilterUtils.ts:resolveSpaceFromArgs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/stringUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/stringUtils.ts:capitalize",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/stringUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/stringUtils.ts:capitalize",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts",
+      "target": "function:apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts:stripFullStandardLinkFooter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts",
+      "target": "function:apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts:stripFullStandardLinkFooter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/urlBuilderUtils.ts:resolveUrlBuilder",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/urlBuilderUtils.ts:resolveUrlBuilder",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts",
+      "target": "file:apps/cli/src/domain/repositories/IVersionCacheProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts",
+      "target": "class:apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts:FileVersionCacheProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts",
+      "target": "class:apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts:FileVersionCacheProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/package.json",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/application/services/GitService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/CommandsCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/InitCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/InstallCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/LinterCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/LoginCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/LogoutCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/PackagesCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/PlaybookCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/PluginsCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/SkillsCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/SpacesCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/StandardsCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/TrackCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/UninstallCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/UntrackCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/UpdateCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/config/ConfigCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/distribution/distributionCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/git/gitCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/commands/legacyExecNameWarning.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "file:apps/cli/src/wasm-runtime.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "function:apps/cli/src/main.ts:findEnvFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/IChangeProposalGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/ICommandsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/IDeploymentGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/ILinterGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/IOrganizationGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackagesGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/IRepositoryTrackingGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/ISkillsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/ISpacesGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "file:apps/cli/src/domain/repositories/IStandardsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "function:apps/cli/src/mocks/createMockGateways.ts:createMockPackmindGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "function:apps/cli/src/mocks/createMockGateways.ts:createMockPackmindGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "function:apps/cli/src/mocks/createMockGateways.ts:createMockLinterGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "function:apps/cli/src/mocks/createMockGateways.ts:createMockLinterGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "function:apps/cli/src/mocks/createMockGateways.ts:createMockDeploymentGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "target": "function:apps/cli/src/mocks/createMockGateways.ts:createMockDeploymentGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "target": "file:apps/cli/src/domain/repositories/IConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "target": "file:apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "target": "file:apps/cli/src/domain/repositories/IOutput.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "target": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "target": "function:apps/cli/src/mocks/createMockRepositories.ts:createMockPackmindRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "target": "function:apps/cli/src/mocks/createMockRepositories.ts:createMockPackmindRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "target": "function:apps/cli/src/mocks/createMockRepositories.ts:createMockOutput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockRepositories.ts",
+      "target": "function:apps/cli/src/mocks/createMockRepositories.ts:createMockOutput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockServices.ts",
+      "target": "file:apps/cli/src/domain/services/IDiffViolationFilterService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockServices.ts",
+      "target": "file:apps/cli/src/domain/services/IGitService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockServices.ts",
+      "target": "file:apps/cli/src/domain/services/IListFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockServices.ts",
+      "target": "file:apps/cli/src/domain/services/IPackmindServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockServices.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockServices.ts",
+      "target": "file:apps/cli/src/mocks/createMockGateways.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockServices.ts",
+      "target": "function:apps/cli/src/mocks/createMockServices.ts:createMockServices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/mocks/createMockServices.ts",
+      "target": "function:apps/cli/src/mocks/createMockServices.ts:createMockServices",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/wasm-runtime.ts",
+      "target": "file:apps/cli/src/embedded-wasm.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/wasm-runtime.ts",
+      "target": "function:apps/cli/src/wasm-runtime.ts:hasEmbeddedWasmFiles",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/wasm-runtime.ts",
+      "target": "function:apps/cli/src/wasm-runtime.ts:hasEmbeddedWasmFiles",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/wasm-runtime.ts",
+      "target": "function:apps/cli/src/wasm-runtime.ts:extractWasmFiles",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/wasm-runtime.ts",
+      "target": "function:apps/cli/src/wasm-runtime.ts:extractWasmFiles",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/readSkillDirectory.ts:readSkillDirectory",
+      "target": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/readSkillDirectory.ts:readSkillDirectory",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:modeToPermissionStringOrDefault",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "function:apps/cli/src/wasm-runtime.ts:hasEmbeddedWasmFiles",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "function:apps/cli/src/wasm-runtime.ts:extractWasmFiles",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:reportError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/main.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts:FileVersionCacheProvider",
+      "target": "file:apps/cli/src/domain/repositories/IVersionCacheProvider.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

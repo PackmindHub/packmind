@@ -1,0 +1,210 @@
+{
+  "nodes": [
+    {
+      "id": "pipeline:.github/workflows/build.yml",
+      "type": "pipeline",
+      "name": "build.yml",
+      "filePath": ".github/workflows/build.yml",
+      "summary": "Reusable 'Build and Test' workflow that builds and tests the API, frontend, all shared packages (build/typecheck/test via nx run-many), integration tests, and the CLI with its publishable executables.",
+      "tags": ["ci-cd", "build-system", "testing", "nx", "reusable-workflow"],
+      "complexity": "complex"
+    },
+    {
+      "id": "pipeline:.github/workflows/deploy-staging-and-release.yml",
+      "type": "pipeline",
+      "name": "deploy-staging-and-release.yml",
+      "filePath": ".github/workflows/deploy-staging-and-release.yml",
+      "summary": "Reusable workflow that checks out an external Helm charts repository and updates it with new image versions to deploy staging and the cloud release.",
+      "tags": ["ci-cd", "deployment", "helm", "kubernetes"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "pipeline:.github/workflows/docker.yml",
+      "type": "pipeline",
+      "name": "docker.yml",
+      "filePath": ".github/workflows/docker.yml",
+      "summary": "Reusable workflow that lints the API and frontend Dockerfiles with hadolint, then builds, vulnerability-scans, and pushes packmind/api and packmind/frontend images tagged with the package version.",
+      "tags": ["ci-cd", "containerization", "security", "deployment", "docker"],
+      "complexity": "complex"
+    },
+    {
+      "id": "pipeline:.github/workflows/e2e.yml",
+      "type": "pipeline",
+      "name": "e2e.yml",
+      "filePath": ".github/workflows/e2e.yml",
+      "summary": "Reusable end-to-end test workflow running the CLI e2e suite across a matrix of CLI sources and the Playwright suite, each building from source in its own containers so they run in parallel with the build.",
+      "tags": ["ci-cd", "e2e-testing", "testing", "playwright"],
+      "complexity": "complex"
+    },
+    {
+      "id": "pipeline:.github/workflows/main.yml",
+      "type": "pipeline",
+      "name": "main.yml",
+      "filePath": ".github/workflows/main.yml",
+      "summary": "Top-level 'Main CI/CD Pipeline' triggered on push and pull requests that orchestrates the reusable build, e2e, quality, CLI lint, docker, CLI publish, staging deploy, and release workflows.",
+      "tags": ["ci-cd", "entry-point", "orchestration", "deployment"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "pipeline:.github/workflows/nightly-packmind-update.yml",
+      "type": "pipeline",
+      "name": "nightly-packmind-update.yml",
+      "filePath": ".github/workflows/nightly-packmind-update.yml",
+      "summary": "Scheduled weeknight workflow that uses the update-packmind-artifacts action to refresh the repository's deployed Packmind playbook artifacts and open a pull request.",
+      "tags": ["ci-cd", "automation", "scheduled", "packmind-artifacts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "pipeline:.github/workflows/publish-cli-release.yml",
+      "type": "pipeline",
+      "name": "publish-cli-release.yml",
+      "filePath": ".github/workflows/publish-cli-release.yml",
+      "summary": "Reusable workflow that signs and notarizes macOS CLI binaries, publishes the CLI package to npm, and creates a GitHub release with the executables.",
+      "tags": ["ci-cd", "release", "code-signing", "npm-publish", "cli"],
+      "complexity": "complex"
+    },
+    {
+      "id": "pipeline:.github/workflows/quality-packmind-cli.yml",
+      "type": "pipeline",
+      "name": "quality-packmind-cli.yml",
+      "filePath": ".github/workflows/quality-packmind-cli.yml",
+      "summary": "Reusable workflow that downloads the linux-x64 CLI executable built by build.yml and runs 'packmind-cli lint .' against the repository.",
+      "tags": ["ci-cd", "linting", "cli", "quality"],
+      "complexity": "simple"
+    },
+    {
+      "id": "pipeline:.github/workflows/quality.yml",
+      "type": "pipeline",
+      "name": "quality.yml",
+      "filePath": ".github/workflows/quality.yml",
+      "summary": "Reusable quality and security workflow running GitGuardian secret scanning, Nx lint and format checks, SonarQube analysis, and an OSS/proprietary source parity check.",
+      "tags": ["ci-cd", "quality", "security", "linting", "static-analysis"],
+      "complexity": "complex"
+    },
+    {
+      "id": "pipeline:.github/workflows/release.yml",
+      "type": "pipeline",
+      "name": "release.yml",
+      "filePath": ".github/workflows/release.yml",
+      "summary": "Reusable workflow that reads the package version, derives edition-specific naming, extracts the matching CHANGELOG section, and creates a GitHub release.",
+      "tags": ["ci-cd", "release", "changelog", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "pipeline:.github/workflows/weekly-claude-md-improver.yml",
+      "type": "pipeline",
+      "name": "weekly-claude-md-improver.yml",
+      "filePath": ".github/workflows/weekly-claude-md-improver.yml",
+      "summary": "Scheduled weekly workflow that runs a Claude agent to audit and improve CLAUDE.md files (scoped per OSS/proprietary repository) and opens a pull request with the changes.",
+      "tags": ["ci-cd", "automation", "scheduled", "ai-agent", "documentation"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "pipeline:.github/workflows/main.yml",
+      "target": "pipeline:.github/workflows/build.yml",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/main.yml",
+      "target": "pipeline:.github/workflows/e2e.yml",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/main.yml",
+      "target": "pipeline:.github/workflows/quality.yml",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/main.yml",
+      "target": "pipeline:.github/workflows/quality-packmind-cli.yml",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/main.yml",
+      "target": "pipeline:.github/workflows/docker.yml",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/main.yml",
+      "target": "pipeline:.github/workflows/publish-cli-release.yml",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/main.yml",
+      "target": "pipeline:.github/workflows/deploy-staging-and-release.yml",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/main.yml",
+      "target": "pipeline:.github/workflows/release.yml",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/quality-packmind-cli.yml",
+      "target": "pipeline:.github/workflows/build.yml",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/publish-cli-release.yml",
+      "target": "pipeline:.github/workflows/build.yml",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/docker.yml",
+      "target": "service:dockerfile/Dockerfile.api",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/docker.yml",
+      "target": "service:dockerfile/Dockerfile.frontend",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/quality.yml",
+      "target": "config:sonar-project.properties",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/build.yml",
+      "target": "file:apps/api/src/main.ts",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "pipeline:.github/workflows/build.yml",
+      "target": "file:apps/cli/src/main.ts",
+      "type": "triggers",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

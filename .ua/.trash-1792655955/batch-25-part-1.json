@@ -1,0 +1,1401 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx",
+      "type": "file",
+      "name": "SpaceNavModeSection.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx",
+      "summary": "Profile-page section, gated by the plugin-first feature flag, letting a user toggle their space sidebar between the current and plugin-first navigation modes, with analytics tracking.",
+      "tags": ["component", "feature-flag", "navigation", "preferences"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx:SpaceNavModeSection",
+      "type": "function",
+      "name": "SpaceNavModeSection",
+      "filePath": "apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx",
+      "lineRange": [32, 105],
+      "summary": "Renders the navigation-mode switch and marks the new navigation as seen.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx",
+      "type": "file",
+      "name": "DashboardKPI.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx",
+      "summary": "Dashboard KPI panel showing live versus non-live standards, commands and skills for the current space, with progress bars and a drawer to inspect non-live artifacts.",
+      "tags": ["component", "dashboard", "kpi", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx:DashboardKPI",
+      "type": "function",
+      "name": "DashboardKPI",
+      "filePath": "apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx",
+      "lineRange": [17, 293],
+      "summary": "Computes and renders live/non-live KPI stats for each artifact type, opening the non-live drawer on demand.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx",
+      "type": "file",
+      "name": "GettingStartedLearnMoreDialog.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx",
+      "summary": "Reusable dialog component displaying \"learn more\" getting-started content with a title and arbitrary body.",
+      "tags": ["component", "dialog", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx:GettingStartedLearnMoreDialog",
+      "type": "function",
+      "name": "GettingStartedLearnMoreDialog",
+      "filePath": "apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx",
+      "lineRange": [20, 74],
+      "summary": "Dialog showing getting-started guidance with configurable title and body.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedWidget.tsx",
+      "type": "file",
+      "name": "GettingStartedWidget.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/dashboard/GettingStartedWidget.tsx",
+      "summary": "Exports preconfigured getting-started dialog definitions for creating standards and commands from code, rendering CreateFromCodeContent.",
+      "tags": ["constants", "onboarding", "dialog-config"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx",
+      "type": "file",
+      "name": "NonLiveArtifactsDrawer.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx",
+      "summary": "Drawer listing standards, commands and skills that are not yet distributed (non-live) in the current space, organized in tabs with links to each artifact.",
+      "tags": ["component", "drawer", "dashboard", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx:NonLiveArtifactsDrawer",
+      "type": "function",
+      "name": "NonLiveArtifactsDrawer",
+      "filePath": "apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx",
+      "lineRange": [30, 232],
+      "summary": "Tabbed drawer listing non-live artifacts with links to their pages.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "type": "file",
+      "name": "OutdatedTargetsSection.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "summary": "Dashboard section that groups active distributed packages by repository target and highlights targets running outdated artifact versions, with a redistribution banner.",
+      "tags": ["component", "dashboard", "deployments", "git-repositories"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx:OutdatedTargetsSection",
+      "type": "function",
+      "name": "OutdatedTargetsSection",
+      "filePath": "apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "lineRange": [53, 216],
+      "summary": "Groups distributed packages per repository target and lists outdated ones.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/sidebar/SidebarSectionCaption.tsx",
+      "type": "file",
+      "name": "SidebarSectionCaption.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SidebarSectionCaption.tsx",
+      "summary": "Small presentational caption component used to label sections in the sidebar.",
+      "tags": ["component", "sidebar", "presentational"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SidebarSectionCaption.tsx:SidebarSectionCaption",
+      "type": "function",
+      "name": "SidebarSectionCaption",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SidebarSectionCaption.tsx",
+      "lineRange": [10, 40],
+      "summary": "Renders a styled sidebar section caption.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "type": "file",
+      "name": "SpaceNavBlock.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "summary": "Sidebar block rendering a space's navigation in expanded and collapsed modes, including space color dots, initials, visibility icon and section links.",
+      "tags": ["component", "sidebar", "navigation", "space"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:getSpaceColorPalette",
+      "type": "function",
+      "name": "getSpaceColorPalette",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "lineRange": [54, 60],
+      "summary": "Derives a deterministic color palette for a space from its identifier.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:SpaceColorDot",
+      "type": "function",
+      "name": "SpaceColorDot",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "lineRange": [68, 83],
+      "summary": "Small colored dot/badge representing a space.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:getSpaceInitials",
+      "type": "function",
+      "name": "getSpaceInitials",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "lineRange": [85, 92],
+      "summary": "Computes display initials from a space name.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:SpaceNavBlock",
+      "type": "function",
+      "name": "SpaceNavBlock",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "lineRange": [94, 126],
+      "summary": "Chooses expanded or collapsed rendering of the space navigation block.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:CollapsedSpaceNavItems",
+      "type": "function",
+      "name": "CollapsedSpaceNavItems",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "lineRange": [134, 199],
+      "summary": "Renders icon-only navigation items when the sidebar is collapsed.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:ExpandedSpaceNavBlock",
+      "type": "function",
+      "name": "ExpandedSpaceNavBlock",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "lineRange": [201, 274],
+      "summary": "Renders the space name row and full navigation sections in the expanded sidebar.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:CollapsedSpaceNavBlock",
+      "type": "function",
+      "name": "CollapsedSpaceNavBlock",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "lineRange": [276, 366],
+      "summary": "Renders the collapsed sidebar space block with a menu of navigation items.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:SpaceNameRow",
+      "type": "function",
+      "name": "SpaceNameRow",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "lineRange": [368, 439],
+      "summary": "Displays the space name with color dot and visibility icon.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavItemLink.tsx",
+      "type": "file",
+      "name": "SpaceNavItemLink.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavItemLink.tsx",
+      "summary": "Sidebar link component for a single space navigation entry with icon, label, active state and collapsed-mode tooltip.",
+      "tags": ["component", "sidebar", "navigation", "link"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavItemLink.tsx:SpaceNavItemLink",
+      "type": "function",
+      "name": "SpaceNavItemLink",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavItemLink.tsx",
+      "lineRange": [26, 109],
+      "summary": "Navigation link for a space sidebar entry with active state.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx",
+      "type": "file",
+      "name": "SpaceNavPanel.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx",
+      "summary": "Panel wrapper rendering the active space's navigation sections inside the sidebar.",
+      "tags": ["component", "sidebar", "navigation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx:SpaceNavPanel",
+      "type": "function",
+      "name": "SpaceNavPanel",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx",
+      "lineRange": [14, 48],
+      "summary": "Wraps SpaceNavSections in a sidebar panel.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "type": "file",
+      "name": "SpaceNavSections.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "summary": "Renders the active space's navigation entries, switching between the current per-artifact-type layout and the plugin-first layout based on the nav mode context.",
+      "tags": ["component", "sidebar", "navigation", "feature-toggle"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:SpaceNavSections",
+      "type": "function",
+      "name": "SpaceNavSections",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "lineRange": [32, 43],
+      "summary": "Selects plugin-first or current navigation sections based on nav mode.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:PluginFirstNavSections",
+      "type": "function",
+      "name": "PluginFirstNavSections",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "lineRange": [56, 87],
+      "summary": "Renders the plugin-first navigation entries (curate and landed directions).",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:contextPages",
+      "type": "function",
+      "name": "contextPages",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "lineRange": [101, 108],
+      "summary": "Lists the route pages belonging to the context section for active-state matching.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:TodayNavSections",
+      "type": "function",
+      "name": "TodayNavSections",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "lineRange": [110, 149],
+      "summary": "Renders the current per-artifact-type navigation entries.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:SectionHeading",
+      "type": "function",
+      "name": "SectionHeading",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "lineRange": [151, 170],
+      "summary": "Heading label for a navigation section.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceVisibilityIcon.tsx",
+      "type": "file",
+      "name": "SpaceVisibilityIcon.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceVisibilityIcon.tsx",
+      "summary": "Icon component indicating whether a space is public or private/restricted.",
+      "tags": ["component", "icon", "space", "presentational"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceVisibilityIcon.tsx:SpaceVisibilityIcon",
+      "type": "function",
+      "name": "SpaceVisibilityIcon",
+      "filePath": "apps/frontend/src/domain/organizations/components/sidebar/SpaceVisibilityIcon.tsx",
+      "lineRange": [10, 24],
+      "summary": "Icon reflecting a space's visibility.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/rules/components/index.ts",
+      "summary": "Barrel re-exporting rule UI components: RuleExampleItem, RuleExamplesManager, RuleDetails and RuleLanguageRail.",
+      "tags": ["barrel", "entry-point", "rules"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "file",
+      "name": "SkillsQueries.ts",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "summary": "TanStack Query hooks and query options for skills: listing, fetching by slug/id with files, versions, plus delete, batch delete, file update and upload mutations with cache invalidation.",
+      "tags": ["api-client", "react-query", "hook", "skills", "mutation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillsBySpaceQueryOptions",
+      "type": "function",
+      "name": "getSkillsBySpaceQueryOptions",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [27, 42],
+      "summary": "Query options fetching all skills of a space.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillsQuery",
+      "type": "function",
+      "name": "useGetSkillsQuery",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [44, 49],
+      "summary": "Hook listing skills of the current space.",
+      "tags": ["hook", "react", "state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillBySlugQueryOptions",
+      "type": "function",
+      "name": "getSkillBySlugQueryOptions",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [51, 70],
+      "summary": "Query options fetching a skill by slug.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillBySlugQuery",
+      "type": "function",
+      "name": "useGetSkillBySlugQuery",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [72, 77],
+      "summary": "Hook fetching a skill by slug in the current space.",
+      "tags": ["hook", "react", "state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillWithFilesByIdQueryOptions",
+      "type": "function",
+      "name": "getSkillWithFilesByIdQueryOptions",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [79, 102],
+      "summary": "Query options fetching a skill with its files by id.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillWithFilesByIdQuery",
+      "type": "function",
+      "name": "useGetSkillWithFilesByIdQuery",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [104, 111],
+      "summary": "Hook fetching a skill with files by id.",
+      "tags": ["hook", "react", "state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillVersionsQueryOptions",
+      "type": "function",
+      "name": "getSkillVersionsQueryOptions",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [113, 132],
+      "summary": "Query options fetching a skill's versions.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillVersionsQuery",
+      "type": "function",
+      "name": "useGetSkillVersionsQuery",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [134, 141],
+      "summary": "Hook fetching a skill's version history.",
+      "tags": ["hook", "react", "state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useDeleteSkillMutation",
+      "type": "function",
+      "name": "useDeleteSkillMutation",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [145, 187],
+      "summary": "Mutation deleting a skill and invalidating skill, package and distribution caches.",
+      "tags": ["hook", "react", "state"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useDeleteSkillsBatchMutation",
+      "type": "function",
+      "name": "useDeleteSkillsBatchMutation",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [191, 237],
+      "summary": "Mutation deleting multiple skills and invalidating related caches.",
+      "tags": ["hook", "react", "state"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useUpdateSkillFileMutation",
+      "type": "function",
+      "name": "useUpdateSkillFileMutation",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [241, 292],
+      "summary": "Mutation updating a skill file content and refreshing skill and change-proposal caches.",
+      "tags": ["hook", "react", "state"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useUploadSkillMutation",
+      "type": "function",
+      "name": "useUploadSkillMutation",
+      "filePath": "apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "lineRange": [303, 333],
+      "summary": "Mutation uploading a skill and invalidating skill lists.",
+      "tags": ["hook", "react", "state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "summary": "Query key factory for skills cache entries scoped by organization and space (by space, slug, id and versions).",
+      "tags": ["react-query", "query-keys", "skills", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillsBySpaceKey",
+      "type": "function",
+      "name": "getSkillsBySpaceKey",
+      "filePath": "apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "lineRange": [14, 21],
+      "summary": "Builds the query key for skills of a space.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillBySlugKey",
+      "type": "function",
+      "name": "getSkillBySlugKey",
+      "filePath": "apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "lineRange": [23, 34],
+      "summary": "Builds the query key for a skill by slug.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillByIdKey",
+      "type": "function",
+      "name": "getSkillByIdKey",
+      "filePath": "apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "lineRange": [36, 47],
+      "summary": "Builds the query key for a skill by id.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillVersionsKey",
+      "type": "function",
+      "name": "getSkillVersionsKey",
+      "filePath": "apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "lineRange": [49, 60],
+      "summary": "Builds the query key for a skill's versions.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx",
+      "type": "file",
+      "name": "DownloadSkillPopover.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx",
+      "summary": "Popover offering download options for a skill (e.g. zip archive or CLI install instructions).",
+      "tags": ["component", "popover", "skills", "download"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx:DownloadSkillPopover",
+      "type": "function",
+      "name": "DownloadSkillPopover",
+      "filePath": "apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx",
+      "lineRange": [24, 121],
+      "summary": "Popover with skill download options.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx:SpaceNavModeSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx:SpaceNavModeSection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx:DashboardKPI",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx:DashboardKPI",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx:GettingStartedLearnMoreDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx:GettingStartedLearnMoreDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedWidget.tsx",
+      "target": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx:NonLiveArtifactsDrawer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx:NonLiveArtifactsDrawer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx:OutdatedTargetsSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx:OutdatedTargetsSection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/OutdatedDistributeBanner/OutdatedDistributeBanner.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetTable/RepositoryTargetTable.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SidebarSectionCaption.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SidebarSectionCaption.tsx:SidebarSectionCaption",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SidebarSectionCaption.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SidebarSectionCaption.tsx:SidebarSectionCaption",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:getSpaceColorPalette",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:getSpaceColorPalette",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:SpaceColorDot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:getSpaceInitials",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:getSpaceInitials",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:SpaceNavBlock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:SpaceNavBlock",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:CollapsedSpaceNavItems",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:ExpandedSpaceNavBlock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:CollapsedSpaceNavBlock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx:SpaceNameRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceVisibilityIcon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavItemLink.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavItemLink.tsx:SpaceNavItemLink",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavItemLink.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavItemLink.tsx:SpaceNavItemLink",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx:SpaceNavPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx:SpaceNavPanel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:SpaceNavSections",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:SpaceNavSections",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:PluginFirstNavSections",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:contextPages",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:contextPages",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:TodayNavSections",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:SectionHeading",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavItemLink.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceVisibilityIcon.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceVisibilityIcon.tsx:SpaceVisibilityIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceVisibilityIcon.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceVisibilityIcon.tsx:SpaceVisibilityIcon",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillsBySpaceQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillsBySpaceQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillBySlugQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillBySlugQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillBySlugQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillBySlugQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillWithFilesByIdQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillWithFilesByIdQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillWithFilesByIdQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillWithFilesByIdQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillVersionsQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillVersionsQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillVersionsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillVersionsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useDeleteSkillMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useDeleteSkillMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useDeleteSkillsBatchMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useDeleteSkillsBatchMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useUpdateSkillFileMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useUpdateSkillFileMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useUploadSkillMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useUploadSkillMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "file:apps/frontend/src/domain/skills/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillsBySpaceKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillsBySpaceKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillBySlugKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillBySlugKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillByIdKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillByIdKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillVersionsKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillVersionsKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx:DownloadSkillPopover",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx:DownloadSkillPopover",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx:SpaceNavModeSection",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx:SpaceNavModeSection",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:useSpaceNavMode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx:DashboardKPI",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx:NonLiveArtifactsDrawer",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx:NonLiveArtifactsDrawer",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpacesQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx:OutdatedTargetsSection",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListActiveDistributedPackagesBySpaceQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx:OutdatedTargetsSection",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx:OutdatedTargetsSection",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGitProvidersQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:SpaceNavSections",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:useSpaceNavMode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx:DashboardKPI",
+      "target": "function:apps/frontend/src/domain/organizations/components/dashboard/NonLiveArtifactsDrawer.tsx:NonLiveArtifactsDrawer",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx:SpaceNavPanel",
+      "target": "function:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavSections.tsx:SpaceNavSections",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillsBySpaceQueryOptions",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillsBySpaceKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillBySlugQueryOptions",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillBySlugKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillWithFilesByIdQueryOptions",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillByIdKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillVersionsQueryOptions",
+      "target": "function:apps/frontend/src/domain/skills/api/queryKeys.ts:getSkillVersionsKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillsQuery",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillsBySpaceQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillBySlugQuery",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillBySlugQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillWithFilesByIdQuery",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillWithFilesByIdQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillVersionsQuery",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillVersionsQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

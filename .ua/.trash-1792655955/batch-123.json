@@ -1,0 +1,654 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/skills/test/skillFileFactory.ts",
+      "type": "file",
+      "name": "skillFileFactory.ts",
+      "filePath": "packages/skills/test/skillFileFactory.ts",
+      "summary": "Test data factory producing SkillFile fixtures with UUID-based branded IDs and sensible defaults, overridable via partial input.",
+      "tags": ["test", "factory", "fixture", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/skills/test/skillFileFactory.ts:skillFileFactory",
+      "type": "function",
+      "name": "skillFileFactory",
+      "filePath": "packages/skills/test/skillFileFactory.ts",
+      "lineRange": [9, 21],
+      "summary": "Builds a SkillFile test object with generated IDs and default fields, merged with optional overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/test/skillVersionFactory.ts",
+      "type": "file",
+      "name": "skillVersionFactory.ts",
+      "filePath": "packages/skills/test/skillVersionFactory.ts",
+      "summary": "Test data factory producing SkillVersion fixtures with UUID-based branded IDs and sensible defaults, overridable via partial input.",
+      "tags": ["test", "factory", "fixture", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/skills/test/skillVersionFactory.ts:skillVersionFactory",
+      "type": "function",
+      "name": "skillVersionFactory",
+      "filePath": "packages/skills/test/skillVersionFactory.ts",
+      "lineRange": [10, 28],
+      "summary": "Builds a SkillVersion test object with generated IDs and default fields, merged with optional overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/test/spaceFactory.ts",
+      "type": "file",
+      "name": "spaceFactory.ts",
+      "filePath": "packages/spaces/test/spaceFactory.ts",
+      "summary": "Test data factory producing Space fixtures with UUID-based branded IDs and sensible defaults, overridable via partial input.",
+      "tags": ["test", "factory", "fixture", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/spaces/test/spaceFactory.ts:spaceFactory",
+      "type": "function",
+      "name": "spaceFactory",
+      "filePath": "packages/spaces/test/spaceFactory.ts",
+      "lineRange": [12, 23],
+      "summary": "Builds a Space test object with generated IDs and default fields, merged with optional overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/test/userSpaceMembershipFactory.ts",
+      "type": "file",
+      "name": "userSpaceMembershipFactory.ts",
+      "filePath": "packages/spaces/test/userSpaceMembershipFactory.ts",
+      "summary": "Test data factory producing UserSpaceMembership fixtures with UUID-based branded IDs and sensible defaults, overridable via partial input.",
+      "tags": ["test", "factory", "fixture", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/spaces/test/userSpaceMembershipFactory.ts:userSpaceMembershipFactory",
+      "type": "function",
+      "name": "userSpaceMembershipFactory",
+      "filePath": "packages/spaces/test/userSpaceMembershipFactory.ts",
+      "lineRange": [9, 22],
+      "summary": "Builds a UserSpaceMembership test object with generated IDs and default fields, merged with optional overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/test/ruleExampleFactory.ts",
+      "type": "file",
+      "name": "ruleExampleFactory.ts",
+      "filePath": "packages/standards/test/ruleExampleFactory.ts",
+      "summary": "Test data factory producing RuleExample fixtures with UUID-based branded IDs and sensible defaults, overridable via partial input.",
+      "tags": ["test", "factory", "fixture", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/standards/test/ruleExampleFactory.ts:ruleExampleFactory",
+      "type": "function",
+      "name": "ruleExampleFactory",
+      "filePath": "packages/standards/test/ruleExampleFactory.ts",
+      "lineRange": [10, 21],
+      "summary": "Builds a RuleExample test object with generated IDs and default fields, merged with optional overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/test/ruleFactory.ts",
+      "type": "file",
+      "name": "ruleFactory.ts",
+      "filePath": "packages/standards/test/ruleFactory.ts",
+      "summary": "Test data factory producing Rule fixtures with UUID-based branded IDs and sensible defaults, overridable via partial input.",
+      "tags": ["test", "factory", "fixture", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/standards/test/ruleFactory.ts:ruleFactory",
+      "type": "function",
+      "name": "ruleFactory",
+      "filePath": "packages/standards/test/ruleFactory.ts",
+      "lineRange": [5, 12],
+      "summary": "Builds a Rule test object with generated IDs and default fields, merged with optional overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/test/standardFactory.ts",
+      "type": "file",
+      "name": "standardFactory.ts",
+      "filePath": "packages/standards/test/standardFactory.ts",
+      "summary": "Test data factory producing Standard fixtures with UUID-based branded IDs and sensible defaults, overridable via partial input.",
+      "tags": ["test", "factory", "fixture", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/standards/test/standardFactory.ts:standardFactory",
+      "type": "function",
+      "name": "standardFactory",
+      "filePath": "packages/standards/test/standardFactory.ts",
+      "lineRange": [10, 26],
+      "summary": "Builds a Standard test object with generated IDs and default fields, merged with optional overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/test/standardVersionFactory.ts",
+      "type": "file",
+      "name": "standardVersionFactory.ts",
+      "filePath": "packages/standards/test/standardVersionFactory.ts",
+      "summary": "Test data factory producing StandardVersion fixtures with UUID-based branded IDs and sensible defaults, overridable via partial input.",
+      "tags": ["test", "factory", "fixture", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/standards/test/standardVersionFactory.ts:standardVersionFactory",
+      "type": "function",
+      "name": "standardVersionFactory",
+      "filePath": "packages/standards/test/standardVersionFactory.ts",
+      "lineRange": [10, 25],
+      "summary": "Builds a StandardVersion test object with generated IDs and default fields, merged with optional overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/.swcrc",
+      "type": "file",
+      "name": ".swcrc",
+      "filePath": "packages/spaces/.swcrc",
+      "summary": "SWC compiler configuration for the spaces package targeting ES2022 CommonJS with TypeScript parsing, kept class names and source maps.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/.swcrc",
+      "type": "file",
+      "name": ".swcrc",
+      "filePath": "packages/standards/.swcrc",
+      "summary": "SWC compiler configuration for the standards package targeting ES2022 CommonJS with TypeScript parsing, kept class names and source maps.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/application/adapters/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/spaces/src/application/adapters/index.ts",
+      "summary": "Barrel re-exporting the SpacesAdapter, the cross-domain port implementation of the spaces package.",
+      "tags": ["barrel", "adapter", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/application/services/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/spaces/src/application/services/index.ts",
+      "summary": "Barrel exposing SpaceService and the SpacesServices aggregate of the spaces application layer.",
+      "tags": ["barrel", "service", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/errors/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/spaces/src/domain/errors/index.ts",
+      "summary": "Barrel re-exporting all spaces domain errors (space not found, slug conflicts, invalid names, membership and role-change guards).",
+      "tags": ["barrel", "errors", "domain", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/repositories/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/spaces/src/domain/repositories/index.ts",
+      "summary": "Barrel exposing the ISpaceRepository and ISpacesRepositories domain port interfaces.",
+      "tags": ["barrel", "type-definition", "repository", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/infra/repositories/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/spaces/src/infra/repositories/index.ts",
+      "summary": "Barrel exposing the TypeORM-backed SpaceRepository and the SpacesRepositories aggregate.",
+      "tags": ["barrel", "repository", "infrastructure", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/spaces/src/index.ts",
+      "summary": "Public entry point of the spaces package, re-exporting domain errors, repositories, schemas, adapters, services and the SpacesHexa.",
+      "tags": ["entry-point", "barrel", "spaces", "hexagonal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/test/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/spaces/test/index.ts",
+      "summary": "Barrel exposing spaces test factories (spaceFactory, userSpaceMembershipFactory).",
+      "tags": ["barrel", "test", "factory", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/standards/src/index.ts",
+      "summary": "Public entry point of the standards package, re-exporting StandardsHexa, StandardsAdapter, use cases, errors, schemas and the standard samples.",
+      "tags": ["entry-point", "barrel", "standards", "hexagonal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/test/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/standards/test/index.ts",
+      "summary": "Barrel exposing standards test factories for standards, versions, rules and rule examples.",
+      "tags": ["barrel", "test", "factory", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/useCases/IGetRuleExamples.ts",
+      "type": "file",
+      "name": "IGetRuleExamples.ts",
+      "filePath": "packages/standards/src/domain/useCases/IGetRuleExamples.ts",
+      "summary": "Declares the GetRuleExamplesCommand type, a PackmindCommand carrying the ruleId whose examples are requested.",
+      "tags": ["type-definition", "use-case", "command", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/samples/generated/.gitkeep",
+      "type": "file",
+      "name": ".gitkeep",
+      "filePath": "packages/standards/samples/generated/.gitkeep",
+      "summary": "Empty placeholder keeping the generated standard samples output directory under version control.",
+      "tags": ["placeholder", "generated", "samples"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/samples/generateSamples.ts",
+      "type": "file",
+      "name": "generateSamples.ts",
+      "filePath": "packages/standards/samples/generateSamples.ts",
+      "summary": "Developer script (nx run standards:generate-samples) that uses an LLM to generate standard sample JSON files for each language and framework sample, validating rule counts and retrying failed attempts.",
+      "tags": ["script", "llm", "code-generation", "samples", "standards"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/standards/samples/prompts/generateStandardSamplePrompt.ts",
+      "type": "file",
+      "name": "generateStandardSamplePrompt.ts",
+      "filePath": "packages/standards/samples/prompts/generateStandardSamplePrompt.ts",
+      "summary": "Builds the LLM prompt used to generate a coding standard sample with 10 rules and examples, including topic exclusions and example-language guidance.",
+      "tags": ["prompt", "llm", "samples", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/standards/samples/generateSamples.ts:validateStandardContent",
+      "type": "function",
+      "name": "validateStandardContent",
+      "filePath": "packages/standards/samples/generateSamples.ts",
+      "lineRange": [55, 119],
+      "summary": "Validates LLM-generated standard content: required fields, expected rule count, and per-rule example shape, returning a list of errors.",
+      "tags": ["validation", "samples", "llm"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/standards/samples/generateSamples.ts:generateSample",
+      "type": "function",
+      "name": "generateSample",
+      "filePath": "packages/standards/samples/generateSamples.ts",
+      "lineRange": [121, 182],
+      "summary": "Generates one standard sample through the LLM with up to three attempts, validating the response and writing it to the generated directory.",
+      "tags": ["llm", "retry", "file-io", "samples"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/standards/samples/generateSamples.ts:main",
+      "type": "function",
+      "name": "main",
+      "filePath": "packages/standards/samples/generateSamples.ts",
+      "lineRange": [184, 267],
+      "summary": "Script entry: builds the list of language and framework samples, skips existing ones, generates the rest and reports success, skip and failure counts.",
+      "tags": ["entry-point", "orchestration", "samples"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:buildExclusionSection",
+      "type": "function",
+      "name": "buildExclusionSection",
+      "filePath": "packages/standards/samples/prompts/generateStandardSamplePrompt.ts",
+      "lineRange": [7, 21],
+      "summary": "Renders the prompt section listing topics the generated standard must avoid.",
+      "tags": ["prompt", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:buildExampleLanguageSection",
+      "type": "function",
+      "name": "buildExampleLanguageSection",
+      "filePath": "packages/standards/samples/prompts/generateStandardSamplePrompt.ts",
+      "lineRange": [23, 34],
+      "summary": "Renders the prompt section specifying which language rule examples should be written in.",
+      "tags": ["prompt", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:generateStandardSamplePrompt",
+      "type": "function",
+      "name": "generateStandardSamplePrompt",
+      "filePath": "packages/standards/samples/prompts/generateStandardSamplePrompt.ts",
+      "lineRange": [36, 187],
+      "summary": "Composes the full LLM prompt for generating a standard sample for a given language or framework, scope and exclusions.",
+      "tags": ["prompt", "llm", "samples"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/skills/test/skillFileFactory.ts",
+      "target": "function:packages/skills/test/skillFileFactory.ts:skillFileFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/test/skillFileFactory.ts",
+      "target": "function:packages/skills/test/skillFileFactory.ts:skillFileFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/test/skillVersionFactory.ts",
+      "target": "function:packages/skills/test/skillVersionFactory.ts:skillVersionFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/test/skillVersionFactory.ts",
+      "target": "function:packages/skills/test/skillVersionFactory.ts:skillVersionFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/test/spaceFactory.ts",
+      "target": "function:packages/spaces/test/spaceFactory.ts:spaceFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/test/spaceFactory.ts",
+      "target": "function:packages/spaces/test/spaceFactory.ts:spaceFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/test/userSpaceMembershipFactory.ts",
+      "target": "function:packages/spaces/test/userSpaceMembershipFactory.ts:userSpaceMembershipFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/test/userSpaceMembershipFactory.ts",
+      "target": "function:packages/spaces/test/userSpaceMembershipFactory.ts:userSpaceMembershipFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/test/ruleExampleFactory.ts",
+      "target": "function:packages/standards/test/ruleExampleFactory.ts:ruleExampleFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/test/ruleExampleFactory.ts",
+      "target": "function:packages/standards/test/ruleExampleFactory.ts:ruleExampleFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/test/ruleFactory.ts",
+      "target": "function:packages/standards/test/ruleFactory.ts:ruleFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/test/ruleFactory.ts",
+      "target": "function:packages/standards/test/ruleFactory.ts:ruleFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/test/standardFactory.ts",
+      "target": "function:packages/standards/test/standardFactory.ts:standardFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/test/standardFactory.ts",
+      "target": "function:packages/standards/test/standardFactory.ts:standardFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/test/standardVersionFactory.ts",
+      "target": "function:packages/standards/test/standardVersionFactory.ts:standardVersionFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/test/standardVersionFactory.ts",
+      "target": "function:packages/standards/test/standardVersionFactory.ts:standardVersionFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/.swcrc",
+      "target": "file:packages/spaces/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/.swcrc",
+      "target": "file:packages/standards/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/samples/generateSamples.ts",
+      "target": "function:packages/standards/samples/generateSamples.ts:validateStandardContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/samples/generateSamples.ts",
+      "target": "function:packages/standards/samples/generateSamples.ts:generateSample",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/samples/generateSamples.ts",
+      "target": "function:packages/standards/samples/generateSamples.ts:main",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/samples/prompts/generateStandardSamplePrompt.ts",
+      "target": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:buildExclusionSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/samples/prompts/generateStandardSamplePrompt.ts",
+      "target": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:buildExampleLanguageSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/samples/prompts/generateStandardSamplePrompt.ts",
+      "target": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:generateStandardSamplePrompt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/samples/prompts/generateStandardSamplePrompt.ts",
+      "target": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:generateStandardSamplePrompt",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/samples/generateSamples.ts",
+      "target": "file:packages/standards/samples/prompts/generateStandardSamplePrompt.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:packages/standards/samples/generateSamples.ts:generateSample",
+      "target": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:generateStandardSamplePrompt",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/standards/samples/generateSamples.ts:main",
+      "target": "function:packages/standards/samples/generateSamples.ts:generateSample",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/standards/samples/generateSamples.ts:generateSample",
+      "target": "function:packages/standards/samples/generateSamples.ts:validateStandardContent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:generateStandardSamplePrompt",
+      "target": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:buildExclusionSection",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:generateStandardSamplePrompt",
+      "target": "function:packages/standards/samples/prompts/generateStandardSamplePrompt.ts:buildExampleLanguageSection",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/test/index.ts",
+      "target": "file:packages/spaces/test/spaceFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/spaces/test/index.ts",
+      "target": "file:packages/spaces/test/userSpaceMembershipFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/test/index.ts",
+      "target": "file:packages/standards/test/standardFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/test/index.ts",
+      "target": "file:packages/standards/test/standardVersionFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/test/index.ts",
+      "target": "file:packages/standards/test/ruleFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/test/index.ts",
+      "target": "file:packages/standards/test/ruleExampleFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/spaces/src/index.ts",
+      "target": "file:packages/spaces/src/domain/errors/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/spaces/src/index.ts",
+      "target": "file:packages/spaces/src/domain/repositories/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/spaces/src/index.ts",
+      "target": "file:packages/spaces/src/infra/repositories/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/spaces/src/index.ts",
+      "target": "file:packages/spaces/src/application/adapters/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/spaces/src/index.ts",
+      "target": "file:packages/spaces/src/application/services/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/standards/samples/generateSamples.ts",
+      "target": "file:packages/standards/samples/generated/.gitkeep",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

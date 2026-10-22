@@ -1,0 +1,1298 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "type": "file",
+      "name": "buildPackageDestinations.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "summary": "Pure model that merges a package's repository landings and marketplace publications into one list of destinations with state, tone, stale-report detection, filtering, search and summary helpers.",
+      "tags": ["utility", "selector", "distribution", "drift", "data-model"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:isReportStale",
+      "type": "function",
+      "name": "isReportStale",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [94, 99],
+      "summary": "Tells whether a destination report is older than the stale threshold.",
+      "tags": ["utility", "predicate"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:destinationTone",
+      "type": "function",
+      "name": "destinationTone",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [132, 136],
+      "summary": "Maps a destination state to its UI tone.",
+      "tags": ["utility", "mapping"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:reportDay",
+      "type": "function",
+      "name": "reportDay",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [150, 160],
+      "summary": "Formats a report timestamp as a day label.",
+      "tags": ["utility", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:reportInstant",
+      "type": "function",
+      "name": "reportInstant",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [170, 178],
+      "summary": "Formats a report timestamp as an instant label.",
+      "tags": ["utility", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:worstState",
+      "type": "function",
+      "name": "worstState",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [185, 195],
+      "summary": "Returns the most severe state among a set of destinations.",
+      "tags": ["utility", "aggregation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:needsAHand",
+      "type": "function",
+      "name": "needsAHand",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [198, 200],
+      "summary": "Predicate for destinations needing user action.",
+      "tags": ["utility", "predicate"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:buildPackageDestinations",
+      "type": "function",
+      "name": "buildPackageDestinations",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [344, 371],
+      "summary": "Builds the merged list of repository and marketplace destinations for a package.",
+      "tags": ["utility", "builder"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:repositoryRow",
+      "type": "function",
+      "name": "repositoryRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [373, 414],
+      "summary": "Builds one destination row for a repository landing.",
+      "tags": ["utility", "builder"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:repositoryState",
+      "type": "function",
+      "name": "repositoryState",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [423, 439],
+      "summary": "Derives a repository landing's state from drift and failure data.",
+      "tags": ["utility", "state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:marketplaceRow",
+      "type": "function",
+      "name": "marketplaceRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [441, 478],
+      "summary": "Builds one destination row for a marketplace publication.",
+      "tags": ["utility", "builder"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:filterPackageDestinations",
+      "type": "function",
+      "name": "filterPackageDestinations",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [497, 513],
+      "summary": "Filters destinations by kind/status filter.",
+      "tags": ["utility", "filtering"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:searchPackageDestinations",
+      "type": "function",
+      "name": "searchPackageDestinations",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [533, 545],
+      "summary": "Filters destinations by free-text search.",
+      "tags": ["utility", "search"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:packageDestinationSummary",
+      "type": "function",
+      "name": "packageDestinationSummary",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [551, 571],
+      "summary": "Summarizes destination counts by state for a package.",
+      "tags": ["utility", "aggregation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:oldestStaleReport",
+      "type": "function",
+      "name": "oldestStaleReport",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "lineRange": [584, 600],
+      "summary": "Finds the oldest stale report among destinations.",
+      "tags": ["utility", "aggregation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts",
+      "type": "file",
+      "name": "buildPackageSyncScope.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts",
+      "summary": "Pivots the package destination rows a user picked into the packages/landings and catalog scope the SyncSurface confirmation expects for an Update.",
+      "tags": ["utility", "selector", "distribution", "sync"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts:buildPackageSyncScope",
+      "type": "function",
+      "name": "buildPackageSyncScope",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts",
+      "lineRange": [23, 71],
+      "summary": "Converts picked package destinations into the sync surface scope.",
+      "tags": ["utility", "builder"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/componentLateness.ts",
+      "type": "file",
+      "name": "componentLateness.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentLateness.ts",
+      "summary": "Computes, per package component, how many repository landings it is behind on by pivoting install drift entries.",
+      "tags": ["utility", "selector", "drift", "package"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/componentLateness.ts:componentLateness",
+      "type": "function",
+      "name": "componentLateness",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentLateness.ts",
+      "lineRange": [26, 49],
+      "summary": "Counts per-component how many landings are behind.",
+      "tags": ["utility", "aggregation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts",
+      "type": "file",
+      "name": "toPackagePublications.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts",
+      "summary": "Adapts marketplace publications plus space drift into edition-neutral PackagePublication rows, deriving last attempt status and timestamps.",
+      "tags": ["adapter", "utility", "marketplace", "distribution"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts:toPackagePublications",
+      "type": "function",
+      "name": "toPackagePublications",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts",
+      "lineRange": [20, 44],
+      "summary": "Maps marketplace publications and drift into PackagePublication rows.",
+      "tags": ["adapter", "mapping"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts:lastAttemptOf",
+      "type": "function",
+      "name": "lastAttemptOf",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts",
+      "lineRange": [54, 67],
+      "summary": "Derives a publication's last attempt status and time.",
+      "tags": ["utility", "mapping"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "type": "file",
+      "name": "usePackageDestinations.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "summary": "Hook that is the single definition of a package's destinations, combining drift, marketplace publications and auth context into buildPackageDestinations output for multiple consumers.",
+      "tags": ["hook", "distribution", "react-query", "package"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts:usePackageDestinations",
+      "type": "function",
+      "name": "usePackageDestinations",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "lineRange": [28, 78],
+      "summary": "Hook computing a package's destination list from shared queries.",
+      "tags": ["hook", "data-fetching"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "type": "file",
+      "name": "usePackageDrift.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "summary": "Hooks exposing the space-wide package drift overview (shared query cache) and its narrowing to a single package.",
+      "tags": ["hook", "drift", "react-query", "space"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts:useSpaceDrift",
+      "type": "function",
+      "name": "useSpaceDrift",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "lineRange": [23, 34],
+      "summary": "Hook returning the space's package drift overview.",
+      "tags": ["hook", "data-fetching"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts:usePackageDrift",
+      "type": "function",
+      "name": "usePackageDrift",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "lineRange": [43, 54],
+      "summary": "Hook returning drift narrowed to one package.",
+      "tags": ["hook", "data-fetching"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "type": "file",
+      "name": "usePackageReleaseVersion.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "summary": "Hook owning a package's next-version state: suggestions, validation verdicts, server refusals and the create-release mutation, shared by the release drawers.",
+      "tags": [
+        "hook",
+        "package-release",
+        "versioning",
+        "mutation",
+        "validation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts:usePackageReleaseVersion",
+      "type": "function",
+      "name": "usePackageReleaseVersion",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "lineRange": [26, 220],
+      "summary": "Hook managing next-version input, verdicts, refusals and release creation.",
+      "tags": ["hook", "form-state", "mutation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "type": "file",
+      "name": "DestinationRail.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "summary": "The Distribution surface's rail listing a space's destinations, sectioned into repositories and marketplaces, with status filter pills, search highlighting, multi-select and a batch distribute action bar.",
+      "tags": ["component", "distribution", "list", "filtering", "selection"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:DestinationRail",
+      "type": "function",
+      "name": "DestinationRail",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [66, 362],
+      "summary": "Renders the sectioned, filterable, selectable list of space destinations.",
+      "tags": ["component", "list"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:ReachRow",
+      "type": "function",
+      "name": "ReachRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [395, 506],
+      "summary": "Row summarizing overall reach at the top of the rail.",
+      "tags": ["component", "row"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:StatusPill",
+      "type": "function",
+      "name": "StatusPill",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [572, 678],
+      "summary": "Status filter pill with count.",
+      "tags": ["component", "filter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:NoMatches",
+      "type": "function",
+      "name": "NoMatches",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [680, 692],
+      "summary": "Empty state when search finds no destination.",
+      "tags": ["component", "empty-state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:NoStatusMatches",
+      "type": "function",
+      "name": "NoStatusMatches",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [703, 735],
+      "summary": "Empty state when a status filter matches nothing.",
+      "tags": ["component", "empty-state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:SectionHeader",
+      "type": "function",
+      "name": "SectionHeader",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [742, 777],
+      "summary": "Section header for repositories/marketplaces with select-all.",
+      "tags": ["component", "header"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:DestinationRow",
+      "type": "function",
+      "name": "DestinationRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [779, 1012],
+      "summary": "One selectable destination row with state and highlight.",
+      "tags": ["component", "row"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:destinationState",
+      "type": "function",
+      "name": "destinationState",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [1031, 1169],
+      "summary": "Derives a destination's displayed state and label.",
+      "tags": ["utility", "state"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:pickedReach",
+      "type": "function",
+      "name": "pickedReach",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [1183, 1194],
+      "summary": "Computes reach of picked destinations for the action bar.",
+      "tags": ["utility", "aggregation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:RailActionBar",
+      "type": "function",
+      "name": "RailActionBar",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [1196, 1342],
+      "summary": "Bottom action bar for batch distributing picked destinations.",
+      "tags": ["component", "action-bar"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:highlight",
+      "type": "function",
+      "name": "highlight",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "lineRange": [1350, 1364],
+      "summary": "Highlights search matches in a label.",
+      "tags": ["utility", "search"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "type": "file",
+      "name": "SpaceDistributionSurface.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "summary": "Space-level Distribution surface: a rail of destinations beside a detail pane, URL-driven selection, drift overviews, provider auth checks and batch sync via SyncSurface, with loading and empty states.",
+      "tags": ["component", "distribution", "layout", "page", "drift"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:SpaceDistributionSurface",
+      "type": "function",
+      "name": "SpaceDistributionSurface",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "lineRange": [79, 392],
+      "summary": "Composes the destination rail and detail pane for a space with sync handling.",
+      "tags": ["component", "layout"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:DestinationPane",
+      "type": "function",
+      "name": "DestinationPane",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "lineRange": [414, 471],
+      "summary": "Detail pane for the selected destination.",
+      "tags": ["component", "pane"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:NothingDistributed",
+      "type": "function",
+      "name": "NothingDistributed",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "lineRange": [491, 567],
+      "summary": "Empty state when the space has distributed nothing.",
+      "tags": ["component", "empty-state"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts",
+      "type": "file",
+      "name": "buildDestinationSyncScope.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts",
+      "summary": "Turns picked space destinations into a distribution scope: the drifted packages and exact repo::target landings in picked repositories plus drifted marketplace plugins, or null when nothing would be sent.",
+      "tags": ["utility", "selector", "distribution", "sync"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts:buildDestinationSyncScope",
+      "type": "function",
+      "name": "buildDestinationSyncScope",
+      "filePath": "apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts",
+      "lineRange": [27, 68],
+      "summary": "Builds the packages, landings and marketplace scope for picked destinations.",
+      "tags": ["utility", "builder"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:isReportStale",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:isReportStale",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:destinationTone",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:destinationTone",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:reportDay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:reportDay",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:reportInstant",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:reportInstant",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:worstState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:worstState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:needsAHand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:needsAHand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:buildPackageDestinations",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:buildPackageDestinations",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:repositoryRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:repositoryState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:marketplaceRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:filterPackageDestinations",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:filterPackageDestinations",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:searchPackageDestinations",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:searchPackageDestinations",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:packageDestinationSummary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:packageDestinationSummary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:oldestStaleReport",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:oldestStaleReport",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts:buildPackageSyncScope",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts:buildPackageSyncScope",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentLateness.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentLateness.ts:componentLateness",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentLateness.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentLateness.ts:componentLateness",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentLateness.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentLateness.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentLateness.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts:toPackagePublications",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts:toPackagePublications",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts:lastAttemptOf",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts:usePackageDestinations",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts:usePackageDestinations",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts:useSpaceDrift",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts:useSpaceDrift",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts:usePackageDrift",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts:usePackageDrift",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts:usePackageReleaseVersion",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts:usePackageReleaseVersion",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "target": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:DestinationRail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:DestinationRail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:ReachRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:StatusPill",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:NoMatches",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:NoStatusMatches",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:SectionHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:DestinationRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:destinationState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:pickedReach",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:RailActionBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:highlight",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/destinations/buildSpaceDestinations.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:SpaceDistributionSurface",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:SpaceDistributionSurface",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:DestinationPane",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:NothingDistributed",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/destinations/buildSpaceDestinations.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/stubPackages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/shared/utils/getEnvVar.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts:buildDestinationSyncScope",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts:buildDestinationSyncScope",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/destinations/buildSpaceDestinations.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts:usePackageDestinations",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:buildPackageDestinations",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts:usePackageDestinations",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/toPackagePublications.ts:toPackagePublications",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts:usePackageReleaseVersion",
+      "target": "function:apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts:readPackageReleaseRefusal",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:SpaceDistributionSurface",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/buildDestinationSyncScope.ts:buildDestinationSyncScope",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts:usePackageDrift",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts:useSpaceDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts:useSpaceDrift",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/usePackageDrift.ts:useSpaceDrift",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/componentLateness.ts:componentLateness",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts:usePackageDestinations",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:SpaceDistributionSurface",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:SpaceDistributionSurface",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:SpaceDistributionSurface",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:buildRepositoryDriftOverview",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:SpaceDistributionSurface",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/buildSpaceDestinations.ts:buildSpaceDestinations",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/destinations/DestinationRail.tsx:DestinationRail",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/buildSpaceDestinations.ts:searchDestinations",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts:usePackageReleaseVersion",
+      "target": "function:apps/frontend/src/domain/deployments/constants/messages.ts:getReleaseVerdictMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

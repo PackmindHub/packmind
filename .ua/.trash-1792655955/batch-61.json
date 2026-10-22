@@ -1,0 +1,179 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.auto-update._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.setup.auto-update._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.auto-update._index.tsx",
+      "summary": "Remix index route for the org-scoped protected setup auto-update configuration step; renders SetupAutoUpdatePage from the setup domain.",
+      "tags": ["route", "component", "setup", "thin-wrapper"],
+      "complexity": "simple",
+      "languageNotes": "Remix flat-route file naming: dots map to URL segments, $orgSlug is a dynamic param, _protected a pathless layout, _index the index route."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.auto-update._index.tsx:SetupAutoUpdateRoute",
+      "type": "function",
+      "name": "SetupAutoUpdateRoute",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.auto-update._index.tsx",
+      "lineRange": [3, 5],
+      "summary": "Default-exported route component that renders SetupAutoUpdatePage.",
+      "tags": ["route", "component", "setup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.cli._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.setup.cli._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.cli._index.tsx",
+      "summary": "Remix index route for the org-scoped protected setup Packmind CLI installation step; renders SetupCliPage from the setup domain.",
+      "tags": ["route", "component", "setup", "thin-wrapper"],
+      "complexity": "simple",
+      "languageNotes": "Remix flat-route file naming: dots map to URL segments, $orgSlug is a dynamic param, _protected a pathless layout, _index the index route."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.cli._index.tsx:SetupCLIRoute",
+      "type": "function",
+      "name": "SetupCLIRoute",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.cli._index.tsx",
+      "lineRange": [3, 5],
+      "summary": "Default-exported route component that renders SetupCliPage.",
+      "tags": ["route", "component", "setup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.skills._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.setup.skills._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.skills._index.tsx",
+      "summary": "Remix index route for the org-scoped protected setup skills setup step; renders SetupSkillsPage from the setup domain.",
+      "tags": ["route", "component", "setup", "thin-wrapper"],
+      "complexity": "simple",
+      "languageNotes": "Remix flat-route file naming: dots map to URL segments, $orgSlug is a dynamic param, _protected a pathless layout, _index the index route."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.skills._index.tsx:SetupSkillsRoute",
+      "type": "function",
+      "name": "SetupSkillsRoute",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.skills._index.tsx",
+      "lineRange": [3, 5],
+      "summary": "Default-exported route component that renders SetupSkillsPage.",
+      "tags": ["route", "component", "setup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.use-cases._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.setup.use-cases._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.use-cases._index.tsx",
+      "summary": "Remix index route for the org-scoped protected setup use-cases step; renders SetupUseCasesPage from the setup domain.",
+      "tags": ["route", "component", "setup", "thin-wrapper"],
+      "complexity": "simple",
+      "languageNotes": "Remix flat-route file naming: dots map to URL segments, $orgSlug is a dynamic param, _protected a pathless layout, _index the index route."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.use-cases._index.tsx:SetupUseCasesRoute",
+      "type": "function",
+      "name": "SetupUseCasesRoute",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.use-cases._index.tsx",
+      "lineRange": [3, 5],
+      "summary": "Default-exported route component that renders SetupUseCasesPage.",
+      "tags": ["route", "component", "setup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/setup/index.ts",
+      "summary": "Barrel for the frontend setup domain, re-exporting all setup page components (CLI, skills, auto-update, use-cases).",
+      "tags": ["barrel", "entry-point", "setup"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.auto-update._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.auto-update._index.tsx:SetupAutoUpdateRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.auto-update._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.auto-update._index.tsx:SetupAutoUpdateRoute",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.auto-update._index.tsx",
+      "target": "file:apps/frontend/src/domain/setup/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.cli._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.cli._index.tsx:SetupCLIRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.cli._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.cli._index.tsx:SetupCLIRoute",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.cli._index.tsx",
+      "target": "file:apps/frontend/src/domain/setup/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.skills._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.skills._index.tsx:SetupSkillsRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.skills._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.skills._index.tsx:SetupSkillsRoute",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.skills._index.tsx",
+      "target": "file:apps/frontend/src/domain/setup/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.use-cases._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.use-cases._index.tsx:SetupUseCasesRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.use-cases._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.use-cases._index.tsx:SetupUseCasesRoute",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.use-cases._index.tsx",
+      "target": "file:apps/frontend/src/domain/setup/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

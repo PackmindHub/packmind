@@ -1,0 +1,948 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/skills/src/SkillsHexa.ts",
+      "type": "file",
+      "name": "SkillsHexa.ts",
+      "filePath": "packages/skills/src/SkillsHexa.ts",
+      "summary": "Hexa entry point for the skills domain: wires TypeORM repositories, services and the SkillsAdapter, and registers the skills port with the hexa registry.",
+      "tags": [
+        "entry-point",
+        "hexagonal-architecture",
+        "dependency-injection",
+        "skills"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/SkillsHexa.ts:SkillsHexa",
+      "type": "class",
+      "name": "SkillsHexa",
+      "filePath": "packages/skills/src/SkillsHexa.ts",
+      "lineRange": [23, 116],
+      "summary": "Hexa class extending BaseHexa that initializes skills repositories, services and adapter and exposes the skills port.",
+      "tags": [
+        "entry-point",
+        "hexagonal-architecture",
+        "dependency-injection",
+        "skills"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "type": "file",
+      "name": "SkillsAdapter.ts",
+      "filePath": "packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "summary": "Implements ISkillsPort by instantiating every skills use case and exposing CRUD, versioning, file, upload and move/hard-delete operations to other domains.",
+      "tags": [
+        "adapter",
+        "port-implementation",
+        "facade",
+        "skills",
+        "hexagonal-architecture"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "type": "class",
+      "name": "SkillsAdapter",
+      "filePath": "packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "lineRange": [59, 479],
+      "summary": "Adapter implementing ISkillsPort; constructs all skills use cases on initialize and delegates port calls to them or to services.",
+      "tags": ["adapter", "port-implementation", "facade", "skills"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/skills/src/application/parser/SkillParser.ts",
+      "type": "file",
+      "name": "SkillParser.ts",
+      "filePath": "packages/skills/src/application/parser/SkillParser.ts",
+      "summary": "Parses SKILL.md content, splitting YAML frontmatter from the Markdown body and mapping fields like allowed-tools into SkillProperties.",
+      "tags": ["parser", "frontmatter", "skills", "yaml"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/application/parser/SkillParser.ts:SkillParser",
+      "type": "class",
+      "name": "SkillParser",
+      "filePath": "packages/skills/src/application/parser/SkillParser.ts",
+      "lineRange": [20, 85],
+      "summary": "Parses SKILL.md frontmatter and body into a ParsedSkill, validating the frontmatter structure.",
+      "tags": ["parser", "frontmatter", "skills", "yaml"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/application/services/SkillFileService.ts",
+      "type": "file",
+      "name": "SkillFileService.ts",
+      "filePath": "packages/skills/src/application/services/SkillFileService.ts",
+      "summary": "Thin service over the skill file repository for looking up and bulk-adding files attached to skill versions.",
+      "tags": ["service", "repository-wrapper", "skills", "files"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/application/services/SkillFileService.ts:SkillFileService",
+      "type": "class",
+      "name": "SkillFileService",
+      "filePath": "packages/skills/src/application/services/SkillFileService.ts",
+      "lineRange": [7, 70],
+      "summary": "Service wrapping ISkillFileRepository for skill file lookup and bulk insertion.",
+      "tags": ["service", "repository-wrapper", "skills", "files"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/application/services/SkillService.ts",
+      "type": "file",
+      "name": "SkillService.ts",
+      "filePath": "packages/skills/src/application/services/SkillService.ts",
+      "summary": "Core skill entity service handling creation, slug lookup, space listing/counting, update, soft/hard delete, duplication to another space and move-marking.",
+      "tags": ["service", "skills", "crud", "persistence"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/skills/src/application/services/SkillService.ts:SkillService",
+      "type": "class",
+      "name": "SkillService",
+      "filePath": "packages/skills/src/application/services/SkillService.ts",
+      "lineRange": [51, 359],
+      "summary": "Service encapsulating skill entity persistence, slug generation, listing, deletion, duplication and move operations.",
+      "tags": ["service", "skills", "crud", "persistence"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/skills/src/application/services/SkillVersionService.ts",
+      "type": "file",
+      "name": "SkillVersionService.ts",
+      "filePath": "packages/skills/src/application/services/SkillVersionService.ts",
+      "summary": "Manages skill versions and their files: adding versions, fetching by id/number, latest versions and version listings.",
+      "tags": ["service", "versioning", "skills", "persistence"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/skills/src/application/services/SkillVersionService.ts:SkillVersionService",
+      "type": "class",
+      "name": "SkillVersionService",
+      "filePath": "packages/skills/src/application/services/SkillVersionService.ts",
+      "lineRange": [32, 258],
+      "summary": "Service managing skill version records and their files.",
+      "tags": ["service", "versioning", "skills", "persistence"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/skills/src/application/services/SkillsServices.ts",
+      "type": "file",
+      "name": "SkillsServices.ts",
+      "filePath": "packages/skills/src/application/services/SkillsServices.ts",
+      "summary": "Aggregate container that builds SkillService, SkillVersionService and SkillFileService from the skills repositories.",
+      "tags": ["service-registry", "factory", "dependency-injection", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/application/services/SkillsServices.ts:SkillsServices",
+      "type": "class",
+      "name": "SkillsServices",
+      "filePath": "packages/skills/src/application/services/SkillsServices.ts",
+      "lineRange": [7, 46],
+      "summary": "Container exposing the three skills services.",
+      "tags": ["service-registry", "factory", "dependency-injection", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts",
+      "type": "file",
+      "name": "CreateSkillUseCase.ts",
+      "filePath": "packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts",
+      "summary": "Space-member use case that creates a new skill and its initial version after checking space access, then emits a creation event.",
+      "tags": ["use-case", "skills", "create", "authorization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts:CreateSkillUseCase",
+      "type": "class",
+      "name": "CreateSkillUseCase",
+      "filePath": "packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts",
+      "lineRange": [25, 161],
+      "summary": "Use case class CreateSkillUseCase extending the Packmind member/space-member base use case; space-member use case that creates a new skill and its initial version after checking space access, then emits a creation event.",
+      "tags": ["use-case", "skills", "application-layer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts",
+      "type": "file",
+      "name": "DeleteSkillUseCase.ts",
+      "filePath": "packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts",
+      "summary": "Space-member use case that deletes a single skill and emits a deletion event, failing with SkillNotFoundError if absent.",
+      "tags": ["use-case", "skills", "delete", "events"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts:DeleteSkillUseCase",
+      "type": "class",
+      "name": "DeleteSkillUseCase",
+      "filePath": "packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts",
+      "lineRange": [23, 93],
+      "summary": "Use case class DeleteSkillUseCase extending the Packmind member/space-member base use case; space-member use case that deletes a single skill and emits a deletion event, failing with SkillNotFoundError if absent.",
+      "tags": ["use-case", "skills", "application-layer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts",
+      "type": "file",
+      "name": "DeleteSkillsBatchUseCase.ts",
+      "filePath": "packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts",
+      "summary": "Space-member use case that validates and deletes several skills in one call.",
+      "tags": ["use-case", "skills", "delete", "batch"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts:DeleteSkillsBatchUseCase",
+      "type": "class",
+      "name": "DeleteSkillsBatchUseCase",
+      "filePath": "packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts",
+      "lineRange": [24, 106],
+      "summary": "Use case class DeleteSkillsBatchUseCase extending the Packmind member/space-member base use case; space-member use case that validates and deletes several skills in one call.",
+      "tags": ["use-case", "skills", "application-layer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts",
+      "type": "file",
+      "name": "FindSkillBySlugUseCase.ts",
+      "filePath": "packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts",
+      "summary": "Member use case that resolves a skill by its slug within an accessible space.",
+      "tags": ["use-case", "skills", "lookup", "slug"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts:FindSkillBySlugUseCase",
+      "type": "class",
+      "name": "FindSkillBySlugUseCase",
+      "filePath": "packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts",
+      "lineRange": [18, 80],
+      "summary": "Use case class FindSkillBySlugUseCase extending the Packmind member/space-member base use case; member use case that resolves a skill by its slug within an accessible space.",
+      "tags": ["use-case", "skills", "application-layer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "type": "file",
+      "name": "GetLatestSkillVersionUseCase.ts",
+      "filePath": "packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "summary": "Member use case returning the latest version of a skill after verifying space ownership.",
+      "tags": ["use-case", "skills", "versioning", "query"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts:GetLatestSkillVersionUseCase",
+      "type": "class",
+      "name": "GetLatestSkillVersionUseCase",
+      "filePath": "packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "lineRange": [19, 78],
+      "summary": "Use case class GetLatestSkillVersionUseCase extending the Packmind member/space-member base use case; member use case returning the latest version of a skill after verifying space ownership.",
+      "tags": ["use-case", "skills", "application-layer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts",
+      "type": "file",
+      "name": "GetSkillByIdUseCase.ts",
+      "filePath": "packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts",
+      "summary": "Space-member use case fetching a skill by id and ensuring it belongs to the requested space.",
+      "tags": ["use-case", "skills", "query", "authorization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts:GetSkillByIdUseCase",
+      "type": "class",
+      "name": "GetSkillByIdUseCase",
+      "filePath": "packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts",
+      "lineRange": [18, 60],
+      "summary": "Use case class GetSkillByIdUseCase extending the Packmind member/space-member base use case; space-member use case fetching a skill by id and ensuring it belongs to the requested space.",
+      "tags": ["use-case", "skills", "application-layer"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/skills/src/SkillsHexa.ts",
+      "target": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/SkillsHexa.ts",
+      "target": "file:packages/skills/src/application/services/SkillsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/SkillsHexa.ts",
+      "target": "file:packages/skills/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/SkillsHexa.ts",
+      "target": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/SkillsHexa.ts",
+      "target": "class:packages/skills/src/SkillsHexa.ts:SkillsHexa",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/SkillsHexa.ts",
+      "target": "class:packages/skills/src/SkillsHexa.ts:SkillsHexa",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/services/SkillsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/getSkillWithFiles/GetSkillWithFilesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/listSkillVersions/ListSkillVersionsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/listSkillsBySpace/ListSkillsBySpaceUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/saveSkillVersion/SaveSkillVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/updateSkillFileFromUI/UpdateSkillFileFromUIUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/application/useCases/uploadSkill/UploadSkillUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/adapter/SkillsAdapter.ts",
+      "target": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/parser/SkillParser.ts",
+      "target": "file:packages/skills/src/domain/SkillProperties.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/parser/SkillParser.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillParseError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/parser/SkillParser.ts",
+      "target": "class:packages/skills/src/application/parser/SkillParser.ts:SkillParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/parser/SkillParser.ts",
+      "target": "class:packages/skills/src/application/parser/SkillParser.ts:SkillParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillFileService.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillFileService.ts",
+      "target": "class:packages/skills/src/application/services/SkillFileService.ts:SkillFileService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillFileService.ts",
+      "target": "class:packages/skills/src/application/services/SkillFileService.ts:SkillFileService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillService.ts",
+      "target": "file:packages/skills/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillService.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillService.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillService.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillService.ts",
+      "target": "class:packages/skills/src/application/services/SkillService.ts:SkillService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillService.ts",
+      "target": "class:packages/skills/src/application/services/SkillService.ts:SkillService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillVersionService.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillVersionService.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillVersionService.ts",
+      "target": "class:packages/skills/src/application/services/SkillVersionService.ts:SkillVersionService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillVersionService.ts",
+      "target": "class:packages/skills/src/application/services/SkillVersionService.ts:SkillVersionService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillsServices.ts",
+      "target": "file:packages/skills/src/application/services/SkillFileService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillsServices.ts",
+      "target": "file:packages/skills/src/application/services/SkillService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillsServices.ts",
+      "target": "file:packages/skills/src/application/services/SkillVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillsServices.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillsServices.ts",
+      "target": "class:packages/skills/src/application/services/SkillsServices.ts:SkillsServices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/services/SkillsServices.ts",
+      "target": "class:packages/skills/src/application/services/SkillsServices.ts:SkillsServices",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts",
+      "target": "file:packages/skills/src/application/services/SkillService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts",
+      "target": "file:packages/skills/src/application/services/SkillVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts:CreateSkillUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts:CreateSkillUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts",
+      "target": "file:packages/skills/src/application/services/SkillService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts:DeleteSkillUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts:DeleteSkillUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts",
+      "target": "file:packages/skills/src/application/services/SkillService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts:DeleteSkillsBatchUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts:DeleteSkillsBatchUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts",
+      "target": "file:packages/skills/src/application/services/SkillService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts:FindSkillBySlugUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts:FindSkillBySlugUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "target": "file:packages/skills/src/application/services/SkillService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "target": "file:packages/skills/src/application/services/SkillVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "target": "file:packages/skills/src/domain/useCases/IGetLatestSkillVersion.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts:GetLatestSkillVersionUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts:GetLatestSkillVersionUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts",
+      "target": "file:packages/skills/src/application/services/SkillService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts:GetSkillByIdUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts",
+      "target": "class:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts:GetSkillByIdUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/skills/src/SkillsHexa.ts:SkillsHexa",
+      "target": "class:packages/skills/src/infra/repositories/SkillsRepositories.ts:SkillsRepositories",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts:CreateSkillUseCase",
+      "target": "class:packages/skills/src/application/services/SkillService.ts:SkillService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts:CreateSkillUseCase",
+      "target": "class:packages/skills/src/application/services/SkillVersionService.ts:SkillVersionService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts:CreateSkillUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts:DeleteSkillUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts:DeleteSkillsBatchUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts:FindSkillBySlugUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/getLatestSkillVersion/GetLatestSkillVersionUseCase.ts:GetLatestSkillVersionUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts:GetSkillByIdUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/getSkillVersion/GetSkillVersionUseCase.ts:GetSkillVersionUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/getSkillWithFiles/GetSkillWithFilesUseCase.ts:GetSkillWithFilesUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/listSkillVersions/ListSkillVersionsUseCase.ts:ListSkillVersionsUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/listSkillsBySpace/ListSkillsBySpaceUseCase.ts:ListSkillsBySpaceUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/saveSkillVersion/SaveSkillVersionUseCase.ts:SaveSkillVersionUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/updateSkill/UpdateSkillUseCase.ts:UpdateSkillUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/updateSkillFileFromUI/UpdateSkillFileFromUIUseCase.ts:UpdateSkillFileFromUIUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/adapter/SkillsAdapter.ts:SkillsAdapter",
+      "target": "class:packages/skills/src/application/useCases/uploadSkill/UploadSkillUseCase.ts:UploadSkillUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/useCases/createSkill/CreateSkillUseCase.ts:CreateSkillUseCase",
+      "target": "class:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts:SkillSpaceNotAccessibleError",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/useCases/findSkillBySlug/FindSkillBySlugUseCase.ts:FindSkillBySlugUseCase",
+      "target": "class:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts:SkillSpaceNotAccessibleError",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/useCases/getSkillById/GetSkillByIdUseCase.ts:GetSkillByIdUseCase",
+      "target": "class:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts:SkillSpaceNotAccessibleError",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/useCases/deleteSkill/DeleteSkillUseCase.ts:DeleteSkillUseCase",
+      "target": "class:packages/skills/src/domain/errors/SkillNotFoundError.ts:SkillNotFoundError",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/useCases/deleteSkillsBatch/DeleteSkillsBatchUseCase.ts:DeleteSkillsBatchUseCase",
+      "target": "class:packages/skills/src/domain/errors/SkillNotFoundError.ts:SkillNotFoundError",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/application/parser/SkillParser.ts:SkillParser",
+      "target": "class:packages/skills/src/domain/errors/SkillParseError.ts:SkillParseError",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

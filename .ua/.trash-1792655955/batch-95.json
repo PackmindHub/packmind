@@ -1,0 +1,112 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/coding-agent/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "packages/coding-agent/CLAUDE.md",
+      "summary": "Developer guide to the coding-agent package: explains the CodingAgentDeployerRegistry mapping CodingAgent keys to deployer folders, non-registry helper folders (generic section writers, default skill deployers, Copilot plugin), and the compiler-enforced versus silent steps for adding a new agent.",
+      "tags": [
+        "documentation",
+        "coding-agent",
+        "deployer-registry",
+        "extension-guide",
+        "ai-agent-instructions"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:packages/coding-agent/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/coding-agent/README.md",
+      "summary": "Nx-generated README for the coding-agent library with build and unit test instructions.",
+      "tags": ["documentation", "coding-agent", "overview"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/coding-agent/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/coding-agent/package.json",
+      "summary": "Package manifest for @packmind/coding-agent, depending on logger, node-utils, commands, skills, standards and types workspace packages plus adm-zip, archiver, semver, yaml and typeorm for rendering and packaging agent files.",
+      "tags": [
+        "configuration",
+        "package-manifest",
+        "dependencies",
+        "coding-agent"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/coding-agent/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/coding-agent/project.json",
+      "summary": "Nx project definition for coding-agent with an SWC build target and a typecheck override covering spec files.",
+      "tags": [
+        "configuration",
+        "nx",
+        "build-system",
+        "typecheck",
+        "coding-agent"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/coding-agent/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/coding-agent/tsconfig.json",
+      "summary": "Root TypeScript config for the coding-agent package referencing lib and spec tsconfigs.",
+      "tags": ["configuration", "typescript", "build-system", "coding-agent"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/coding-agent/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/coding-agent/tsconfig.lib.json",
+      "summary": "TypeScript library compilation settings for coding-agent sources excluding tests.",
+      "tags": ["configuration", "typescript", "build-system", "coding-agent"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/coding-agent/tsconfig.json",
+      "target": "config:packages/coding-agent/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/coding-agent/project.json",
+      "target": "config:packages/coding-agent/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/coding-agent/project.json",
+      "target": "config:packages/coding-agent/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/coding-agent/README.md",
+      "target": "config:packages/coding-agent/project.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/coding-agent/CLAUDE.md",
+      "target": "document:packages/coding-agent/README.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

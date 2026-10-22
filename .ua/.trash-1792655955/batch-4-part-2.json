@@ -1,0 +1,819 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "type": "file",
+      "name": "AddArtefactsToPackageUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "summary": "Space-member use case adding standards, commands and skills to a package, checking space membership of artefacts and placement conflicts with other packages, then notifying space content changes.",
+      "tags": [
+        "use-case",
+        "package",
+        "artefact-management",
+        "validation",
+        "event-emission"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts:AddArtefactsToPackageUseCase",
+      "type": "class",
+      "name": "AddArtefactsToPackageUseCase",
+      "filePath": "packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "lineRange": [36, 283],
+      "summary": "Adds artefacts to a package after validating space ownership and detecting conflicting placements in other packages.",
+      "tags": ["use-case", "package", "artefact-management", "validation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "type": "file",
+      "name": "CreatePackageUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "summary": "Space-member use case creating a new package with initial artefacts, validating artefact ownership and package placement conflicts and notifying listeners.",
+      "tags": ["use-case", "package", "creation", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts:CreatePackageUseCase",
+      "type": "class",
+      "name": "CreatePackageUseCase",
+      "filePath": "packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "lineRange": [33, 213],
+      "summary": "Creates a package in a space with validated artefact selection and emits content-change notifications.",
+      "tags": ["use-case", "package", "creation", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "type": "file",
+      "name": "CreatePackageReleaseUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "summary": "Space-member use case cutting a new immutable package release, snapshotting pinned component versions and refusing releases when components have no version or nothing changed.",
+      "tags": ["use-case", "package-release", "versioning", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts:CreatePackageReleaseUseCase",
+      "type": "class",
+      "name": "CreatePackageReleaseUseCase",
+      "filePath": "packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "lineRange": [40, 188],
+      "summary": "Resolves the next release version and component snapshot, persists the release and handles unique-violation races.",
+      "tags": ["use-case", "package-release", "versioning", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts",
+      "type": "file",
+      "name": "DeletePackagesBatchUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts",
+      "summary": "Use case deleting several packages in one call and notifying space content listeners of the deletions.",
+      "tags": ["use-case", "package", "deletion", "batch"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts:DeletePackagesBatchUseCase",
+      "type": "class",
+      "name": "DeletePackagesBatchUseCase",
+      "filePath": "packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts",
+      "lineRange": [20, 95],
+      "summary": "Deletes a batch of packages after verifying they exist, then notifies content changes.",
+      "tags": ["use-case", "package", "deletion", "batch"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/getDashboardKpi/GetDashboardKpiUseCase.ts",
+      "type": "file",
+      "name": "GetDashboardKpiUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/getDashboardKpi/GetDashboardKpiUseCase.ts",
+      "summary": "Use case computing dashboard KPIs (counts of deployed artifacts and targets) for a space from the distribution repository.",
+      "tags": ["use-case", "dashboard", "kpi", "query"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/getDashboardKpi/GetDashboardKpiUseCase.ts:GetDashboardKpiUseCase",
+      "type": "class",
+      "name": "GetDashboardKpiUseCase",
+      "filePath": "packages/deployments/src/application/useCases/getDashboardKpi/GetDashboardKpiUseCase.ts",
+      "lineRange": [14, 62],
+      "summary": "Aggregates dashboard KPI figures from distribution data.",
+      "tags": ["use-case", "dashboard", "kpi", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/getDashboardNonLive/GetDashboardNonLiveUseCase.ts",
+      "type": "file",
+      "name": "GetDashboardNonLiveUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/getDashboardNonLive/GetDashboardNonLiveUseCase.ts",
+      "summary": "Use case listing standards, commands and skills in a space that have never been deployed (non-live) by comparing space artifacts with deployed artifact IDs.",
+      "tags": ["use-case", "dashboard", "query", "analytics"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/getDashboardNonLive/GetDashboardNonLiveUseCase.ts:GetDashboardNonLiveUseCase",
+      "type": "class",
+      "name": "GetDashboardNonLiveUseCase",
+      "filePath": "packages/deployments/src/application/useCases/getDashboardNonLive/GetDashboardNonLiveUseCase.ts",
+      "lineRange": [16, 78],
+      "summary": "Fetches space artifacts through ports and filters out those already deployed.",
+      "tags": ["use-case", "dashboard", "query", "analytics"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/getPackageById/GetPackageByIdUseCase.ts",
+      "type": "file",
+      "name": "GetPackageByIdUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/getPackageById/GetPackageByIdUseCase.ts",
+      "summary": "Space-member use case returning a single package with its artefacts by ID.",
+      "tags": ["use-case", "package", "query"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/getPackageById/GetPackageByIdUseCase.ts:GetPackageByIdUseCase",
+      "type": "class",
+      "name": "GetPackageByIdUseCase",
+      "filePath": "packages/deployments/src/application/useCases/getPackageById/GetPackageByIdUseCase.ts",
+      "lineRange": [18, 67],
+      "summary": "Loads a package by ID within a space, throwing when not found.",
+      "tags": ["use-case", "package", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts",
+      "type": "file",
+      "name": "GetPackageReleaseUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts",
+      "summary": "Space-member use case returning a specific package release by package and version.",
+      "tags": ["use-case", "package-release", "query"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts:GetPackageReleaseUseCase",
+      "type": "class",
+      "name": "GetPackageReleaseUseCase",
+      "filePath": "packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts",
+      "lineRange": [19, 62],
+      "summary": "Loads a package release, throwing when the package or release is missing.",
+      "tags": ["use-case", "package-release", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/getPackageSummary/GetPackageSummaryUseCase.ts",
+      "type": "file",
+      "name": "GetPackageSummaryUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/getPackageSummary/GetPackageSummaryUseCase.ts",
+      "summary": "Member use case returning a summarized view of a package (name, description, command/standard/skill names) looked up by slug, optionally scoped to a space.",
+      "tags": ["use-case", "package", "query", "cli-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/getPackageSummary/GetPackageSummaryUseCase.ts:GetPackageSummaryUseCase",
+      "type": "class",
+      "name": "GetPackageSummaryUseCase",
+      "filePath": "packages/deployments/src/application/useCases/getPackageSummary/GetPackageSummaryUseCase.ts",
+      "lineRange": [15, 79],
+      "summary": "Resolves a package by slug and maps its artefacts to summarized entries.",
+      "tags": ["use-case", "package", "query", "cli-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "type": "file",
+      "name": "ListPackageReleasesUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "summary": "Space-member use case listing a package's releases newest-first, computing release-gate snapshots and the components that are outdated relative to the latest artefact versions.",
+      "tags": ["use-case", "package-release", "query", "versioning"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:ListPackageReleasesUseCase",
+      "type": "class",
+      "name": "ListPackageReleasesUseCase",
+      "filePath": "packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "lineRange": [183, 270],
+      "summary": "Lists releases of a package and annotates them with gate state and outdated components.",
+      "tags": ["use-case", "package-release", "query", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:byVersionDescending",
+      "type": "function",
+      "name": "byVersionDescending",
+      "filePath": "packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "lineRange": [39, 51],
+      "summary": "Comparator sorting package releases by version, newest first.",
+      "tags": ["helper", "utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:pinnedByComponent",
+      "type": "function",
+      "name": "pinnedByComponent",
+      "filePath": "packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "lineRange": [72, 100],
+      "summary": "Indexes a release's pinned component versions by component.",
+      "tags": ["helper", "utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:toGateSnapshot",
+      "type": "function",
+      "name": "toGateSnapshot",
+      "filePath": "packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "lineRange": [102, 148],
+      "summary": "Builds a release-gate snapshot from the package and its latest release.",
+      "tags": ["helper", "utility", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:findOutdatedComponents",
+      "type": "function",
+      "name": "findOutdatedComponents",
+      "filePath": "packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "lineRange": [154, 181],
+      "summary": "Finds release components whose pinned version lags behind the latest artefact version.",
+      "tags": ["helper", "utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/listPackages/ListPackagesUseCase.ts",
+      "type": "file",
+      "name": "ListPackagesUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/listPackages/ListPackagesUseCase.ts",
+      "summary": "Member use case listing all packages of an organization.",
+      "tags": ["use-case", "package", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/listPackages/ListPackagesUseCase.ts:ListPackagesUseCase",
+      "type": "class",
+      "name": "ListPackagesUseCase",
+      "filePath": "packages/deployments/src/application/useCases/listPackages/ListPackagesUseCase.ts",
+      "lineRange": [13, 52],
+      "summary": "Returns organization packages via the package service.",
+      "tags": ["use-case", "package", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/listPackagesBySpace/ListPackagesBySpaceUseCase.ts",
+      "type": "file",
+      "name": "ListPackagesBySpaceUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/listPackagesBySpace/ListPackagesBySpaceUseCase.ts",
+      "summary": "Space-member use case listing packages belonging to a space.",
+      "tags": ["use-case", "package", "query", "space"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/listPackagesBySpace/ListPackagesBySpaceUseCase.ts:ListPackagesBySpaceUseCase",
+      "type": "class",
+      "name": "ListPackagesBySpaceUseCase",
+      "filePath": "packages/deployments/src/application/useCases/listPackagesBySpace/ListPackagesBySpaceUseCase.ts",
+      "lineRange": [18, 72],
+      "summary": "Returns packages of an accessible space.",
+      "tags": ["use-case", "package", "query", "space"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts:AddArtefactsToPackageUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts:AddArtefactsToPackageUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/SpaceContentNotifier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageReloadFailedError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts:AddArtefactsToPackageUseCase",
+      "target": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:placementKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/addArtefactsToPackage/AddArtefactsToPackageUseCase.ts:AddArtefactsToPackageUseCase",
+      "target": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:findPlacementConflicts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts:CreatePackageUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts:CreatePackageUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/SpaceContentNotifier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts:CreatePackageUseCase",
+      "target": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:placementKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/createPackage/CreatePackageUseCase.ts:CreatePackageUseCase",
+      "target": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:findPlacementConflicts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts:CreatePackageReleaseUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts:CreatePackageReleaseUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/SpaceContentNotifier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/packageReleaseResolution.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageReleaseRefusedError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts:CreatePackageReleaseUseCase",
+      "target": "function:packages/deployments/src/application/services/packageReleaseResolution.ts:resolveLatestComponentVersions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts:CreatePackageReleaseUseCase",
+      "target": "function:packages/deployments/src/application/services/packageReleaseResolution.ts:currentVersionOf",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/createPackageRelease/CreatePackageReleaseUseCase.ts:CreatePackageReleaseUseCase",
+      "target": "function:packages/deployments/src/application/services/packageReleaseResolution.ts:toPackageReleaseVersionIds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts:DeletePackagesBatchUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts:DeletePackagesBatchUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/PackageService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/SpaceContentNotifier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/deletePackage/DeletePackagesBatchUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getDashboardKpi/GetDashboardKpiUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/getDashboardKpi/GetDashboardKpiUseCase.ts:GetDashboardKpiUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getDashboardKpi/GetDashboardKpiUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/getDashboardKpi/GetDashboardKpiUseCase.ts:GetDashboardKpiUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getDashboardKpi/GetDashboardKpiUseCase.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getDashboardNonLive/GetDashboardNonLiveUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/getDashboardNonLive/GetDashboardNonLiveUseCase.ts:GetDashboardNonLiveUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getDashboardNonLive/GetDashboardNonLiveUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/getDashboardNonLive/GetDashboardNonLiveUseCase.ts:GetDashboardNonLiveUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getDashboardNonLive/GetDashboardNonLiveUseCase.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageById/GetPackageByIdUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/getPackageById/GetPackageByIdUseCase.ts:GetPackageByIdUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageById/GetPackageByIdUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/getPackageById/GetPackageByIdUseCase.ts:GetPackageByIdUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageById/GetPackageByIdUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageById/GetPackageByIdUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts:GetPackageReleaseUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts:GetPackageReleaseUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageRelease/GetPackageReleaseUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageSummary/GetPackageSummaryUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/getPackageSummary/GetPackageSummaryUseCase.ts:GetPackageSummaryUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageSummary/GetPackageSummaryUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/getPackageSummary/GetPackageSummaryUseCase.ts:GetPackageSummaryUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageSummary/GetPackageSummaryUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/getPackageSummary/GetPackageSummaryUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackagesNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:ListPackageReleasesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:ListPackageReleasesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "target": "function:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:byVersionDescending",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "target": "function:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:pinnedByComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "target": "function:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:toGateSnapshot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "target": "function:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:findOutdatedComponents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/packageReleaseResolution.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:ListPackageReleasesUseCase",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:evaluatePackageReleaseGate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:ListPackageReleasesUseCase",
+      "target": "function:packages/deployments/src/application/services/packageReleaseResolution.ts:resolveLatestComponentVersions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/listPackageReleases/ListPackageReleasesUseCase.ts:ListPackageReleasesUseCase",
+      "target": "function:packages/deployments/src/application/services/packageReleaseResolution.ts:currentVersionOf",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackages/ListPackagesUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/listPackages/ListPackagesUseCase.ts:ListPackagesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackages/ListPackagesUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/listPackages/ListPackagesUseCase.ts:ListPackagesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackages/ListPackagesUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackagesBySpace/ListPackagesBySpaceUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/listPackagesBySpace/ListPackagesBySpaceUseCase.ts:ListPackagesBySpaceUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackagesBySpace/ListPackagesBySpaceUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/listPackagesBySpace/ListPackagesBySpaceUseCase.ts:ListPackagesBySpaceUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackagesBySpace/ListPackagesBySpaceUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/listPackagesBySpace/ListPackagesBySpaceUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

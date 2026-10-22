@@ -1,0 +1,556 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/commands/src/domain/jobs/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/commands/src/domain/jobs/index.ts",
+      "summary": "Barrel re-exporting the commands deployment job definitions and the delayed-jobs interface.",
+      "tags": ["barrel", "jobs", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/commands/src/index.ts",
+      "summary": "Public entry point of the commands package, exporting CommandsHexa, errors, job definitions, schemas, and the DeployCommandsCallback.",
+      "tags": ["entry-point", "barrel", "commands", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/test/commandFactory.ts",
+      "type": "file",
+      "name": "commandFactory.ts",
+      "filePath": "packages/commands/test/commandFactory.ts",
+      "summary": "Test factory producing Command fixtures with random IDs and overridable fields.",
+      "tags": ["test", "factory", "fixture", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/commands/test/commandFactory.ts:commandFactory",
+      "type": "function",
+      "name": "commandFactory",
+      "filePath": "packages/commands/test/commandFactory.ts",
+      "lineRange": [10, 22],
+      "summary": "Builds a Command test fixture with generated command, user, and space IDs, merging any partial overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/test/commandVersionFactory.ts",
+      "type": "file",
+      "name": "commandVersionFactory.ts",
+      "filePath": "packages/commands/test/commandVersionFactory.ts",
+      "summary": "Test factory producing CommandVersion fixtures by randomly picking one of several realistic sample command versions.",
+      "tags": ["test", "factory", "fixture", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/commands/test/commandVersionFactory.ts:commandVersionFactory",
+      "type": "function",
+      "name": "commandVersionFactory",
+      "filePath": "packages/commands/test/commandVersionFactory.ts",
+      "lineRange": [9, 89],
+      "summary": "Returns a random sample CommandVersion (e.g. TDD guide) with generated IDs, merged with partial overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/commands/test/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/commands/test/index.ts",
+      "summary": "Barrel re-exporting the commands test factories.",
+      "tags": ["barrel", "test", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/deployments/.swcrc",
+      "type": "config",
+      "name": ".swcrc",
+      "filePath": "packages/deployments/.swcrc",
+      "summary": "SWC compiler config for the @packmind/deployments package: TypeScript parser without decorators, ES2022 target, CommonJS modules, source maps, and preserved class names.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/deployments/src/domain/errors/index.ts",
+      "summary": "Barrel re-exporting the deployments domain errors covering packages, releases, targets, render modes, artifacts, and spaces.",
+      "tags": ["barrel", "error-handling", "deployments", "domain"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/deployments/src/index.ts",
+      "summary": "Public entry point of the deployments package, exporting DeploymentsHexa, schemas, errors, and package slug and release-gate helpers.",
+      "tags": ["entry-point", "barrel", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/test/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/deployments/test/index.ts",
+      "summary": "Barrel re-exporting the deployments test factories (packages, targets, distributions, overviews, render mode configurations).",
+      "tags": ["barrel", "test", "factory", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/test/packageFactory.ts",
+      "type": "file",
+      "name": "packageFactory.ts",
+      "filePath": "packages/deployments/test/packageFactory.ts",
+      "summary": "Test factory producing empty Package fixtures with generated IDs.",
+      "tags": ["test", "factory", "fixture", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/test/packageFactory.ts:packageFactory",
+      "type": "function",
+      "name": "packageFactory",
+      "filePath": "packages/deployments/test/packageFactory.ts",
+      "lineRange": [10, 23],
+      "summary": "Builds a Package test fixture with generated package, space, and user IDs and empty recipe/standard/skill lists, merging overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/test/renderModeConfigurationFactory.ts",
+      "type": "file",
+      "name": "renderModeConfigurationFactory.ts",
+      "filePath": "packages/deployments/test/renderModeConfigurationFactory.ts",
+      "summary": "Test factory producing RenderModeConfiguration fixtures using the default active render modes.",
+      "tags": ["test", "factory", "fixture", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/test/renderModeConfigurationFactory.ts:renderModeConfigurationFactory",
+      "type": "function",
+      "name": "renderModeConfigurationFactory",
+      "filePath": "packages/deployments/test/renderModeConfigurationFactory.ts",
+      "lineRange": [10, 19],
+      "summary": "Builds a RenderModeConfiguration fixture with generated IDs and DEFAULT_ACTIVE_RENDER_MODES, merging overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/feature-flags/.swcrc",
+      "type": "config",
+      "name": ".swcrc",
+      "filePath": "packages/feature-flags/.swcrc",
+      "summary": "SWC compiler config for the @packmind/feature-flags package: TypeScript parser without decorators, ES2022 target, CommonJS modules, source maps, and preserved class names.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/feature-flags/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/feature-flags/src/index.ts",
+      "summary": "Entry point of the feature-flags package re-exporting the flag registry and the evaluation function.",
+      "tags": ["entry-point", "barrel", "feature-flags"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "type": "file",
+      "name": "isFeatureFlagEnabled.ts",
+      "filePath": "packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "summary": "Pure, browser-safe feature-flag evaluation shared by frontend and backend: decides whether a user email matches any allowed domain, exact email, or the every-account wildcard for the requested flags.",
+      "tags": ["feature-flags", "utility", "validation", "shared"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:extractDomainFromEmail",
+      "type": "function",
+      "name": "extractDomainFromEmail",
+      "filePath": "packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "lineRange": [37, 50],
+      "summary": "Extracts and normalizes the @domain part of an email, returning null when malformed.",
+      "tags": ["utility", "email", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isEntryAllowedForUser",
+      "type": "function",
+      "name": "isEntryAllowedForUser",
+      "filePath": "packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "lineRange": [52, 68],
+      "summary": "Checks one allow-list entry (wildcard, exact email, or domain) against the user email and domain.",
+      "tags": ["feature-flags", "validation", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isFeatureAllowedForUser",
+      "type": "function",
+      "name": "isFeatureAllowedForUser",
+      "filePath": "packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "lineRange": [70, 90],
+      "summary": "Returns whether any allow-list entry registered for a feature key grants access to the user.",
+      "tags": ["feature-flags", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isFeatureFlagEnabled",
+      "type": "function",
+      "name": "isFeatureFlagEnabled",
+      "filePath": "packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "lineRange": [92, 116],
+      "summary": "Main feature-flag decision: true when no keys are requested, false without an email, otherwise true if any key is allowed for the user.",
+      "tags": ["feature-flags", "entry-point", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/feature-flags/src/registry.ts",
+      "type": "file",
+      "name": "registry.ts",
+      "filePath": "packages/feature-flags/src/registry.ts",
+      "summary": "Feature-flag registry declaring known flag keys (change proposals, org space management, plugin-first navigation) and the default map of allowed email domains per flag.",
+      "tags": ["feature-flags", "config", "registry", "constants"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/frontend/.swcrc",
+      "type": "config",
+      "name": ".swcrc",
+      "filePath": "packages/frontend/.swcrc",
+      "summary": "SWC compiler config for the @packmind/frontend package: TypeScript parser without decorators, ES2022 target, CommonJS modules, source maps, and preserved class names.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/account/components/ActivationFormDataTestIds.ts",
+      "type": "file",
+      "name": "ActivationFormDataTestIds.ts",
+      "filePath": "packages/frontend/src/domains/account/components/ActivationFormDataTestIds.ts",
+      "summary": "Enum of data-testid values for the account activation form, shared with the e2e test suite.",
+      "tags": ["test-ids", "e2e", "constants", "account"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/account/components/CliAuthenticationDataTestIds.ts",
+      "type": "file",
+      "name": "CliAuthenticationDataTestIds.ts",
+      "filePath": "packages/frontend/src/domains/account/components/CliAuthenticationDataTestIds.ts",
+      "summary": "Enum of data-testid values for the CLI authentication panel (login command tab, environment variable tab, API key generation), shared with the e2e test suite.",
+      "tags": ["test-ids", "e2e", "constants", "account"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/account/components/SidebarAccountsMenuDataTestIds.ts",
+      "type": "file",
+      "name": "SidebarAccountsMenuDataTestIds.ts",
+      "filePath": "packages/frontend/src/domains/account/components/SidebarAccountsMenuDataTestIds.ts",
+      "summary": "Enum of data-testid values for the sidebar accounts menu, shared with the e2e test suite.",
+      "tags": ["test-ids", "e2e", "constants", "account"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/account/components/SignUpOptionsDataTestIds.ts",
+      "type": "file",
+      "name": "SignUpOptionsDataTestIds.ts",
+      "filePath": "packages/frontend/src/domains/account/components/SignUpOptionsDataTestIds.ts",
+      "summary": "Enum of data-testid values for the sign-up options screen, shared with the e2e test suite.",
+      "tags": ["test-ids", "e2e", "constants", "account"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/account/components/SignUpWithOrganizationFormDataTestIds.ts",
+      "type": "file",
+      "name": "SignUpWithOrganizationFormDataTestIds.ts",
+      "filePath": "packages/frontend/src/domains/account/components/SignUpWithOrganizationFormDataTestIds.ts",
+      "summary": "Enum of data-testid values for the sign-up with organization form, shared with the e2e test suite.",
+      "tags": ["test-ids", "e2e", "constants", "account"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/account/components/UsersPageDataTestIds.ts",
+      "type": "file",
+      "name": "UsersPageDataTestIds.ts",
+      "filePath": "packages/frontend/src/domains/account/components/UsersPageDataTestIds.ts",
+      "summary": "Enum of data-testid values for the organization users page, shared with the e2e test suite.",
+      "tags": ["test-ids", "e2e", "constants", "account"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/account/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/frontend/src/domains/account/components/index.ts",
+      "summary": "Barrel re-exporting all account-domain data-testid enums.",
+      "tags": ["barrel", "test-ids", "account"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/account/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/frontend/src/domains/account/index.ts",
+      "summary": "Entry point of the frontend account domain re-exporting its components barrel.",
+      "tags": ["barrel", "entry-point", "account"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/deployments/components/DeploymentsHistoryDataTestIds.ts",
+      "type": "file",
+      "name": "DeploymentsHistoryDataTestIds.ts",
+      "filePath": "packages/frontend/src/domains/deployments/components/DeploymentsHistoryDataTestIds.ts",
+      "summary": "Enum of named data-testid values for the distribution history table (destination, status, package version) read by e2e tests instead of column indices.",
+      "tags": ["test-ids", "e2e", "constants", "deployments"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/commands/src/index.ts",
+      "target": "file:packages/commands/src/domain/jobs/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/commands/test/commandFactory.ts",
+      "target": "function:packages/commands/test/commandFactory.ts:commandFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/test/commandFactory.ts",
+      "target": "function:packages/commands/test/commandFactory.ts:commandFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/test/commandVersionFactory.ts",
+      "target": "function:packages/commands/test/commandVersionFactory.ts:commandVersionFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/test/commandVersionFactory.ts",
+      "target": "function:packages/commands/test/commandVersionFactory.ts:commandVersionFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/test/index.ts",
+      "target": "file:packages/commands/test/commandFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/commands/test/index.ts",
+      "target": "file:packages/commands/test/commandVersionFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/deployments/.swcrc",
+      "target": "file:packages/deployments/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/deployments/src/index.ts",
+      "target": "file:packages/deployments/src/domain/errors/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/deployments/test/index.ts",
+      "target": "file:packages/deployments/test/packageFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/deployments/test/index.ts",
+      "target": "file:packages/deployments/test/renderModeConfigurationFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/deployments/test/packageFactory.ts",
+      "target": "function:packages/deployments/test/packageFactory.ts:packageFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/test/packageFactory.ts",
+      "target": "function:packages/deployments/test/packageFactory.ts:packageFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/test/renderModeConfigurationFactory.ts",
+      "target": "function:packages/deployments/test/renderModeConfigurationFactory.ts:renderModeConfigurationFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/test/renderModeConfigurationFactory.ts",
+      "target": "function:packages/deployments/test/renderModeConfigurationFactory.ts:renderModeConfigurationFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "config:packages/feature-flags/.swcrc",
+      "target": "file:packages/feature-flags/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/feature-flags/src/index.ts",
+      "target": "file:packages/feature-flags/src/registry.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/feature-flags/src/index.ts",
+      "target": "file:packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "target": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:extractDomainFromEmail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "target": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isEntryAllowedForUser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "target": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isFeatureAllowedForUser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "target": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isFeatureFlagEnabled",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "target": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isFeatureFlagEnabled",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isFeatureFlagEnabled",
+      "target": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isFeatureAllowedForUser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isFeatureFlagEnabled",
+      "target": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:extractDomainFromEmail",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isFeatureAllowedForUser",
+      "target": "function:packages/feature-flags/src/isFeatureFlagEnabled.ts:isEntryAllowedForUser",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/feature-flags/src/registry.ts",
+      "target": "file:packages/feature-flags/src/isFeatureFlagEnabled.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/frontend/src/domains/account/components/index.ts",
+      "target": "file:packages/frontend/src/domains/account/components/ActivationFormDataTestIds.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/account/components/index.ts",
+      "target": "file:packages/frontend/src/domains/account/components/CliAuthenticationDataTestIds.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/account/components/index.ts",
+      "target": "file:packages/frontend/src/domains/account/components/SidebarAccountsMenuDataTestIds.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/account/components/index.ts",
+      "target": "file:packages/frontend/src/domains/account/components/SignUpOptionsDataTestIds.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/account/components/index.ts",
+      "target": "file:packages/frontend/src/domains/account/components/SignUpWithOrganizationFormDataTestIds.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/account/components/index.ts",
+      "target": "file:packages/frontend/src/domains/account/components/UsersPageDataTestIds.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/account/index.ts",
+      "target": "file:packages/frontend/src/domains/account/components/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/frontend/.swcrc",
+      "target": "file:packages/frontend/src/domains/account/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

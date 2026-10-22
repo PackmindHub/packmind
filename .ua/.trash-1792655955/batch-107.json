@@ -1,0 +1,119 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/skills/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/skills/README.md",
+      "summary": "Brief Nx-generated README for the skills library, noting it implements skill domain logic, persistence schemas and the SkillsHexa entry point, with build and test commands.",
+      "tags": ["documentation", "readme", "nx", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/skills/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/skills/package.json",
+      "summary": "Package manifest for the private @packmind/skills workspace library (domain logic and persistence for playbook skills), a CommonJS package depending on @packmind/accounts, logger, node-utils, spaces, types, TypeORM, uuid and slug.",
+      "tags": [
+        "configuration",
+        "package-manifest",
+        "dependencies",
+        "workspace"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/skills/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/skills/project.json",
+      "summary": "Nx project definition for the skills library: env:node tag, SWC build to dist/packages/skills from src/index.ts, and a typecheck override that also checks tsconfig.spec.json.",
+      "tags": ["configuration", "nx", "build-system", "typecheck"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/skills/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/skills/tsconfig.json",
+      "summary": "Root TypeScript config for the skills package, extending tsconfig.base.effective.json with strict CommonJS options and referencing the lib and spec tsconfigs.",
+      "tags": ["configuration", "typescript", "build-system", "strict-mode"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/skills/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/skills/tsconfig.lib.json",
+      "summary": "Library build TypeScript config for skills: emits declarations to dist/out-tsc and compiles src/**/*.ts while excluding spec and test files.",
+      "tags": ["configuration", "typescript", "build-system", "library"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/skills/package.json",
+      "target": "file:packages/skills/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/skills/project.json",
+      "target": "file:packages/skills/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/skills/tsconfig.json",
+      "target": "file:packages/skills/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/skills/tsconfig.lib.json",
+      "target": "file:packages/skills/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/skills/project.json",
+      "target": "config:packages/skills/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/skills/project.json",
+      "target": "config:packages/skills/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/skills/tsconfig.lib.json",
+      "target": "config:packages/skills/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/skills/README.md",
+      "target": "file:packages/skills/src/SkillsHexa.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/skills/README.md",
+      "target": "file:packages/skills/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

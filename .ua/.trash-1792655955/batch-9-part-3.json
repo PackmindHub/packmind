@@ -1,0 +1,766 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "type": "file",
+      "name": "InstallUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/InstallUseCase.ts",
+      "summary": "Core install use case: normalizes package slugs, resolves agents and versions, validates package access, pulls content from the server, writes/merges files, and updates packmind.json and the lock file.",
+      "tags": ["use-case", "install", "lock-file", "packages", "core"],
+      "complexity": "complex",
+      "languageNotes": "Large class duplicating file-merge helpers (marker merging, empty dir pruning) also present in InstallPackagesUseCase."
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/InstallUseCase.ts:InstallUseCase",
+      "type": "class",
+      "name": "InstallUseCase",
+      "filePath": "apps/cli/src/application/useCases/InstallUseCase.ts",
+      "lineRange": [36, 888],
+      "summary": "Orchestrates the full install flow including config normalization, access validation, marker-based content merging and stale file cleanup.",
+      "tags": ["use-case", "install", "orchestration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "type": "file",
+      "name": "LintFilesAgainstRuleUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "summary": "Use case linting files against a single standard rule by fetching its detection programs and executing them per file, honoring scope and diff modes.",
+      "tags": ["use-case", "lint", "detection-programs", "cli"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts:LintFilesAgainstRuleUseCase",
+      "type": "class",
+      "name": "LintFilesAgainstRuleUseCase",
+      "filePath": "apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "lineRange": [35, 511],
+      "summary": "Resolves languages, executes detection programs on matching files and collects violations.",
+      "tags": ["use-case", "lint"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "type": "file",
+      "name": "LintFilesFromConfigUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "summary": "Use case linting files using detection programs from deployed standards configured in the repository, matching targets and scopes.",
+      "tags": ["use-case", "lint", "detection-programs", "configuration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts:LintFilesFromConfigUseCase",
+      "type": "class",
+      "name": "LintFilesFromConfigUseCase",
+      "filePath": "apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "lineRange": [32, 421],
+      "summary": "Finds matching targets, fetches detection programs per target and runs them on files.",
+      "tags": ["use-case", "lint"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/ListCommandsUseCase.ts",
+      "type": "file",
+      "name": "ListCommandsUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/ListCommandsUseCase.ts",
+      "summary": "Use case listing commands available in the default space via the gateway.",
+      "tags": ["use-case", "listing", "commands", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/ListCommandsUseCase.ts:ListCommandsUseCase",
+      "type": "class",
+      "name": "ListCommandsUseCase",
+      "filePath": "apps/cli/src/application/useCases/ListCommandsUseCase.ts",
+      "lineRange": [9, 35],
+      "summary": "Lists commands of the resolved space.",
+      "tags": ["use-case", "listing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts",
+      "type": "file",
+      "name": "ListFilesInDirectoryUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts",
+      "summary": "Use case listing files in a directory with extension and exclusion filters and reading their contents.",
+      "tags": ["use-case", "filesystem", "listing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts:ListFilesInDirectoryUseCase",
+      "type": "class",
+      "name": "ListFilesInDirectoryUseCase",
+      "filePath": "apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts",
+      "lineRange": [15, 45],
+      "summary": "Lists directory files with contents via ListFiles.",
+      "tags": ["use-case", "filesystem"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/ListPackagesUseCase.ts",
+      "type": "file",
+      "name": "ListPackagesUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/ListPackagesUseCase.ts",
+      "summary": "Use case listing packages available in the default space via the gateway.",
+      "tags": ["use-case", "listing", "packages", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/ListPackagesUseCase.ts:ListPackagesUseCase",
+      "type": "class",
+      "name": "ListPackagesUseCase",
+      "filePath": "apps/cli/src/application/useCases/ListPackagesUseCase.ts",
+      "lineRange": [9, 35],
+      "summary": "Lists packages of the resolved space.",
+      "tags": ["use-case", "listing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/ListSkillsUseCase.ts",
+      "type": "file",
+      "name": "ListSkillsUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/ListSkillsUseCase.ts",
+      "summary": "Use case listing skills available in the default space via the gateway.",
+      "tags": ["use-case", "listing", "skills", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/ListSkillsUseCase.ts:ListSkillsUseCase",
+      "type": "class",
+      "name": "ListSkillsUseCase",
+      "filePath": "apps/cli/src/application/useCases/ListSkillsUseCase.ts",
+      "lineRange": [10, 50],
+      "summary": "Lists skills of the resolved space.",
+      "tags": ["use-case", "listing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/ListStandardsUseCase.ts",
+      "type": "file",
+      "name": "ListStandardsUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/ListStandardsUseCase.ts",
+      "summary": "Use case listing standards available in the default space via the gateway.",
+      "tags": ["use-case", "listing", "standards", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/ListStandardsUseCase.ts:ListStandardsUseCase",
+      "type": "class",
+      "name": "ListStandardsUseCase",
+      "filePath": "apps/cli/src/application/useCases/ListStandardsUseCase.ts",
+      "lineRange": [9, 35],
+      "summary": "Lists standards of the resolved space.",
+      "tags": ["use-case", "listing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/LoginUseCase.ts",
+      "type": "file",
+      "name": "LoginUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/LoginUseCase.ts",
+      "summary": "Use case implementing browser-based CLI login: opens the browser, runs a local callback server or prompts for a code, exchanges it for an API key and saves credentials.",
+      "tags": ["use-case", "authentication", "oauth-flow", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/LoginUseCase.ts:LoginUseCase",
+      "type": "class",
+      "name": "LoginUseCase",
+      "filePath": "apps/cli/src/application/useCases/LoginUseCase.ts",
+      "lineRange": [143, 196],
+      "summary": "Orchestrates the login flow with injectable browser, prompt, code exchange and callback server dependencies.",
+      "tags": ["use-case", "authentication"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/useCases/LoginUseCase.ts:defaultPromptForCode",
+      "type": "function",
+      "name": "defaultPromptForCode",
+      "filePath": "apps/cli/src/application/useCases/LoginUseCase.ts",
+      "lineRange": [39, 51],
+      "summary": "Default prompt implementation reading the login code from stdin.",
+      "tags": ["authentication", "prompt", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/useCases/LoginUseCase.ts:defaultExchangeCodeForApiKey",
+      "type": "function",
+      "name": "defaultExchangeCodeForApiKey",
+      "filePath": "apps/cli/src/application/useCases/LoginUseCase.ts",
+      "lineRange": [53, 89],
+      "summary": "Exchanges a login code for an API key by calling the Packmind CLI login endpoint.",
+      "tags": ["authentication", "http", "api-key"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/useCases/LoginUseCase.ts:defaultStartCallbackServer",
+      "type": "function",
+      "name": "defaultStartCallbackServer",
+      "filePath": "apps/cli/src/application/useCases/LoginUseCase.ts",
+      "lineRange": [91, 141],
+      "summary": "Starts a local HTTP callback server receiving the login code from the browser redirect, with timeout.",
+      "tags": ["authentication", "http-server", "callback"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/LogoutUseCase.ts",
+      "type": "file",
+      "name": "LogoutUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/LogoutUseCase.ts",
+      "summary": "Use case removing stored CLI credentials and reporting when credentials still come from environment variables.",
+      "tags": ["use-case", "authentication", "credentials", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/LogoutUseCase.ts:LogoutUseCase",
+      "type": "class",
+      "name": "LogoutUseCase",
+      "filePath": "apps/cli/src/application/useCases/LogoutUseCase.ts",
+      "lineRange": [16, 49],
+      "summary": "Deletes credentials file and detects env-provided credentials.",
+      "tags": ["use-case", "authentication"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/InstallUseCase.ts:InstallUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/InstallUseCase.ts:InstallUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/application/services/resolveInstallPackageVersions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IInstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/agentHomeDirectory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/permissions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts:LintFilesAgainstRuleUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts:LintFilesAgainstRuleUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "file:apps/cli/src/application/services/ListFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "file:apps/cli/src/application/utils/handleScope.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "file:apps/cli/src/application/utils/scopeMatcher.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "file:apps/cli/src/domain/entities/DiffMode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "file:apps/cli/src/domain/entities/LintViolation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/IPackmindServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILintFilesAgainstRule.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts:LintFilesFromConfigUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts:LintFilesFromConfigUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "file:apps/cli/src/application/services/ListFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "file:apps/cli/src/application/utils/scopeMatcher.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "file:apps/cli/src/domain/entities/DiffMode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "file:apps/cli/src/domain/entities/LintViolation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/IPackmindServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILintFilesFromConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListCommandsUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/ListCommandsUseCase.ts:ListCommandsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListCommandsUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/ListCommandsUseCase.ts:ListCommandsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListCommandsUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListCommandsUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListCommandsUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListCommandsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts:ListFilesInDirectoryUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts:ListFilesInDirectoryUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts",
+      "target": "file:apps/cli/src/application/services/ListFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListPackagesUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/ListPackagesUseCase.ts:ListPackagesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListPackagesUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/ListPackagesUseCase.ts:ListPackagesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListPackagesUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListPackagesUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListPackagesUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListPackagesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListSkillsUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/ListSkillsUseCase.ts:ListSkillsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListSkillsUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/ListSkillsUseCase.ts:ListSkillsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListSkillsUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListSkillsUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListSkillsUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListSkillsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListStandardsUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/ListStandardsUseCase.ts:ListStandardsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListStandardsUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/ListStandardsUseCase.ts:ListStandardsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListStandardsUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListStandardsUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/ListStandardsUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListStandardsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LoginUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/LoginUseCase.ts:LoginUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LoginUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/LoginUseCase.ts:LoginUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LoginUseCase.ts",
+      "target": "function:apps/cli/src/application/useCases/LoginUseCase.ts:defaultPromptForCode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LoginUseCase.ts",
+      "target": "function:apps/cli/src/application/useCases/LoginUseCase.ts:defaultExchangeCodeForApiKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LoginUseCase.ts",
+      "target": "function:apps/cli/src/application/useCases/LoginUseCase.ts:defaultStartCallbackServer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LoginUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILoginUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LoginUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LogoutUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/LogoutUseCase.ts:LogoutUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LogoutUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/LogoutUseCase.ts:LogoutUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LogoutUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILogoutUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LogoutUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/LogoutUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/InstallUseCase.ts:InstallUseCase",
+      "target": "function:apps/cli/src/application/services/resolveInstallPackageVersions.ts:resolveInstallPackageVersions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/LoginUseCase.ts:LoginUseCase",
+      "target": "function:apps/cli/src/application/useCases/LoginUseCase.ts:defaultStartCallbackServer",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/LoginUseCase.ts:LoginUseCase",
+      "target": "function:apps/cli/src/application/useCases/LoginUseCase.ts:defaultExchangeCodeForApiKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/LoginUseCase.ts:LoginUseCase",
+      "target": "function:apps/cli/src/application/useCases/LoginUseCase.ts:defaultPromptForCode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

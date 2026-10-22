@@ -1,0 +1,658 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/deployments/src/domain/errors/NoPackageSlugsProvidedError.ts",
+      "type": "file",
+      "name": "NoPackageSlugsProvidedError.ts",
+      "filePath": "packages/deployments/src/domain/errors/NoPackageSlugsProvidedError.ts",
+      "summary": "Invalid-input error raised when an install or pull request contains no package slugs.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/NoPackageSlugsProvidedError.ts:NoPackageSlugsProvidedError",
+      "type": "class",
+      "name": "NoPackageSlugsProvidedError",
+      "filePath": "packages/deployments/src/domain/errors/NoPackageSlugsProvidedError.ts",
+      "lineRange": [9, 19],
+      "summary": "Invalid-input error raised when an install or pull request contains no package slugs.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/NoPackagesProvidedError.ts",
+      "type": "file",
+      "name": "NoPackagesProvidedError.ts",
+      "filePath": "packages/deployments/src/domain/errors/NoPackagesProvidedError.ts",
+      "summary": "Invalid-input error raised when a publish request contains no packages.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/NoPackagesProvidedError.ts:NoPackagesProvidedError",
+      "type": "class",
+      "name": "NoPackagesProvidedError",
+      "filePath": "packages/deployments/src/domain/errors/NoPackagesProvidedError.ts",
+      "lineRange": [8, 18],
+      "summary": "Invalid-input error raised when a publish request contains no packages.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/NoTargetsProvidedError.ts",
+      "type": "file",
+      "name": "NoTargetsProvidedError.ts",
+      "filePath": "packages/deployments/src/domain/errors/NoTargetsProvidedError.ts",
+      "summary": "Invalid-input error raised when a publish request contains no targets.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/NoTargetsProvidedError.ts:NoTargetsProvidedError",
+      "type": "class",
+      "name": "NoTargetsProvidedError",
+      "filePath": "packages/deployments/src/domain/errors/NoTargetsProvidedError.ts",
+      "lineRange": [8, 18],
+      "summary": "Invalid-input error raised when a publish request contains no targets.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts",
+      "type": "file",
+      "name": "PackageComponentHasNoVersionError.ts",
+      "filePath": "packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts",
+      "summary": "Internal error raised when a package component (standard, command, skill family) has no current version while cutting a release.",
+      "tags": ["error", "domain-error", "deployments", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts:PackageComponentHasNoVersionError",
+      "type": "class",
+      "name": "PackageComponentHasNoVersionError",
+      "filePath": "packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts",
+      "lineRange": [13, 25],
+      "summary": "Internal error raised when a package component (standard, command, skill family) has no current version while cutting a release.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "file",
+      "name": "PackageNotFoundError.ts",
+      "filePath": "packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "summary": "404 error raised when a package id does not resolve to an existing package.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/PackageNotFoundError.ts:PackageNotFoundError",
+      "type": "class",
+      "name": "PackageNotFoundError",
+      "filePath": "packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "lineRange": [12, 22],
+      "summary": "404 error raised when a package id does not resolve to an existing package.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts",
+      "type": "file",
+      "name": "PackageReleaseNotFoundError.ts",
+      "filePath": "packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts",
+      "summary": "404 error raised when a requested package release does not exist.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts:PackageReleaseNotFoundError",
+      "type": "class",
+      "name": "PackageReleaseNotFoundError",
+      "filePath": "packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts",
+      "lineRange": [10, 20],
+      "summary": "404 error raised when a requested package release does not exist.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts",
+      "type": "file",
+      "name": "PackageReleaseNotPersistedError.ts",
+      "filePath": "packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts",
+      "summary": "Internal error raised when a saved package release cannot be read back after persisting.",
+      "tags": ["error", "domain-error", "deployments", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts:PackageReleaseNotPersistedError",
+      "type": "class",
+      "name": "PackageReleaseNotPersistedError",
+      "filePath": "packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts",
+      "lineRange": [12, 24],
+      "summary": "Internal error raised when a saved package release cannot be read back after persisting.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/PackageReleaseRefusedError.ts",
+      "type": "file",
+      "name": "PackageReleaseRefusedError.ts",
+      "filePath": "packages/deployments/src/domain/errors/PackageReleaseRefusedError.ts",
+      "summary": "409 conflict raised when the server refuses a package release cut, carrying a refusal code and current version for the frontend.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/PackageReleaseRefusedError.ts:PackageReleaseRefusedError",
+      "type": "class",
+      "name": "PackageReleaseRefusedError",
+      "filePath": "packages/deployments/src/domain/errors/PackageReleaseRefusedError.ts",
+      "lineRange": [16, 29],
+      "summary": "409 conflict raised when the server refuses a package release cut, carrying a refusal code and current version for the frontend.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/PackageReloadFailedError.ts",
+      "type": "file",
+      "name": "PackageReloadFailedError.ts",
+      "filePath": "packages/deployments/src/domain/errors/PackageReloadFailedError.ts",
+      "summary": "Internal error raised when a package cannot be reloaded right after it was updated.",
+      "tags": ["error", "domain-error", "deployments", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/PackageReloadFailedError.ts:PackageReloadFailedError",
+      "type": "class",
+      "name": "PackageReloadFailedError",
+      "filePath": "packages/deployments/src/domain/errors/PackageReloadFailedError.ts",
+      "lineRange": [11, 20],
+      "summary": "Internal error raised when a package cannot be reloaded right after it was updated.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/PackageSpaceMissingError.ts",
+      "type": "file",
+      "name": "PackageSpaceMissingError.ts",
+      "filePath": "packages/deployments/src/domain/errors/PackageSpaceMissingError.ts",
+      "summary": "Internal error raised when a package has no resolvable space during publishing.",
+      "tags": ["error", "domain-error", "deployments", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/PackageSpaceMissingError.ts:PackageSpaceMissingError",
+      "type": "class",
+      "name": "PackageSpaceMissingError",
+      "filePath": "packages/deployments/src/domain/errors/PackageSpaceMissingError.ts",
+      "lineRange": [11, 20],
+      "summary": "Internal error raised when a package has no resolvable space during publishing.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/PackageVersionNotAvailableError.ts",
+      "type": "file",
+      "name": "PackageVersionNotAvailableError.ts",
+      "filePath": "packages/deployments/src/domain/errors/PackageVersionNotAvailableError.ts",
+      "summary": "404 error raised when a repo requests a never-released package version, listing available versions in the message.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/PackageVersionNotAvailableError.ts:PackageVersionNotAvailableError",
+      "type": "class",
+      "name": "PackageVersionNotAvailableError",
+      "filePath": "packages/deployments/src/domain/errors/PackageVersionNotAvailableError.ts",
+      "lineRange": [17, 33],
+      "summary": "404 error raised when a repo requests a never-released package version, listing available versions in the message.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/PackagesNotFoundError.ts",
+      "type": "file",
+      "name": "PackagesNotFoundError.ts",
+      "filePath": "packages/deployments/src/domain/errors/PackagesNotFoundError.ts",
+      "summary": "404 error raised when one or more requested package slugs do not exist.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/PackagesNotFoundError.ts:PackagesNotFoundError",
+      "type": "class",
+      "name": "PackagesNotFoundError",
+      "filePath": "packages/deployments/src/domain/errors/PackagesNotFoundError.ts",
+      "lineRange": [11, 27],
+      "summary": "404 error raised when one or more requested package slugs do not exist.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts",
+      "type": "file",
+      "name": "RenderModeConfigurationMissingError.ts",
+      "filePath": "packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts",
+      "summary": "Internal error raised when an organization has no render mode configuration where one is expected.",
+      "tags": ["error", "domain-error", "deployments", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts:RenderModeConfigurationMissingError",
+      "type": "class",
+      "name": "RenderModeConfigurationMissingError",
+      "filePath": "packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts",
+      "lineRange": [11, 20],
+      "summary": "Internal error raised when an organization has no render mode configuration where one is expected.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/RootTargetNotDeletableError.ts",
+      "type": "file",
+      "name": "RootTargetNotDeletableError.ts",
+      "filePath": "packages/deployments/src/domain/errors/RootTargetNotDeletableError.ts",
+      "summary": "409 conflict raised when attempting to delete the root target of a repository.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/RootTargetNotDeletableError.ts:RootTargetNotDeletableError",
+      "type": "class",
+      "name": "RootTargetNotDeletableError",
+      "filePath": "packages/deployments/src/domain/errors/RootTargetNotDeletableError.ts",
+      "lineRange": [10, 20],
+      "summary": "409 conflict raised when attempting to delete the root target of a repository.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts",
+      "type": "file",
+      "name": "SpaceNotAccessibleError.ts",
+      "filePath": "packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts",
+      "summary": "404 error raised when the caller cannot access the requested space.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts:SpaceNotAccessibleError",
+      "type": "class",
+      "name": "SpaceNotAccessibleError",
+      "filePath": "packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts",
+      "lineRange": [15, 25],
+      "summary": "404 error raised when the caller cannot access the requested space.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/TargetNotFoundError.ts",
+      "type": "file",
+      "name": "TargetNotFoundError.ts",
+      "filePath": "packages/deployments/src/domain/errors/TargetNotFoundError.ts",
+      "summary": "404 error raised when a deployment target id does not exist.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/TargetNotFoundError.ts:TargetNotFoundError",
+      "type": "class",
+      "name": "TargetNotFoundError",
+      "filePath": "packages/deployments/src/domain/errors/TargetNotFoundError.ts",
+      "lineRange": [9, 19],
+      "summary": "404 error raised when a deployment target id does not exist.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/TargetResolutionMissingError.ts",
+      "type": "file",
+      "name": "TargetResolutionMissingError.ts",
+      "filePath": "packages/deployments/src/domain/errors/TargetResolutionMissingError.ts",
+      "summary": "Internal error raised when removal data or artifact resolution is missing for a target during package removal.",
+      "tags": ["error", "domain-error", "deployments", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/TargetResolutionMissingError.ts:TargetResolutionMissingError",
+      "type": "class",
+      "name": "TargetResolutionMissingError",
+      "filePath": "packages/deployments/src/domain/errors/TargetResolutionMissingError.ts",
+      "lineRange": [10, 22],
+      "summary": "Internal error raised when removal data or artifact resolution is missing for a target during package removal.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/deployments/src/domain/errors/NoPackageSlugsProvidedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/NoPackageSlugsProvidedError.ts:NoPackageSlugsProvidedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/NoPackageSlugsProvidedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/NoPackageSlugsProvidedError.ts:NoPackageSlugsProvidedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/NoPackagesProvidedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/NoPackagesProvidedError.ts:NoPackagesProvidedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/NoPackagesProvidedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/NoPackagesProvidedError.ts:NoPackagesProvidedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/NoTargetsProvidedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/NoTargetsProvidedError.ts:NoTargetsProvidedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/NoTargetsProvidedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/NoTargetsProvidedError.ts:NoTargetsProvidedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts:PackageComponentHasNoVersionError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts:PackageComponentHasNoVersionError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts",
+      "target": "file:packages/deployments/src/application/services/packageReleaseResolution.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageNotFoundError.ts:PackageNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageNotFoundError.ts:PackageNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts:PackageReleaseNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts:PackageReleaseNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts:PackageReleaseNotPersistedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts:PackageReleaseNotPersistedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageReleaseRefusedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageReleaseRefusedError.ts:PackageReleaseRefusedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageReleaseRefusedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageReleaseRefusedError.ts:PackageReleaseRefusedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageReloadFailedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageReloadFailedError.ts:PackageReloadFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageReloadFailedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageReloadFailedError.ts:PackageReloadFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageReloadFailedError.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageSpaceMissingError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageSpaceMissingError.ts:PackageSpaceMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageSpaceMissingError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageSpaceMissingError.ts:PackageSpaceMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageSpaceMissingError.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageVersionNotAvailableError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageVersionNotAvailableError.ts:PackageVersionNotAvailableError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackageVersionNotAvailableError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackageVersionNotAvailableError.ts:PackageVersionNotAvailableError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackagesNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackagesNotFoundError.ts:PackagesNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/PackagesNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/PackagesNotFoundError.ts:PackagesNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts",
+      "target": "class:packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts:RenderModeConfigurationMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts",
+      "target": "class:packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts:RenderModeConfigurationMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/RootTargetNotDeletableError.ts",
+      "target": "class:packages/deployments/src/domain/errors/RootTargetNotDeletableError.ts:RootTargetNotDeletableError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/RootTargetNotDeletableError.ts",
+      "target": "class:packages/deployments/src/domain/errors/RootTargetNotDeletableError.ts:RootTargetNotDeletableError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts",
+      "target": "class:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts:SpaceNotAccessibleError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts",
+      "target": "class:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts:SpaceNotAccessibleError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/TargetNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/TargetNotFoundError.ts:TargetNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/TargetNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/TargetNotFoundError.ts:TargetNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/TargetResolutionMissingError.ts",
+      "target": "class:packages/deployments/src/domain/errors/TargetResolutionMissingError.ts:TargetResolutionMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/TargetResolutionMissingError.ts",
+      "target": "class:packages/deployments/src/domain/errors/TargetResolutionMissingError.ts:TargetResolutionMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/TargetResolutionMissingError.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/PackageComponentHasNoVersionError.ts:PackageComponentHasNoVersionError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts:PackageReleaseNotPersistedError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/PackageReloadFailedError.ts:PackageReloadFailedError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/PackageSpaceMissingError.ts:PackageSpaceMissingError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts:RenderModeConfigurationMissingError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/TargetResolutionMissingError.ts:TargetResolutionMissingError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

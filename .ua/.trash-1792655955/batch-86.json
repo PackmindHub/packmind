@@ -1,0 +1,80 @@
+{
+  "nodes": [
+    {
+      "id": "document:apps/frontend/.packmind/standards/frontend-data-flow.md",
+      "type": "document",
+      "name": "frontend-data-flow.md",
+      "filePath": "apps/frontend/.packmind/standards/frontend-data-flow.md",
+      "summary": "Packmind source standard \"Frontend Data Flow\" for the frontend, defining rules on route data flow with React Router v7 clientLoaders and TanStack Query hooks/query options.",
+      "tags": [
+        "coding-standard",
+        "packmind",
+        "documentation",
+        "react-router",
+        "tanstack-query"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/frontend/.packmind/standards/frontend-error-management.md",
+      "type": "document",
+      "name": "frontend-error-management.md",
+      "filePath": "apps/frontend/.packmind/standards/frontend-error-management.md",
+      "summary": "Packmind source standard \"Frontend Error Management\" for the frontend, defining rules on when to add explicit error boundaries beyond the root one and how to handle async/mutation errors inline.",
+      "tags": [
+        "coding-standard",
+        "packmind",
+        "documentation",
+        "error-handling",
+        "react"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/frontend/.packmind/standards/frontend-navigation-with-react-router.md",
+      "type": "document",
+      "name": "frontend-navigation-with-react-router.md",
+      "filePath": "apps/frontend/.packmind/standards/frontend-navigation-with-react-router.md",
+      "summary": "Packmind source standard \"Frontend Navigation with React Router\" for the frontend, defining rules on using the centralized routes utility and useNavigation() instead of hand-built org/space scoped URLs.",
+      "tags": [
+        "coding-standard",
+        "packmind",
+        "documentation",
+        "react-router",
+        "navigation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/frontend/.packmind/standards/tanstack-query-key-management.md",
+      "type": "document",
+      "name": "tanstack-query-key-management.md",
+      "filePath": "apps/frontend/.packmind/standards/tanstack-query-key-management.md",
+      "summary": "Packmind source standard \"TanStack Query Key Management\" for the frontend, defining rules on hierarchical, const-based query keys in per-domain queryKeys.ts files for prefix-based cache invalidation.",
+      "tags": [
+        "coding-standard",
+        "packmind",
+        "documentation",
+        "tanstack-query",
+        "caching"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:apps/frontend/.packmind/standards/frontend-navigation-with-react-router.md",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/frontend/.packmind/standards/frontend-navigation-with-react-router.md",
+      "target": "document:apps/frontend/NAVIGATION.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

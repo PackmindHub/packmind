@@ -1,0 +1,1033 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx",
+      "type": "file",
+      "name": "PackagesDropdown.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx",
+      "summary": "Dropdown listing the packages an artifact belongs to with links to each package, plus a helper that formats package names into a compact human-readable label.",
+      "tags": ["component", "react", "packages", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx:formatPackageNames",
+      "type": "function",
+      "name": "formatPackageNames",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx",
+      "lineRange": [8, 44],
+      "summary": "Formats a list of package names into a short label, truncating with a count of remaining packages.",
+      "tags": ["utility", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx:PackagesDropdown",
+      "type": "function",
+      "name": "PackagesDropdown",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx",
+      "lineRange": [53, 113],
+      "summary": "Renders a menu of packages with links to their detail pages.",
+      "tags": ["component", "menu"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageCountBadge/index.ts",
+      "summary": "Barrel re-exporting the PackageCountBadge component and the PackagesDropdown/formatPackageNames helpers.",
+      "tags": ["barrel", "entry-point", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "type": "file",
+      "name": "DeployPackageButton.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "summary": "Split button that distributes a package to code repositories or shows CLI install snippets, with version labelling and deployment notifications.",
+      "tags": ["component", "react", "deployment", "packages", "split-button"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx:DeployPackageButton",
+      "type": "function",
+      "name": "DeployPackageButton",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "lineRange": [94, 224],
+      "summary": "Split button offering repository distribution or CLI install, handling distribution state and notifications.",
+      "tags": ["component", "deployment"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx:versionLine",
+      "type": "function",
+      "name": "versionLine",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "lineRange": [226, 239],
+      "summary": "Builds the version label line shown for a package in the deploy menu.",
+      "tags": ["utility", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx:CodeRepositoryDialogContents",
+      "type": "function",
+      "name": "CodeRepositoryDialogContents",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "lineRange": [241, 304],
+      "summary": "Dialog contents for distributing a package to code repositories via RunDistribution.",
+      "tags": ["component", "dialog"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "type": "file",
+      "name": "PackageDetails.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "summary": "Package detail page showing a package's standards, commands and skills, its distributions, install snippets, deploy and remove-from-targets actions.",
+      "tags": ["component", "react", "packages", "page", "deployment"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx:PackageDetails",
+      "type": "function",
+      "name": "PackageDetails",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "lineRange": [50, 435],
+      "summary": "Package details page component with artifacts, distributions and deployment actions.",
+      "tags": ["component", "page"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageDetails/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageDetails/index.ts",
+      "summary": "Barrel re-exporting everything from PackageDetails.",
+      "tags": ["barrel", "entry-point", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx",
+      "type": "file",
+      "name": "PackageDistributionList.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx",
+      "summary": "Lists the distribution history of a package, resolving user names and marking live targets via the shared DeploymentsHistory view.",
+      "tags": ["component", "react", "distribution-history", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx:PackageDistributionList",
+      "type": "function",
+      "name": "PackageDistributionList",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx",
+      "lineRange": [20, 89],
+      "summary": "Renders package distribution history.",
+      "tags": ["component", "history"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "type": "file",
+      "name": "PackageEditForm.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "summary": "Container for editing a package: loads the package, available standards, commands and skills and artefact ownership, then renders the edit form body.",
+      "tags": ["component", "react", "form", "packages", "data-loading"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx:PackageEditForm",
+      "type": "function",
+      "name": "PackageEditForm",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "lineRange": [19, 140],
+      "summary": "Loads data required by the package edit form and renders it.",
+      "tags": ["component", "container"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "type": "file",
+      "name": "PackageEditFormBody.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "summary": "Stateful package edit form handling name/description (markdown) and artifact selection, submitting updates through the package mutation.",
+      "tags": ["component", "react", "form", "packages", "mutation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx:PackageEditFormBody",
+      "type": "function",
+      "name": "PackageEditFormBody",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "lineRange": [48, 270],
+      "summary": "Manages edit form state and submits package updates.",
+      "tags": ["component", "form"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx",
+      "type": "file",
+      "name": "PackageEditFormContent.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx",
+      "summary": "Presentational layout of the package edit form with identity fields and artifact pickers for standards, commands and skills.",
+      "tags": ["component", "react", "form", "packages", "presentational"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx:PackageEditFormContent",
+      "type": "function",
+      "name": "PackageEditFormContent",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx",
+      "lineRange": [47, 444],
+      "summary": "Renders the package edit form layout and artifact pickers.",
+      "tags": ["component", "form"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageInstallSnippets/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageInstallSnippets/index.ts",
+      "summary": "Barrel re-exporting the PackageInstallSnippets component.",
+      "tags": ["barrel", "entry-point", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx",
+      "type": "file",
+      "name": "PackagesBlankState.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx",
+      "summary": "Empty state shown when a space has no packages, guiding the user to create the first one.",
+      "tags": ["component", "react", "blank-state", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx:PackagesBlankState",
+      "type": "function",
+      "name": "PackagesBlankState",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx",
+      "lineRange": [21, 87],
+      "summary": "Empty state for spaces without packages.",
+      "tags": ["component", "blank-state"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "type": "file",
+      "name": "PackagesPage.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "summary": "Space packages listing page with search, selection and bulk actions including deploy and delete, falling back to a blank state when empty.",
+      "tags": ["component", "react", "page", "packages", "listing"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx:PackagesPage",
+      "type": "function",
+      "name": "PackagesPage",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "lineRange": [36, 257],
+      "summary": "Packages list page with selection and bulk actions.",
+      "tags": ["component", "page"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackagesPage/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPage/index.ts",
+      "summary": "Barrel re-exporting PackagesPage and its props type.",
+      "tags": ["barrel", "entry-point", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx",
+      "type": "file",
+      "name": "MoveArtifactsToPackageConfirm.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx",
+      "summary": "Confirmation dialog for moving artifacts to another package, warning about packages that would be emptied and places where they are distributed.",
+      "tags": ["component", "react", "confirmation-dialog", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx:MoveArtifactsToPackageConfirm",
+      "type": "function",
+      "name": "MoveArtifactsToPackageConfirm",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx",
+      "lineRange": [55, 189],
+      "summary": "Confirms moving artifacts to another package.",
+      "tags": ["component", "dialog"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "type": "file",
+      "name": "PackagesPopover.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "summary": "Popover managing an artifact's package membership: shows current packages, lets the user add, remove or move the artifact with deployment-aware confirmations.",
+      "tags": ["component", "react", "popover", "packages", "membership"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:PackagesPopover",
+      "type": "function",
+      "name": "PackagesPopover",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "lineRange": [65, 409],
+      "summary": "Popover for viewing and editing an artifact's package membership.",
+      "tags": ["component", "popover"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:SectionLabel",
+      "type": "function",
+      "name": "SectionLabel",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "lineRange": [411, 423],
+      "summary": "Small section heading inside the packages popover.",
+      "tags": ["component", "presentational"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:MemberRow",
+      "type": "function",
+      "name": "MemberRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "lineRange": [425, 472],
+      "summary": "Row for a package the artifact belongs to, with a remove action.",
+      "tags": ["component", "row"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:MoveRow",
+      "type": "function",
+      "name": "MoveRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "lineRange": [474, 519],
+      "summary": "Row offering to move the artifact into another package.",
+      "tags": ["component", "row"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "type": "file",
+      "name": "RemoveArtifactFromPackageConfirm.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "summary": "Confirmation dialog for removing an artifact from a package, describing where the package is deployed so the user understands the impact.",
+      "tags": ["component", "react", "confirmation-dialog", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx:deployedPlaceParts",
+      "type": "function",
+      "name": "deployedPlaceParts",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "lineRange": [20, 34],
+      "summary": "Builds descriptive text fragments for where a package is deployed.",
+      "tags": ["utility", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx:RemoveArtifactFromPackageConfirm",
+      "type": "function",
+      "name": "RemoveArtifactFromPackageConfirm",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "lineRange": [52, 187],
+      "summary": "Confirms removing an artifact from a package.",
+      "tags": ["component", "dialog"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx:formatPackageNames",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx:formatPackageNames",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx:PackagesDropdown",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx:PackagesDropdown",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx:DeployPackageButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx:DeployPackageButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx:versionLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx:versionLine",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx:CodeRepositoryDialogContents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageInstallSnippets/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/splitButton.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx:PackageDetails",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx:PackageDetails",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageDistributionList/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageInstallSnippets/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx:PackageDistributionList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx:PackageDistributionList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDistributionList/PackageDistributionList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx:PackageEditForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx:PackageEditForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx:PackageEditFormBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx:PackageEditFormBody",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx:PackageEditFormContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx:PackageEditFormContent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/packageForm/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx:PackagesBlankState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx:PackagesBlankState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx:PackagesPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx:PackagesPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "target": "file:apps/frontend/src/shared/components/ItemsListing.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx:MoveArtifactsToPackageConfirm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx:MoveArtifactsToPackageConfirm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:PackagesPopover",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:PackagesPopover",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:SectionLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:MemberRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:MoveRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx:deployedPlaceParts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx:deployedPlaceParts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx:RemoveArtifactFromPackageConfirm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx:RemoveArtifactFromPackageConfirm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx:PackageDetails",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx:DeployPackageButton",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx:PackagesPage",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageDeployments/DeployPackageButton.tsx:DeployPackageButton",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx:PackagesPage",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesBlankState.tsx:PackagesBlankState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx:PackageEditForm",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx:PackageEditFormBody",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormBody.tsx:PackageEditFormBody",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditFormContent.tsx:PackageEditFormContent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:PackagesPopover",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx:MoveArtifactsToPackageConfirm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx:PackagesPopover",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx:RemoveArtifactFromPackageConfirm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/PackagesDropdown.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPage/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPage/PackagesPage.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageDetails/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageDetails/PackageDetails.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

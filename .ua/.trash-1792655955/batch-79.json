@@ -1,0 +1,436 @@
+{
+  "nodes": [
+    {
+      "id": "document:AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "AGENTS.md",
+      "summary": "Agent instruction file describing the Nx monorepo structure, tooling, git workflow and task-splitting rules, followed by the Packmind-distributed coding standards (backend tests, changelog, comments, PII logging, TypeScript practices).",
+      "tags": [
+        "documentation",
+        "ai-agent-instructions",
+        "coding-standards",
+        "monorepo"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:CHANGELOG.MD",
+      "type": "document",
+      "name": "CHANGELOG.MD",
+      "filePath": "CHANGELOG.MD",
+      "summary": "Keep-a-Changelog style release history of the Packmind application, listing Added/Changed/Fixed/Removed entries per version up to 1.19.0 plus an Unreleased section.",
+      "tags": ["documentation", "changelog", "release-notes", "versioning"],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "CLAUDE.md",
+      "summary": "Claude Code project instructions covering the Nx monorepo layout, core technologies (TypeScript, PostgreSQL/TypeORM, Redis, BullMQ, Jest), Nx commands, security rules and per-sub-task commit workflow.",
+      "tags": [
+        "documentation",
+        "ai-agent-instructions",
+        "monorepo",
+        "development"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:CODE_OF_CONDUCT.md",
+      "type": "document",
+      "name": "CODE_OF_CONDUCT.md",
+      "filePath": "CODE_OF_CONDUCT.md",
+      "summary": "Contributor Covenant code of conduct defining community standards, enforcement responsibilities and the correction/warning/ban enforcement ladder.",
+      "tags": ["documentation", "community", "governance", "open-source"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:CONTRIBUTING.md",
+      "type": "document",
+      "name": "CONTRIBUTING.md",
+      "filePath": "CONTRIBUTING.md",
+      "summary": "Contribution guide explaining how to start the Docker Compose dev stack, migrate a checkout from npm to pnpm, switch packmind-cli versions with pvm, and perform releases.",
+      "tags": ["documentation", "development", "onboarding", "contributing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:DESIGN.md",
+      "type": "document",
+      "name": "DESIGN.md",
+      "filePath": "DESIGN.md",
+      "summary": "Packmind design system specification covering color palette (warm-dark neutrals, semantic colors), typography hierarchy, elevation, component guidelines (buttons, inputs, tables, dialogs, PMMarkdownViewer) and do/don't rules.",
+      "tags": ["documentation", "design-system", "ui", "frontend"],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:PRODUCT.md",
+      "type": "document",
+      "name": "PRODUCT.md",
+      "filePath": "PRODUCT.md",
+      "summary": "Product brief describing Packmind's target users, purpose, brand personality, anti-references, design principles and accessibility commitments, used to steer UI/UX work.",
+      "tags": ["documentation", "product", "brand", "design-principles"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "README.md",
+      "summary": "Project landing README pitching Packmind as one engineering playbook synced to every AI coding agent, comparing it to plain marketplaces/Git repos, and explaining CLI installation and documentation links.",
+      "tags": ["documentation", "entry-point", "overview", "getting-started"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:commands-change-report.md",
+      "type": "document",
+      "name": "commands-change-report.md",
+      "filePath": "commands-change-report.md",
+      "summary": "Generated report from a packmind-update-playbook session concluding that none of the 18 playbook commands were followed or needed updating.",
+      "tags": ["documentation", "report", "playbook", "generated"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.production.yml",
+      "type": "service",
+      "name": "docker-compose.production.yml",
+      "filePath": "docker-compose.production.yml",
+      "summary": "Minimal production-like Compose stack providing a PostgreSQL 17 database with healthcheck and a one-shot Node 24 container that installs dependencies.",
+      "tags": ["orchestration", "infrastructure", "docker-compose", "database"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.yml",
+      "type": "service",
+      "name": "docker-compose.yml",
+      "filePath": "docker-compose.yml",
+      "summary": "Main local development Compose stack running the Nx daemon, PostgreSQL, Redis, OpenTelemetry LGTM, Mailpit, pgAdmin, dependency install and migration jobs, the frontend, backend API, nginx reverse proxy and an e2e test runner with shared volumes.",
+      "tags": [
+        "orchestration",
+        "infrastructure",
+        "local-development",
+        "docker-compose",
+        "observability"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Uses a YAML extension field (x-nx-env) with anchors to share Nx environment settings across services."
+    },
+    {
+      "id": "service:docker-compose.yml:postgres",
+      "type": "service",
+      "name": "postgres",
+      "filePath": "docker-compose.yml",
+      "summary": "PostgreSQL database service for local development with persistent volume.",
+      "tags": ["docker-compose", "service", "local-development"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.yml:redis",
+      "type": "service",
+      "name": "redis",
+      "filePath": "docker-compose.yml",
+      "summary": "Redis cache and BullMQ queue backend for local development.",
+      "tags": ["docker-compose", "service", "local-development"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.yml:otel-lgtm",
+      "type": "service",
+      "name": "otel-lgtm",
+      "filePath": "docker-compose.yml",
+      "summary": "OpenTelemetry LGTM (Loki/Grafana/Tempo/Mimir) observability stack for local tracing and metrics.",
+      "tags": ["docker-compose", "service", "local-development"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.yml:run-migrations",
+      "type": "service",
+      "name": "run-migrations",
+      "filePath": "docker-compose.yml",
+      "summary": "One-shot job that runs TypeORM database migrations before the API starts.",
+      "tags": ["docker-compose", "service", "local-development"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.yml:frontend",
+      "type": "service",
+      "name": "frontend",
+      "filePath": "docker-compose.yml",
+      "summary": "React/Vite frontend dev server container.",
+      "tags": ["docker-compose", "service", "local-development"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.yml:backend",
+      "type": "service",
+      "name": "backend",
+      "filePath": "docker-compose.yml",
+      "summary": "NestJS API dev server container connected to PostgreSQL and Redis.",
+      "tags": ["docker-compose", "service", "local-development"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.yml:nginx",
+      "type": "service",
+      "name": "nginx",
+      "filePath": "docker-compose.yml",
+      "summary": "nginx reverse proxy routing traffic to the frontend and backend containers.",
+      "tags": ["docker-compose", "service", "local-development"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:docker-compose.yml:run-e2e-tests",
+      "type": "service",
+      "name": "run-e2e-tests",
+      "filePath": "docker-compose.yml",
+      "summary": "Container that runs Playwright end-to-end tests against the local stack.",
+      "tags": ["docker-compose", "service", "local-development"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:docker-local.sh",
+      "type": "file",
+      "name": "docker-local.sh",
+      "filePath": "docker-local.sh",
+      "summary": "Builds all Nx apps and Docker images then starts a production-like local stack from dockerfile/local/docker-compose.yaml (ports offset by +10), optionally including a compose override.",
+      "tags": ["script", "build-system", "deployment", "docker"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:downgrade_node22.sh",
+      "type": "file",
+      "name": "downgrade_node22.sh",
+      "filePath": "downgrade_node22.sh",
+      "summary": "Workspace cleanup script for downgrading to Node 22: stops Docker containers, removes Nx/node_modules volumes, resets Nx caches and reinstalls dependencies.",
+      "tags": ["script", "node-version", "maintenance", "cleanup"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:fix_integration_tests.sh",
+      "type": "file",
+      "name": "fix_integration_tests.sh",
+      "filePath": "fix_integration_tests.sh",
+      "summary": "One-off sed-based script patching specific integration test specs to add SpacesHexa imports and space setup.",
+      "tags": ["script", "codemod", "test", "maintenance"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:migrate_node24.sh",
+      "type": "file",
+      "name": "migrate_node24.sh",
+      "filePath": "migrate_node24.sh",
+      "summary": "Workspace cleanup script for migrating to Node 24: stops Docker containers, removes Nx/node_modules volumes, resets Nx caches and reinstalls dependencies.",
+      "tags": ["script", "node-version", "migration", "maintenance"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:nx.json",
+      "type": "config",
+      "name": "nx.json",
+      "filePath": "nx.json",
+      "summary": "Nx workspace configuration defining named inputs, plugins, generators, target defaults (caching, dependencies), TUI and daemon settings for the monorepo.",
+      "tags": ["configuration", "build-system", "nx", "monorepo"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "package.json",
+      "summary": "Root workspace manifest declaring Node engine and pnpm package manager, monorepo scripts (build, lint, test, staged checks) and shared dev/runtime dependencies.",
+      "tags": ["configuration", "build-system", "dependencies", "scripts"],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:packmind-lock.json",
+      "type": "config",
+      "name": "packmind-lock.json",
+      "filePath": "packmind-lock.json",
+      "summary": "Packmind CLI lockfile recording installed playbook package slugs, target agents and the resolved artifacts (standards, commands, skills) with the CLI version used.",
+      "tags": ["configuration", "lockfile", "playbook", "generated"],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:packmind.json",
+      "type": "config",
+      "name": "packmind.json",
+      "filePath": "packmind.json",
+      "summary": "Packmind CLI manifest listing the playbook packages (playground, cli-e2e, unit-tests, packmind-standards, backend-standards, proprietary) to install into this repository.",
+      "tags": ["configuration", "playbook", "packmind-cli", "manifest"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:pnpm-workspace.yaml",
+      "type": "config",
+      "name": "pnpm-workspace.yaml",
+      "filePath": "pnpm-workspace.yaml",
+      "summary": "pnpm workspace configuration defining workspace packages, dependency overrides (security pins), allowed build scripts, strict engine/peer settings and hoisting patterns.",
+      "tags": ["configuration", "dependencies", "pnpm", "security"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "service:docker-compose.yml",
+      "target": "service:docker-compose.yml:postgres",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "service:docker-compose.yml:redis",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "service:docker-compose.yml:otel-lgtm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "service:docker-compose.yml:run-migrations",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "service:docker-compose.yml:frontend",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "service:docker-compose.yml:backend",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "service:docker-compose.yml:nginx",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:docker-compose.yml",
+      "target": "service:docker-compose.yml:run-e2e-tests",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:docker-compose.yml:nginx",
+      "target": "service:docker-compose.yml:frontend",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:docker-compose.yml:nginx",
+      "target": "service:docker-compose.yml:backend",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:docker-compose.yml:backend",
+      "target": "service:docker-compose.yml:postgres",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:docker-compose.yml:backend",
+      "target": "service:docker-compose.yml:redis",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:docker-compose.yml:run-migrations",
+      "target": "service:docker-compose.yml:postgres",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:docker-compose.production.yml",
+      "target": "service:docker-compose.yml",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:CLAUDE.md",
+      "target": "document:AGENTS.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packmind-lock.json",
+      "target": "config:packmind.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:pnpm-workspace.yaml",
+      "target": "config:package.json",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:nx.json",
+      "target": "config:package.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:migrate_node24.sh",
+      "target": "service:docker-compose.yml",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:downgrade_node22.sh",
+      "target": "service:docker-compose.yml",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:downgrade_node22.sh",
+      "target": "file:migrate_node24.sh",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:CONTRIBUTING.md",
+      "target": "service:docker-compose.yml",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:DESIGN.md",
+      "target": "document:PRODUCT.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

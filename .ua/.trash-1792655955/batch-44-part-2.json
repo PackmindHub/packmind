@@ -1,0 +1,634 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/git/src/domain/errors/FetchFileContentDelayedJobMissingError.ts",
+      "type": "file",
+      "name": "FetchFileContentDelayedJobMissingError.ts",
+      "filePath": "packages/git/src/domain/errors/FetchFileContentDelayedJobMissingError.ts",
+      "summary": "Internal error raised when the FetchFileContent delayed job has not been registered.",
+      "tags": ["error", "internal-error", "job-queue"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/FetchFileContentDelayedJobMissingError.ts:FetchFileContentDelayedJobMissingError",
+      "type": "class",
+      "name": "FetchFileContentDelayedJobMissingError",
+      "filePath": "packages/git/src/domain/errors/FetchFileContentDelayedJobMissingError.ts",
+      "lineRange": [8, 17],
+      "summary": "Error class FetchFileContentDelayedJobMissingError: Internal error raised when the FetchFileContent delayed job has not been registered.",
+      "tags": ["error", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts",
+      "type": "file",
+      "name": "FetchFileContentQueueErrors.ts",
+      "filePath": "packages/git/src/domain/errors/FetchFileContentQueueErrors.ts",
+      "summary": "Internal errors for the FetchFileContent BullMQ queue: queue not initialized and delayed job not created.",
+      "tags": ["error", "internal-error", "job-queue"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts:FetchFileContentQueueNotInitializedError",
+      "type": "class",
+      "name": "FetchFileContentQueueNotInitializedError",
+      "filePath": "packages/git/src/domain/errors/FetchFileContentQueueErrors.ts",
+      "lineRange": [10, 19],
+      "summary": "Error class FetchFileContentQueueNotInitializedError: raised when the FetchFileContent queue is used before initialization.",
+      "tags": ["error", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts:FetchFileContentDelayedJobNotCreatedError",
+      "type": "class",
+      "name": "FetchFileContentDelayedJobNotCreatedError",
+      "filePath": "packages/git/src/domain/errors/FetchFileContentQueueErrors.ts",
+      "lineRange": [21, 30],
+      "summary": "Error class FetchFileContentDelayedJobNotCreatedError: raised when the FetchFileContent delayed job could not be created.",
+      "tags": ["error", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GitAdapterPortsNotProvidedError.ts",
+      "type": "file",
+      "name": "GitAdapterPortsNotProvidedError.ts",
+      "filePath": "packages/git/src/domain/errors/GitAdapterPortsNotProvidedError.ts",
+      "summary": "Internal error raised when the GitAdapter is used before its required ports are injected.",
+      "tags": ["error", "internal-error", "dependency-injection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitAdapterPortsNotProvidedError.ts:GitAdapterPortsNotProvidedError",
+      "type": "class",
+      "name": "GitAdapterPortsNotProvidedError",
+      "filePath": "packages/git/src/domain/errors/GitAdapterPortsNotProvidedError.ts",
+      "lineRange": [8, 17],
+      "summary": "Error class GitAdapterPortsNotProvidedError: Internal error raised when the GitAdapter is used before its required ports are injected.",
+      "tags": ["error", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GitInternalError.ts",
+      "type": "file",
+      "name": "GitInternalError.ts",
+      "filePath": "packages/git/src/domain/errors/GitInternalError.ts",
+      "summary": "Base internal error for the git package, declaring the union of internal error reasons and their context shape on top of PackmindInternalError.",
+      "tags": ["error", "base-class", "type-definition", "internal-error"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "class",
+      "name": "GitInternalError",
+      "filePath": "packages/git/src/domain/errors/GitInternalError.ts",
+      "lineRange": [49, 58],
+      "summary": "Base internal error for the git package, declaring the union of internal error reasons and their context shape on top of PackmindInternalError.",
+      "tags": ["error", "base-class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GitProviderSourceNotConfiguredError.ts",
+      "type": "file",
+      "name": "GitProviderSourceNotConfiguredError.ts",
+      "filePath": "packages/git/src/domain/errors/GitProviderSourceNotConfiguredError.ts",
+      "summary": "Internal error raised when a git provider has no source (vendor) configured.",
+      "tags": ["error", "internal-error", "git-provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitProviderSourceNotConfiguredError.ts:GitProviderSourceNotConfiguredError",
+      "type": "class",
+      "name": "GitProviderSourceNotConfiguredError",
+      "filePath": "packages/git/src/domain/errors/GitProviderSourceNotConfiguredError.ts",
+      "lineRange": [8, 17],
+      "summary": "Error class GitProviderSourceNotConfiguredError: Internal error raised when a git provider has no source (vendor) configured.",
+      "tags": ["error", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts",
+      "type": "file",
+      "name": "GitRepoProviderNotConfiguredError.ts",
+      "filePath": "packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts",
+      "summary": "Internal error raised when a git repository has no associated provider configured.",
+      "tags": ["error", "internal-error", "git-repository"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts:GitRepoProviderNotConfiguredError",
+      "type": "class",
+      "name": "GitRepoProviderNotConfiguredError",
+      "filePath": "packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts",
+      "lineRange": [8, 17],
+      "summary": "Error class GitRepoProviderNotConfiguredError: Internal error raised when a git repository has no associated provider configured.",
+      "tags": ["error", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "file",
+      "name": "GitUpstreamError.ts",
+      "filePath": "packages/git/src/domain/errors/GitUpstreamError.ts",
+      "summary": "Base upstream error for failures returned by git providers (GitHub/GitLab), carrying kind, reason, context and optional retry-after on top of PackmindUpstreamError.",
+      "tags": ["error", "base-class", "type-definition", "upstream-error"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "class",
+      "name": "GitUpstreamError",
+      "filePath": "packages/git/src/domain/errors/GitUpstreamError.ts",
+      "lineRange": [46, 57],
+      "summary": "Base upstream error for failures returned by git providers (GitHub/GitLab), carrying kind, reason, context and optional retry-after on top of PackmindUpstreamError.",
+      "tags": ["error", "base-class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GithubAccessTokenExpiryUnparseableError.ts",
+      "type": "file",
+      "name": "GithubAccessTokenExpiryUnparseableError.ts",
+      "filePath": "packages/git/src/domain/errors/GithubAccessTokenExpiryUnparseableError.ts",
+      "summary": "Upstream error raised when GitHub returns an access token expiry that cannot be parsed.",
+      "tags": ["error", "upstream-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubAccessTokenExpiryUnparseableError.ts:GithubAccessTokenExpiryUnparseableError",
+      "type": "class",
+      "name": "GithubAccessTokenExpiryUnparseableError",
+      "filePath": "packages/git/src/domain/errors/GithubAccessTokenExpiryUnparseableError.ts",
+      "lineRange": [9, 23],
+      "summary": "Error class GithubAccessTokenExpiryUnparseableError: Upstream error raised when GitHub returns an access token expiry that cannot be parsed.",
+      "tags": ["error", "upstream-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GithubAccessTokenResponseIncompleteError.ts",
+      "type": "file",
+      "name": "GithubAccessTokenResponseIncompleteError.ts",
+      "filePath": "packages/git/src/domain/errors/GithubAccessTokenResponseIncompleteError.ts",
+      "summary": "Upstream error raised when the GitHub access token response is missing required fields.",
+      "tags": ["error", "upstream-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubAccessTokenResponseIncompleteError.ts:GithubAccessTokenResponseIncompleteError",
+      "type": "class",
+      "name": "GithubAccessTokenResponseIncompleteError",
+      "filePath": "packages/git/src/domain/errors/GithubAccessTokenResponseIncompleteError.ts",
+      "lineRange": [8, 18],
+      "summary": "Error class GithubAccessTokenResponseIncompleteError: Upstream error raised when the GitHub access token response is missing required fields.",
+      "tags": ["error", "upstream-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GithubApiOperationFailedError.ts",
+      "type": "file",
+      "name": "GithubApiOperationFailedError.ts",
+      "filePath": "packages/git/src/domain/errors/GithubApiOperationFailedError.ts",
+      "summary": "Upstream error wrapping a failed GitHub API operation with a provider error message.",
+      "tags": ["error", "upstream-error", "github"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubApiOperationFailedError.ts:GithubApiOperationFailedError",
+      "type": "class",
+      "name": "GithubApiOperationFailedError",
+      "filePath": "packages/git/src/domain/errors/GithubApiOperationFailedError.ts",
+      "lineRange": [11, 25],
+      "summary": "Error class GithubApiOperationFailedError: Upstream error wrapping a failed GitHub API operation with a provider error message.",
+      "tags": ["error", "upstream-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GithubAppTokenExchangeFailedError.ts",
+      "type": "file",
+      "name": "GithubAppTokenExchangeFailedError.ts",
+      "filePath": "packages/git/src/domain/errors/GithubAppTokenExchangeFailedError.ts",
+      "summary": "Upstream error raised when exchanging GitHub App credentials for an installation token fails.",
+      "tags": ["error", "upstream-error", "github-app", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubAppTokenExchangeFailedError.ts:GithubAppTokenExchangeFailedError",
+      "type": "class",
+      "name": "GithubAppTokenExchangeFailedError",
+      "filePath": "packages/git/src/domain/errors/GithubAppTokenExchangeFailedError.ts",
+      "lineRange": [9, 26],
+      "summary": "Error class GithubAppTokenExchangeFailedError: Upstream error raised when exchanging GitHub App credentials for an installation token fails.",
+      "tags": ["error", "upstream-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GithubAvailableRepositoriesFailedError.ts",
+      "type": "file",
+      "name": "GithubAvailableRepositoriesFailedError.ts",
+      "filePath": "packages/git/src/domain/errors/GithubAvailableRepositoriesFailedError.ts",
+      "summary": "Upstream error raised when GitHub fails to list available repositories.",
+      "tags": ["error", "upstream-error", "github"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubAvailableRepositoriesFailedError.ts:GithubAvailableRepositoriesFailedError",
+      "type": "class",
+      "name": "GithubAvailableRepositoriesFailedError",
+      "filePath": "packages/git/src/domain/errors/GithubAvailableRepositoriesFailedError.ts",
+      "lineRange": [9, 19],
+      "summary": "Error class GithubAvailableRepositoriesFailedError: Upstream error raised when GitHub fails to list available repositories.",
+      "tags": ["error", "upstream-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts",
+      "type": "file",
+      "name": "GithubBranchExistenceCheckFailedError.ts",
+      "filePath": "packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts",
+      "summary": "Upstream error raised when checking whether a branch exists on GitHub fails.",
+      "tags": ["error", "upstream-error", "github"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts:GithubBranchExistenceCheckFailedError",
+      "type": "class",
+      "name": "GithubBranchExistenceCheckFailedError",
+      "filePath": "packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts",
+      "lineRange": [12, 29],
+      "summary": "Error class GithubBranchExistenceCheckFailedError: Upstream error raised when checking whether a branch exists on GitHub fails.",
+      "tags": ["error", "upstream-error"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/git/src/domain/errors/FetchFileContentDelayedJobMissingError.ts",
+      "target": "class:packages/git/src/domain/errors/FetchFileContentDelayedJobMissingError.ts:FetchFileContentDelayedJobMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/FetchFileContentDelayedJobMissingError.ts",
+      "target": "class:packages/git/src/domain/errors/FetchFileContentDelayedJobMissingError.ts:FetchFileContentDelayedJobMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/FetchFileContentDelayedJobMissingError.ts:FetchFileContentDelayedJobMissingError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/FetchFileContentDelayedJobMissingError.ts",
+      "target": "file:packages/git/src/domain/errors/GitInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts",
+      "target": "class:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts:FetchFileContentQueueNotInitializedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts",
+      "target": "class:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts:FetchFileContentQueueNotInitializedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts:FetchFileContentQueueNotInitializedError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts",
+      "target": "class:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts:FetchFileContentDelayedJobNotCreatedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts",
+      "target": "class:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts:FetchFileContentDelayedJobNotCreatedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts:FetchFileContentDelayedJobNotCreatedError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/FetchFileContentQueueErrors.ts",
+      "target": "file:packages/git/src/domain/errors/GitInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitAdapterPortsNotProvidedError.ts",
+      "target": "class:packages/git/src/domain/errors/GitAdapterPortsNotProvidedError.ts:GitAdapterPortsNotProvidedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitAdapterPortsNotProvidedError.ts",
+      "target": "class:packages/git/src/domain/errors/GitAdapterPortsNotProvidedError.ts:GitAdapterPortsNotProvidedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitAdapterPortsNotProvidedError.ts:GitAdapterPortsNotProvidedError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitAdapterPortsNotProvidedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitInternalError.ts",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitInternalError.ts",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitProviderSourceNotConfiguredError.ts",
+      "target": "class:packages/git/src/domain/errors/GitProviderSourceNotConfiguredError.ts:GitProviderSourceNotConfiguredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitProviderSourceNotConfiguredError.ts",
+      "target": "class:packages/git/src/domain/errors/GitProviderSourceNotConfiguredError.ts:GitProviderSourceNotConfiguredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitProviderSourceNotConfiguredError.ts:GitProviderSourceNotConfiguredError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitProviderSourceNotConfiguredError.ts",
+      "target": "file:packages/git/src/domain/errors/GitInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts",
+      "target": "class:packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts:GitRepoProviderNotConfiguredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts",
+      "target": "class:packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts:GitRepoProviderNotConfiguredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts:GitRepoProviderNotConfiguredError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts",
+      "target": "file:packages/git/src/domain/errors/GitInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAccessTokenExpiryUnparseableError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubAccessTokenExpiryUnparseableError.ts:GithubAccessTokenExpiryUnparseableError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAccessTokenExpiryUnparseableError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubAccessTokenExpiryUnparseableError.ts:GithubAccessTokenExpiryUnparseableError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubAccessTokenExpiryUnparseableError.ts:GithubAccessTokenExpiryUnparseableError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAccessTokenExpiryUnparseableError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAccessTokenResponseIncompleteError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubAccessTokenResponseIncompleteError.ts:GithubAccessTokenResponseIncompleteError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAccessTokenResponseIncompleteError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubAccessTokenResponseIncompleteError.ts:GithubAccessTokenResponseIncompleteError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubAccessTokenResponseIncompleteError.ts:GithubAccessTokenResponseIncompleteError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAccessTokenResponseIncompleteError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubApiOperationFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubApiOperationFailedError.ts:GithubApiOperationFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubApiOperationFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubApiOperationFailedError.ts:GithubApiOperationFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubApiOperationFailedError.ts:GithubApiOperationFailedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubApiOperationFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubApiOperationFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAppTokenExchangeFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubAppTokenExchangeFailedError.ts:GithubAppTokenExchangeFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAppTokenExchangeFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubAppTokenExchangeFailedError.ts:GithubAppTokenExchangeFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubAppTokenExchangeFailedError.ts:GithubAppTokenExchangeFailedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAppTokenExchangeFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAvailableRepositoriesFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubAvailableRepositoriesFailedError.ts:GithubAvailableRepositoriesFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAvailableRepositoriesFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubAvailableRepositoriesFailedError.ts:GithubAvailableRepositoriesFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubAvailableRepositoriesFailedError.ts:GithubAvailableRepositoriesFailedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubAvailableRepositoriesFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts:GithubBranchExistenceCheckFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts:GithubBranchExistenceCheckFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts:GithubBranchExistenceCheckFailedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubBranchExistenceCheckFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

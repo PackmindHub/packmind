@@ -1,0 +1,992 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "summary": "Command detail layout route whose loader prefetches user, space and command data, rendering nested routes through an outlet.",
+      "tags": ["routing", "commands", "loader", "layout"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "lineRange": [8, 34],
+      "summary": "Ensures user, space and command query data are cached before rendering command detail routes.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx:CommandDetailsRouteModule",
+      "type": "function",
+      "name": "CommandDetailsRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "lineRange": [36, 38],
+      "summary": "Layout component rendering the nested command route outlet.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx",
+      "summary": "Commands list route displaying the commands of the current space with a create button.",
+      "tags": ["routing", "commands", "list", "component"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx:OrgCommandsIndex",
+      "type": "function",
+      "name": "OrgCommandsIndex",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx",
+      "lineRange": [8, 40],
+      "summary": "Renders the space commands list page with a create-command action.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx",
+      "summary": "Command creation route rendering the CreateCommand form inside a page.",
+      "tags": ["routing", "commands", "form", "component"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx:CreateCommandRouteModule",
+      "type": "function",
+      "name": "CreateCommandRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx",
+      "lineRange": [5, 16],
+      "summary": "Renders the CreateCommand form page.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "summary": "Space Context route (plugin-first navigation entry) that prefetches packages and renders the full-bleed context surface with live content subscription.",
+      "tags": ["routing", "spaces", "packages", "loader", "navigation-mode"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "lineRange": [10, 22],
+      "summary": "Ensures org context and prefetches space and its packages.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:SpaceContextRouteModule",
+      "type": "function",
+      "name": "SpaceContextRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "lineRange": [43, 54],
+      "summary": "Full-bleed page rendering the space content subscription and SpaceContextSurface.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "summary": "Space distribution route rendering the destination-indexed distribution surface showing which repositories and marketplaces are behind.",
+      "tags": ["routing", "deployments", "distribution", "loader"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "lineRange": [9, 24],
+      "summary": "Prefetches space, packages and distribution data for the distribution surface.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx:SpaceDistributionRouteModule",
+      "type": "function",
+      "name": "SpaceDistributionRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "lineRange": [50, 56],
+      "summary": "Full-bleed page rendering the SpaceDistributionSurface.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "summary": "Package detail index route that redirects to Context in plugin-first navigation, otherwise rendering PackageDetails.",
+      "tags": ["routing", "packages", "component", "redirect"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "lineRange": [18, 20],
+      "summary": "Delegates to redirectToContextComponent for package detail addresses.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx:PackageDetailsIndexRouteModule",
+      "type": "function",
+      "name": "PackageDetailsIndexRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "lineRange": [22, 53],
+      "summary": "Renders PackageDetails for the current package ID or a not-found page.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "summary": "Package detail layout route whose loader verifies the package belongs to the space (redirecting otherwise) and prefetches the package.",
+      "tags": ["routing", "packages", "loader", "layout"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "lineRange": [17, 58],
+      "summary": "Loads user, space and packages, redirects to dashboard if the package is missing, and returns package data.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx:PackageDetailsRouteModule",
+      "type": "function",
+      "name": "PackageDetailsRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "lineRange": [60, 62],
+      "summary": "Layout component rendering the nested package route outlet.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "summary": "Packages list route that redirects to Context in plugin-first navigation, otherwise shows the packages page with a create button.",
+      "tags": ["routing", "packages", "list", "component"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "lineRange": [14, 16],
+      "summary": "Delegates to redirectToContextPackage to open Context in plugin-first mode.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx:PackagesRouteModule",
+      "type": "function",
+      "name": "PackagesRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "lineRange": [18, 46],
+      "summary": "Renders the packages list page with a Create button and empty-state tracking.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx",
+      "summary": "Packages layout route mounting a live space content subscription around nested package routes.",
+      "tags": ["routing", "packages", "layout", "subscription"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx:PackagesRouteModule",
+      "type": "function",
+      "name": "PackagesRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx",
+      "lineRange": [11, 18],
+      "summary": "Layout rendering SpaceContentSubscription and the nested outlet.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx",
+      "summary": "Legacy recipe detail route that redirects to the corresponding command detail page.",
+      "tags": ["routing", "redirect", "legacy", "commands"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx",
+      "lineRange": [4, 12],
+      "summary": "Redirects legacy recipe URLs to the command detail route.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx:CommandDetailRedirectRouteModule",
+      "type": "function",
+      "name": "CommandDetailRedirectRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx",
+      "lineRange": [14, 16],
+      "summary": "Empty placeholder component for the redirecting route.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx",
+      "summary": "Legacy recipes list route that redirects to the commands list.",
+      "tags": ["routing", "redirect", "legacy", "commands"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx",
+      "lineRange": [4, 10],
+      "summary": "Redirects the legacy recipes list URL to the commands list.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx:CommandsIndexRedirectRouteModule",
+      "type": "function",
+      "name": "CommandsIndexRedirectRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx",
+      "lineRange": [12, 14],
+      "summary": "Empty placeholder component for the redirecting route.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandByIdOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceBySlugQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx:CommandDetailsRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx:CommandDetailsRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx:OrgCommandsIndex",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx:OrgCommandsIndex",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx:OrgCommandsIndex",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx:OrgCommandsIndex",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx:CommandsCreateButton",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx:OrgCommandsIndex",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx:OrgCommandsIndex",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands._index.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx:CreateCommandRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx:CreateCommandRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx:CreateCommandRouteModule",
+      "target": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.create.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackagesBySpaceQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceBySlugQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:SpaceContextRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:SpaceContextRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:SpaceContextRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx:SpaceContentSubscription",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx:SpaceContextRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/index.ts:SpaceContextSurface",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "target": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.context.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getListActiveDistributedPackagesBySpaceOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceBySlugQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx:SpaceDistributionRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx:SpaceDistributionRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx:SpaceDistributionRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx:SpaceDistributionSurface",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/destinations/SpaceDistributionSurface.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "target": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.distribution.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextPackage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx:PackageDetailsIndexRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx:PackageDetailsIndexRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx:PackageDetailsIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageDetails/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackagesBySpaceQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageByIdOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceBySlugQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx:PackageDetailsRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx:PackageDetailsRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.$packageId.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextPackage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx:PackagesRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx:PackagesRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx:PackagesRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackagesPage/index.ts:PackagesPage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPage/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages._index.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx:PackagesRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx:PackagesRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx:PackagesRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx:SpaceContentSubscription",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.packages.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx:CommandDetailRedirectRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx:CommandDetailRedirectRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes.$recipeId.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx:CommandsIndexRedirectRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx:CommandsIndexRedirectRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.recipes._index.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

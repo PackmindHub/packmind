@@ -1,0 +1,1026 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "type": "file",
+      "name": "destinationChanges.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "summary": "Computes the list of component changes a destination will receive, for live destinations and for destinations pinned to a specific package release.",
+      "tags": ["selector", "deployments", "changes", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:changeCount",
+      "type": "function",
+      "name": "changeCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "lineRange": [43, 45],
+      "summary": "Counts the changes in a change set.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:liveDestinationChanges",
+      "type": "function",
+      "name": "liveDestinationChanges",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "lineRange": [102, 114],
+      "summary": "Computes changes a live-tracking destination will receive.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:pinnedComponents",
+      "type": "function",
+      "name": "pinnedComponents",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "lineRange": [132, 161],
+      "summary": "Resolves components contained in a pinned package release.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:releaseDestinationChanges",
+      "type": "function",
+      "name": "releaseDestinationChanges",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "lineRange": [175, 217],
+      "summary": "Computes changes between a pinned release and the target release for a destination.",
+      "tags": ["selector", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "type": "file",
+      "name": "destinationStanding.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "summary": "Determines whether a destination is up-to-date, drifted or behind relative to its package (live vs pinned release) and what remedy applies.",
+      "tags": ["selector", "versioning", "drift", "pure-function"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:destinationStanding",
+      "type": "function",
+      "name": "destinationStanding",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "lineRange": [128, 163],
+      "summary": "Computes the standing (up-to-date, drifted, behind) and remedy for a destination.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:needsAttention",
+      "type": "function",
+      "name": "needsAttention",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "lineRange": [166, 168],
+      "summary": "Whether a standing requires user action.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "file",
+      "name": "installDriftEntries.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "summary": "Helpers computing per-install drift entries, relative dates, behind counts, multi-landing repositories and target labels for the deployments redesign.",
+      "tags": ["selector", "drift", "utility", "date-formatting"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:relativeDaysAgo",
+      "type": "function",
+      "name": "relativeDaysAgo",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "lineRange": [20, 25],
+      "summary": "Computes how many days ago a date was.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:formatRelativeDate",
+      "type": "function",
+      "name": "formatRelativeDate",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "lineRange": [27, 45],
+      "summary": "Formats a date as a human relative string.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:isInstallBehind",
+      "type": "function",
+      "name": "isInstallBehind",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "lineRange": [47, 49],
+      "summary": "Whether an install entry is behind.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:artifactBehindCount",
+      "type": "function",
+      "name": "artifactBehindCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "lineRange": [51, 53],
+      "summary": "Counts behind artifacts for an install.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:emptyEntry",
+      "type": "function",
+      "name": "emptyEntry",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "lineRange": [95, 115],
+      "summary": "Creates an empty install drift entry.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "function",
+      "name": "installDriftEntries",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "lineRange": [117, 210],
+      "summary": "Builds per-install drift entries from package artifacts.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:multiLandingRepoIds",
+      "type": "function",
+      "name": "multiLandingRepoIds",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "lineRange": [221, 238],
+      "summary": "Finds repositories where a package lands on multiple targets.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:isRootTargetPath",
+      "type": "function",
+      "name": "isRootTargetPath",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "lineRange": [252, 254],
+      "summary": "Whether a target path is the repository root.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:targetLabel",
+      "type": "function",
+      "name": "targetLabel",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "lineRange": [256, 258],
+      "summary": "Returns a display label for a target.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:packageMostRecentPush",
+      "type": "function",
+      "name": "packageMostRecentPush",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "lineRange": [260, 275],
+      "summary": "Finds the most recent push date of a package.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "type": "file",
+      "name": "installLock.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "summary": "Derives why an install is locked (e.g. CLI-managed) and aggregates a package-level lock profile.",
+      "tags": ["selector", "lock-file", "deployments", "pure-function"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:installLockReason",
+      "type": "function",
+      "name": "installLockReason",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "lineRange": [8, 20],
+      "summary": "Determines why an install is locked from app distribution.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:packageLockProfile",
+      "type": "function",
+      "name": "packageLockProfile",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "lineRange": [36, 56],
+      "summary": "Aggregates lock reasons across a package's installs.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "type": "file",
+      "name": "providerAuth.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "summary": "Helpers determining which git providers have tokens and whether behind installs can be distributed by the app or require the CLI.",
+      "tags": ["selector", "git-provider", "authentication", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts:providersWithTokenSet",
+      "type": "function",
+      "name": "providersWithTokenSet",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "lineRange": [9, 18],
+      "summary": "Returns the set of provider ids with a configured token.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts:isAppDistributable",
+      "type": "function",
+      "name": "isAppDistributable",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "lineRange": [20, 25],
+      "summary": "Whether an install can be distributed by the app given provider auth and locks.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts:behindInstallsRequiringCliCount",
+      "type": "function",
+      "name": "behindInstallsRequiringCliCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "lineRange": [27, 39],
+      "summary": "Counts behind installs that must be updated via the CLI.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/stubPackages.ts",
+      "type": "file",
+      "name": "stubPackages.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/stubPackages.ts",
+      "summary": "Hand-written stub fixtures of packages, repositories and providers used by the DEV-only stub mode of the deployments redesign, pivoting packages into repositories.",
+      "tags": ["fixture", "stub", "test-data", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/stubPackages.ts:pivotPackagesIntoRepositories",
+      "type": "function",
+      "name": "pivotPackagesIntoRepositories",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/stubPackages.ts",
+      "lineRange": [510, 569],
+      "summary": "Pivots stub package fixtures into stub repository drift fixtures.",
+      "tags": ["utility", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "file",
+      "name": "types.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "summary": "Type definitions for the deployments redesign: artifact kinds, repo/target refs, install drift reasons, package/repository/marketplace drift shapes.",
+      "tags": ["type-definition", "data-model", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/MarketplaceDetailPane.tsx",
+      "type": "file",
+      "name": "MarketplaceDetailPane.tsx",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/MarketplaceDetailPane.tsx",
+      "summary": "OSS-edition stub of the marketplace detail pane that renders nothing; the proprietary build swaps in the real pane via an alias.",
+      "tags": ["stub", "oss-edition", "component", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/MarketplaceDetailPane.tsx:MarketplaceDetailPane",
+      "type": "function",
+      "name": "MarketplaceDetailPane",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/MarketplaceDetailPane.tsx",
+      "lineRange": [23, 27],
+      "summary": "OSS stub marketplace pane that always renders null.",
+      "tags": ["component", "oss-edition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/buildMarketplaceDriftOverview.ts",
+      "type": "file",
+      "name": "buildMarketplaceDriftOverview.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/buildMarketplaceDriftOverview.ts",
+      "summary": "OSS-edition stand-in for marketplace drift selectors, providing the real marketplacePluginCount arithmetic.",
+      "tags": ["stub", "oss-edition", "selector", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/buildMarketplaceDriftOverview.ts:marketplacePluginCount",
+      "type": "function",
+      "name": "marketplacePluginCount",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/buildMarketplaceDriftOverview.ts",
+      "lineRange": [17, 19],
+      "summary": "Returns the number of plugins in a marketplace drift group.",
+      "tags": ["utility", "oss-edition", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceMarketplaces.ts",
+      "type": "file",
+      "name": "useSpaceMarketplaces.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceMarketplaces.ts",
+      "summary": "OSS-edition stub hook reporting that a space publishes to no marketplaces and is immediately ready.",
+      "tags": ["stub", "oss-edition", "hook", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceMarketplaces.ts:useSpaceMarketplaces",
+      "type": "function",
+      "name": "useSpaceMarketplaces",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceMarketplaces.ts",
+      "lineRange": [20, 22],
+      "summary": "OSS stub hook returning an empty, ready marketplace list.",
+      "tags": ["hook", "oss-edition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts",
+      "type": "file",
+      "name": "GitProviderGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts",
+      "summary": "HTTP gateway implementing IGitProviderGateway for git provider CRUD, GitHub App installation/manifest flows, repository tracking, branch checks and directory lookups.",
+      "tags": [
+        "gateway",
+        "api-client",
+        "git-provider",
+        "github-app",
+        "service"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts:GitProviderGatewayApi",
+      "type": "class",
+      "name": "GitProviderGatewayApi",
+      "filePath": "apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts",
+      "lineRange": [39, 351],
+      "summary": "Gateway class extending PackmindGateway that issues HTTP calls for git providers, GitHub App flows, repositories, branches and target directories.",
+      "tags": ["gateway", "api-client", "git", "service"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/api/gateways/IGitProviderGateway.ts",
+      "type": "file",
+      "name": "IGitProviderGateway.ts",
+      "filePath": "apps/frontend/src/domain/git/api/gateways/IGitProviderGateway.ts",
+      "summary": "Interface contract for the frontend git provider gateway, declaring provider, GitHub App, repository, branch and directory operations.",
+      "tags": ["type-definition", "interface", "gateway", "git-provider"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/api/gateways/IRepositoryGateway.ts",
+      "type": "file",
+      "name": "IRepositoryGateway.ts",
+      "filePath": "apps/frontend/src/domain/git/api/gateways/IRepositoryGateway.ts",
+      "summary": "Interface contract for the repository gateway exposing a method to list git repositories.",
+      "tags": ["type-definition", "interface", "gateway", "repository"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts",
+      "type": "file",
+      "name": "RepositoryGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts",
+      "summary": "HTTP gateway implementing IRepositoryGateway to fetch git repositories from the API.",
+      "tags": ["gateway", "api-client", "repository", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts:RepositoryGatewayApi",
+      "type": "class",
+      "name": "RepositoryGatewayApi",
+      "filePath": "apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts",
+      "lineRange": [5, 18],
+      "summary": "Gateway class extending PackmindGateway that fetches the organization's git repositories.",
+      "tags": ["gateway", "api-client", "git", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/api/gateways/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/git/api/gateways/index.ts",
+      "summary": "Barrel instantiating and exporting singleton repository and git provider gateway instances.",
+      "tags": ["barrel", "singleton", "gateway", "entry-point"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:changeCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:changeCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:liveDestinationChanges",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:liveDestinationChanges",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:pinnedComponents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:releaseDestinationChanges",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:releaseDestinationChanges",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:releaseDestinationChanges",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:pinnedComponents",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:destinationStanding",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:destinationStanding",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:needsAttention",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:needsAttention",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:relativeDaysAgo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:relativeDaysAgo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:formatRelativeDate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:formatRelativeDate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:isInstallBehind",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:isInstallBehind",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:artifactBehindCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:artifactBehindCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:emptyEntry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:multiLandingRepoIds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:multiLandingRepoIds",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:isRootTargetPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:isRootTargetPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:targetLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:targetLabel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:packageMostRecentPush",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:packageMostRecentPush",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:emptyEntry",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:relativeDaysAgo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:destinationStanding",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:needsAttention",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:packageMostRecentPush",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:relativeDaysAgo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:packageMostRecentPush",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:formatRelativeDate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:installLockReason",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:installLockReason",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:packageLockProfile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:packageLockProfile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:packageLockProfile",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:packageLockProfile",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:installLockReason",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts:providersWithTokenSet",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts:providersWithTokenSet",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts:isAppDistributable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts:isAppDistributable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts:behindInstallsRequiringCliCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts:behindInstallsRequiringCliCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts:behindInstallsRequiringCliCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/stubPackages.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/stubPackages.ts:pivotPackagesIntoRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/stubPackages.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/MarketplaceDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/MarketplaceDetailPane.tsx:MarketplaceDetailPane",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/MarketplaceDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/MarketplaceDetailPane.tsx:MarketplaceDetailPane",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/MarketplaceDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/buildMarketplaceDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/buildMarketplaceDriftOverview.ts:marketplacePluginCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/buildMarketplaceDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/buildMarketplaceDriftOverview.ts:marketplacePluginCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/buildMarketplaceDriftOverview.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceMarketplaces.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceMarketplaces.ts:useSpaceMarketplaces",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceMarketplaces.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceMarketplaces.ts:useSpaceMarketplaces",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceMarketplaces.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts:GitProviderGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts:GitProviderGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts:GitProviderGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/git/api/gateways/IGitProviderGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/git/types/GitHubAppManifest.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/IGitProviderGateway.ts",
+      "target": "file:apps/frontend/src/domain/git/types/GitHubAppManifest.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/IGitProviderGateway.ts",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts:RepositoryGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts:RepositoryGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts:RepositoryGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/git/api/gateways/IRepositoryGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/git/api/gateways/GitProviderGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/git/api/gateways/IGitProviderGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/git/api/gateways/IRepositoryGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/git/api/gateways/RepositoryGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

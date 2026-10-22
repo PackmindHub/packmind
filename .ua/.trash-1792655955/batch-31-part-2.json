@@ -1,0 +1,731 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts",
+      "type": "file",
+      "name": "GitRemoteCredentialsMiddleware.ts",
+      "filePath": "apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts",
+      "summary": "Middleware that strips credentials embedded in git remote URLs from request payloads before they reach handlers.",
+      "tags": ["middleware", "security", "git", "sanitization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts:GitRemoteCredentialsMiddleware",
+      "type": "class",
+      "name": "GitRemoteCredentialsMiddleware",
+      "filePath": "apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts",
+      "lineRange": [37, 55],
+      "summary": "Middleware sanitizing git remote credentials from requests.",
+      "tags": ["middleware", "security", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts:stripFromUrl",
+      "type": "function",
+      "name": "stripFromUrl",
+      "filePath": "apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts",
+      "lineRange": [9, 28],
+      "summary": "Removes user/password credentials from a git remote URL string.",
+      "tags": ["utility", "security", "url"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/shared/middleware/editionHeaderMiddleware.ts",
+      "type": "file",
+      "name": "editionHeaderMiddleware.ts",
+      "filePath": "apps/api/src/app/shared/middleware/editionHeaderMiddleware.ts",
+      "summary": "Factory producing an Express middleware that adds the Packmind edition header to every response.",
+      "tags": ["middleware", "factory", "edition", "http-headers"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/middleware/editionHeaderMiddleware.ts:createEditionHeaderMiddleware",
+      "type": "function",
+      "name": "createEditionHeaderMiddleware",
+      "filePath": "apps/api/src/app/shared/middleware/editionHeaderMiddleware.ts",
+      "lineRange": [11, 18],
+      "summary": "Returns middleware setting the edition response header.",
+      "tags": ["middleware", "factory", "edition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/shared/utils/edition.ts",
+      "type": "file",
+      "name": "edition.ts",
+      "filePath": "apps/api/src/app/shared/utils/edition.ts",
+      "summary": "Utilities resolving the Packmind edition (oss vs proprietary) and the GitHub App mode from environment configuration.",
+      "tags": ["utility", "configuration", "edition", "feature-toggle"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/utils/edition.ts:resolvePackmindEdition",
+      "type": "function",
+      "name": "resolvePackmindEdition",
+      "filePath": "apps/api/src/app/shared/utils/edition.ts",
+      "lineRange": [8, 12],
+      "summary": "Resolves the current Packmind edition from environment.",
+      "tags": ["utility", "edition", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/utils/edition.ts:resolveGithubAppMode",
+      "type": "function",
+      "name": "resolveGithubAppMode",
+      "filePath": "apps/api/src/app/shared/utils/edition.ts",
+      "lineRange": [20, 23],
+      "summary": "Resolves the GitHub App integration mode from environment.",
+      "tags": ["utility", "github", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/shared/utils/error.utils.ts",
+      "type": "file",
+      "name": "error.utils.ts",
+      "filePath": "apps/api/src/app/shared/utils/error.utils.ts",
+      "summary": "Helper extracting a human-readable message from unknown thrown values.",
+      "tags": ["utility", "error-handling", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/utils/error.utils.ts:getErrorMessage",
+      "type": "function",
+      "name": "getErrorMessage",
+      "filePath": "apps/api/src/app/shared/utils/error.utils.ts",
+      "lineRange": [19, 29],
+      "summary": "Returns a string message from any thrown value.",
+      "tags": ["utility", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/spaces/spaces.service.ts",
+      "type": "file",
+      "name": "spaces.service.ts",
+      "filePath": "apps/api/src/app/spaces/spaces.service.ts",
+      "summary": "Application service listing the spaces of a user and resolving a space by slug through the Spaces hexa adapter.",
+      "tags": ["service", "spaces", "adapter-facade"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/spaces/spaces.service.ts:SpacesService",
+      "type": "class",
+      "name": "SpacesService",
+      "filePath": "apps/api/src/app/spaces/spaces.service.ts",
+      "lineRange": [12, 38],
+      "summary": "Facade over the Spaces adapter for listing user spaces and slug lookup.",
+      "tags": ["service", "spaces", "facade"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/sse/dto/subscribe.dto.ts",
+      "type": "file",
+      "name": "subscribe.dto.ts",
+      "filePath": "apps/api/src/app/sse/dto/subscribe.dto.ts",
+      "summary": "Type definitions for SSE subscribe and unsubscribe request bodies (event type and optional params).",
+      "tags": ["type-definition", "dto", "sse", "realtime"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/sse/sse.controller.ts",
+      "type": "file",
+      "name": "sse.controller.ts",
+      "filePath": "apps/api/src/app/sse/sse.controller.ts",
+      "summary": "NestJS controller exposing the Server-Sent Events stream endpoint plus subscribe/unsubscribe endpoints for event types.",
+      "tags": ["api-handler", "controller", "sse", "realtime", "streaming"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/sse/sse.controller.ts:SSEController",
+      "type": "class",
+      "name": "SSEController",
+      "filePath": "apps/api/src/app/sse/sse.controller.ts",
+      "lineRange": [22, 171],
+      "summary": "Controller serving the SSE event stream and subscribe/unsubscribe endpoints.",
+      "tags": ["controller", "sse", "api-handler"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/sse/sse.module.ts",
+      "type": "file",
+      "name": "sse.module.ts",
+      "filePath": "apps/api/src/app/sse/sse.module.ts",
+      "summary": "NestJS module registering the SSE controller and service with access to the hexa registry.",
+      "tags": ["nestjs-module", "sse", "realtime"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/sse/sse.module.ts:SSEModule",
+      "type": "class",
+      "name": "SSEModule",
+      "filePath": "apps/api/src/app/sse/sse.module.ts",
+      "lineRange": [29, 29],
+      "summary": "NestJS module class declaring the imports, controllers and providers for this feature area.",
+      "tags": ["nestjs-module", "composition", "decorator"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/sse/sse.service.ts",
+      "type": "file",
+      "name": "sse.service.ts",
+      "filePath": "apps/api/src/app/sse/sse.service.ts",
+      "summary": "Manages Server-Sent Events connections and per-user event subscriptions, fanning out events across API instances through Redis pub/sub.",
+      "tags": ["service", "sse", "realtime", "redis", "pub-sub"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/sse/sse.service.ts:SSEService",
+      "type": "class",
+      "name": "SSEService",
+      "filePath": "apps/api/src/app/sse/sse.service.ts",
+      "lineRange": [33, 617],
+      "summary": "Tracks SSE connections per user, handles subscriptions, relays Redis pub/sub events to matching connections and formats SSE frames.",
+      "tags": ["service", "sse", "redis", "pub-sub"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/instrument.ts",
+      "type": "file",
+      "name": "instrument.ts",
+      "filePath": "apps/api/src/instrument.ts",
+      "summary": "Process-level instrumentation entry that loads OpenTelemetry first and initializes Sentry error reporting when a DSN is configured.",
+      "tags": ["observability", "instrumentation", "sentry", "bootstrap"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/main.ts",
+      "type": "file",
+      "name": "main.ts",
+      "filePath": "apps/api/src/main.ts",
+      "summary": "API entry point bootstrapping the NestJS application: CORS, cache, middleware, body limits, database pool warm-up, listening, and the setup ping.",
+      "tags": ["entry-point", "bootstrap", "nestjs", "server"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/api/src/main.ts:getCorsOrigins",
+      "type": "function",
+      "name": "getCorsOrigins",
+      "filePath": "apps/api/src/main.ts",
+      "lineRange": [37, 70],
+      "summary": "Computes allowed CORS origins from configuration.",
+      "tags": ["configuration", "cors", "security"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/api/src/main.ts:initializeCache",
+      "type": "function",
+      "name": "initializeCache",
+      "filePath": "apps/api/src/main.ts",
+      "lineRange": [75, 90],
+      "summary": "Initializes the shared Redis-backed cache before app start.",
+      "tags": ["cache", "redis", "initialization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/main.ts:bootstrap",
+      "type": "function",
+      "name": "bootstrap",
+      "filePath": "apps/api/src/main.ts",
+      "lineRange": [92, 262],
+      "summary": "Creates and configures the NestJS app, warms the DB pool, starts listening and fires the setup ping.",
+      "tags": ["entry-point", "bootstrap", "server"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/otel.ts",
+      "type": "file",
+      "name": "otel.ts",
+      "filePath": "apps/api/src/otel.ts",
+      "summary": "OpenTelemetry SDK bootstrap gated on OTEL_EXPORTER_OTLP_ENDPOINT, configuring OTLP trace/log exporters, auto-instrumentation and noise filtering, with a shutdown hook.",
+      "tags": [
+        "observability",
+        "opentelemetry",
+        "instrumentation",
+        "tracing",
+        "bootstrap"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Must be evaluated before other modules because OpenTelemetry auto-instrumentation hooks require(); reads raw env vars synchronously on purpose."
+    },
+    {
+      "id": "function:apps/api/src/otel.ts:declaredEnvironment",
+      "type": "function",
+      "name": "declaredEnvironment",
+      "filePath": "apps/api/src/otel.ts",
+      "lineRange": [115, 132],
+      "summary": "Determines the deployment environment name for OpenTelemetry resource attributes.",
+      "tags": ["opentelemetry", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/otel.ts:shutdownOtel",
+      "type": "function",
+      "name": "shutdownOtel",
+      "filePath": "apps/api/src/otel.ts",
+      "lineRange": [325, 341],
+      "summary": "Flushes and shuts down the OpenTelemetry SDK if it was started.",
+      "tags": ["opentelemetry", "shutdown", "lifecycle"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/startup/ping-packmind-setup.ts",
+      "type": "file",
+      "name": "ping-packmind-setup.ts",
+      "filePath": "apps/api/src/startup/ping-packmind-setup.ts",
+      "summary": "Startup task that sends an anonymous instance ping (cached instance id and version) to the Packmind setup webhook.",
+      "tags": ["startup", "telemetry", "webhook", "cache"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/api/src/startup/ping-packmind-setup.ts:getVersion",
+      "type": "function",
+      "name": "getVersion",
+      "filePath": "apps/api/src/startup/ping-packmind-setup.ts",
+      "lineRange": [20, 55],
+      "summary": "Reads the application version from the root package.json.",
+      "tags": ["utility", "version", "filesystem"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/api/src/startup/ping-packmind-setup.ts:sendPing",
+      "type": "function",
+      "name": "sendPing",
+      "filePath": "apps/api/src/startup/ping-packmind-setup.ts",
+      "lineRange": [60, 88],
+      "summary": "Posts instance id and version to the setup webhook.",
+      "tags": ["telemetry", "http", "webhook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/startup/ping-packmind-setup.ts:pingPackmindSetup",
+      "type": "function",
+      "name": "pingPackmindSetup",
+      "filePath": "apps/api/src/startup/ping-packmind-setup.ts",
+      "lineRange": [95, 208],
+      "summary": "Resolves or creates a cached instance id and version, then sends the setup ping.",
+      "tags": ["startup", "telemetry", "cache"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/startup/warm-up-database-pool.ts",
+      "type": "file",
+      "name": "warm-up-database-pool.ts",
+      "filePath": "apps/api/src/startup/warm-up-database-pool.ts",
+      "summary": "Startup task that pre-opens PostgreSQL pool connections up to the configured minimum, bounded by a deadline, before the API starts listening.",
+      "tags": ["startup", "database", "connection-pool", "performance"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/api/src/startup/warm-up-database-pool.ts:startDeadline",
+      "type": "function",
+      "name": "startDeadline",
+      "filePath": "apps/api/src/startup/warm-up-database-pool.ts",
+      "lineRange": [35, 52],
+      "summary": "Creates a timeout deadline promise bounding the pool warm-up.",
+      "tags": ["utility", "timeout", "async"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/startup/warm-up-database-pool.ts:warmUpDatabasePool",
+      "type": "function",
+      "name": "warmUpDatabasePool",
+      "filePath": "apps/api/src/startup/warm-up-database-pool.ts",
+      "lineRange": [101, 173],
+      "summary": "Opens pool connections concurrently up to the minimum size within a deadline, releasing them quietly.",
+      "tags": ["startup", "database", "connection-pool"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts",
+      "target": "class:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts:GitRemoteCredentialsMiddleware",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts",
+      "target": "class:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts:GitRemoteCredentialsMiddleware",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts",
+      "target": "function:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts:stripFromUrl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/middleware/editionHeaderMiddleware.ts",
+      "target": "function:apps/api/src/app/shared/middleware/editionHeaderMiddleware.ts:createEditionHeaderMiddleware",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/middleware/editionHeaderMiddleware.ts",
+      "target": "function:apps/api/src/app/shared/middleware/editionHeaderMiddleware.ts:createEditionHeaderMiddleware",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/utils/edition.ts",
+      "target": "function:apps/api/src/app/shared/utils/edition.ts:resolvePackmindEdition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/utils/edition.ts",
+      "target": "function:apps/api/src/app/shared/utils/edition.ts:resolvePackmindEdition",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/utils/edition.ts",
+      "target": "function:apps/api/src/app/shared/utils/edition.ts:resolveGithubAppMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/utils/edition.ts",
+      "target": "function:apps/api/src/app/shared/utils/edition.ts:resolveGithubAppMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/utils/error.utils.ts",
+      "target": "function:apps/api/src/app/shared/utils/error.utils.ts:getErrorMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/utils/error.utils.ts",
+      "target": "function:apps/api/src/app/shared/utils/error.utils.ts:getErrorMessage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/spaces/spaces.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/spaces/spaces.service.ts",
+      "target": "class:apps/api/src/app/spaces/spaces.service.ts:SpacesService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/spaces/spaces.service.ts",
+      "target": "class:apps/api/src/app/spaces/spaces.service.ts:SpacesService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.controller.ts",
+      "target": "file:apps/api/src/app/sse/dto/subscribe.dto.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.controller.ts",
+      "target": "file:apps/api/src/app/sse/sse.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.controller.ts",
+      "target": "class:apps/api/src/app/sse/sse.controller.ts:SSEController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.controller.ts",
+      "target": "class:apps/api/src/app/sse/sse.controller.ts:SSEController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.module.ts",
+      "target": "file:apps/api/src/app/shared/HexaRegistryModule.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.module.ts",
+      "target": "file:apps/api/src/app/sse/sse.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.module.ts",
+      "target": "file:apps/api/src/app/sse/sse.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.module.ts",
+      "target": "class:apps/api/src/app/sse/sse.module.ts:SSEModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.module.ts",
+      "target": "class:apps/api/src/app/sse/sse.module.ts:SSEModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.service.ts",
+      "target": "file:apps/api/src/app/errors/ApiInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.service.ts",
+      "target": "class:apps/api/src/app/sse/sse.service.ts:SSEService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/sse/sse.service.ts",
+      "target": "class:apps/api/src/app/sse/sse.service.ts:SSEService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/instrument.ts",
+      "target": "file:apps/api/src/otel.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/main.ts",
+      "target": "file:apps/api/src/app/app.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/main.ts",
+      "target": "file:apps/api/src/app/shared/middleware/editionHeaderMiddleware.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/main.ts",
+      "target": "file:apps/api/src/app/shared/utils/edition.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/main.ts",
+      "target": "file:apps/api/src/instrument.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/main.ts",
+      "target": "file:apps/api/src/otel.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/main.ts",
+      "target": "file:apps/api/src/startup/ping-packmind-setup.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/main.ts",
+      "target": "file:apps/api/src/startup/warm-up-database-pool.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/main.ts",
+      "target": "function:apps/api/src/main.ts:getCorsOrigins",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/main.ts",
+      "target": "function:apps/api/src/main.ts:initializeCache",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/main.ts",
+      "target": "function:apps/api/src/main.ts:bootstrap",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/otel.ts",
+      "target": "function:apps/api/src/otel.ts:declaredEnvironment",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/otel.ts",
+      "target": "function:apps/api/src/otel.ts:shutdownOtel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/otel.ts",
+      "target": "function:apps/api/src/otel.ts:shutdownOtel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/startup/ping-packmind-setup.ts",
+      "target": "function:apps/api/src/startup/ping-packmind-setup.ts:getVersion",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/startup/ping-packmind-setup.ts",
+      "target": "function:apps/api/src/startup/ping-packmind-setup.ts:sendPing",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/startup/ping-packmind-setup.ts",
+      "target": "function:apps/api/src/startup/ping-packmind-setup.ts:pingPackmindSetup",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/startup/ping-packmind-setup.ts",
+      "target": "function:apps/api/src/startup/ping-packmind-setup.ts:pingPackmindSetup",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/startup/warm-up-database-pool.ts",
+      "target": "file:apps/api/src/app/database-pool.config.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/startup/warm-up-database-pool.ts",
+      "target": "function:apps/api/src/startup/warm-up-database-pool.ts:startDeadline",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/startup/warm-up-database-pool.ts",
+      "target": "function:apps/api/src/startup/warm-up-database-pool.ts:warmUpDatabasePool",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/startup/warm-up-database-pool.ts",
+      "target": "function:apps/api/src/startup/warm-up-database-pool.ts:warmUpDatabasePool",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/sse/sse.controller.ts:SSEController",
+      "target": "class:apps/api/src/app/sse/sse.service.ts:SSEService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "function:apps/api/src/main.ts:bootstrap",
+      "target": "function:apps/api/src/startup/warm-up-database-pool.ts:warmUpDatabasePool",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/api/src/main.ts:bootstrap",
+      "target": "function:apps/api/src/startup/ping-packmind-setup.ts:pingPackmindSetup",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/api/src/main.ts:bootstrap",
+      "target": "function:apps/api/src/app/shared/middleware/editionHeaderMiddleware.ts:createEditionHeaderMiddleware",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/api/src/main.ts:bootstrap",
+      "target": "function:apps/api/src/app/shared/utils/edition.ts:resolvePackmindEdition",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts:stripFromUrl",
+      "target": "class:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts:GitRemoteCredentialsMiddleware",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "class:apps/api/src/app/sse/sse.service.ts:SSEService",
+      "target": "class:apps/api/src/app/errors/ApiInternalError.ts:ApiInternalError",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "function:apps/api/src/startup/warm-up-database-pool.ts:warmUpDatabasePool",
+      "target": "function:apps/api/src/app/database-pool.config.ts:resolveDatabasePoolOptions",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

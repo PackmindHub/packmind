@@ -1,0 +1,533 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/frontend/src/domains/deployments/components/PackageVersionBarDataTestIds.ts",
+      "type": "file",
+      "name": "PackageVersionBarDataTestIds.ts",
+      "filePath": "packages/frontend/src/domains/deployments/components/PackageVersionBarDataTestIds.ts",
+      "summary": "Defines the PackageVersionBarDataTestId enum of stable data-testid values (reading, release action, pinned components) that the e2e suite uses to read a package version bar without relying on labels or DOM neighbours.",
+      "tags": [
+        "type-definition",
+        "e2e-testing",
+        "test-ids",
+        "frontend",
+        "deployments"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/deployments/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/frontend/src/domains/deployments/components/index.ts",
+      "summary": "Barrel re-exporting the deployments domain data-test-id enums (deployments history and package version bar).",
+      "tags": ["barrel", "test-ids", "deployments", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/deployments/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/frontend/src/domains/deployments/index.ts",
+      "summary": "Barrel exposing the deployments domain components module of the frontend test-id package.",
+      "tags": ["barrel", "deployments", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/frontend/src/domains/index.ts",
+      "summary": "Barrel aggregating the account, deployments and organizations domain exports of the frontend shared package.",
+      "tags": ["barrel", "frontend", "domains"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/organizations/components/SidebarNavigationDataTestIds.ts",
+      "type": "file",
+      "name": "SidebarNavigationDataTestIds.ts",
+      "filePath": "packages/frontend/src/domains/organizations/components/SidebarNavigationDataTestIds.ts",
+      "summary": "Defines the SidebarNavigationDataTestId enum of data-testid values for sidebar links (packages, skills, settings, integrations, space settings) used by e2e tests.",
+      "tags": [
+        "type-definition",
+        "e2e-testing",
+        "test-ids",
+        "frontend",
+        "navigation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/organizations/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/frontend/src/domains/organizations/components/index.ts",
+      "summary": "Barrel re-exporting the sidebar navigation data-test-id enum for the organizations domain.",
+      "tags": ["barrel", "test-ids", "organizations", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/domains/organizations/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/frontend/src/domains/organizations/index.ts",
+      "summary": "Barrel exposing the organizations domain components module of the frontend test-id package.",
+      "tags": ["barrel", "organizations", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/frontend/src/index.ts",
+      "summary": "Package entry point of the frontend shared package, re-exporting domain and route data-test-id enums consumed by the app and the e2e suite.",
+      "tags": ["entry-point", "barrel", "frontend", "test-ids"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/routes/SettingsRouteDataTestIds.ts",
+      "type": "file",
+      "name": "SettingsRouteDataTestIds.ts",
+      "filePath": "packages/frontend/src/routes/SettingsRouteDataTestIds.ts",
+      "summary": "Defines the SettingsRouteDataTestIds enum of data-testid values for the Git and Users links on the settings route.",
+      "tags": [
+        "type-definition",
+        "e2e-testing",
+        "test-ids",
+        "frontend",
+        "settings"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/frontend/src/routes/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/frontend/src/routes/index.ts",
+      "summary": "Barrel re-exporting the settings route data-test-id enum.",
+      "tags": ["barrel", "routes", "test-ids", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/.swcrc",
+      "type": "file",
+      "name": ".swcrc",
+      "filePath": "packages/git/.swcrc",
+      "summary": "SWC compiler configuration for the git package: TypeScript syntax without decorators, ES2022 target, CommonJS modules, preserved class names and source maps.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/git/src/application/useCases/index.ts",
+      "summary": "Barrel exporting all git package use cases: provider and repository CRUD, branch/directory existence checks, file retrieval, commits, and repository lookups by owner/repo/branch.",
+      "tags": ["barrel", "use-case", "git", "application-layer"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/jobs/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/git/src/domain/jobs/index.ts",
+      "summary": "Barrel exporting the git domain delayed-job contracts: FetchFileContent input/output types and the IGitDelayedJobs interface.",
+      "tags": ["barrel", "type-definition", "jobs", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/git/src/index.ts",
+      "summary": "Public entry point of the git package, exporting GitHexa, GitRepoService/Repository, use cases, schemas, delayed jobs, GitHub token resolution, the GitHub App install-state signer and display-name normalization.",
+      "tags": ["entry-point", "barrel", "git", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts",
+      "type": "file",
+      "name": "InstallStateSigner.ts",
+      "filePath": "packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts",
+      "summary": "Implements HMAC-SHA256 signing and verification of short-TTL state tokens for the GitHub App installation and manifest flows, carrying org, user, nonce, expiry, app/provider ids and display name tamper-proof through the GitHub redirect.",
+      "tags": [
+        "security",
+        "authentication",
+        "github-app",
+        "cryptography",
+        "service"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Verification re-signs the decoded raw JSON bytes and uses crypto.timingSafeEqual, so key ordering does not matter and comparisons resist timing attacks."
+    },
+    {
+      "id": "class:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts:InvalidInstallStateError",
+      "type": "class",
+      "name": "InvalidInstallStateError",
+      "filePath": "packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts",
+      "lineRange": [31, 36],
+      "summary": "GitError raised when an install state token is forged, tampered, truncated or expired; deliberately does not reveal which check failed.",
+      "tags": ["error-handling", "security", "github-app"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts:InstallStateSigner",
+      "type": "class",
+      "name": "InstallStateSigner",
+      "filePath": "packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts",
+      "lineRange": [48, 199],
+      "summary": "Signs payloads into base64url(json).base64url(hmac) tokens with a 10-minute default TTL and verifies them with constant-time comparison and expiry checks.",
+      "tags": ["security", "cryptography", "github-app", "token"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/test/gitProviderFactory.ts",
+      "type": "file",
+      "name": "gitProviderFactory.ts",
+      "filePath": "packages/git/test/gitProviderFactory.ts",
+      "summary": "Test factories building GitHub and GitLab GitProvider fixtures with random ids, token auth and overridable fields.",
+      "tags": ["test", "factory", "fixture", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/test/gitProviderFactory.ts:gitProviderFactory",
+      "type": "function",
+      "name": "gitProviderFactory",
+      "filePath": "packages/git/test/gitProviderFactory.ts",
+      "lineRange": [10, 25],
+      "summary": "Builds a GitHub GitProvider test fixture with token auth, merging partial overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/test/gitProviderFactory.ts:gitlabProviderFactory",
+      "type": "function",
+      "name": "gitlabProviderFactory",
+      "filePath": "packages/git/test/gitProviderFactory.ts",
+      "lineRange": [27, 40],
+      "summary": "Builds a GitLab GitProvider test fixture with a glpat token, merging partial overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/test/gitRepoFactory.ts",
+      "type": "file",
+      "name": "gitRepoFactory.ts",
+      "filePath": "packages/git/test/gitRepoFactory.ts",
+      "summary": "Test factory building GitRepo fixtures (owner, repo, branch, provider id) with overridable fields.",
+      "tags": ["test", "factory", "fixture", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/test/gitRepoFactory.ts:gitRepoFactory",
+      "type": "function",
+      "name": "gitRepoFactory",
+      "filePath": "packages/git/test/gitRepoFactory.ts",
+      "lineRange": [5, 19],
+      "summary": "Builds a GitRepo test fixture with random ids and default owner/repo/main branch, merging partial overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/test/organizationGitHubAppFactory.ts",
+      "type": "file",
+      "name": "organizationGitHubAppFactory.ts",
+      "filePath": "packages/git/test/organizationGitHubAppFactory.ts",
+      "summary": "Test factory building OrganizationGitHubApp fixtures for GitHub App integration tests.",
+      "tags": ["test", "factory", "fixture", "github-app"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/test/organizationGitHubAppFactory.ts:organizationGitHubAppFactory",
+      "type": "function",
+      "name": "organizationGitHubAppFactory",
+      "filePath": "packages/git/test/organizationGitHubAppFactory.ts",
+      "lineRange": [9, 25],
+      "summary": "Builds an OrganizationGitHubApp test fixture with random ids, merging partial overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/.swcrc",
+      "type": "file",
+      "name": ".swcrc",
+      "filePath": "packages/linter-ast/.swcrc",
+      "summary": "SWC compiler configuration for the linter-ast package: TypeScript syntax without decorators, ES2022 target, CommonJS modules, preserved class names and source maps.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:packages/linter-ast/res/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/linter-ast/res/README.md",
+      "summary": "How-to notes for compiling a tree-sitter grammar (SCSS example) to WebAssembly with the tree-sitter CLI or Docker, and loading it with web-tree-sitter.",
+      "tags": ["documentation", "tree-sitter", "wasm", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-c_sharp.wasm",
+      "type": "file",
+      "name": "tree-sitter-c_sharp.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-c_sharp.wasm",
+      "summary": "Compiled tree-sitter grammar for C#, loaded at runtime by linter-ast to parse C# sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "c-sharp", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-cpp.wasm",
+      "type": "file",
+      "name": "tree-sitter-cpp.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-cpp.wasm",
+      "summary": "Compiled tree-sitter grammar for C++, loaded at runtime by linter-ast to parse C++ sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "cpp", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-go.wasm",
+      "type": "file",
+      "name": "tree-sitter-go.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-go.wasm",
+      "summary": "Compiled tree-sitter grammar for Go, loaded at runtime by linter-ast to parse Go sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "go", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-html.wasm",
+      "type": "file",
+      "name": "tree-sitter-html.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-html.wasm",
+      "summary": "Compiled tree-sitter grammar for HTML, loaded at runtime by linter-ast to parse HTML sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "html", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-java.wasm",
+      "type": "file",
+      "name": "tree-sitter-java.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-java.wasm",
+      "summary": "Compiled tree-sitter grammar for Java, loaded at runtime by linter-ast to parse Java sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "java", "binary-asset"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts",
+      "target": "class:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts:InvalidInstallStateError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts",
+      "target": "class:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts:InvalidInstallStateError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts",
+      "target": "class:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts:InstallStateSigner",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts",
+      "target": "class:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts:InstallStateSigner",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/test/gitProviderFactory.ts",
+      "target": "function:packages/git/test/gitProviderFactory.ts:gitProviderFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/test/gitProviderFactory.ts",
+      "target": "function:packages/git/test/gitProviderFactory.ts:gitProviderFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/test/gitProviderFactory.ts",
+      "target": "function:packages/git/test/gitProviderFactory.ts:gitlabProviderFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/test/gitProviderFactory.ts",
+      "target": "function:packages/git/test/gitProviderFactory.ts:gitlabProviderFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/test/gitRepoFactory.ts",
+      "target": "function:packages/git/test/gitRepoFactory.ts:gitRepoFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/test/gitRepoFactory.ts",
+      "target": "function:packages/git/test/gitRepoFactory.ts:gitRepoFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/test/organizationGitHubAppFactory.ts",
+      "target": "function:packages/git/test/organizationGitHubAppFactory.ts:organizationGitHubAppFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/test/organizationGitHubAppFactory.ts",
+      "target": "function:packages/git/test/organizationGitHubAppFactory.ts:organizationGitHubAppFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/frontend/src/index.ts",
+      "target": "file:packages/frontend/src/domains/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/index.ts",
+      "target": "file:packages/frontend/src/routes/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/index.ts",
+      "target": "file:packages/frontend/src/domains/deployments/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/index.ts",
+      "target": "file:packages/frontend/src/domains/organizations/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/deployments/index.ts",
+      "target": "file:packages/frontend/src/domains/deployments/components/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/deployments/components/index.ts",
+      "target": "file:packages/frontend/src/domains/deployments/components/PackageVersionBarDataTestIds.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/organizations/index.ts",
+      "target": "file:packages/frontend/src/domains/organizations/components/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/domains/organizations/components/index.ts",
+      "target": "file:packages/frontend/src/domains/organizations/components/SidebarNavigationDataTestIds.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/frontend/src/routes/index.ts",
+      "target": "file:packages/frontend/src/routes/SettingsRouteDataTestIds.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/git/src/index.ts",
+      "target": "file:packages/git/src/application/useCases/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/git/src/index.ts",
+      "target": "file:packages/git/src/domain/jobs/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/git/src/index.ts",
+      "target": "file:packages/git/src/infra/repositories/github/auth/InstallStateSigner.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/git/.swcrc",
+      "target": "file:packages/git/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/.swcrc",
+      "target": "file:packages/linter-ast/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/linter-ast/res/README.md",
+      "target": "file:packages/linter-ast/res/tree-sitter-c_sharp.wasm",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/res/README.md",
+      "target": "file:packages/linter-ast/res/tree-sitter-cpp.wasm",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/res/README.md",
+      "target": "file:packages/linter-ast/res/tree-sitter-go.wasm",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/res/README.md",
+      "target": "file:packages/linter-ast/res/tree-sitter-html.wasm",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/res/README.md",
+      "target": "file:packages/linter-ast/res/tree-sitter-java.wasm",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

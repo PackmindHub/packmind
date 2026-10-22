@@ -1,0 +1,167 @@
+{
+  "nodes": [
+    {
+      "id": "config:packages/node-utils/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/node-utils/package.json",
+      "summary": "Package manifest for the private CommonJS workspace library @packmind/node-utils, declaring dependencies on @packmind/feature-flags, logger, types, OpenTelemetry API and express.",
+      "tags": [
+        "configuration",
+        "package-manifest",
+        "dependencies",
+        "nx-library"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/node-utils/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/node-utils/project.json",
+      "summary": "Nx project definition for node-utils: node-tagged library built with @nx/js:swc, with lint via @nx/eslint and a typecheck target covering both lib and spec tsconfigs.",
+      "tags": ["configuration", "build-system", "nx", "swc"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/node-utils/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/node-utils/tsconfig.json",
+      "summary": "Root TypeScript project config for node-utils, extending tsconfig.base.json with strict CommonJS settings and referencing lib/spec tsconfigs.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system",
+        "project-references"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/node-utils/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/node-utils/tsconfig.lib.json",
+      "summary": "TypeScript library build config for node-utils emitting declarations for Node, excluding specs, jest config and src/testUtils.",
+      "tags": ["configuration", "typescript", "build-system", "library-build"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:packages/node-utils/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "packages/node-utils/CLAUDE.md",
+      "summary": "Inventory of the shared backend foundation package: hexagonal base classes (BaseHexa, HexaRegistry, abstract use cases, scoped repositories), infrastructure helpers (Configuration, cache, jobs, SSE, mail, feature flags, observability) and text/git/error utilities to reuse.",
+      "tags": [
+        "documentation",
+        "agent-instructions",
+        "hexagonal-architecture",
+        "inventory",
+        "backend-framework"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:packages/node-utils/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/node-utils/README.md",
+      "summary": "Short README presenting node-utils as Packmind's shared backend framework (BaseHexa, HexaRegistry, Configuration.getConfig, caching, jobs, SSE, mail) with build/test commands.",
+      "tags": ["documentation", "readme", "backend-framework", "nx"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/node-utils/package.json",
+      "target": "file:packages/node-utils/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/node-utils/project.json",
+      "target": "file:packages/node-utils/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/node-utils/tsconfig.json",
+      "target": "config:packages/node-utils/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/node-utils/tsconfig.lib.json",
+      "target": "file:packages/node-utils/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/node-utils/project.json",
+      "target": "config:packages/node-utils/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/node-utils/project.json",
+      "target": "config:packages/node-utils/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/node-utils/CLAUDE.md",
+      "target": "file:packages/node-utils/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/node-utils/CLAUDE.md",
+      "target": "file:packages/node-utils/src/hexa/BaseHexa.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/node-utils/CLAUDE.md",
+      "target": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/node-utils/README.md",
+      "target": "file:packages/node-utils/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/node-utils/README.md",
+      "target": "file:packages/node-utils/src/hexa/BaseHexa.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/node-utils/README.md",
+      "target": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/node-utils/package.json",
+      "target": "config:packages/logger/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

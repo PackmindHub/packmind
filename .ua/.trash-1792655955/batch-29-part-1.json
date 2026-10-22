@@ -1,0 +1,910 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/api/src/app/accounts/organizations/organizations.controller.ts",
+      "type": "file",
+      "name": "organizations.controller.ts",
+      "filePath": "apps/api/src/app/accounts/organizations/organizations.controller.ts",
+      "summary": "NestJS controller exposing account-level organization endpoints: list the user's organizations, look one up by name, create and rename organizations.",
+      "tags": ["api-handler", "controller", "nestjs", "organizations"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/accounts/organizations/organizations.controller.ts:OrganizationsController",
+      "type": "class",
+      "name": "OrganizationsController",
+      "filePath": "apps/api/src/app/accounts/organizations/organizations.controller.ts",
+      "lineRange": [25, 103],
+      "summary": "Exposes organization list/get/create/rename endpoints for the authenticated user.",
+      "tags": ["controller", "api-handler", "organizations"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/accounts/organizations/organizations.module.ts",
+      "type": "file",
+      "name": "organizations.module.ts",
+      "filePath": "apps/api/src/app/accounts/organizations/organizations.module.ts",
+      "summary": "NestJS module wiring the account organizations controller and service, importing AuthModule for authentication support.",
+      "tags": ["nestjs-module", "config", "organizations", "wiring"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/accounts/organizations/organizations.module.ts:OrganizationsModule",
+      "type": "class",
+      "name": "OrganizationsModule",
+      "filePath": "apps/api/src/app/accounts/organizations/organizations.module.ts",
+      "lineRange": [20, 20],
+      "summary": "Nest module for account organizations.",
+      "tags": ["nestjs-module", "organizations"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/accounts/organizations/organizations.service.ts",
+      "type": "file",
+      "name": "organizations.service.ts",
+      "filePath": "apps/api/src/app/accounts/organizations/organizations.service.ts",
+      "summary": "Thin API service delegating organization lookup, creation, listing and rename to the injected accounts hexagon adapter.",
+      "tags": ["service", "adapter", "organizations", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/accounts/organizations/organizations.service.ts:OrganizationsService",
+      "type": "class",
+      "name": "OrganizationsService",
+      "filePath": "apps/api/src/app/accounts/organizations/organizations.service.ts",
+      "lineRange": [13, 41],
+      "summary": "Delegates organization operations to the accounts adapter.",
+      "tags": ["service", "organizations", "adapter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/app.controller.ts",
+      "type": "file",
+      "name": "app.controller.ts",
+      "filePath": "apps/api/src/app/app.controller.ts",
+      "summary": "Root API controller serving a basic data route and a public healthcheck endpoint.",
+      "tags": ["api-handler", "controller", "healthcheck", "nestjs"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/app.controller.ts:AppController",
+      "type": "class",
+      "name": "AppController",
+      "filePath": "apps/api/src/app/app.controller.ts",
+      "lineRange": [9, 57],
+      "summary": "Root controller with data and healthcheck routes.",
+      "tags": ["controller", "healthcheck"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/app.module.ts",
+      "type": "file",
+      "name": "app.module.ts",
+      "filePath": "apps/api/src/app/app.module.ts",
+      "summary": "Root NestJS application module: configures TypeORM/Postgres with the pool options, Redis/BullMQ, JWT, all feature modules and nested route registration, global AuthGuard and domain exception filter, and request middleware.",
+      "tags": ["entry-point", "nestjs-module", "config", "routing", "wiring"],
+      "complexity": "complex",
+      "languageNotes": "Uses NestJS RouterModule to build nested organization/space route trees and NestModule.configure to apply middleware globally."
+    },
+    {
+      "id": "class:apps/api/src/app/app.module.ts:AppModule",
+      "type": "class",
+      "name": "AppModule",
+      "filePath": "apps/api/src/app/app.module.ts",
+      "lineRange": [301, 308],
+      "summary": "Root application module configuring infrastructure, feature modules, global guard/filter and middleware.",
+      "tags": ["entry-point", "nestjs-module", "config"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/app.service.ts",
+      "type": "file",
+      "name": "app.service.ts",
+      "filePath": "apps/api/src/app/app.service.ts",
+      "summary": "Trivial root service returning a welcome payload for the AppController.",
+      "tags": ["service", "nestjs", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/app.service.ts:AppService",
+      "type": "class",
+      "name": "AppService",
+      "filePath": "apps/api/src/app/app.service.ts",
+      "lineRange": [4, 8],
+      "summary": "Returns the root welcome payload.",
+      "tags": ["service", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/auth/JwtPayload.ts",
+      "type": "file",
+      "name": "JwtPayload.ts",
+      "filePath": "apps/api/src/app/auth/JwtPayload.ts",
+      "summary": "Type definition of the JWT payload carried in auth cookies: user identity, optional selected organization with role, and issue/expiry timestamps.",
+      "tags": ["type-definition", "auth", "jwt"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/auth/auth.controller.ts",
+      "type": "file",
+      "name": "auth.controller.ts",
+      "filePath": "apps/api/src/app/auth/auth.controller.ts",
+      "summary": "Authentication REST controller covering sign-up/sign-in/out, organization selection, profile, API key generation, invitation activation, password reset, CLI login codes and WorkOS social OAuth flows, managing auth cookies.",
+      "tags": ["api-handler", "controller", "auth", "oauth", "nestjs"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/auth/auth.controller.ts:AuthController",
+      "type": "class",
+      "name": "AuthController",
+      "filePath": "apps/api/src/app/auth/auth.controller.ts",
+      "lineRange": [50, 673],
+      "summary": "REST endpoints for all authentication, session, API key, password reset, CLI login and social OAuth flows.",
+      "tags": ["controller", "auth", "api-handler"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/auth/auth.guard.ts",
+      "type": "file",
+      "name": "auth.guard.ts",
+      "filePath": "apps/api/src/app/auth/auth.guard.ts",
+      "summary": "Global NestJS guard authenticating requests via JWT auth cookie or Packmind API key (bearer), skipping routes marked public and attaching the decoded user/organization to the request.",
+      "tags": ["middleware", "guard", "auth", "jwt", "security"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/auth/auth.guard.ts:JwtServiceAdapter",
+      "type": "class",
+      "name": "JwtServiceAdapter",
+      "filePath": "apps/api/src/app/auth/auth.guard.ts",
+      "lineRange": [18, 26],
+      "summary": "Adapts Nest JwtService to the port expected by ApiKeyService.",
+      "tags": ["adapter", "jwt", "auth"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/auth/auth.guard.ts:AuthGuard",
+      "type": "class",
+      "name": "AuthGuard",
+      "filePath": "apps/api/src/app/auth/auth.guard.ts",
+      "lineRange": [29, 107],
+      "summary": "Global guard authenticating via JWT cookie or API key, honoring public route metadata.",
+      "tags": ["guard", "auth", "middleware"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/auth/auth.module.ts",
+      "type": "file",
+      "name": "auth.module.ts",
+      "filePath": "apps/api/src/app/auth/auth.module.ts",
+      "summary": "NestJS module bundling the auth controller, AuthService and WorkOsService and exporting them for other modules.",
+      "tags": ["nestjs-module", "auth", "wiring"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/auth/auth.module.ts:AuthModule",
+      "type": "class",
+      "name": "AuthModule",
+      "filePath": "apps/api/src/app/auth/auth.module.ts",
+      "lineRange": [20, 20],
+      "summary": "Nest module bundling authentication providers.",
+      "tags": ["nestjs-module", "auth"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/auth/auth.service.ts",
+      "type": "file",
+      "name": "auth.service.ts",
+      "filePath": "apps/api/src/app/auth/auth.service.ts",
+      "summary": "Core API authentication service orchestrating accounts hexagon use cases for sign-up, sign-in (password and social), session info, API keys, invitations, password reset, organization selection and CLI login code exchange, issuing JWTs.",
+      "tags": ["service", "auth", "jwt", "accounts", "use-case-orchestration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/auth/auth.service.ts:AuthService",
+      "type": "class",
+      "name": "AuthService",
+      "filePath": "apps/api/src/app/auth/auth.service.ts",
+      "lineRange": [98, 902],
+      "summary": "Orchestrates accounts use cases for authentication and issues JWT tokens.",
+      "tags": ["service", "auth", "jwt"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/auth/workos.service.ts",
+      "type": "file",
+      "name": "workos.service.ts",
+      "filePath": "apps/api/src/app/auth/workos.service.ts",
+      "summary": "Lazily initialized WorkOS client wrapper listing available social SSO providers, building authorization URLs and exchanging OAuth codes for user profiles.",
+      "tags": ["service", "oauth", "sso", "integration"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/auth/workos.service.ts:WorkOsService",
+      "type": "class",
+      "name": "WorkOsService",
+      "filePath": "apps/api/src/app/auth/workos.service.ts",
+      "lineRange": [9, 120],
+      "summary": "Wraps the WorkOS SDK for social SSO provider discovery and OAuth code exchange.",
+      "tags": ["service", "oauth", "integration"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/database-pool.config.ts",
+      "type": "file",
+      "name": "database-pool.config.ts",
+      "filePath": "apps/api/src/app/database-pool.config.ts",
+      "summary": "Resolves fixed-size Postgres connection-pool options (min/max, timeouts, application name) from environment variables with validation and logging, shared by TypeORM config and the startup warm-up.",
+      "tags": ["config", "database", "postgres", "performance"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/api/src/app/database-pool.config.ts:readPoolSetting",
+      "type": "function",
+      "name": "readPoolSetting",
+      "filePath": "apps/api/src/app/database-pool.config.ts",
+      "lineRange": [87, 110],
+      "summary": "Reads and validates a single numeric pool setting from an environment variable, falling back to a default with a warning on invalid values.",
+      "tags": ["utility", "config", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/database-pool.config.ts:resolveDatabasePoolOptions",
+      "type": "function",
+      "name": "resolveDatabasePoolOptions",
+      "filePath": "apps/api/src/app/database-pool.config.ts",
+      "lineRange": [112, 168],
+      "summary": "Builds the full Postgres pool options object (sizes, timeouts, application name) consumed by TypeORM and the startup warm-up.",
+      "tags": ["config", "database", "factory"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/errors/ApiInternalError.ts",
+      "type": "file",
+      "name": "ApiInternalError.ts",
+      "filePath": "apps/api/src/app/errors/ApiInternalError.ts",
+      "summary": "Defines ApiInternalError, the API's base error for broken invariants and server misconfiguration, with typed reason codes and context.",
+      "tags": ["error-handling", "type-definition", "errors"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/errors/ApiInternalError.ts:ApiInternalError",
+      "type": "class",
+      "name": "ApiInternalError",
+      "filePath": "apps/api/src/app/errors/ApiInternalError.ts",
+      "lineRange": [24, 33],
+      "summary": "Base error for API broken invariants with reason and context.",
+      "tags": ["error-handling", "errors"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/deployments/deployments.controller.ts",
+      "type": "file",
+      "name": "deployments.controller.ts",
+      "filePath": "apps/api/src/app/organizations/deployments/deployments.controller.ts",
+      "summary": "Organization-scoped deployments controller: publishing commands/standards/packages, distribution listings per artifact, render-mode configuration, CLI distribution notifications and lock-file sync, dashboard KPIs, space overview and package removal from targets.",
+      "tags": [
+        "api-handler",
+        "controller",
+        "deployments",
+        "distribution",
+        "nestjs"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/deployments/deployments.controller.ts:DeploymentsController",
+      "type": "class",
+      "name": "DeploymentsController",
+      "filePath": "apps/api/src/app/organizations/deployments/deployments.controller.ts",
+      "lineRange": [65, 680],
+      "summary": "Endpoints for publishing artifacts, distribution tracking, render modes and dashboards.",
+      "tags": ["controller", "deployments", "api-handler"],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.controller.ts",
+      "target": "class:apps/api/src/app/accounts/organizations/organizations.controller.ts:OrganizationsController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.controller.ts",
+      "target": "class:apps/api/src/app/accounts/organizations/organizations.controller.ts:OrganizationsController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.module.ts",
+      "target": "class:apps/api/src/app/accounts/organizations/organizations.module.ts:OrganizationsModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.module.ts",
+      "target": "class:apps/api/src/app/accounts/organizations/organizations.module.ts:OrganizationsModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.service.ts",
+      "target": "class:apps/api/src/app/accounts/organizations/organizations.service.ts:OrganizationsService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.service.ts",
+      "target": "class:apps/api/src/app/accounts/organizations/organizations.service.ts:OrganizationsService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/app.controller.ts",
+      "target": "class:apps/api/src/app/app.controller.ts:AppController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/app.controller.ts",
+      "target": "class:apps/api/src/app/app.controller.ts:AppController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "class:apps/api/src/app/app.module.ts:AppModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "class:apps/api/src/app/app.module.ts:AppModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/app.service.ts",
+      "target": "class:apps/api/src/app/app.service.ts:AppService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/app.service.ts",
+      "target": "class:apps/api/src/app/app.service.ts:AppService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.controller.ts",
+      "target": "class:apps/api/src/app/auth/auth.controller.ts:AuthController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.controller.ts",
+      "target": "class:apps/api/src/app/auth/auth.controller.ts:AuthController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.guard.ts",
+      "target": "class:apps/api/src/app/auth/auth.guard.ts:JwtServiceAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.guard.ts",
+      "target": "class:apps/api/src/app/auth/auth.guard.ts:AuthGuard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.guard.ts",
+      "target": "class:apps/api/src/app/auth/auth.guard.ts:AuthGuard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.module.ts",
+      "target": "class:apps/api/src/app/auth/auth.module.ts:AuthModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.module.ts",
+      "target": "class:apps/api/src/app/auth/auth.module.ts:AuthModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.service.ts",
+      "target": "class:apps/api/src/app/auth/auth.service.ts:AuthService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.service.ts",
+      "target": "class:apps/api/src/app/auth/auth.service.ts:AuthService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/auth/workos.service.ts",
+      "target": "class:apps/api/src/app/auth/workos.service.ts:WorkOsService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/auth/workos.service.ts",
+      "target": "class:apps/api/src/app/auth/workos.service.ts:WorkOsService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/database-pool.config.ts",
+      "target": "function:apps/api/src/app/database-pool.config.ts:readPoolSetting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/database-pool.config.ts",
+      "target": "function:apps/api/src/app/database-pool.config.ts:resolveDatabasePoolOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/database-pool.config.ts",
+      "target": "function:apps/api/src/app/database-pool.config.ts:resolveDatabasePoolOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/errors/ApiInternalError.ts",
+      "target": "class:apps/api/src/app/errors/ApiInternalError.ts:ApiInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/errors/ApiInternalError.ts",
+      "target": "class:apps/api/src/app/errors/ApiInternalError.ts:ApiInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.controller.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/deployments.controller.ts:DeploymentsController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.controller.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/deployments.controller.ts:DeploymentsController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.controller.ts",
+      "target": "file:apps/api/src/app/accounts/organizations/organizations.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.module.ts",
+      "target": "file:apps/api/src/app/accounts/organizations/organizations.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.module.ts",
+      "target": "file:apps/api/src/app/accounts/organizations/organizations.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.module.ts",
+      "target": "file:apps/api/src/app/auth/auth.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/accounts/organizations/organizations.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.controller.ts",
+      "target": "file:apps/api/src/app/app.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/accounts/organizations/organizations.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/app.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/app.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/auth/auth.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/auth/auth.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/database-pool.config.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/deployments.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/targets/targets.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/git/git.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/git/repositories/git-repositories.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/llm/llm.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/organizations.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/playbook/playbook.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/plugins/plugins.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/skills/skills.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/commands/commands.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/members/members.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/packages/packages.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/organizations/users/users.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/shared/HexaRegistryModule.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/shared/middleware/CliVersionLoggerMiddleware.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/shared/middleware/GitRemoteCredentialsMiddleware.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/app.module.ts",
+      "target": "file:apps/api/src/app/sse/sse.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.controller.ts",
+      "target": "file:apps/api/src/app/auth/auth.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.controller.ts",
+      "target": "file:apps/api/src/app/auth/workos.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.controller.ts",
+      "target": "file:apps/api/src/app/shared/utils/edition.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.controller.ts",
+      "target": "file:apps/api/src/app/shared/utils/error.utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.guard.ts",
+      "target": "file:apps/api/src/app/auth/JwtPayload.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.module.ts",
+      "target": "file:apps/api/src/app/auth/auth.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.module.ts",
+      "target": "file:apps/api/src/app/auth/auth.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.module.ts",
+      "target": "file:apps/api/src/app/auth/workos.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.service.ts",
+      "target": "file:apps/api/src/app/auth/JwtPayload.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.service.ts",
+      "target": "file:apps/api/src/app/errors/ApiInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.service.ts",
+      "target": "file:apps/api/src/app/shared/utils/edition.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/auth.service.ts",
+      "target": "file:apps/api/src/app/shared/utils/error.utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/auth/workos.service.ts",
+      "target": "file:apps/api/src/app/errors/ApiInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.controller.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/deployments.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:apps/api/src/app/accounts/organizations/organizations.controller.ts:OrganizationsController",
+      "target": "class:apps/api/src/app/accounts/organizations/organizations.service.ts:OrganizationsService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/app.controller.ts:AppController",
+      "target": "class:apps/api/src/app/app.service.ts:AppService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/auth/auth.controller.ts:AuthController",
+      "target": "class:apps/api/src/app/auth/auth.service.ts:AuthService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/auth/auth.controller.ts:AuthController",
+      "target": "class:apps/api/src/app/auth/workos.service.ts:WorkOsService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/deployments/deployments.controller.ts:DeploymentsController",
+      "target": "class:apps/api/src/app/organizations/deployments/deployments.service.ts:DeploymentsService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

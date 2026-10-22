@@ -1,0 +1,1009 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts",
+      "type": "file",
+      "name": "DeploymentsGateway.ts",
+      "filePath": "apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts",
+      "summary": "Large HTTP gateway for deployments: packages, releases, distributions, targets, render modes, dashboard KPIs and repository sync endpoints.",
+      "tags": ["service", "api-client", "gateway", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts:DeploymentsGatewayApi",
+      "type": "class",
+      "name": "DeploymentsGatewayApi",
+      "filePath": "apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts",
+      "lineRange": [62, 401],
+      "summary": "Gateway class calling the deployments, packages and targets REST API.",
+      "tags": ["gateway", "api-client", "service"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/api/gateways/IDeploymentsGateway.ts",
+      "type": "file",
+      "name": "IDeploymentsGateway.ts",
+      "filePath": "apps/frontend/src/domain/deployments/api/gateways/IDeploymentsGateway.ts",
+      "summary": "Port interface describing every deployments/packages/targets operation the frontend can call.",
+      "tags": ["type-definition", "gateway", "deployments", "port"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/api/gateways/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/api/gateways/index.ts",
+      "summary": "Barrel exporting the singleton deploymentsGateways instance.",
+      "tags": ["barrel", "singleton", "gateway"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts",
+      "type": "file",
+      "name": "useDeployCommand.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts",
+      "summary": "Hook that resolves command version IDs and triggers command deployments to selected targets via the deploy mutation.",
+      "tags": ["hook", "deployments", "commands", "react-query"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts:getCommandVersionId",
+      "type": "function",
+      "name": "getCommandVersionId",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts",
+      "lineRange": [21, 47],
+      "summary": "Resolves a command version ID from a command ID and version number.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts:useDeployCommand",
+      "type": "function",
+      "name": "useDeployCommand",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts",
+      "lineRange": [49, 178],
+      "summary": "Hook exposing a callback to deploy commands to targets.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/api/gateways/ILLMGateway.ts",
+      "type": "file",
+      "name": "ILLMGateway.ts",
+      "filePath": "apps/frontend/src/domain/llm/api/gateways/ILLMGateway.ts",
+      "summary": "Port interface for LLM configuration operations: test connection, save/get configuration and list providers.",
+      "tags": ["type-definition", "gateway", "llm", "port"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts",
+      "type": "file",
+      "name": "LLMGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts",
+      "summary": "HTTP gateway implementing LLM configuration endpoints scoped to an organization.",
+      "tags": ["service", "api-client", "gateway", "llm"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts:LLMGatewayApi",
+      "type": "class",
+      "name": "LLMGatewayApi",
+      "filePath": "apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts",
+      "lineRange": [13, 62],
+      "summary": "Gateway class calling the LLM configuration REST API.",
+      "tags": ["gateway", "api-client", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/api/gateways/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/llm/api/gateways/index.ts",
+      "summary": "Barrel exporting the singleton llmGateway instance.",
+      "tags": ["barrel", "singleton", "gateway"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "type": "file",
+      "name": "LLMQueries.ts",
+      "filePath": "apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "summary": "TanStack Query hooks and query options for LLM configuration: testing connections, fetching/saving config and listing available providers.",
+      "tags": ["hook", "react-query", "llm", "data-fetching"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useTestLLMConnectionMutation",
+      "type": "function",
+      "name": "useTestLLMConnectionMutation",
+      "filePath": "apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "lineRange": [14, 23],
+      "summary": "Mutation testing an LLM connection with given settings.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:getGetLLMConfigurationQueryOptions",
+      "type": "function",
+      "name": "getGetLLMConfigurationQueryOptions",
+      "filePath": "apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "lineRange": [26, 32],
+      "summary": "Query options for fetching the org LLM configuration.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useGetLLMConfigurationQuery",
+      "type": "function",
+      "name": "useGetLLMConfigurationQuery",
+      "filePath": "apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "lineRange": [34, 36],
+      "summary": "Query hook for the org LLM configuration.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:getTestSavedLLMConfigurationQueryOptions",
+      "type": "function",
+      "name": "getTestSavedLLMConfigurationQueryOptions",
+      "filePath": "apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "lineRange": [39, 50],
+      "summary": "Query options testing the saved LLM configuration.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useTestSavedLLMConfigurationQuery",
+      "type": "function",
+      "name": "useTestSavedLLMConfigurationQuery",
+      "filePath": "apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "lineRange": [52, 59],
+      "summary": "Query hook testing the saved LLM configuration.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useSaveLLMConfigurationMutation",
+      "type": "function",
+      "name": "useSaveLLMConfigurationMutation",
+      "filePath": "apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "lineRange": [61, 82],
+      "summary": "Mutation saving LLM configuration and invalidating caches.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:getAvailableProvidersQueryOptions",
+      "type": "function",
+      "name": "getAvailableProvidersQueryOptions",
+      "filePath": "apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "lineRange": [85, 93],
+      "summary": "Query options listing available LLM providers.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useGetAvailableProvidersQuery",
+      "type": "function",
+      "name": "useGetAvailableProvidersQuery",
+      "filePath": "apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "lineRange": [95, 99],
+      "summary": "Query hook listing available LLM providers.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "summary": "Query key constants and builders for LLM-related React Query caches, scoped under the organization key.",
+      "tags": ["utility", "react-query", "llm", "cache-keys"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queryKeys.ts:getLLMConfigurationKey",
+      "type": "function",
+      "name": "getLLMConfigurationKey",
+      "filePath": "apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "lineRange": [39, 40],
+      "summary": "Builds the query key for an org LLM configuration.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queryKeys.ts:getTestSavedLLMConfigurationKey",
+      "type": "function",
+      "name": "getTestSavedLLMConfigurationKey",
+      "filePath": "apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "lineRange": [42, 44],
+      "summary": "Builds the query key for testing saved LLM config.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/api/queryKeys.ts:getAvailableProvidersKey",
+      "type": "function",
+      "name": "getAvailableProvidersKey",
+      "filePath": "apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "lineRange": [46, 47],
+      "summary": "Builds the query key for available LLM providers.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "type": "file",
+      "name": "LLMConfigurationDisplay.tsx",
+      "filePath": "apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "summary": "Displays the saved LLM configuration with a connection status badge, plus an empty state when none is configured.",
+      "tags": ["component", "llm", "display", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx:StatusBadge",
+      "type": "function",
+      "name": "StatusBadge",
+      "filePath": "apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "lineRange": [31, 65],
+      "summary": "Badge showing LLM connection test status.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx:LLMEmptyState",
+      "type": "function",
+      "name": "LLMEmptyState",
+      "filePath": "apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "lineRange": [71, 84],
+      "summary": "Empty state shown when no LLM is configured.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx:LLMConfigurationDisplay",
+      "type": "function",
+      "name": "LLMConfigurationDisplay",
+      "filePath": "apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "lineRange": [86, 173],
+      "summary": "Displays configured LLM provider details and status.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/components/LLMConfigurationForm.tsx",
+      "type": "file",
+      "name": "LLMConfigurationForm.tsx",
+      "filePath": "apps/frontend/src/domain/llm/components/LLMConfigurationForm.tsx",
+      "summary": "Dynamic form for configuring an LLM provider: provider-specific fields, defaults, validation and connection testing before saving.",
+      "tags": ["component", "form", "llm", "validation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/components/LLMConfigurationForm.tsx:LLMConfigurationForm",
+      "type": "function",
+      "name": "LLMConfigurationForm",
+      "filePath": "apps/frontend/src/domain/llm/components/LLMConfigurationForm.tsx",
+      "lineRange": [58, 530],
+      "summary": "Provider-aware LLM configuration form with test and save.",
+      "tags": ["component", "react", "complex-ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx",
+      "type": "file",
+      "name": "LLMConfigurationPage.tsx",
+      "filePath": "apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx",
+      "summary": "Page composing the LLM configuration display and form, wiring query hooks for loading, testing and saving the organization LLM setup.",
+      "tags": ["component", "page", "llm", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx:LLMConfigurationPage",
+      "type": "function",
+      "name": "LLMConfigurationPage",
+      "filePath": "apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx",
+      "lineRange": [26, 205],
+      "summary": "Page combining LLM configuration display and form.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/api/gateways/IRulesGateway.ts",
+      "type": "file",
+      "name": "IRulesGateway.ts",
+      "filePath": "apps/frontend/src/domain/rules/api/gateways/IRulesGateway.ts",
+      "summary": "Port interface for rule example CRUD operations on standards rules.",
+      "tags": ["type-definition", "gateway", "rules", "port"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts",
+      "type": "file",
+      "name": "RulesGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts",
+      "summary": "HTTP gateway implementing rule example create/read/update/delete endpoints.",
+      "tags": ["service", "api-client", "gateway", "rules"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts:RulesGatewayApi",
+      "type": "class",
+      "name": "RulesGatewayApi",
+      "filePath": "apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts",
+      "lineRange": [12, 74],
+      "summary": "Gateway class calling the rule examples REST API.",
+      "tags": ["gateway", "api-client", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/api/gateways/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/rules/api/gateways/index.ts",
+      "summary": "Barrel exporting the singleton rulesGateway and its interface.",
+      "tags": ["barrel", "singleton", "gateway"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "type": "file",
+      "name": "RulesQueries.ts",
+      "filePath": "apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "summary": "React Query hooks for rule examples with cache invalidation of related standards and rules queries on mutations.",
+      "tags": ["hook", "react-query", "rules", "data-fetching"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useGetRuleExamplesQuery",
+      "type": "function",
+      "name": "useGetRuleExamplesQuery",
+      "filePath": "apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "lineRange": [23, 37],
+      "summary": "Query hook fetching examples of a rule.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useCreateRuleExampleMutation",
+      "type": "function",
+      "name": "useCreateRuleExampleMutation",
+      "filePath": "apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "lineRange": [39, 107],
+      "summary": "Mutation creating a rule example and invalidating caches.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useUpdateRuleExampleMutation",
+      "type": "function",
+      "name": "useUpdateRuleExampleMutation",
+      "filePath": "apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "lineRange": [109, 173],
+      "summary": "Mutation updating a rule example and invalidating caches.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useDeleteRuleExampleMutation",
+      "type": "function",
+      "name": "useDeleteRuleExampleMutation",
+      "filePath": "apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "lineRange": [175, 233],
+      "summary": "Mutation deleting a rule example and invalidating caches.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/gateways/IDeploymentsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts",
+      "target": "class:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts:DeploymentsGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts",
+      "target": "class:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts:DeploymentsGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts:DeploymentsGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts",
+      "target": "file:apps/frontend/src/domain/commands/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts:getCommandVersionId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts:useDeployCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts:useDeployCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/llm/api/gateways/ILLMGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts:LLMGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts:LLMGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts:LLMGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "file:apps/frontend/src/domain/llm/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "file:apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useTestLLMConnectionMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useTestLLMConnectionMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:getGetLLMConfigurationQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:getGetLLMConfigurationQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useGetLLMConfigurationQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useGetLLMConfigurationQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:getTestSavedLLMConfigurationQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:getTestSavedLLMConfigurationQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useTestSavedLLMConfigurationQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useTestSavedLLMConfigurationQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useSaveLLMConfigurationMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useSaveLLMConfigurationMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:getAvailableProvidersQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:getAvailableProvidersQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useGetAvailableProvidersQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useGetAvailableProvidersQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queryKeys.ts:getLLMConfigurationKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queryKeys.ts:getLLMConfigurationKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queryKeys.ts:getTestSavedLLMConfigurationKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queryKeys.ts:getTestSavedLLMConfigurationKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queryKeys.ts:getAvailableProvidersKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/llm/api/queryKeys.ts:getAvailableProvidersKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx:StatusBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx:LLMEmptyState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx:LLMEmptyState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx:LLMConfigurationDisplay",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx:LLMConfigurationDisplay",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationForm.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationForm.tsx:LLMConfigurationForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationForm.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationForm.tsx:LLMConfigurationForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx",
+      "target": "file:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx",
+      "target": "file:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx",
+      "target": "file:apps/frontend/src/domain/llm/components/LLMConfigurationForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx:LLMConfigurationPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx:LLMConfigurationPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/rules/api/gateways/IRulesGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts:RulesGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts:RulesGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts:RulesGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/rules/api/gateways/IRulesGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "file:apps/frontend/src/domain/rules/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "file:apps/frontend/src/domain/rules/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "file:apps/frontend/src/domain/spaces/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "file:apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useGetRuleExamplesQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useGetRuleExamplesQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useCreateRuleExampleMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useCreateRuleExampleMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useUpdateRuleExampleMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useUpdateRuleExampleMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useDeleteRuleExampleMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts",
+      "target": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useDeleteRuleExampleMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts:useDeployCommand",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployCommandsMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts:useDeployCommand",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useDeployCommand.ts:getCommandVersionId",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/api/queries/RulesQueries.ts:useCreateRuleExampleMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx:LLMConfigurationPage",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useGetAvailableProvidersQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx:LLMConfigurationPage",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useGetLLMConfigurationQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx:LLMConfigurationPage",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useSaveLLMConfigurationMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx:LLMConfigurationPage",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useTestLLMConnectionMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx:LLMConfigurationPage",
+      "target": "function:apps/frontend/src/domain/llm/api/queries/LLMQueries.ts:useTestSavedLLMConfigurationQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx:LLMConfigurationPage",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationDisplay.tsx:LLMConfigurationDisplay",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/llm/components/LLMConfigurationPage.tsx:LLMConfigurationPage",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationForm.tsx:LLMConfigurationForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/deployments/api/gateways/DeploymentsGateway.ts:DeploymentsGatewayApi",
+      "target": "file:apps/frontend/src/domain/deployments/api/gateways/IDeploymentsGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/frontend/src/domain/llm/api/gateways/LLMGatewayApi.ts:LLMGatewayApi",
+      "target": "file:apps/frontend/src/domain/llm/api/gateways/ILLMGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/frontend/src/domain/rules/api/gateways/RulesGatewayApi.ts:RulesGatewayApi",
+      "target": "file:apps/frontend/src/domain/rules/api/gateways/IRulesGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

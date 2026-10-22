@@ -1,0 +1,16 @@
+{
+  "fixedSectionOk": true,
+  "nodesRecovered": 0,
+  "edgesRestored": 32,
+  "crossBatchEdgesAdded": 0,
+  "typesRemapped": 0,
+  "complexityRemapped": 0,
+  "notes": [
+    "Fixed section trivial (1 tested_by edge dropped); no ID/complexity anomalies; all node types and complexity values valid.",
+    "42 of 44 dropped edges were re-targetable: barrel index.ts function IDs re-pointed to the defining file (useAuthContext.ts, CredentialsService.ts, decodeApiKey.ts, SpacesManagementPage.tsx, SpaceContextSurface.tsx, PackagesPage.tsx); file:apps/cli/package.json -> config:apps/cli/package.json; file:tsconfig.base.json -> config:tsconfig.base.json. 32 added; 10 were already present (imports to config:apps/cli/package.json recovered by importMap).",
+    "stageSinglePath -> resolveArtefactFromPath retargeted to file:apps/cli/src/application/utils/resolveArtefactFromPath.ts (a re-export shim of @packmind/types; packages/types/src/coding-agent/resolveArtefactFromPath.ts has no function node).",
+    "2 edges skipped: targets in packages/editions/, which is excluded by .ua/.understandignore (line 155).",
+    "All 4158 importMap pairs already have imports edges; no cross-batch gaps.",
+    "Integrity: 0 dangling refs, 0 self-loops, every function/class has a file node and a contains edge. 89 isolated nodes (mostly root docs, .packmind standards, some pipelines/configs) \u2014 expected for non-code files."
+  ]
+}

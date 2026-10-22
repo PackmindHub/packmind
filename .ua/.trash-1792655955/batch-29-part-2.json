@@ -1,0 +1,698 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/api/src/app/organizations/deployments/deployments.module.ts",
+      "type": "file",
+      "name": "deployments.module.ts",
+      "filePath": "apps/api/src/app/organizations/deployments/deployments.module.ts",
+      "summary": "NestJS module registering the deployments controller and service and importing the targets submodule.",
+      "tags": ["nestjs-module", "deployments", "wiring"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/deployments/deployments.module.ts:OrganizationDeploymentsModule",
+      "type": "class",
+      "name": "OrganizationDeploymentsModule",
+      "filePath": "apps/api/src/app/organizations/deployments/deployments.module.ts",
+      "lineRange": [20, 20],
+      "summary": "Nest module for deployments.",
+      "tags": ["nestjs-module", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/deployments/deployments.service.ts",
+      "type": "file",
+      "name": "deployments.service.ts",
+      "filePath": "apps/api/src/app/organizations/deployments/deployments.service.ts",
+      "summary": "API service delegating deployment, distribution, package, render-mode, package release and dashboard operations to the deployment hexagon adapter.",
+      "tags": ["service", "adapter", "deployments", "packages"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/deployments/deployments.service.ts:DeploymentsService",
+      "type": "class",
+      "name": "DeploymentsService",
+      "filePath": "apps/api/src/app/organizations/deployments/deployments.service.ts",
+      "lineRange": [65, 254],
+      "summary": "Facade over the deployment adapter for packages, distributions, releases and dashboards.",
+      "tags": ["service", "deployments", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/deployments/targets/targets.controller.ts",
+      "type": "file",
+      "name": "targets.controller.ts",
+      "filePath": "apps/api/src/app/organizations/deployments/targets/targets.controller.ts",
+      "summary": "Controller managing deployment targets (repository paths) for an organization: list by organization or repository, add, update and delete targets.",
+      "tags": ["api-handler", "controller", "deployments", "targets"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/deployments/targets/targets.controller.ts:TargetsController",
+      "type": "class",
+      "name": "TargetsController",
+      "filePath": "apps/api/src/app/organizations/deployments/targets/targets.controller.ts",
+      "lineRange": [34, 303],
+      "summary": "CRUD endpoints for deployment targets.",
+      "tags": ["controller", "targets", "api-handler"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/deployments/targets/targets.module.ts",
+      "type": "file",
+      "name": "targets.module.ts",
+      "filePath": "apps/api/src/app/organizations/deployments/targets/targets.module.ts",
+      "summary": "NestJS module wiring the deployment targets controller and service.",
+      "tags": ["nestjs-module", "targets", "wiring"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/deployments/targets/targets.module.ts:OrganizationTargetsModule",
+      "type": "class",
+      "name": "OrganizationTargetsModule",
+      "filePath": "apps/api/src/app/organizations/deployments/targets/targets.module.ts",
+      "lineRange": [17, 17],
+      "summary": "Nest module for deployment targets.",
+      "tags": ["nestjs-module", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/deployments/targets/targets.service.ts",
+      "type": "file",
+      "name": "targets.service.ts",
+      "filePath": "apps/api/src/app/organizations/deployments/targets/targets.service.ts",
+      "summary": "Thin service forwarding target CRUD operations to the deployment hexagon adapter.",
+      "tags": ["service", "adapter", "targets", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/deployments/targets/targets.service.ts:TargetsService",
+      "type": "class",
+      "name": "TargetsService",
+      "filePath": "apps/api/src/app/organizations/deployments/targets/targets.service.ts",
+      "lineRange": [16, 47],
+      "summary": "Forwards target CRUD to the deployment adapter.",
+      "tags": ["service", "targets", "adapter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/git/git.module.ts",
+      "type": "file",
+      "name": "git.module.ts",
+      "filePath": "apps/api/src/app/organizations/git/git.module.ts",
+      "summary": "Aggregating NestJS module grouping the git providers and git repositories submodules.",
+      "tags": ["nestjs-module", "git", "barrel"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/git/git.module.ts:OrganizationGitModule",
+      "type": "class",
+      "name": "OrganizationGitModule",
+      "filePath": "apps/api/src/app/organizations/git/git.module.ts",
+      "lineRange": [8, 8],
+      "summary": "Aggregates git provider and repository modules.",
+      "tags": ["nestjs-module", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/git/providers/errors/GithubAppManifestConversionNetworkError.ts",
+      "type": "file",
+      "name": "GithubAppManifestConversionNetworkError.ts",
+      "filePath": "apps/api/src/app/organizations/git/providers/errors/GithubAppManifestConversionNetworkError.ts",
+      "summary": "Error raised when the network call converting a GitHub App manifest code into app credentials fails.",
+      "tags": ["error-handling", "github-app", "errors"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/git/providers/errors/GithubAppManifestConversionNetworkError.ts:GithubAppManifestConversionNetworkError",
+      "type": "class",
+      "name": "GithubAppManifestConversionNetworkError",
+      "filePath": "apps/api/src/app/organizations/git/providers/errors/GithubAppManifestConversionNetworkError.ts",
+      "lineRange": [13, 25],
+      "summary": "Network failure during GitHub App manifest conversion.",
+      "tags": ["error-handling", "github-app"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts",
+      "type": "file",
+      "name": "GithubAppSlugNotConfiguredError.ts",
+      "filePath": "apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts",
+      "summary": "ApiInternalError subclass signaling that the GitHub App slug is missing from server configuration.",
+      "tags": ["error-handling", "github-app", "configuration", "errors"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts:GithubAppSlugNotConfiguredError",
+      "type": "class",
+      "name": "GithubAppSlugNotConfiguredError",
+      "filePath": "apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts",
+      "lineRange": [7, 16],
+      "summary": "Missing GitHub App slug configuration error.",
+      "tags": ["error-handling", "github-app"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "type": "file",
+      "name": "git-providers.controller.ts",
+      "filePath": "apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "summary": "Controller for organization git providers: CRUD of providers, GitHub App manifest/install/status/revoke flows, listing available repos, branch checks and search, auth checks, and attaching/detaching repositories.",
+      "tags": ["api-handler", "controller", "git", "github-app", "nestjs"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/git/providers/git-providers.controller.ts:GitProvidersController",
+      "type": "class",
+      "name": "GitProvidersController",
+      "filePath": "apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "lineRange": [48, 525],
+      "summary": "Endpoints for git providers and GitHub App lifecycle.",
+      "tags": ["controller", "git", "github-app"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "type": "file",
+      "name": "git-providers.module.ts",
+      "filePath": "apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "summary": "NestJS module for git providers, wiring controller, service, logger and an InstallStateSigner provider keyed by the encryption key from configuration.",
+      "tags": ["nestjs-module", "git", "factory", "wiring"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/git/providers/git-providers.module.ts:OrganizationGitProvidersModule",
+      "type": "class",
+      "name": "OrganizationGitProvidersModule",
+      "filePath": "apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "lineRange": [33, 33],
+      "summary": "Nest module for git providers including install state signer.",
+      "tags": ["nestjs-module", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "type": "file",
+      "name": "git-providers.service.ts",
+      "filePath": "apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "summary": "Git provider service orchestrating the git hexagon: provider CRUD, GitHub App manifest and installation completion with signed install state, repository materialization for app installations, branch and auth checks, and app revocation.",
+      "tags": ["service", "git", "github-app", "integration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/git/providers/git-providers.service.ts:GitProvidersService",
+      "type": "class",
+      "name": "GitProvidersService",
+      "filePath": "apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "lineRange": [120, 937],
+      "summary": "Git hexagon facade handling providers, GitHub App installs and repository materialization.",
+      "tags": ["service", "git", "github-app"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/git/providers/git-providers.tokens.ts",
+      "type": "file",
+      "name": "git-providers.tokens.ts",
+      "filePath": "apps/api/src/app/organizations/git/providers/git-providers.tokens.ts",
+      "summary": "Declares the INSTALL_STATE_SIGNER NestJS injection token in a standalone file to avoid circular imports.",
+      "tags": ["dependency-injection", "config", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/git/providers/types/GitHubAppManifest.ts",
+      "type": "file",
+      "name": "GitHubAppManifest.ts",
+      "filePath": "apps/api/src/app/organizations/git/providers/types/GitHubAppManifest.ts",
+      "summary": "Type describing a GitHub App manifest payload (URLs, webhook, permissions and events) used in the app-manifest creation flow.",
+      "tags": ["type-definition", "github-app", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts",
+      "type": "file",
+      "name": "git-repositories.controller.ts",
+      "filePath": "apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts",
+      "summary": "Controller for organization git repositories: add repos, manage tracked repository and branch, list repos by organization or provider, check branches and directories, and browse remote directories.",
+      "tags": ["api-handler", "controller", "git", "repositories"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts:GitRepositoriesController",
+      "type": "class",
+      "name": "GitRepositoriesController",
+      "filePath": "apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts",
+      "lineRange": [59, 392],
+      "summary": "Endpoints for tracked repositories, branches and remote directories.",
+      "tags": ["controller", "git", "repositories"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/git/repositories/git-repositories.module.ts",
+      "type": "file",
+      "name": "git-repositories.module.ts",
+      "filePath": "apps/api/src/app/organizations/git/repositories/git-repositories.module.ts",
+      "summary": "NestJS module wiring the git repositories controller and service.",
+      "tags": ["nestjs-module", "git", "wiring"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/git/repositories/git-repositories.module.ts:OrganizationGitRepositoriesModule",
+      "type": "class",
+      "name": "OrganizationGitRepositoriesModule",
+      "filePath": "apps/api/src/app/organizations/git/repositories/git-repositories.module.ts",
+      "lineRange": [18, 18],
+      "summary": "Nest module for git repositories.",
+      "tags": ["nestjs-module", "git"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.module.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/deployments.module.ts:OrganizationDeploymentsModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.module.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/deployments.module.ts:OrganizationDeploymentsModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.service.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/deployments.service.ts:DeploymentsService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.service.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/deployments.service.ts:DeploymentsService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.controller.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/targets/targets.controller.ts:TargetsController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.controller.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/targets/targets.controller.ts:TargetsController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.module.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/targets/targets.module.ts:OrganizationTargetsModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.module.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/targets/targets.module.ts:OrganizationTargetsModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.service.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/targets/targets.service.ts:TargetsService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.service.ts",
+      "target": "class:apps/api/src/app/organizations/deployments/targets/targets.service.ts:TargetsService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/git.module.ts",
+      "target": "class:apps/api/src/app/organizations/git/git.module.ts:OrganizationGitModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/git.module.ts",
+      "target": "class:apps/api/src/app/organizations/git/git.module.ts:OrganizationGitModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/errors/GithubAppManifestConversionNetworkError.ts",
+      "target": "class:apps/api/src/app/organizations/git/providers/errors/GithubAppManifestConversionNetworkError.ts:GithubAppManifestConversionNetworkError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/errors/GithubAppManifestConversionNetworkError.ts",
+      "target": "class:apps/api/src/app/organizations/git/providers/errors/GithubAppManifestConversionNetworkError.ts:GithubAppManifestConversionNetworkError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts",
+      "target": "class:apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts:GithubAppSlugNotConfiguredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts",
+      "target": "class:apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts:GithubAppSlugNotConfiguredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "target": "class:apps/api/src/app/organizations/git/providers/git-providers.controller.ts:GitProvidersController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "target": "class:apps/api/src/app/organizations/git/providers/git-providers.controller.ts:GitProvidersController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "target": "class:apps/api/src/app/organizations/git/providers/git-providers.module.ts:OrganizationGitProvidersModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "target": "class:apps/api/src/app/organizations/git/providers/git-providers.module.ts:OrganizationGitProvidersModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "target": "class:apps/api/src/app/organizations/git/providers/git-providers.service.ts:GitProvidersService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "target": "class:apps/api/src/app/organizations/git/providers/git-providers.service.ts:GitProvidersService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts",
+      "target": "class:apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts:GitRepositoriesController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts",
+      "target": "class:apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts:GitRepositoriesController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/repositories/git-repositories.module.ts",
+      "target": "class:apps/api/src/app/organizations/git/repositories/git-repositories.module.ts:OrganizationGitRepositoriesModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/repositories/git-repositories.module.ts",
+      "target": "class:apps/api/src/app/organizations/git/repositories/git-repositories.module.ts:OrganizationGitRepositoriesModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.module.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/deployments.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.module.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/deployments.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.module.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/targets/targets.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/deployments.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.controller.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/targets/targets.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.module.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/targets/targets.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.module.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/targets/targets.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/deployments/targets/targets.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/git.module.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/git.module.ts",
+      "target": "file:apps/api/src/app/organizations/git/repositories/git-repositories.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts",
+      "target": "file:apps/api/src/app/errors/ApiInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "target": "file:apps/api/src/app/auth/auth.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/types/GitHubAppManifest.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "target": "file:apps/api/src/app/shared/utils/edition.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "target": "file:apps/api/src/app/auth/auth.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/git-providers.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.module.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/git-providers.tokens.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/errors/GithubAppManifestConversionNetworkError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/git-providers.tokens.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "target": "file:apps/api/src/app/organizations/git/providers/types/GitHubAppManifest.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/providers/git-providers.service.ts",
+      "target": "file:apps/api/src/app/shared/utils/edition.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts",
+      "target": "file:apps/api/src/app/organizations/git/repositories/git-repositories.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/repositories/git-repositories.module.ts",
+      "target": "file:apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/git/repositories/git-repositories.module.ts",
+      "target": "file:apps/api/src/app/organizations/git/repositories/git-repositories.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/git/providers/errors/GithubAppSlugNotConfiguredError.ts:GithubAppSlugNotConfiguredError",
+      "target": "class:apps/api/src/app/errors/ApiInternalError.ts:ApiInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/deployments/targets/targets.controller.ts:TargetsController",
+      "target": "class:apps/api/src/app/organizations/deployments/targets/targets.service.ts:TargetsService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/git/providers/git-providers.controller.ts:GitProvidersController",
+      "target": "class:apps/api/src/app/organizations/git/providers/git-providers.service.ts:GitProvidersService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/git/repositories/git-repositories.controller.ts:GitRepositoriesController",
+      "target": "class:apps/api/src/app/organizations/git/repositories/git-repositories.service.ts:GitRepositoriesService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

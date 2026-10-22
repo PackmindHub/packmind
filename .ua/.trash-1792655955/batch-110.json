@@ -1,0 +1,586 @@
+{
+  "nodes": [
+    {
+      "id": "config:packages/standards/samples/generated/angular.json",
+      "type": "config",
+      "name": "angular.json",
+      "filePath": "packages/standards/samples/generated/angular.json",
+      "summary": "Generated sample standard \"Angular Best Practices\" with 10 rules (each with positive/negative TYPESCRIPT examples) scoped to **/*.ts,**/*.tsx,**/*.html,**/*.htm; standards for production Angular apps focusing on reactive correctness, security boundaries, performance-critical change detection, and reliable integration patterns.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "angular",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/ansible.json",
+      "type": "config",
+      "name": "ansible.json",
+      "filePath": "packages/standards/samples/generated/ansible.json",
+      "summary": "Generated sample standard \"Ansible Best Practices\" with 10 rules (each with positive/negative YAML examples) scoped to **/*.yaml,**/*.yml; advanced rules for writing predictable, secure, and maintainable Ansible playbooks, roles, and tasks in production automation.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "ansible",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/c.json",
+      "type": "config",
+      "name": "c.json",
+      "filePath": "packages/standards/samples/generated/c.json",
+      "summary": "Generated sample standard \"C Best Practices\" with 10 rules (each with positive/negative GENERIC examples) scoped to **/*.c,**/*.h; advanced C rules for production code that interacts with memory, OS resources, concurrency, external inputs, and failure-prone dependencies.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "c",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/cpp.json",
+      "type": "config",
+      "name": "cpp.json",
+      "filePath": "packages/standards/samples/generated/cpp.json",
+      "summary": "Generated sample standard \"C++ Best Practices\" with 10 rules (each with positive/negative GENERIC examples) scoped to **/*.cpp,**/*.cc,**/*.cxx,**/*.c++,**/*.hpp,**/*.hxx; advanced, production-focused C++ rules for correctness, security, performance, and operability in long-lived services and applications.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "cpp",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/csharp.json",
+      "type": "config",
+      "name": "csharp.json",
+      "filePath": "packages/standards/samples/generated/csharp.json",
+      "summary": "Generated sample standard \"C# Best Practices\" with 10 rules (each with positive/negative CSHARP examples) scoped to **/*.cs; advanced C# rules for preventing production bugs and performance issues in everyday code involving resources, concurrency, exceptions, validation, and async behavior.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "csharp",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/django.json",
+      "type": "config",
+      "name": "django.json",
+      "filePath": "packages/standards/samples/generated/django.json",
+      "summary": "Generated sample standard \"Django Best Practices\" with 10 rules (each with positive/negative PYTHON examples) scoped to **/*.py,**/*.pyx,**/*.pyw; advanced operational standards for Django codebases handling real traffic, multi-worker deployments, external services, and evolving schemas.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "django",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/dotnet-core.json",
+      "type": "config",
+      "name": "dotnet-core.json",
+      "filePath": "packages/standards/samples/generated/dotnet-core.json",
+      "summary": "Generated sample standard \".NET Core Best Practices\" with 10 rules (each with positive/negative CSHARP examples) scoped to **/*.cs; advanced production-focused rules for .NET Core services and libraries handling I/O, concurrency, configuration, logging, and reliability under real traffic.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "dotnet-core",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/express.json",
+      "type": "config",
+      "name": "express.json",
+      "filePath": "packages/standards/samples/generated/express.json",
+      "summary": "Generated sample standard \"Express.js Best Practices\" with 10 rules (each with positive/negative TYPESCRIPT examples) scoped to **/*.ts,**/*.js; apply these rules when building and operating production Express.js HTTP APIs where reliability, security, and observability matter.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "express",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/fastapi.json",
+      "type": "config",
+      "name": "fastapi.json",
+      "filePath": "packages/standards/samples/generated/fastapi.json",
+      "summary": "Generated sample standard \"FastAPI Best Practices\" with 10 rules (each with positive/negative PYTHON examples) scoped to **/*.py,**/*.pyx,**/*.pyw; advanced, production-focused FastAPI rules for reliability, security, performance, and maintainable API behavior across typical service codebases.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "fastapi",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/flask.json",
+      "type": "config",
+      "name": "flask.json",
+      "filePath": "packages/standards/samples/generated/flask.json",
+      "summary": "Generated sample standard \"Flask Best Practices\" with 10 rules (each with positive/negative PYTHON examples) scoped to **/*.py,**/*.pyx,**/*.pyw; advanced operational and security-focused rules for building production Flask services with predictable behavior under load and failures.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "flask",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/flutter.json",
+      "type": "config",
+      "name": "flutter.json",
+      "filePath": "packages/standards/samples/generated/flutter.json",
+      "summary": "Generated sample standard \"Flutter Best Practices\" with 10 rules (each with positive/negative GENERIC examples) scoped to **/*.dart; advanced Flutter standards for production apps focusing on correctness, resilience, and performance at common framework and platform boundaries.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "flutter",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/go.json",
+      "type": "config",
+      "name": "go.json",
+      "filePath": "packages/standards/samples/generated/go.json",
+      "summary": "Generated sample standard \"Go Best Practices\" with 10 rules (each with positive/negative GO examples) scoped to **/*.go; advanced Go rules for production services covering correctness, resilience, security, observability, and concurrency patterns used in everyday backend codebases.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "go",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/ionic.json",
+      "type": "config",
+      "name": "ionic.json",
+      "filePath": "packages/standards/samples/generated/ionic.json",
+      "summary": "Generated sample standard \"Ionic Best Practices\" with 10 rules (each with positive/negative TYPESCRIPT/HTML examples) scoped to **/*.ts,**/*.tsx,**/*.html,**/*.htm; advanced rules for Ionic apps that prevent common production issues around navigation, lifecycle, networking, storage, and UI performance.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "ionic",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/java.json",
+      "type": "config",
+      "name": "java.json",
+      "filePath": "packages/standards/samples/generated/java.json",
+      "summary": "Generated sample standard \"Java Best Practices\" with 10 rules (each with positive/negative JAVA examples) scoped to **/*.java; advanced, production-focused rules for core Java code handling failures, concurrency, IO, configuration, validation, and observability in typical backend and service applications.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "java",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/javascript.json",
+      "type": "config",
+      "name": "javascript.json",
+      "filePath": "packages/standards/samples/generated/javascript.json",
+      "summary": "Generated sample standard \"JavaScript Best Practices\" with 10 rules (each with positive/negative JAVASCRIPT examples) scoped to **/*.js; apply these rules when writing production JavaScript that performs I/O, handles untrusted input, and runs in long-lived processes or services.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "javascript",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/kotlin.json",
+      "type": "config",
+      "name": "kotlin.json",
+      "filePath": "packages/standards/samples/generated/kotlin.json",
+      "summary": "Generated sample standard \"Kotlin Best Practices\" with 10 rules (each with positive/negative KOTLIN examples) scoped to **/*.kt,**/*.kts; apply these rules when building production Kotlin services, apps, and libraries that interact with I/O, concurrency, configuration, and external systems.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "kotlin",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/laravel.json",
+      "type": "config",
+      "name": "laravel.json",
+      "filePath": "packages/standards/samples/generated/laravel.json",
+      "summary": "Generated sample standard \"Laravel Best Practices\" with 10 rules (each with positive/negative PHP examples) scoped to **/*.php,**/*.phtml; apply these rules when building production Laravel applications to standardize high-impact behaviors around boundaries, failures, configuration, persistence, and observability.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "laravel",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/meteor.json",
+      "type": "config",
+      "name": "meteor.json",
+      "filePath": "packages/standards/samples/generated/meteor.json",
+      "summary": "Generated sample standard \"Meteor Best Practices\" with 10 rules (each with positive/negative TYPESCRIPT examples) scoped to **/*.js,**/*.ts; advanced, production-focused rules for building secure, performant Meteor apps with predictable data access, methods, publications, and runtime behavior.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "meteor",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/nestjs.json",
+      "type": "config",
+      "name": "nestjs.json",
+      "filePath": "packages/standards/samples/generated/nestjs.json",
+      "summary": "Generated sample standard \"Nest.js Best Practices\" with 10 rules (each with positive/negative TYPESCRIPT examples) scoped to **/*.ts; advanced, production-oriented Nest.js rules for building reliable APIs and services with consistent validation, failure handling, observability, and configuration boundaries.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "nestjs",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/nextjs.json",
+      "type": "config",
+      "name": "nextjs.json",
+      "filePath": "packages/standards/samples/generated/nextjs.json",
+      "summary": "Generated sample standard \"Next.js Best Practices\" with 10 rules (each with positive/negative TYPESCRIPT/TYPESCRIPT_TSX examples) scoped to **/*.tsx,**/*.jsx,**/*.ts,**/*.js; apply these rules when building production Next.js apps with React Server Components, Route Handlers, and client components across serverless or Node runtimes.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "generated",
+        "nextjs",
+        "seed-data"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/standards/samples/generated/angular.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/angular.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/ansible.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/ansible.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/c.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/c.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/cpp.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/cpp.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/csharp.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/csharp.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/django.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/django.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/dotnet-core.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/dotnet-core.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/express.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/express.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/fastapi.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/fastapi.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/flask.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/flask.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/flutter.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/flutter.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/go.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/go.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/ionic.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/ionic.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/java.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/java.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/javascript.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/javascript.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/kotlin.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/kotlin.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/laravel.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/laravel.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/meteor.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/meteor.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/nestjs.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/nestjs.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/nextjs.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/nextjs.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

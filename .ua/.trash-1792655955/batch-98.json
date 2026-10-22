@@ -1,0 +1,110 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/feature-flags/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/feature-flags/README.md",
+      "summary": "README for the browser-safe feature-flags package holding the flag registry (keys and email-domain rules) and the pure isFeatureFlagEnabled function shared by frontend and backend; warns against node-only dependencies.",
+      "tags": ["documentation", "readme", "feature-flags", "browser-safe"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/feature-flags/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/feature-flags/package.json",
+      "summary": "Minimal package manifest for @packmind/feature-flags, a private CommonJS library with no dependencies, keeping it browser-safe.",
+      "tags": [
+        "configuration",
+        "workspace-package",
+        "feature-flags",
+        "commonjs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/feature-flags/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/feature-flags/project.json",
+      "summary": "Nx project definition for the feature-flags library tagged env:shared (usable from browser and node) with the default typecheck target and an SWC build.",
+      "tags": ["configuration", "nx", "build-system", "env-shared"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/feature-flags/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/feature-flags/tsconfig.json",
+      "summary": "Solution-style TypeScript config for the feature-flags package that extends the effective base config with strict compiler flags and references the lib and spec projects without compiling files itself.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system",
+        "project-references"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/feature-flags/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/feature-flags/tsconfig.lib.json",
+      "summary": "TypeScript library build config for the feature-flags package: compiles src/**/*.ts with declarations into dist/out-tsc, excluding spec and test files.",
+      "tags": ["configuration", "typescript", "build-system", "library"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:packages/feature-flags/README.md",
+      "target": "file:packages/feature-flags/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/feature-flags/package.json",
+      "target": "file:packages/feature-flags/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/feature-flags/project.json",
+      "target": "config:packages/feature-flags/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/feature-flags/project.json",
+      "target": "file:packages/feature-flags/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/feature-flags/project.json",
+      "target": "config:packages/feature-flags/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/feature-flags/tsconfig.lib.json",
+      "target": "config:packages/feature-flags/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/feature-flags/tsconfig.lib.json",
+      "target": "file:packages/feature-flags/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}
