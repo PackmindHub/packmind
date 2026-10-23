@@ -1,0 +1,198 @@
+{
+  "nodes": [
+    {
+      "id": "document:apps/api/AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "apps/api/AGENTS.md",
+      "summary": "Agent-facing overview of the NestJS API app (stack, commands, configuration) followed by a Packmind-generated block inlining the NestJS module hierarchy standard.",
+      "tags": [
+        "documentation",
+        "ai-agent-instructions",
+        "nestjs",
+        "packmind-standards"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:apps/api/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "apps/api/CLAUDE.md",
+      "summary": "Claude Code instructions for the API app describing its NestJS feature-module layout, JWT auth, Sentry, gated OpenTelemetry tracing, Redis SSE pub/sub and build/test commands.",
+      "tags": [
+        "documentation",
+        "ai-agent-instructions",
+        "nestjs",
+        "observability"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/api/docker-package.json",
+      "type": "config",
+      "name": "docker-package.json",
+      "filePath": "apps/api/docker-package.json",
+      "summary": "Trimmed production package.json for the API Docker image, pinning Node 24 / pnpm 11 engines and listing only runtime dependencies (NestJS, TypeORM, LLM SDKs, OpenTelemetry, etc.).",
+      "tags": [
+        "configuration",
+        "dependencies",
+        "containerization",
+        "production"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/api/nodemon.json",
+      "type": "config",
+      "name": "nodemon.json",
+      "filePath": "apps/api/nodemon.json",
+      "summary": "Nodemon dev-server config that restarts the webpack-built API bundle in dist/apps/api on change, using legacy polling and SIGTERM.",
+      "tags": ["configuration", "development", "hot-reload"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/api/packmind-lock.json",
+      "type": "config",
+      "name": "packmind-lock.json",
+      "filePath": "apps/api/packmind-lock.json",
+      "summary": "Packmind lockfile recording the deployed @backend/backend-nestjs-standards package, target agents and versioned standard artifacts rendered into the API folder.",
+      "tags": [
+        "configuration",
+        "packmind",
+        "lockfile",
+        "ai-agent-instructions"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/api/packmind.json",
+      "type": "config",
+      "name": "packmind.json",
+      "filePath": "apps/api/packmind.json",
+      "summary": "Packmind manifest subscribing the API app to the @backend/backend-nestjs-standards playbook package.",
+      "tags": ["configuration", "packmind", "manifest"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/api/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "apps/api/project.json",
+      "summary": "Nx project definition for the api application with typecheck, webpack build (dev/prod), serve via nodemon, lint and test targets.",
+      "tags": ["configuration", "build-system", "nx", "api"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/api/tsconfig.app.json",
+      "type": "config",
+      "name": "tsconfig.app.json",
+      "filePath": "apps/api/tsconfig.app.json",
+      "summary": "TypeScript app build config for the API targeting ES2022/CommonJS with decorator metadata enabled for NestJS, excluding spec files.",
+      "tags": ["configuration", "typescript", "build-system", "nestjs"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/api/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "apps/api/tsconfig.json",
+      "summary": "Root TypeScript config for the API project extending the effective base config and referencing tsconfig.app.json.",
+      "tags": ["configuration", "typescript", "build-system"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:apps/api/project.json",
+      "target": "file:apps/api/src/main.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/api/project.json",
+      "target": "config:apps/api/nodemon.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/api/project.json",
+      "target": "config:apps/api/tsconfig.app.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/api/project.json",
+      "target": "file:apps/api/webpack.config.js",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/api/tsconfig.app.json",
+      "target": "config:apps/api/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/api/tsconfig.json",
+      "target": "config:apps/api/tsconfig.app.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:apps/api/tsconfig.app.json",
+      "target": "file:apps/api/src/main.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/api/nodemon.json",
+      "target": "file:apps/api/src/main.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/api/packmind-lock.json",
+      "target": "config:apps/api/packmind.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/api/packmind.json",
+      "target": "document:apps/api/AGENTS.md",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:apps/api/AGENTS.md",
+      "target": "file:apps/api/src/main.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/api/CLAUDE.md",
+      "target": "file:apps/api/src/main.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/api/CLAUDE.md",
+      "target": "document:apps/api/AGENTS.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

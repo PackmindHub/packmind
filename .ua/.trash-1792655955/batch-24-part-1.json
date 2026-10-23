@@ -1,0 +1,1131 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "type": "file",
+      "name": "GitHubAppAuthBlock.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "summary": "GitHub App authentication step of the add-connection drawer, guiding the user through registering (manifest flow), installing and revoking the Packmind GitHub App with an edition-aware step indicator.",
+      "tags": ["component", "github-app", "authentication", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx",
+      "type": "file",
+      "name": "PatAuthBlock.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx",
+      "summary": "Personal access token authentication block for the add-connection drawer, with a token input and a popover listing the required token permissions per vendor.",
+      "tags": ["component", "authentication", "personal-access-token", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "type": "file",
+      "name": "ConnectionDrawer.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "summary": "Side drawer for an existing git connection that switches between view, repository-editing and re-authentication modes, shows live connection status and applies repository add/remove/track plans sequentially.",
+      "tags": [
+        "component",
+        "drawer",
+        "git-connection",
+        "state-management",
+        "react"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/DisplayNameEditor.tsx",
+      "type": "file",
+      "name": "DisplayNameEditor.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/DisplayNameEditor.tsx",
+      "summary": "Inline editor for a git connection's display name with validation, save/cancel controls and keyboard handling.",
+      "tags": ["component", "form", "inline-edit", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "type": "file",
+      "name": "ManageReposPanel.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "summary": "Repository management panel inside the connection drawer: searches provider repositories, adds/removes repo-branch tuples, switches tracked branches and shows apply progress.",
+      "tags": ["component", "repository-selection", "git", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx",
+      "type": "file",
+      "name": "PreviewBranchRow.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx",
+      "summary": "Small row component previewing a repository branch in the connection drawer, flagging branches deleted on the remote.",
+      "tags": ["component", "git", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "type": "file",
+      "name": "ReauthPanel.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "summary": "Re-authentication panel for a failing connection, offering PAT replacement with validation or GitHub App reinstall depending on the auth method.",
+      "tags": ["component", "authentication", "reauth", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts",
+      "type": "file",
+      "name": "repoApplyPlan.ts",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts",
+      "summary": "Pure planning logic that diffs saved repository rows against the user's selection into ordered remove/add/track operations, plus the rows shown in the drawer.",
+      "tags": ["utility", "diff", "planning", "pure-function"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "type": "file",
+      "name": "types.ts",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "summary": "Type definitions for the connection drawer (modes, repo tuples, selections, apply progress, reauth drafts) plus key helpers for tuples and repos.",
+      "tags": ["type-definition", "utility", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "type": "file",
+      "name": "GitProvidersList.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "summary": "Main git connections settings view with tabs for web-managed connections and CLI-managed repositories, wiring the connections table, empty state and add/edit drawers.",
+      "tags": ["component", "page", "git-providers", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/GitProvidersPage.tsx",
+      "type": "file",
+      "name": "GitProvidersPage.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/GitProvidersPage.tsx",
+      "summary": "Thin page wrapper rendering the git providers list.",
+      "tags": ["component", "page", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:GitHubAppAuthBlock",
+      "type": "function",
+      "name": "GitHubAppAuthBlock",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "lineRange": [48, 384],
+      "summary": "Drives GitHub App registration, installation and revocation for a new connection, redirecting to GitHub as needed.",
+      "tags": ["component", "github-app", "oauth-flow"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:EditionStepIndicator",
+      "type": "function",
+      "name": "EditionStepIndicator",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "lineRange": [386, 413],
+      "summary": "Renders the multi-step progress indicator adapted to the OSS or cloud edition flow.",
+      "tags": ["component", "stepper", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:StepDot",
+      "type": "function",
+      "name": "StepDot",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "lineRange": [415, 454],
+      "summary": "Renders a single numbered step dot with done/active/pending styling.",
+      "tags": ["component", "stepper", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx:PatAuthBlock",
+      "type": "function",
+      "name": "PatAuthBlock",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx",
+      "lineRange": [38, 78],
+      "summary": "Token input block for PAT-based connections with a permissions helper.",
+      "tags": ["component", "authentication", "form"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx:PermissionsPopover",
+      "type": "function",
+      "name": "PermissionsPopover",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx",
+      "lineRange": [80, 121],
+      "summary": "Popover listing the token scopes required for the chosen vendor.",
+      "tags": ["component", "popover", "help"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:ConnectionDrawer",
+      "type": "function",
+      "name": "ConnectionDrawer",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "lineRange": [68, 116],
+      "summary": "Drawer shell that opens for a selected connection and hosts the drawer body.",
+      "tags": ["component", "drawer", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:DrawerBody",
+      "type": "function",
+      "name": "DrawerBody",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "lineRange": [127, 507],
+      "summary": "Core drawer logic managing mode, repository selection, apply plan execution with progress, reauth and display name edits.",
+      "tags": ["component", "state-management", "orchestration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:ViewMode",
+      "type": "function",
+      "name": "ViewMode",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "lineRange": [522, 582],
+      "summary": "Read-only view of a connection showing status, repositories preview and edit actions.",
+      "tags": ["component", "view", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:StatusBlock",
+      "type": "function",
+      "name": "StatusBlock",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "lineRange": [584, 669],
+      "summary": "Displays the probed connection status with refresh and re-authenticate prompts.",
+      "tags": ["component", "status", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:RepositoriesPreview",
+      "type": "function",
+      "name": "RepositoriesPreview",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "lineRange": [671, 769],
+      "summary": "Lists tracked repositories and branches for the connection in view mode.",
+      "tags": ["component", "list", "git"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:operationLabel",
+      "type": "function",
+      "name": "operationLabel",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "lineRange": [771, 782],
+      "summary": "Builds a human-readable progress label for a repository operation.",
+      "tags": ["utility", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:diffSummary",
+      "type": "function",
+      "name": "diffSummary",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "lineRange": [784, 806],
+      "summary": "Summarizes the pending repository changes (added, removed, switched) for confirmation.",
+      "tags": ["utility", "diff", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/DisplayNameEditor.tsx:DisplayNameEditor",
+      "type": "function",
+      "name": "DisplayNameEditor",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/DisplayNameEditor.tsx",
+      "lineRange": [23, 233],
+      "summary": "Editable display name field with validation, save and cancel handling.",
+      "tags": ["component", "form", "inline-edit"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:ManageReposPanel",
+      "type": "function",
+      "name": "ManageReposPanel",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "lineRange": [76, 427],
+      "summary": "Manages the repository selection state: search, add/remove tuples, branch switching and apply.",
+      "tags": ["component", "state-management", "repository-selection"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:Header",
+      "type": "function",
+      "name": "Header",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "lineRange": [429, 450],
+      "summary": "Panel header with title and back navigation.",
+      "tags": ["component", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:SectionLabel",
+      "type": "function",
+      "name": "SectionLabel",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "lineRange": [452, 478],
+      "summary": "Section label with optional count for repo groups.",
+      "tags": ["component", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:UntrackedRepoRow",
+      "type": "function",
+      "name": "UntrackedRepoRow",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "lineRange": [480, 531],
+      "summary": "Row for a provider repository not yet tracked, with add action.",
+      "tags": ["component", "list-item", "git"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:TrackedRepoSection",
+      "type": "function",
+      "name": "TrackedRepoSection",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "lineRange": [533, 712],
+      "summary": "Section for a tracked repository listing its branches with untick and change-branch controls.",
+      "tags": ["component", "git", "branches"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:BranchNameCombobox",
+      "type": "function",
+      "name": "BranchNameCombobox",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "lineRange": [721, 790],
+      "summary": "Combobox to pick or type a branch name for a repository.",
+      "tags": ["component", "combobox", "input"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:BranchRow",
+      "type": "function",
+      "name": "BranchRow",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "lineRange": [792, 850],
+      "summary": "Row for a single tracked branch with checkbox and deleted-branch badge.",
+      "tags": ["component", "list-item", "git"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:ProgressIndicator",
+      "type": "function",
+      "name": "ProgressIndicator",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "lineRange": [852, 884],
+      "summary": "Shows apply progress or error for repository operations.",
+      "tags": ["component", "progress", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx:PreviewBranchRow",
+      "type": "function",
+      "name": "PreviewBranchRow",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx",
+      "lineRange": [18, 38],
+      "summary": "Renders a branch preview row with deleted-branch badge when relevant.",
+      "tags": ["component", "git", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx:ReauthPanel",
+      "type": "function",
+      "name": "ReauthPanel",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "lineRange": [27, 65],
+      "summary": "Chooses PAT or GitHub App re-authentication based on the provider auth method.",
+      "tags": ["component", "authentication", "router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx:PatReauth",
+      "type": "function",
+      "name": "PatReauth",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "lineRange": [74, 182],
+      "summary": "Collects and validates a replacement personal access token, then updates the provider.",
+      "tags": ["component", "authentication", "form"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx:AppReauth",
+      "type": "function",
+      "name": "AppReauth",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "lineRange": [189, 228],
+      "summary": "Offers reinstalling the GitHub App to restore access.",
+      "tags": ["component", "github-app", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts:buildRepoApplyPlan",
+      "type": "function",
+      "name": "buildRepoApplyPlan",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts",
+      "lineRange": [29, 86],
+      "summary": "Computes ordered remove/add/track operations from saved rows versus the current selection.",
+      "tags": ["utility", "diff", "planning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts:rowsShownInDrawer",
+      "type": "function",
+      "name": "rowsShownInDrawer",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts",
+      "lineRange": [92, 97],
+      "summary": "Filters saved rows to those displayed in the drawer, one per repo key where relevant.",
+      "tags": ["utility", "filter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts:tupleKey",
+      "type": "function",
+      "name": "tupleKey",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "lineRange": [10, 11],
+      "summary": "Builds a unique owner/repo::branch key for a repo tuple.",
+      "tags": ["utility", "key"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts:repoKey",
+      "type": "function",
+      "name": "repoKey",
+      "filePath": "apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "lineRange": [24, 25],
+      "summary": "Builds an owner/repo key.",
+      "tags": ["utility", "key"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/GitProvidersList.tsx:GitProvidersList",
+      "type": "function",
+      "name": "GitProvidersList",
+      "filePath": "apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "lineRange": [34, 228],
+      "summary": "Fetches providers and renders tabs, tables, empty state and drawers for managing git connections.",
+      "tags": ["component", "page", "data-fetching"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/GitProvidersList.tsx:TabLabel",
+      "type": "function",
+      "name": "TabLabel",
+      "filePath": "apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "lineRange": [236, 247],
+      "summary": "Tab label with a count badge.",
+      "tags": ["component", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/GitProvidersPage.tsx:GitProvidersPage",
+      "type": "function",
+      "name": "GitProvidersPage",
+      "filePath": "apps/frontend/src/domain/git/components/GitProvidersPage.tsx",
+      "lineRange": [9, 13],
+      "summary": "Page component rendering GitProvidersList.",
+      "tags": ["component", "page"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:GitHubAppAuthBlock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:GitHubAppAuthBlock",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:EditionStepIndicator",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:StepDot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx:PatAuthBlock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx:PatAuthBlock",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx:PermissionsPopover",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:ConnectionDrawer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:ConnectionDrawer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:DrawerBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:ViewMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:StatusBlock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:RepositoriesPreview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:operationLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:diffSummary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/DisplayNameEditor.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/DisplayNameEditor.tsx:DisplayNameEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/DisplayNameEditor.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/DisplayNameEditor.tsx:DisplayNameEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:ManageReposPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:ManageReposPanel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:Header",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:SectionLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:UntrackedRepoRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:TrackedRepoSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:BranchNameCombobox",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:BranchRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:ProgressIndicator",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx:PreviewBranchRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx:PreviewBranchRow",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx:ReauthPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx:ReauthPanel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx:PatReauth",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx:AppReauth",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts:buildRepoApplyPlan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts:buildRepoApplyPlan",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts:rowsShownInDrawer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts:rowsShownInDrawer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts:tupleKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts:tupleKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts:repoKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts:repoKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/GitProvidersList.tsx:GitProvidersList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/GitProvidersList.tsx:GitProvidersList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/GitProvidersList.tsx:TabLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersPage.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/GitProvidersPage.tsx:GitProvidersPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersPage.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/GitProvidersPage.tsx:GitProvidersPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "target": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "target": "file:apps/frontend/src/shared/utils/navigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/DisplayNameEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/ConnectionStatusPill.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/shared/utils/navigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "file:apps/frontend/src/shared/components/DeletedBranchBadge.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/PreviewBranchRow.tsx",
+      "target": "file:apps/frontend/src/shared/components/DeletedBranchBadge.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ManageGitProvider/GitHubAppConnection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ReauthPanel.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts",
+      "target": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/list/CliManagedTable.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/list/ConnectionsEmptyState.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/list/ConnectionsTable.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "file:apps/frontend/src/domain/git/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "target": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/GitProvidersPage.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/GitProvidersList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:GitHubAppAuthBlock",
+      "target": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:isGithubOrgValid",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:GitHubAppAuthBlock",
+      "target": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:githubOrgForRegistration",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:GitHubAppAuthBlock",
+      "target": "function:apps/frontend/src/shared/utils/navigation.ts:redirectTo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx:GitHubAppAuthBlock",
+      "target": "function:apps/frontend/src/domain/git/utils/errorUtils.ts:extractErrorMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:DrawerBody",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts:buildRepoApplyPlan",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:DrawerBody",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts:rowsShownInDrawer",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:DrawerBody",
+      "target": "function:apps/frontend/src/domain/git/utils/errorUtils.ts:extractErrorMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:DrawerBody",
+      "target": "function:apps/frontend/src/shared/utils/navigation.ts:redirectTo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:DrawerBody",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:RepositoriesPreview",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts:rowsShownInDrawer",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:StatusBlock",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:deriveConnectionStatus",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:StatusBlock",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:toStatusBucket",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ConnectionDrawer.tsx:diffSummary",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts:repoKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:ManageReposPanel",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts:repoKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/ManageReposPanel.tsx:ManageReposPanel",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts:tupleKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/repoApplyPlan.ts:rowsShownInDrawer",
+      "target": "function:apps/frontend/src/domain/git/components/ConnectionDrawer/types.ts:repoKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/GitProvidersList.tsx:GitProvidersList",
+      "target": "function:apps/frontend/src/domain/git/utils/errorUtils.ts:extractErrorMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

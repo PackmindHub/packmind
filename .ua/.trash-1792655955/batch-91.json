@@ -1,0 +1,94 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "packages/AGENTS.md",
+      "summary": "Agent-facing guide to the packages/ directory: lists package categories (core infrastructure, domain, integration, language analysis, frontend) with common Nx commands and embedded Packmind coding standards such as TypeORM repository rules.",
+      "tags": [
+        "documentation",
+        "monorepo",
+        "packages-overview",
+        "coding-standards",
+        "ai-agent-instructions"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:packages/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "packages/CLAUDE.md",
+      "summary": "Claude Code instructions for the packages/ directory describing each package category, environment tags and import boundaries, package layout, and cross-package conventions, pointing to architecture rules under packages/.claude/rules/packmind/.",
+      "tags": [
+        "documentation",
+        "monorepo",
+        "architecture",
+        "import-boundaries",
+        "ai-agent-instructions"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Near-duplicate of packages/AGENTS.md but more current (e.g. recipes renamed to commands, feature-flags and playbook-change-applier packages listed)."
+    },
+    {
+      "id": "config:packages/packmind-lock.json",
+      "type": "config",
+      "name": "packmind-lock.json",
+      "filePath": "packages/packmind-lock.json",
+      "summary": "Packmind CLI lockfile for the packages/ scope recording installed playbook packages (@backend/backend, hexagonal architecture standards), the target coding agents (Claude, Cursor, Copilot, Codex, AGENTS.md, etc.) and pinned artifact versions with ids and space ids.",
+      "tags": [
+        "configuration",
+        "lockfile",
+        "packmind-cli",
+        "playbook-distribution",
+        "generated"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:packages/packmind.json",
+      "type": "config",
+      "name": "packmind.json",
+      "filePath": "packages/packmind.json",
+      "summary": "Packmind CLI manifest declaring which playbook packages (@backend/backend and its hexagonal architecture standards) are installed for the packages/ directory.",
+      "tags": [
+        "configuration",
+        "packmind-cli",
+        "manifest",
+        "playbook-distribution"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/packmind-lock.json",
+      "target": "config:packages/packmind.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/AGENTS.md",
+      "target": "document:packages/CLAUDE.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/packmind.json",
+      "target": "document:packages/CLAUDE.md",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/packmind.json",
+      "target": "document:packages/AGENTS.md",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

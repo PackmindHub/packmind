@@ -1,0 +1,1386 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts",
+      "type": "file",
+      "name": "UnsupportedRenderModeError.ts",
+      "filePath": "packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts",
+      "summary": "Domain error raised when a requested render mode is not supported by the deployments pipeline, extending the package-internal error base.",
+      "tags": ["error-handling", "domain-error", "render-mode"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/jobs/IDeploymentsDelayedJobs.ts",
+      "type": "file",
+      "name": "IDeploymentsDelayedJobs.ts",
+      "filePath": "packages/deployments/src/domain/jobs/IDeploymentsDelayedJobs.ts",
+      "summary": "Port declaring the delayed jobs the deployments domain exposes, currently the artifact-publishing job.",
+      "tags": ["type-definition", "port", "background-jobs"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/jobs/PublishArtifactsJob.ts",
+      "type": "file",
+      "name": "PublishArtifactsJob.ts",
+      "filePath": "packages/deployments/src/domain/jobs/PublishArtifactsJob.ts",
+      "summary": "Defines the input/output payload contracts of the BullMQ artifact-publishing job and a helper that reads distribution IDs from both legacy and current payload shapes.",
+      "tags": [
+        "type-definition",
+        "background-jobs",
+        "backward-compatibility",
+        "deployment"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/jobs/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/deployments/src/domain/jobs/index.ts",
+      "summary": "Barrel re-exporting the deployments job payload types and delayed-jobs port.",
+      "tags": ["barrel", "entry-point", "background-jobs"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "type": "file",
+      "name": "IDeploymentsRepositories.ts",
+      "filePath": "packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "summary": "Aggregate port exposing getters for every deployments repository (targets, packages, distributions, releases, render modes).",
+      "tags": [
+        "type-definition",
+        "port",
+        "repository",
+        "hexagonal-architecture"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "type": "file",
+      "name": "IDistributedPackageRepository.ts",
+      "filePath": "packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "summary": "Repository port for distributed packages, covering lookups by distribution/package and attaching standard, command and skill versions.",
+      "tags": ["type-definition", "port", "repository", "data-access"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "file",
+      "name": "IDistributionRepository.ts",
+      "filePath": "packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "summary": "Large repository port for distributions: history listings, active-version queries per target/space, outdated-deployment detection and package operation rows, plus the related row types.",
+      "tags": ["type-definition", "port", "repository", "deployment-history"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts",
+      "type": "file",
+      "name": "IPackageReleaseRepository.ts",
+      "filePath": "packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts",
+      "summary": "Repository port for versioned package releases, supporting creation with pinned artifact versions and lookups by package/version.",
+      "tags": ["type-definition", "port", "repository", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "type": "file",
+      "name": "IPackageRepository.ts",
+      "filePath": "packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "summary": "Repository port for packages, defining space/organization lookups, slug resolution with artefacts and add/set/remove operations for commands, standards and skills.",
+      "tags": ["type-definition", "port", "repository", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts",
+      "type": "file",
+      "name": "IPackagesDeploymentRepository.ts",
+      "filePath": "packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts",
+      "summary": "Repository port for legacy packages deployments, listing by organization, package, target and status.",
+      "tags": ["type-definition", "port", "repository", "legacy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts",
+      "type": "file",
+      "name": "IRenderModeConfigurationRepository.ts",
+      "filePath": "packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts",
+      "summary": "Repository port for organization render-mode configuration lookup and upsert.",
+      "tags": ["type-definition", "port", "repository", "render-mode"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/repositories/ITargetRepository.ts",
+      "type": "file",
+      "name": "ITargetRepository.ts",
+      "filePath": "packages/deployments/src/domain/repositories/ITargetRepository.ts",
+      "summary": "Repository port for deployment targets, scoped by organization, space and git repository.",
+      "tags": ["type-definition", "port", "repository", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts",
+      "type": "file",
+      "name": "PublishArtifactsJobFactory.ts",
+      "filePath": "packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts",
+      "summary": "BullMQ job factory that creates the publish-artifacts queue and wires its delayed job with the distribution repository and deployment dependencies.",
+      "tags": ["factory", "background-jobs", "bullmq", "infrastructure"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "type": "file",
+      "name": "DeploymentsRepositories.ts",
+      "filePath": "packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "summary": "Composition root instantiating all TypeORM-backed deployments repositories from a DataSource and exposing them through the IDeploymentsRepositories port.",
+      "tags": ["factory", "repository", "composition-root", "typeorm"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/repositories/DistributedPackageRepository.ts",
+      "type": "file",
+      "name": "DistributedPackageRepository.ts",
+      "filePath": "packages/deployments/src/infra/repositories/DistributedPackageRepository.ts",
+      "summary": "TypeORM repository persisting distributed packages and their many-to-many links to standard, command and skill versions.",
+      "tags": ["repository", "typeorm", "data-access", "adapter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "type": "file",
+      "name": "DistributionRepository.ts",
+      "filePath": "packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "summary": "Very large TypeORM adapter implementing distribution history and governance queries: active versions per target, outdated deployments, artifact counts per space and package operations, restricted to tracked branches.",
+      "tags": [
+        "repository",
+        "typeorm",
+        "query-builder",
+        "deployment-history",
+        "adapter"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "type": "file",
+      "name": "PackageReleaseRepository.ts",
+      "filePath": "packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "summary": "TypeORM repository for package releases that stores pinned recipe/standard/skill versions via join rows and resolves latest or specific release contents.",
+      "tags": ["repository", "typeorm", "versioning", "adapter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "type": "file",
+      "name": "PackageRepository.ts",
+      "filePath": "packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "summary": "Large TypeORM repository for packages, handling lookups with hydrated artefacts, slug resolution across spaces, and membership management of commands, standards and skills.",
+      "tags": ["repository", "typeorm", "packages", "adapter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts",
+      "type": "file",
+      "name": "PackagesDeploymentRepository.ts",
+      "filePath": "packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts",
+      "summary": "TypeORM repository for legacy packages deployment records with listing and active-package-per-target queries.",
+      "tags": ["repository", "typeorm", "legacy", "adapter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts",
+      "type": "file",
+      "name": "RenderModeConfigurationRepository.ts",
+      "filePath": "packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts",
+      "summary": "TypeORM repository reading and upserting per-organization render-mode configuration.",
+      "tags": ["repository", "typeorm", "render-mode", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/repositories/TargetRepository.ts",
+      "type": "file",
+      "name": "TargetRepository.ts",
+      "filePath": "packages/deployments/src/infra/repositories/TargetRepository.ts",
+      "summary": "Organization-scoped TypeORM repository for deployment targets with space, git repo and tracked-branch filtering.",
+      "tags": ["repository", "typeorm", "targets", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/repositories/trackedBranchScope.ts",
+      "type": "file",
+      "name": "trackedBranchScope.ts",
+      "filePath": "packages/deployments/src/infra/repositories/trackedBranchScope.ts",
+      "summary": "Shared raw SQL predicate and parameter helper restricting governance queries to the branch Packmind currently tracks per repository, hiding shadowed branches.",
+      "tags": ["sql", "query-helper", "governance", "utility"],
+      "complexity": "moderate",
+      "languageNotes": "Uses quoted fully-qualified SQL identifiers because TypeORM only rewrites alias.property references in specific positions."
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/DistributedPackageSchema.ts",
+      "type": "file",
+      "name": "DistributedPackageSchema.ts",
+      "filePath": "packages/deployments/src/infra/schemas/DistributedPackageSchema.ts",
+      "summary": "TypeORM EntitySchema for distributed packages with join tables to standard, command and skill versions.",
+      "tags": ["schema-definition", "typeorm", "database", "data-model"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/DistributionSchema.ts",
+      "type": "file",
+      "name": "DistributionSchema.ts",
+      "filePath": "packages/deployments/src/infra/schemas/DistributionSchema.ts",
+      "summary": "TypeORM EntitySchema for distributions, linking targets, authors and distributed packages with status and render modes.",
+      "tags": ["schema-definition", "typeorm", "database", "data-model"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/PackageCommandsSchema.ts",
+      "type": "file",
+      "name": "PackageCommandsSchema.ts",
+      "filePath": "packages/deployments/src/infra/schemas/PackageCommandsSchema.ts",
+      "summary": "TypeORM EntitySchema for the package-to-command join table.",
+      "tags": ["schema-definition", "typeorm", "database", "join-table"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/PackageReleaseSchema.ts",
+      "type": "file",
+      "name": "PackageReleaseSchema.ts",
+      "filePath": "packages/deployments/src/infra/schemas/PackageReleaseSchema.ts",
+      "summary": "TypeORM EntitySchema for package releases and their pinned recipe, standard and skill version join tables.",
+      "tags": ["schema-definition", "typeorm", "database", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/PackageSchema.ts",
+      "type": "file",
+      "name": "PackageSchema.ts",
+      "filePath": "packages/deployments/src/infra/schemas/PackageSchema.ts",
+      "summary": "TypeORM EntitySchema for packages with space ownership and soft-delete columns.",
+      "tags": ["schema-definition", "typeorm", "database", "data-model"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/PackageSkillsSchema.ts",
+      "type": "file",
+      "name": "PackageSkillsSchema.ts",
+      "filePath": "packages/deployments/src/infra/schemas/PackageSkillsSchema.ts",
+      "summary": "TypeORM EntitySchema for the package-to-skill join table.",
+      "tags": ["schema-definition", "typeorm", "database", "join-table"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/PackageStandardsSchema.ts",
+      "type": "file",
+      "name": "PackageStandardsSchema.ts",
+      "filePath": "packages/deployments/src/infra/schemas/PackageStandardsSchema.ts",
+      "summary": "TypeORM EntitySchema for the package-to-standard join table.",
+      "tags": ["schema-definition", "typeorm", "database", "join-table"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/PackagesDeploymentSchema.ts",
+      "type": "file",
+      "name": "PackagesDeploymentSchema.ts",
+      "filePath": "packages/deployments/src/infra/schemas/PackagesDeploymentSchema.ts",
+      "summary": "TypeORM EntitySchema for legacy packages deployments with target, author and package relations.",
+      "tags": ["schema-definition", "typeorm", "database", "legacy"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/RenderModeConfigurationSchema.ts",
+      "type": "file",
+      "name": "RenderModeConfigurationSchema.ts",
+      "filePath": "packages/deployments/src/infra/schemas/RenderModeConfigurationSchema.ts",
+      "summary": "TypeORM EntitySchema storing each organization's active render modes.",
+      "tags": ["schema-definition", "typeorm", "database", "render-mode"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/TargetSchema.ts",
+      "type": "file",
+      "name": "TargetSchema.ts",
+      "filePath": "packages/deployments/src/infra/schemas/TargetSchema.ts",
+      "summary": "TypeORM EntitySchema for deployment targets bound to a git repository and path.",
+      "tags": ["schema-definition", "typeorm", "database", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/infra/schemas/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/deployments/src/infra/schemas/index.ts",
+      "summary": "Barrel re-exporting all deployments TypeORM schemas and the deploymentsSchemas array registered with the data source.",
+      "tags": ["barrel", "entry-point", "typeorm", "schema-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts:UnsupportedRenderModeError",
+      "type": "class",
+      "name": "UnsupportedRenderModeError",
+      "filePath": "packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts",
+      "lineRange": [10, 19],
+      "summary": "Error thrown when a render mode value cannot be mapped to a supported coding agent output.",
+      "tags": ["error-handling", "domain-error", "render-mode"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/domain/jobs/PublishArtifactsJob.ts:distributionIdsOf",
+      "type": "function",
+      "name": "distributionIdsOf",
+      "filePath": "packages/deployments/src/domain/jobs/PublishArtifactsJob.ts",
+      "lineRange": [49, 56],
+      "summary": "Returns the distribution IDs covered by a publish job payload, falling back to the legacy single distributionId field.",
+      "tags": ["utility", "backward-compatibility", "background-jobs"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/infra/repositories/trackedBranchScope.ts:trackedBranchScopeParams",
+      "type": "function",
+      "name": "trackedBranchScopeParams",
+      "filePath": "packages/deployments/src/infra/repositories/trackedBranchScope.ts",
+      "lineRange": [62, 66],
+      "summary": "Builds the query parameters object binding the organization ID required by the TRACKED_BRANCH_SCOPE predicate.",
+      "tags": ["utility", "query-helper", "governance"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/jobs/IDeploymentsDelayedJobs.ts:IDeploymentsDelayedJobs",
+      "type": "class",
+      "name": "IDeploymentsDelayedJobs",
+      "filePath": "packages/deployments/src/domain/jobs/IDeploymentsDelayedJobs.ts",
+      "lineRange": [3, 5],
+      "summary": "Port listing the delayed jobs of the deployments domain.",
+      "tags": ["port", "background-jobs", "interface"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts:IDeploymentsRepositories",
+      "type": "class",
+      "name": "IDeploymentsRepositories",
+      "filePath": "packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "lineRange": [8, 23],
+      "summary": "Aggregate repository port giving access to each deployments repository.",
+      "tags": ["port", "repository", "interface"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts:IDistributedPackageRepository",
+      "type": "class",
+      "name": "IDistributedPackageRepository",
+      "filePath": "packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "lineRange": [12, 33],
+      "summary": "Port for persisting distributed packages and their artifact version links.",
+      "tags": ["port", "repository", "interface"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/repositories/IDistributionRepository.ts:IDistributionRepository",
+      "type": "class",
+      "name": "IDistributionRepository",
+      "filePath": "packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "lineRange": [36, 191],
+      "summary": "Port for distribution persistence and governance queries over active and outdated deployments.",
+      "tags": ["port", "repository", "interface", "deployment-history"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts:IPackageReleaseRepository",
+      "type": "class",
+      "name": "IPackageReleaseRepository",
+      "filePath": "packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts",
+      "lineRange": [23, 69],
+      "summary": "Port for creating and querying versioned package releases with pinned artifact versions.",
+      "tags": ["port", "repository", "interface", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/repositories/IPackageRepository.ts:IPackageRepository",
+      "type": "class",
+      "name": "IPackageRepository",
+      "filePath": "packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "lineRange": [16, 75],
+      "summary": "Port for package persistence and membership management of commands, standards and skills.",
+      "tags": ["port", "repository", "interface"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts:IPackagesDeploymentRepository",
+      "type": "class",
+      "name": "IPackagesDeploymentRepository",
+      "filePath": "packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts",
+      "lineRange": [11, 38],
+      "summary": "Port for legacy packages deployment queries.",
+      "tags": ["port", "repository", "interface", "legacy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts:IRenderModeConfigurationRepository",
+      "type": "class",
+      "name": "IRenderModeConfigurationRepository",
+      "filePath": "packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts",
+      "lineRange": [5, 12],
+      "summary": "Port for organization render-mode configuration persistence.",
+      "tags": ["port", "repository", "interface"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/repositories/ITargetRepository.ts:ITargetRepository",
+      "type": "class",
+      "name": "ITargetRepository",
+      "filePath": "packages/deployments/src/domain/repositories/ITargetRepository.ts",
+      "lineRange": [10, 31],
+      "summary": "Port for organization-scoped deployment target persistence.",
+      "tags": ["port", "repository", "interface"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts:PublishArtifactsJobFactory",
+      "type": "class",
+      "name": "PublishArtifactsJobFactory",
+      "filePath": "packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts",
+      "lineRange": [10, 56],
+      "summary": "Creates the BullMQ queue and PublishArtifactsDelayedJob instance for committing rendered artifacts to git.",
+      "tags": ["factory", "bullmq", "background-jobs"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts:DeploymentsRepositories",
+      "type": "class",
+      "name": "DeploymentsRepositories",
+      "filePath": "packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "lineRange": [35, 117],
+      "summary": "Instantiates and exposes all deployments TypeORM repositories from a single DataSource.",
+      "tags": ["factory", "repository", "composition-root"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/infra/repositories/DistributedPackageRepository.ts:DistributedPackageRepository",
+      "type": "class",
+      "name": "DistributedPackageRepository",
+      "filePath": "packages/deployments/src/infra/repositories/DistributedPackageRepository.ts",
+      "lineRange": [18, 248],
+      "summary": "TypeORM adapter for distributed packages and their standard/command/skill version associations.",
+      "tags": ["repository", "typeorm", "adapter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/infra/repositories/DistributionRepository.ts:DistributionRepository",
+      "type": "class",
+      "name": "DistributionRepository",
+      "filePath": "packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "lineRange": [120, 1634],
+      "summary": "TypeORM adapter with ~30 query methods for distribution history, active versions per target, outdated deployments and space-level artifact stats.",
+      "tags": ["repository", "typeorm", "query-builder", "adapter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts:PackageReleaseRepository",
+      "type": "class",
+      "name": "PackageReleaseRepository",
+      "filePath": "packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "lineRange": [89, 492],
+      "summary": "TypeORM adapter creating package releases with pinned version join rows and resolving release contents.",
+      "tags": ["repository", "typeorm", "versioning", "adapter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/infra/repositories/PackageRepository.ts:PackageRepository",
+      "type": "class",
+      "name": "PackageRepository",
+      "filePath": "packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "lineRange": [41, 1222],
+      "summary": "TypeORM adapter for packages including artefact hydration, slug lookups and command/standard/skill membership updates.",
+      "tags": ["repository", "typeorm", "packages", "adapter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts:PackagesDeploymentRepository",
+      "type": "class",
+      "name": "PackagesDeploymentRepository",
+      "filePath": "packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts",
+      "lineRange": [17, 277],
+      "summary": "TypeORM adapter for legacy packages deployment records.",
+      "tags": ["repository", "typeorm", "legacy", "adapter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts:RenderModeConfigurationRepository",
+      "type": "class",
+      "name": "RenderModeConfigurationRepository",
+      "filePath": "packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts",
+      "lineRange": [11, 119],
+      "summary": "TypeORM adapter reading and upserting organization render-mode configuration.",
+      "tags": ["repository", "typeorm", "render-mode"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/infra/repositories/TargetRepository.ts:TargetRepository",
+      "type": "class",
+      "name": "TargetRepository",
+      "filePath": "packages/deployments/src/infra/repositories/TargetRepository.ts",
+      "lineRange": [23, 220],
+      "summary": "Organization-scoped TypeORM adapter for deployment targets.",
+      "tags": ["repository", "typeorm", "targets", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/infra/repositories/DistributionRepository.ts:groupBy",
+      "type": "function",
+      "name": "groupBy",
+      "filePath": "packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "lineRange": [52, 67],
+      "summary": "Generic helper grouping an array into a Map keyed by a selector function.",
+      "tags": ["utility", "collections"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts:groupPins",
+      "type": "function",
+      "name": "groupPins",
+      "filePath": "packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "lineRange": [55, 67],
+      "summary": "Groups flat pinned-version rows into a Map keyed by package release ID, preserving query order.",
+      "tags": ["utility", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts:sortableVersionOf",
+      "type": "function",
+      "name": "sortableVersionOf",
+      "filePath": "packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "lineRange": [76, 87],
+      "summary": "Parses a release version string into nullable major/minor/patch columns used to sort releases and find the latest one.",
+      "tags": ["utility", "versioning", "sorting"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/jobs/IDeploymentsDelayedJobs.ts",
+      "target": "file:packages/deployments/src/application/jobs/PublishArtifactsDelayedJob.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/ITargetRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts",
+      "target": "file:packages/deployments/src/application/jobs/PublishArtifactsDelayedJob.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts",
+      "target": "file:packages/deployments/src/domain/jobs/PublishArtifactsJob.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/domain/repositories/ITargetRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/repositories/DistributedPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/repositories/TargetRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/schemas/DistributedPackageSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/schemas/DistributionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageReleaseSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackagesDeploymentSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/schemas/RenderModeConfigurationSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "file:packages/deployments/src/infra/schemas/TargetSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DistributedPackageRepository.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DistributedPackageRepository.ts",
+      "target": "file:packages/deployments/src/infra/schemas/DistributedPackageSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "target": "file:packages/deployments/src/infra/repositories/trackedBranchScope.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "target": "file:packages/deployments/src/infra/schemas/DistributionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageReleaseNotPersistedError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageReleaseSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageCommandsSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageSkillsSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageStandardsSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackagesDeploymentSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts",
+      "target": "file:packages/deployments/src/infra/schemas/RenderModeConfigurationSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/TargetRepository.ts",
+      "target": "file:packages/deployments/src/domain/repositories/ITargetRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/TargetRepository.ts",
+      "target": "file:packages/deployments/src/infra/repositories/trackedBranchScope.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/TargetRepository.ts",
+      "target": "file:packages/deployments/src/infra/schemas/TargetSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/schemas/index.ts",
+      "target": "file:packages/deployments/src/infra/schemas/DistributedPackageSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/schemas/index.ts",
+      "target": "file:packages/deployments/src/infra/schemas/DistributionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/schemas/index.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageCommandsSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/schemas/index.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageReleaseSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/schemas/index.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/schemas/index.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageSkillsSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/schemas/index.ts",
+      "target": "file:packages/deployments/src/infra/schemas/PackageStandardsSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/schemas/index.ts",
+      "target": "file:packages/deployments/src/infra/schemas/RenderModeConfigurationSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/infra/schemas/index.ts",
+      "target": "file:packages/deployments/src/infra/schemas/TargetSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts",
+      "target": "class:packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts:UnsupportedRenderModeError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts",
+      "target": "class:packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts:UnsupportedRenderModeError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts:UnsupportedRenderModeError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/deployments/src/domain/jobs/PublishArtifactsJob.ts",
+      "target": "function:packages/deployments/src/domain/jobs/PublishArtifactsJob.ts:distributionIdsOf",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/jobs/PublishArtifactsJob.ts",
+      "target": "function:packages/deployments/src/domain/jobs/PublishArtifactsJob.ts:distributionIdsOf",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/trackedBranchScope.ts",
+      "target": "function:packages/deployments/src/infra/repositories/trackedBranchScope.ts:trackedBranchScopeParams",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/trackedBranchScope.ts",
+      "target": "function:packages/deployments/src/infra/repositories/trackedBranchScope.ts:trackedBranchScopeParams",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/jobs/IDeploymentsDelayedJobs.ts",
+      "target": "class:packages/deployments/src/domain/jobs/IDeploymentsDelayedJobs.ts:IDeploymentsDelayedJobs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/jobs/IDeploymentsDelayedJobs.ts",
+      "target": "class:packages/deployments/src/domain/jobs/IDeploymentsDelayedJobs.ts:IDeploymentsDelayedJobs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts:IDeploymentsRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts:IDeploymentsRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts:IDistributedPackageRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts:IDistributedPackageRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IDistributionRepository.ts:IDistributionRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IDistributionRepository.ts:IDistributionRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts:IPackageReleaseRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts:IPackageReleaseRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IPackageRepository.ts:IPackageRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IPackageRepository.ts:IPackageRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts:IPackagesDeploymentRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts:IPackagesDeploymentRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts:IRenderModeConfigurationRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts:IRenderModeConfigurationRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/ITargetRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/ITargetRepository.ts:ITargetRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/repositories/ITargetRepository.ts",
+      "target": "class:packages/deployments/src/domain/repositories/ITargetRepository.ts:ITargetRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts",
+      "target": "class:packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts:PublishArtifactsJobFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts",
+      "target": "class:packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts:PublishArtifactsJobFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "class:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts:DeploymentsRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts",
+      "target": "class:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts:DeploymentsRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/infra/repositories/DeploymentsRepositories.ts:DeploymentsRepositories",
+      "target": "class:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts:IDeploymentsRepositories",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DistributedPackageRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/DistributedPackageRepository.ts:DistributedPackageRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DistributedPackageRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/DistributedPackageRepository.ts:DistributedPackageRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/infra/repositories/DistributedPackageRepository.ts:DistributedPackageRepository",
+      "target": "class:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts:IDistributedPackageRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/DistributionRepository.ts:DistributionRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/DistributionRepository.ts:DistributionRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/infra/repositories/DistributionRepository.ts:DistributionRepository",
+      "target": "class:packages/deployments/src/domain/repositories/IDistributionRepository.ts:IDistributionRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts:PackageReleaseRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts:PackageReleaseRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts:PackageReleaseRepository",
+      "target": "class:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts:IPackageReleaseRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/PackageRepository.ts:PackageRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/PackageRepository.ts:PackageRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/infra/repositories/PackageRepository.ts:PackageRepository",
+      "target": "class:packages/deployments/src/domain/repositories/IPackageRepository.ts:IPackageRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts:PackagesDeploymentRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts:PackagesDeploymentRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/infra/repositories/PackagesDeploymentRepository.ts:PackagesDeploymentRepository",
+      "target": "class:packages/deployments/src/domain/repositories/IPackagesDeploymentRepository.ts:IPackagesDeploymentRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts:RenderModeConfigurationRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts:RenderModeConfigurationRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/infra/repositories/RenderModeConfigurationRepository.ts:RenderModeConfigurationRepository",
+      "target": "class:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts:IRenderModeConfigurationRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/TargetRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/TargetRepository.ts:TargetRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/TargetRepository.ts",
+      "target": "class:packages/deployments/src/infra/repositories/TargetRepository.ts:TargetRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/infra/repositories/TargetRepository.ts:TargetRepository",
+      "target": "class:packages/deployments/src/domain/repositories/ITargetRepository.ts:ITargetRepository",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/DistributionRepository.ts",
+      "target": "function:packages/deployments/src/infra/repositories/DistributionRepository.ts:groupBy",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "target": "function:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts:groupPins",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts",
+      "target": "function:packages/deployments/src/infra/repositories/PackageReleaseRepository.ts:sortableVersionOf",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "class:packages/deployments/src/infra/jobs/PublishArtifactsJobFactory.ts:PublishArtifactsJobFactory",
+      "target": "class:packages/deployments/src/application/jobs/PublishArtifactsDelayedJob.ts:PublishArtifactsDelayedJob",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/deployments/src/infra/repositories/trackedBranchScope.ts:trackedBranchScopeParams",
+      "target": "class:packages/deployments/src/infra/repositories/DistributionRepository.ts:DistributionRepository",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

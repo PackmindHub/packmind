@@ -1,0 +1,846 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/rules/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/rules/api/queryKeys.ts",
+      "summary": "Defines TanStack Query key constants and a builder for rule example queries, scoped under the organization query scope.",
+      "tags": ["query-keys", "react-query", "rules", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/api/queryKeys.ts:getRuleExamplesKey",
+      "type": "function",
+      "name": "getRuleExamplesKey",
+      "filePath": "apps/frontend/src/domain/rules/api/queryKeys.ts",
+      "lineRange": [17, 22],
+      "summary": "Builds the query key for rule examples of a given standard and rule.",
+      "tags": ["utility", "function", "rules"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx",
+      "type": "file",
+      "name": "AutomateUpdatesStep.tsx",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx",
+      "summary": "Top-level setup step letting users pick GitHub or GitLab and a schedule to generate a CI workflow that auto-updates Packmind artifacts.",
+      "tags": ["component", "setup", "ci-automation", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx:AutomateUpdatesStep",
+      "type": "function",
+      "name": "AutomateUpdatesStep",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx",
+      "lineRange": [8, 49],
+      "summary": "Renders provider choice and provider panel driven by useAutomateUpdatesState.",
+      "tags": ["component", "react", "ci-automation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "type": "file",
+      "name": "ProviderPanel.tsx",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "summary": "Renders the provider-specific panel showing the generated workflow YAML, schedule selector, API key generation and secrets setup reminder.",
+      "tags": ["component", "setup", "ci-automation", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx:formatSecretsReminder",
+      "type": "function",
+      "name": "formatSecretsReminder",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "lineRange": [29, 38],
+      "summary": "Formats the list of secrets to configure in the CI provider.",
+      "tags": ["utility", "function", "ci-automation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx:ProviderPanel",
+      "type": "function",
+      "name": "ProviderPanel",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "lineRange": [40, 109],
+      "summary": "Displays generated workflow YAML, schedule controls and API key / secrets setup for the selected provider.",
+      "tags": ["component", "react", "ci-automation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx",
+      "type": "file",
+      "name": "ScheduleSelector.tsx",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx",
+      "summary": "Radio-based selector for preset (weeknights, Mondays) or custom cron schedules with live cron validation.",
+      "tags": ["component", "form-input", "cron", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx:ScheduleSelector",
+      "type": "function",
+      "name": "ScheduleSelector",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx",
+      "lineRange": [24, 107],
+      "summary": "Lets users choose a preset or custom cron schedule with validation feedback.",
+      "tags": ["component", "react", "cron"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/constants.ts",
+      "type": "file",
+      "name": "constants.ts",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/constants.ts",
+      "summary": "Declares auto-update provider types, schedule presets, default cron and per-provider metadata (workflow paths, secret names, hints).",
+      "tags": [
+        "constants",
+        "type-definition",
+        "configuration",
+        "ci-automation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/cron.ts",
+      "type": "file",
+      "name": "cron.ts",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/cron.ts",
+      "summary": "Lightweight five-field cron expression validator using a per-field regex.",
+      "tags": ["utility", "validation", "cron"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/cron.ts:isValidCron",
+      "type": "function",
+      "name": "isValidCron",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/cron.ts",
+      "lineRange": [3, 9],
+      "summary": "Validates a five-field cron expression.",
+      "tags": ["utility", "function", "cron"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/index.ts",
+      "summary": "Barrel re-exporting the AutomateUpdatesStep component, its types, constants, cron validator, YAML builder and state hook.",
+      "tags": ["barrel", "entry-point", "exports"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts",
+      "type": "file",
+      "name": "useAutomateUpdatesState.ts",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts",
+      "summary": "React hook managing the selected CI provider (persisted to localStorage) and schedule selection, resolving the effective cron.",
+      "tags": ["hook", "state-management", "local-storage", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts:useAutomateUpdatesState",
+      "type": "function",
+      "name": "useAutomateUpdatesState",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts",
+      "lineRange": [47, 72],
+      "summary": "Hook returning provider and schedule state with a resolved cron.",
+      "tags": ["hook", "react", "local-storage"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts",
+      "type": "file",
+      "name": "yaml.ts",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts",
+      "summary": "Builds GitHub Actions or GitLab CI YAML templates for a nightly Packmind update job, injecting the chosen cron.",
+      "tags": ["utility", "code-generation", "ci-cd", "yaml"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts:buildWorkflowYaml",
+      "type": "function",
+      "name": "buildWorkflowYaml",
+      "filePath": "apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts",
+      "lineRange": [74, 84],
+      "summary": "Returns the provider workflow template with the cron substituted.",
+      "tags": ["utility", "function", "ci-cd"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/SetupAutoUpdatePage.tsx",
+      "type": "file",
+      "name": "SetupAutoUpdatePage.tsx",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupAutoUpdatePage.tsx",
+      "summary": "Thin page component wrapping AutomateUpdatesStep for the auto-update setup route.",
+      "tags": ["component", "page", "setup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/SetupAutoUpdatePage.tsx:SetupAutoUpdatePage",
+      "type": "function",
+      "name": "SetupAutoUpdatePage",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupAutoUpdatePage.tsx",
+      "lineRange": [5, 12],
+      "summary": "Page wrapper for the automate updates step.",
+      "tags": ["component", "react", "setup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "type": "file",
+      "name": "SetupCliPage.tsx",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "summary": "Guided CLI setup page covering OS-specific installation, authentication via login code or API key, and optional automated updates.",
+      "tags": ["component", "page", "setup", "cli-onboarding"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/SetupCliPage.tsx:LoginCommandContent",
+      "type": "function",
+      "name": "LoginCommandContent",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "lineRange": [43, 56],
+      "summary": "Shows the CLI login command with copy support and code expiration.",
+      "tags": ["component", "react", "setup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/SetupCliPage.tsx:ApiKeyContent",
+      "type": "function",
+      "name": "ApiKeyContent",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "lineRange": [58, 85],
+      "summary": "Shows API key generation and the corresponding CLI login instructions.",
+      "tags": ["component", "react", "setup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/SetupCliPage.tsx:SetupCliPage",
+      "type": "function",
+      "name": "SetupCliPage",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "lineRange": [87, 252],
+      "summary": "Full CLI setup flow: install, authenticate, automate updates.",
+      "tags": ["component", "react", "setup"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts",
+      "type": "file",
+      "name": "ISkillsGateway.ts",
+      "filePath": "apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts",
+      "summary": "Interface describing the frontend skills gateway: list, fetch by slug/id, versions, delete, batch delete, file update and upload.",
+      "tags": ["type-definition", "gateway", "interface", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts",
+      "type": "file",
+      "name": "SkillsGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts",
+      "summary": "HTTP gateway implementation for skills endpoints built on PackmindGateway, including multipart skill upload with an extended timeout.",
+      "tags": ["gateway", "api-client", "skills", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts:SkillsGatewayApi",
+      "type": "class",
+      "name": "SkillsGatewayApi",
+      "filePath": "apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts",
+      "lineRange": [28, 137],
+      "summary": "Gateway class calling skills REST endpoints, including multipart upload.",
+      "tags": ["class", "gateway", "api-client"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/api/gateways/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/skills/api/gateways/index.ts",
+      "summary": "Exposes the singleton skillsGateway instance typed as ISkillsGateway.",
+      "tags": ["barrel", "singleton", "gateway"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "type": "file",
+      "name": "SkillExampleDialog.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "summary": "Dialog showcasing example SKILL.md documents (single and tabbed) rendered in a read-only Markdown editor to inspire skill authoring.",
+      "tags": ["component", "dialog", "skills", "examples"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx:SkillExampleDialogButton",
+      "type": "function",
+      "name": "SkillExampleDialogButton",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "lineRange": [518, 560],
+      "summary": "Button opening a dialog that renders a single example skill.",
+      "tags": ["component", "react", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx:SkillExampleWithTabsDialogButton",
+      "type": "function",
+      "name": "SkillExampleWithTabsDialogButton",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "lineRange": [566, 617],
+      "summary": "Button opening a dialog with tabbed multi-file skill examples.",
+      "tags": ["component", "react", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx:SkillExampleDialog",
+      "type": "function",
+      "name": "SkillExampleDialog",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "lineRange": [619, 645],
+      "summary": "Exported component listing example skill dialog buttons.",
+      "tags": ["component", "react", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "type": "file",
+      "name": "SkillsBlankState.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "summary": "Empty-state view for the skills list offering import, create-from-code and example dialogs plus learn-more links.",
+      "tags": ["component", "blank-state", "skills", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx:SkillsBlankState",
+      "type": "function",
+      "name": "SkillsBlankState",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "lineRange": [31, 179],
+      "summary": "Empty-state component with creation and import entry points for skills.",
+      "tags": ["component", "react", "skills"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts:ISkillsGateway",
+      "type": "class",
+      "name": "ISkillsGateway",
+      "filePath": "apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts",
+      "lineRange": [14, 54],
+      "summary": "Contract for skills data access operations.",
+      "tags": ["interface", "gateway", "type-definition"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/rules/api/queryKeys.ts:getRuleExamplesKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/rules/api/queryKeys.ts:getRuleExamplesKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/constants.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx:AutomateUpdatesStep",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx:AutomateUpdatesStep",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/constants.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx:formatSecretsReminder",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx:ProviderPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx:ProviderPanel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/constants.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/cron.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx:ScheduleSelector",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx:ScheduleSelector",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/cron.ts",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/cron.ts:isValidCron",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/cron.ts",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/cron.ts:isValidCron",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/constants.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts:useAutomateUpdatesState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts:useAutomateUpdatesState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/constants.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts:buildWorkflowYaml",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts:buildWorkflowYaml",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupAutoUpdatePage.tsx",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupAutoUpdatePage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupAutoUpdatePage.tsx:SetupAutoUpdatePage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupAutoUpdatePage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupAutoUpdatePage.tsx:SetupAutoUpdatePage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "file:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupCliPage.tsx:LoginCommandContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupCliPage.tsx:ApiKeyContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupCliPage.tsx:SetupCliPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupCliPage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupCliPage.tsx:SetupCliPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts:SkillsGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts:SkillsGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx:SkillExampleDialogButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx:SkillExampleWithTabsDialogButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx:SkillExampleDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx:SkillExampleDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillExampleDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "target": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx:SkillsBlankState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx:SkillsBlankState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts",
+      "target": "class:apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts:ISkillsGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts",
+      "target": "class:apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts:ISkillsGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts:SkillsGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/frontend/src/domain/skills/api/gateways/SkillsGatewayApi.ts:SkillsGatewayApi",
+      "target": "class:apps/frontend/src/domain/skills/api/gateways/ISkillsGateway.ts:ISkillsGateway",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ProviderPanel.tsx:ProviderPanel",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/yaml.ts:buildWorkflowYaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/ScheduleSelector.tsx:ScheduleSelector",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/cron.ts:isValidCron",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/AutomateUpdatesStep.tsx:AutomateUpdatesStep",
+      "target": "function:apps/frontend/src/domain/setup/components/AutomateUpdatesStep/useAutomateUpdatesState.ts:useAutomateUpdatesState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/setup/components/SetupCliPage.tsx:SetupCliPage",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts:useCliLoginCode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/setup/components/SetupCliPage.tsx:SetupCliPage",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useApiKey.ts:useApiKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

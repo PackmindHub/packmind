@@ -1,0 +1,127 @@
+{
+  "nodes": [
+    {
+      "id": "file:pnpm_migrate.sh",
+      "type": "file",
+      "name": "pnpm_migrate.sh",
+      "filePath": "pnpm_migrate.sh",
+      "summary": "Idempotent one-shot script migrating a developer checkout from npm to pnpm: checks Node against .nvmrc, activates pinned pnpm via corepack, removes npm artifacts, installs from the lockfile, regenerates the OSS tsconfig, and smoke-builds leaf packages.",
+      "tags": [
+        "script",
+        "build-system",
+        "migration",
+        "developer-tooling",
+        "pnpm"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:sonar-project.properties",
+      "type": "config",
+      "name": "sonar-project.properties",
+      "filePath": "sonar-project.properties",
+      "summary": "SonarCloud project configuration for Packmind OSS defining organization/project keys, analyzed sources, and exclusions for build output, tests, playground, scripts, and agent skill folders.",
+      "tags": ["configuration", "static-analysis", "quality", "sonarqube"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:standard-template.json",
+      "type": "config",
+      "name": "standard-template.json",
+      "filePath": "standard-template.json",
+      "summary": "JSON template for authoring a Packmind standard with name, description, scope, and a list of rule contents.",
+      "tags": ["configuration", "template", "standards", "packmind-artifacts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:tsconfig.base.json",
+      "type": "config",
+      "name": "tsconfig.base.json",
+      "filePath": "tsconfig.base.json",
+      "summary": "Root TypeScript base configuration for the Nx monorepo enabling strict mode and mapping every @packmind/* package alias to its source entry point.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system",
+        "monorepo",
+        "path-aliases"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:tsconfig.paths.oss.json",
+      "type": "config",
+      "name": "tsconfig.paths.oss.json",
+      "filePath": "tsconfig.paths.oss.json",
+      "summary": "OSS-edition path overrides that redirect proprietary-only package aliases (linter, amplitude, plugins, spaces-management, marketplaces, etc.) to the packages/editions stub entry point.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "editions",
+        "oss",
+        "path-aliases"
+      ],
+      "complexity": "simple",
+      "languageNotes": "Edition switching is done purely through tsconfig path aliasing: the same import resolves to real code or a stub depending on which paths file is merged."
+    },
+    {
+      "id": "config:tsconfig.paths.proprietary.json",
+      "type": "config",
+      "name": "tsconfig.paths.proprietary.json",
+      "filePath": "tsconfig.paths.proprietary.json",
+      "summary": "Proprietary-edition path overrides mapping analytics, jobs, linter, amplitude, plugins, marketplaces and other enterprise package aliases to their real source entry points.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "editions",
+        "proprietary",
+        "path-aliases"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:tsconfig.base.json",
+      "target": "file:packages/deployments/jest.config.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:tsconfig.paths.oss.json",
+      "target": "config:tsconfig.base.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:tsconfig.paths.proprietary.json",
+      "target": "config:tsconfig.base.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:tsconfig.paths.oss.json",
+      "target": "file:packages/editions/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pnpm_migrate.sh",
+      "target": "config:tsconfig.paths.oss.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:pnpm_migrate.sh",
+      "target": "config:tsconfig.base.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

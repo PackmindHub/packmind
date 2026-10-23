@@ -1,0 +1,391 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "type": "file",
+      "name": "GithubAppOrgInput.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "summary": "GitHub organization input for App registration plus validation and normalization helpers for the org name.",
+      "tags": ["component", "validation", "github-app", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "type": "file",
+      "name": "VendorMark.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "summary": "Vendor branding helpers and component rendering git vendor (GitHub, GitLab, ...) icons and labels.",
+      "tags": ["component", "branding", "utility", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "type": "file",
+      "name": "connectionStatus.ts",
+      "filePath": "apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "summary": "Logic deriving a connection status view from the auth-probe query result, mapping it to UI buckets and human-readable failure descriptions.",
+      "tags": ["utility", "status", "mapping"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/constants/messages.ts",
+      "type": "file",
+      "name": "messages.ts",
+      "filePath": "apps/frontend/src/domain/git/constants/messages.ts",
+      "summary": "Centralized user-facing messages (success, error, confirmation) for git provider and repository operations.",
+      "tags": ["constants", "messages", "ux-copy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/types/GitHubAppManifest.ts",
+      "type": "file",
+      "name": "GitHubAppManifest.ts",
+      "filePath": "apps/frontend/src/domain/git/types/GitHubAppManifest.ts",
+      "summary": "Type describing the GitHub App manifest payload used in the App registration (manifest) flow.",
+      "tags": ["type-definition", "github-app", "manifest"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "file",
+      "name": "GitProviderTypes.ts",
+      "filePath": "apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "summary": "Frontend git domain types: GitProviders enum, UI provider/repo shapes, form models and repository selection types.",
+      "tags": ["type-definition", "data-model", "git-providers"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "type": "file",
+      "name": "errorUtils.ts",
+      "filePath": "apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "summary": "Extracts a user-displayable error message from Packmind API errors or generic errors with a fallback.",
+      "tags": ["utility", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/llm/components/index.ts",
+      "summary": "Barrel exporting LLM configuration UI components (status, form, page).",
+      "tags": ["barrel", "entry-point", "llm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/DeletedBranchBadge.tsx",
+      "type": "file",
+      "name": "DeletedBranchBadge.tsx",
+      "filePath": "apps/frontend/src/shared/components/DeletedBranchBadge.tsx",
+      "summary": "Shared badge component signalling that a tracked git branch was deleted on the remote.",
+      "tags": ["component", "badge", "shared-ui", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/utils/navigation.ts",
+      "type": "file",
+      "name": "navigation.ts",
+      "filePath": "apps/frontend/src/shared/utils/navigation.ts",
+      "summary": "Wraps window.location.assign in a redirectTo helper to give tests a mockable full-page navigation seam.",
+      "tags": ["utility", "navigation", "testability"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:isGithubOrgValid",
+      "type": "function",
+      "name": "isGithubOrgValid",
+      "filePath": "apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "lineRange": [8, 11],
+      "summary": "Validates a GitHub organization name.",
+      "tags": ["validation", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:githubOrgForRegistration",
+      "type": "function",
+      "name": "githubOrgForRegistration",
+      "filePath": "apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "lineRange": [13, 15],
+      "summary": "Normalizes the organization value used for App registration.",
+      "tags": ["utility", "normalization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:GithubAppOrgInput",
+      "type": "function",
+      "name": "GithubAppOrgInput",
+      "filePath": "apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "lineRange": [23, 56],
+      "summary": "Input field for the GitHub organization with inline validation.",
+      "tags": ["component", "input", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorLabel",
+      "type": "function",
+      "name": "vendorLabel",
+      "filePath": "apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "lineRange": [12, 13],
+      "summary": "Returns the display label for a git vendor.",
+      "tags": ["utility", "branding"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorIcon",
+      "type": "function",
+      "name": "vendorIcon",
+      "filePath": "apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "lineRange": [21, 22],
+      "summary": "Returns the icon for a git vendor.",
+      "tags": ["utility", "branding"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:VendorMark",
+      "type": "function",
+      "name": "VendorMark",
+      "filePath": "apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "lineRange": [35, 70],
+      "summary": "Renders a vendor mark badge with icon or fallback initials.",
+      "tags": ["component", "branding"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:deriveConnectionStatus",
+      "type": "function",
+      "name": "deriveConnectionStatus",
+      "filePath": "apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "lineRange": [38, 49],
+      "summary": "Derives the connection status view from the probe query state and auth presence.",
+      "tags": ["utility", "status", "derivation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:toStatusBucket",
+      "type": "function",
+      "name": "toStatusBucket",
+      "filePath": "apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "lineRange": [64, 81],
+      "summary": "Maps a status view to a UI bucket for coloring and labels.",
+      "tags": ["utility", "mapping"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:describeFailure",
+      "type": "function",
+      "name": "describeFailure",
+      "filePath": "apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "lineRange": [83, 88],
+      "summary": "Returns a human-readable description for a failing or unknown status.",
+      "tags": ["utility", "messages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/utils/errorUtils.ts:extractErrorMessage",
+      "type": "function",
+      "name": "extractErrorMessage",
+      "filePath": "apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "lineRange": [11, 24],
+      "summary": "Extracts a displayable message from PackmindError or Error with a fallback.",
+      "tags": ["utility", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/DeletedBranchBadge.tsx:DeletedBranchBadge",
+      "type": "function",
+      "name": "DeletedBranchBadge",
+      "filePath": "apps/frontend/src/shared/components/DeletedBranchBadge.tsx",
+      "lineRange": [17, 38],
+      "summary": "Badge component indicating a deleted remote branch.",
+      "tags": ["component", "badge"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/utils/navigation.ts:redirectTo",
+      "type": "function",
+      "name": "redirectTo",
+      "filePath": "apps/frontend/src/shared/utils/navigation.ts",
+      "lineRange": [8, 10],
+      "summary": "Performs a full-page navigation via window.location.assign.",
+      "tags": ["utility", "navigation"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:isGithubOrgValid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:isGithubOrgValid",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:githubOrgForRegistration",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:githubOrgForRegistration",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:GithubAppOrgInput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/GithubAppOrgInput.tsx:GithubAppOrgInput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorLabel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:vendorIcon",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:VendorMark",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/VendorMark.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/shared/VendorMark.tsx:VendorMark",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:deriveConnectionStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:deriveConnectionStatus",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:toStatusBucket",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:toStatusBucket",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:describeFailure",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:describeFailure",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "target": "function:apps/frontend/src/domain/git/utils/errorUtils.ts:extractErrorMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "target": "function:apps/frontend/src/domain/git/utils/errorUtils.ts:extractErrorMessage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/DeletedBranchBadge.tsx",
+      "target": "function:apps/frontend/src/shared/components/DeletedBranchBadge.tsx:DeletedBranchBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/DeletedBranchBadge.tsx",
+      "target": "function:apps/frontend/src/shared/components/DeletedBranchBadge.tsx:DeletedBranchBadge",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/navigation.ts",
+      "target": "function:apps/frontend/src/shared/utils/navigation.ts:redirectTo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/navigation.ts",
+      "target": "function:apps/frontend/src/shared/utils/navigation.ts:redirectTo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

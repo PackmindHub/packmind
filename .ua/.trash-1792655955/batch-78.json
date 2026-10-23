@@ -1,0 +1,74 @@
+{
+  "nodes": [
+    {
+      "id": "document:.packmind/standards/backend-tests-redaction.md",
+      "type": "document",
+      "name": "backend-tests-redaction.md",
+      "filePath": ".packmind/standards/backend-tests-redaction.md",
+      "summary": "Packmind coding standard with rules for writing clear, behavior-focused Jest backend tests in the monorepo.",
+      "tags": ["documentation", "coding-standard", "testing", "jest"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.packmind/standards/changelog.md",
+      "type": "document",
+      "name": "changelog.md",
+      "filePath": ".packmind/standards/changelog.md",
+      "summary": "Packmind coding standard for maintaining CHANGELOG.MD in Keep a Changelog format with accurate version links and dates.",
+      "tags": ["documentation", "coding-standard", "changelog", "release"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.packmind/standards/code-comments.md",
+      "type": "document",
+      "name": "code-comments.md",
+      "filePath": ".packmind/standards/code-comments.md",
+      "summary": "Packmind coding standard defining when code comments earn their place in TypeScript sources versus self-explanatory code.",
+      "tags": [
+        "documentation",
+        "coding-standard",
+        "code-comments",
+        "typescript"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.packmind/standards/compliance-logging-personal-information.md",
+      "type": "document",
+      "name": "compliance-logging-personal-information.md",
+      "filePath": ".packmind/standards/compliance-logging-personal-information.md",
+      "summary": "Packmind compliance standard requiring personal information to be masked in application logs forwarded to processors like Datadog.",
+      "tags": [
+        "documentation",
+        "coding-standard",
+        "security",
+        "compliance",
+        "logging"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.packmind/standards/typescript-good-practices.md",
+      "type": "document",
+      "name": "typescript-good-practices.md",
+      "filePath": ".packmind/standards/typescript-good-practices.md",
+      "summary": "Packmind coding standard listing generic TypeScript good practices applicable across the codebase.",
+      "tags": [
+        "documentation",
+        "coding-standard",
+        "typescript",
+        "best-practices"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:.packmind/standards/code-comments.md",
+      "target": "document:.packmind/standards/typescript-good-practices.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

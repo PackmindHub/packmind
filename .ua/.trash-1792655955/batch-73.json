@@ -1,0 +1,102 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/node-utils/src/mail/MailService.ts",
+      "type": "file",
+      "name": "MailService.ts",
+      "filePath": "packages/node-utils/src/mail/MailService.ts",
+      "summary": "Declares the MailService port interface and EmailData type (recipient, subject, HTML/text content, CC/BCC) used to send transactional emails.",
+      "tags": ["type-definition", "interface", "email", "port"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/mail/SmtpConfigurationError.ts",
+      "type": "file",
+      "name": "SmtpConfigurationError.ts",
+      "filePath": "packages/node-utils/src/mail/SmtpConfigurationError.ts",
+      "summary": "Error type thrown when the SMTP mail configuration is missing or invalid.",
+      "tags": ["error-handling", "email", "configuration", "smtp"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/mail/SmtpConfigurationError.ts:SmtpConfigurationError",
+      "type": "class",
+      "name": "SmtpConfigurationError",
+      "filePath": "packages/node-utils/src/mail/SmtpConfigurationError.ts",
+      "lineRange": [8, 13],
+      "summary": "Error for missing or invalid SMTP configuration.",
+      "tags": ["error-handling", "smtp", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/mail/SmtpMailService.ts",
+      "type": "file",
+      "name": "SmtpMailService.ts",
+      "filePath": "packages/node-utils/src/mail/SmtpMailService.ts",
+      "summary": "Nodemailer-based SMTP implementation of MailService that builds transport config from settings, sends emails, and logs messages with masked recipients.",
+      "tags": ["service", "email", "smtp", "adapter", "logging"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/mail/SmtpMailService.ts:SmtpMailService",
+      "type": "class",
+      "name": "SmtpMailService",
+      "filePath": "packages/node-utils/src/mail/SmtpMailService.ts",
+      "lineRange": [22, 194],
+      "summary": "SMTP MailService adapter using nodemailer, with TLS parsing, config building and PII-masked logging.",
+      "tags": ["service", "email", "smtp", "adapter"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/node-utils/src/mail/SmtpConfigurationError.ts",
+      "target": "class:packages/node-utils/src/mail/SmtpConfigurationError.ts:SmtpConfigurationError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/mail/SmtpConfigurationError.ts",
+      "target": "class:packages/node-utils/src/mail/SmtpConfigurationError.ts:SmtpConfigurationError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/mail/SmtpMailService.ts",
+      "target": "class:packages/node-utils/src/mail/SmtpMailService.ts:SmtpMailService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/mail/SmtpMailService.ts",
+      "target": "class:packages/node-utils/src/mail/SmtpMailService.ts:SmtpMailService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/mail/SmtpMailService.ts",
+      "target": "file:packages/node-utils/src/mail/MailService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/mail/SmtpMailService.ts",
+      "target": "file:packages/node-utils/src/mail/SmtpConfigurationError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/node-utils/src/mail/SmtpMailService.ts:SmtpMailService",
+      "target": "class:packages/node-utils/src/mail/SmtpConfigurationError.ts:SmtpConfigurationError",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

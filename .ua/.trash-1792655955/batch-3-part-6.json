@@ -1,0 +1,246 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/deployments/src/application/services/TargetService.ts",
+      "type": "file",
+      "name": "TargetService.ts",
+      "filePath": "packages/deployments/src/application/services/TargetService.ts",
+      "summary": "Target domain service for finding, listing, adding, updating and deleting deployment targets, protecting the root target from deletion.",
+      "tags": ["service", "targets", "crud", "repository-access"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/services/TargetService.ts:TargetService",
+      "type": "class",
+      "name": "TargetService",
+      "filePath": "packages/deployments/src/application/services/TargetService.ts",
+      "lineRange": [9, 201],
+      "summary": "CRUD service for deployment targets.",
+      "tags": ["class", "service", "targets", "crud"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/services/gitInfoHelpers.ts",
+      "type": "file",
+      "name": "gitInfoHelpers.ts",
+      "filePath": "packages/deployments/src/application/services/gitInfoHelpers.ts",
+      "summary": "Small helpers that generate a target name from a path and normalize relative repository paths.",
+      "tags": ["utility", "git", "path-normalization", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/gitInfoHelpers.ts:generateTargetName",
+      "type": "function",
+      "name": "generateTargetName",
+      "filePath": "packages/deployments/src/application/services/gitInfoHelpers.ts",
+      "lineRange": [6, 13],
+      "summary": "Derives a target name from a repository path.",
+      "tags": ["function", "utility", "git", "path-normalization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/gitInfoHelpers.ts:normalizeRelativePath",
+      "type": "function",
+      "name": "normalizeRelativePath",
+      "filePath": "packages/deployments/src/application/services/gitInfoHelpers.ts",
+      "lineRange": [18, 31],
+      "summary": "Normalizes a relative path into the canonical target path form.",
+      "tags": ["function", "utility", "git", "path-normalization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "type": "file",
+      "name": "packageReleaseGateHelpers.ts",
+      "filePath": "packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "summary": "Pure predicates deciding whether a new package release is needed by comparing name, description, component list and pinned versions against the latest release.",
+      "tags": ["utility", "package-release", "validation", "pure-functions"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:packageNameMatches",
+      "type": "function",
+      "name": "packageNameMatches",
+      "filePath": "packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "lineRange": [34, 36],
+      "summary": "Checks whether the package name matches the latest release.",
+      "tags": ["function", "utility", "package-release", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:packageDescriptionMatches",
+      "type": "function",
+      "name": "packageDescriptionMatches",
+      "filePath": "packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "lineRange": [46, 48],
+      "summary": "Checks whether the package description matches the latest release.",
+      "tags": ["function", "utility", "package-release", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:componentListMatches",
+      "type": "function",
+      "name": "componentListMatches",
+      "filePath": "packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "lineRange": [55, 82],
+      "summary": "Checks whether the package component lists match the latest release.",
+      "tags": ["function", "utility", "package-release", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:pinnedVersionsMatch",
+      "type": "function",
+      "name": "pinnedVersionsMatch",
+      "filePath": "packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "lineRange": [92, 118],
+      "summary": "Checks whether resolved latest component versions match the release pins.",
+      "tags": ["function", "utility", "package-release", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:evaluatePackageReleaseGate",
+      "type": "function",
+      "name": "evaluatePackageReleaseGate",
+      "filePath": "packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "lineRange": [131, 164],
+      "summary": "Combines release gate predicates to decide whether a new release is warranted.",
+      "tags": ["function", "utility", "package-release", "validation"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/deployments/src/application/services/TargetService.ts",
+      "target": "class:packages/deployments/src/application/services/TargetService.ts:TargetService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/TargetService.ts",
+      "target": "class:packages/deployments/src/application/services/TargetService.ts:TargetService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/TargetService.ts",
+      "target": "file:packages/deployments/src/domain/errors/RootTargetNotDeletableError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/TargetService.ts",
+      "target": "file:packages/deployments/src/domain/errors/TargetNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/TargetService.ts",
+      "target": "file:packages/deployments/src/domain/repositories/ITargetRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/gitInfoHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/gitInfoHelpers.ts:generateTargetName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/gitInfoHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/gitInfoHelpers.ts:generateTargetName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/gitInfoHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/gitInfoHelpers.ts:normalizeRelativePath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/gitInfoHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/gitInfoHelpers.ts:normalizeRelativePath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:packageNameMatches",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:packageNameMatches",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:packageDescriptionMatches",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:packageDescriptionMatches",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:componentListMatches",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:componentListMatches",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:pinnedVersionsMatch",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:pinnedVersionsMatch",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:evaluatePackageReleaseGate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/packageReleaseGateHelpers.ts",
+      "target": "function:packages/deployments/src/application/services/packageReleaseGateHelpers.ts:evaluatePackageReleaseGate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,741 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts",
+      "type": "file",
+      "name": "FindStandardBySlugUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts",
+      "summary": "Thin use case resolving a standard by its slug within an organization via StandardService.",
+      "tags": ["use-case", "query", "standards", "lookup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts:FindStandardBySlugUseCase",
+      "type": "class",
+      "name": "FindStandardBySlugUseCase",
+      "filePath": "packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts",
+      "lineRange": [8, 39],
+      "summary": "Finds a standard by slug through StandardService.",
+      "tags": ["use-case", "application-layer", "query", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts",
+      "type": "file",
+      "name": "GetLatestStandardVersionUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts",
+      "summary": "Thin use case returning the latest version of a standard through StandardVersionService.",
+      "tags": ["use-case", "query", "versioning", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts:GetLatestStandardVersionUseCase",
+      "type": "class",
+      "name": "GetLatestStandardVersionUseCase",
+      "filePath": "packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts",
+      "lineRange": [8, 32],
+      "summary": "Retrieves the latest standard version for a standard id.",
+      "tags": ["use-case", "application-layer", "query", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts",
+      "type": "file",
+      "name": "GetRuleExamplesUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts",
+      "summary": "Use case listing the code examples of a rule, raising RuleNotFoundError when the rule does not exist.",
+      "tags": ["use-case", "query", "rule-examples", "rules"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts:GetRuleExamplesUseCase",
+      "type": "class",
+      "name": "GetRuleExamplesUseCase",
+      "filePath": "packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts",
+      "lineRange": [14, 52],
+      "summary": "Validates rule existence then returns its examples.",
+      "tags": ["use-case", "application-layer", "query", "rule-examples"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts",
+      "type": "file",
+      "name": "GetRulesByStandardIdUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts",
+      "summary": "Thin use case returning the rules of the latest version of a standard.",
+      "tags": ["use-case", "query", "rules", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts:GetRulesByStandardIdUseCase",
+      "type": "class",
+      "name": "GetRulesByStandardIdUseCase",
+      "filePath": "packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts",
+      "lineRange": [8, 30],
+      "summary": "Returns the latest rules for a standard id.",
+      "tags": ["use-case", "application-layer", "query", "rules"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts",
+      "type": "file",
+      "name": "GetStandardByIdUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts",
+      "summary": "Space-member use case fetching a standard by id, enforcing that it belongs to the requested space.",
+      "tags": ["use-case", "query", "standards", "authorization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts:GetStandardByIdUseCase",
+      "type": "class",
+      "name": "GetStandardByIdUseCase",
+      "filePath": "packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts",
+      "lineRange": [18, 65],
+      "summary": "Fetches a standard and raises StandardSpaceNotAccessibleError when it is outside the requested space.",
+      "tags": ["use-case", "application-layer", "query", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts",
+      "type": "file",
+      "name": "GetStandardVersionUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts",
+      "summary": "Thin use case fetching a specific numbered version of a standard.",
+      "tags": ["use-case", "query", "versioning", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts:GetStandardVersionUseCase",
+      "type": "class",
+      "name": "GetStandardVersionUseCase",
+      "filePath": "packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts",
+      "lineRange": [8, 39],
+      "summary": "Returns a standard version by standard id and version number.",
+      "tags": ["use-case", "application-layer", "query", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts",
+      "type": "file",
+      "name": "GetStandardVersionByIdUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts",
+      "summary": "Thin use case fetching a standard version by its id.",
+      "tags": ["use-case", "query", "versioning", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts:GetStandardVersionByIdUseCase",
+      "type": "class",
+      "name": "GetStandardVersionByIdUseCase",
+      "filePath": "packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts",
+      "lineRange": [8, 32],
+      "summary": "Returns a standard version by id.",
+      "tags": ["use-case", "application-layer", "query", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts",
+      "type": "file",
+      "name": "ListStandardVersionsUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts",
+      "summary": "Thin use case listing all versions of a standard.",
+      "tags": ["use-case", "query", "versioning", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts:ListStandardVersionsUseCase",
+      "type": "class",
+      "name": "ListStandardVersionsUseCase",
+      "filePath": "packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts",
+      "lineRange": [8, 32],
+      "summary": "Lists versions for a given standard id.",
+      "tags": ["use-case", "application-layer", "query", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts",
+      "type": "file",
+      "name": "ListStandardsBySpaceUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts",
+      "summary": "Space-member use case listing the standards of a space after verifying space accessibility.",
+      "tags": ["use-case", "query", "standards", "authorization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts:ListStandardsBySpaceUseCase",
+      "type": "class",
+      "name": "ListStandardsBySpaceUseCase",
+      "filePath": "packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts",
+      "lineRange": [18, 68],
+      "summary": "Lists standards in a space, guarding against inaccessible spaces.",
+      "tags": ["use-case", "application-layer", "query", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts",
+      "type": "file",
+      "name": "UpdateRuleExampleUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts",
+      "summary": "Use case updating a rule example's code or language within the member's space, then re-assessing linter detection for affected languages.",
+      "tags": ["use-case", "rule-examples", "update", "linter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts:UpdateRuleExampleUseCase",
+      "type": "class",
+      "name": "UpdateRuleExampleUseCase",
+      "filePath": "packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts",
+      "lineRange": [29, 164],
+      "summary": "Updates a rule example with validation and space checks, triggering detection re-assessment.",
+      "tags": ["use-case", "application-layer", "rule-examples", "update"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "type": "file",
+      "name": "UpdateStandardUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "summary": "Use case updating a standard's metadata and rules, creating a new version only when content changed and detecting added/updated/removed rules for events and example carry-over.",
+      "tags": ["use-case", "standards", "versioning", "domain-events"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts:UpdateStandardUseCase",
+      "type": "class",
+      "name": "UpdateStandardUseCase",
+      "filePath": "packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "lineRange": [37, 365],
+      "summary": "Updates a standard, diffs rules against the previous version, creates a new version when content changes and emits rule change events.",
+      "tags": ["use-case", "application-layer", "standards", "versioning"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/RuleExampleInvalidError.ts",
+      "type": "file",
+      "name": "RuleExampleInvalidError.ts",
+      "filePath": "packages/standards/src/domain/errors/RuleExampleInvalidError.ts",
+      "summary": "Domain error raised when a rule example fails validation.",
+      "tags": ["error", "domain", "validation", "rule-examples"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/RuleExampleInvalidError.ts:RuleExampleInvalidError",
+      "type": "class",
+      "name": "RuleExampleInvalidError",
+      "filePath": "packages/standards/src/domain/errors/RuleExampleInvalidError.ts",
+      "lineRange": [10, 18],
+      "summary": "StandardsError subclass signalling an invalid rule example.",
+      "tags": ["error", "domain", "exception"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/RuleExampleNotFoundError.ts",
+      "type": "file",
+      "name": "RuleExampleNotFoundError.ts",
+      "filePath": "packages/standards/src/domain/errors/RuleExampleNotFoundError.ts",
+      "summary": "Domain error raised when a rule example id cannot be found.",
+      "tags": ["error", "domain", "not-found", "rule-examples"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/RuleExampleNotFoundError.ts:RuleExampleNotFoundError",
+      "type": "class",
+      "name": "RuleExampleNotFoundError",
+      "filePath": "packages/standards/src/domain/errors/RuleExampleNotFoundError.ts",
+      "lineRange": [11, 21],
+      "summary": "StandardsError subclass signalling a missing rule example.",
+      "tags": ["error", "domain", "exception"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts",
+      "type": "file",
+      "name": "RuleExampleNotFoundInSpaceError.ts",
+      "filePath": "packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts",
+      "summary": "Domain error raised when a rule example does not exist within the caller's space.",
+      "tags": ["error", "domain", "authorization", "rule-examples"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts:RuleExampleNotFoundInSpaceError",
+      "type": "class",
+      "name": "RuleExampleNotFoundInSpaceError",
+      "filePath": "packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts",
+      "lineRange": [13, 23],
+      "summary": "StandardsError subclass signalling a rule example not found in the given space.",
+      "tags": ["error", "domain", "exception"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts:FindStandardBySlugUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts:FindStandardBySlugUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts:GetLatestStandardVersionUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts:GetLatestStandardVersionUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts:GetRuleExamplesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts:GetRuleExamplesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/RuleNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts:GetRulesByStandardIdUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts:GetRulesByStandardIdUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts:GetStandardByIdUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts:GetStandardByIdUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts:GetStandardVersionUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts:GetStandardVersionUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts:GetStandardVersionByIdUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts:GetStandardVersionByIdUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts:ListStandardVersionsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts:ListStandardVersionsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts:ListStandardsBySpaceUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts:ListStandardsBySpaceUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts:UpdateRuleExampleUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts:UpdateRuleExampleUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/RuleExampleInvalidError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts:UpdateStandardUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts:UpdateStandardUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardSpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardVersionMissingError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleExampleInvalidError.ts",
+      "target": "class:packages/standards/src/domain/errors/RuleExampleInvalidError.ts:RuleExampleInvalidError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleExampleInvalidError.ts",
+      "target": "class:packages/standards/src/domain/errors/RuleExampleInvalidError.ts:RuleExampleInvalidError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/RuleExampleInvalidError.ts:RuleExampleInvalidError",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleExampleInvalidError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleExampleNotFoundError.ts",
+      "target": "class:packages/standards/src/domain/errors/RuleExampleNotFoundError.ts:RuleExampleNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleExampleNotFoundError.ts",
+      "target": "class:packages/standards/src/domain/errors/RuleExampleNotFoundError.ts:RuleExampleNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/RuleExampleNotFoundError.ts:RuleExampleNotFoundError",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleExampleNotFoundError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts",
+      "target": "class:packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts:RuleExampleNotFoundInSpaceError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts",
+      "target": "class:packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts:RuleExampleNotFoundInSpaceError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts:RuleExampleNotFoundInSpaceError",
+      "target": "class:packages/standards/src/domain/errors/StandardsError.ts:StandardsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts:FindStandardBySlugUseCase",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts:GetLatestStandardVersionUseCase",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts:GetRulesByStandardIdUseCase",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts:GetStandardByIdUseCase",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts:GetStandardVersionUseCase",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts:GetStandardVersionByIdUseCase",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts:ListStandardVersionsUseCase",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts:ListStandardsBySpaceUseCase",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts:UpdateStandardUseCase",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts:UpdateStandardUseCase",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

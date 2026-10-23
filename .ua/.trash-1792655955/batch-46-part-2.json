@@ -1,0 +1,641 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/llm/src/infra/repositories/AIProviderRepository.ts",
+      "type": "file",
+      "name": "AIProviderRepository.ts",
+      "filePath": "packages/llm/src/infra/repositories/AIProviderRepository.ts",
+      "summary": "TypeORM repository storing per-organization AI provider configs with encryption/decryption of API keys and secret-unreadable detection.",
+      "tags": ["repository", "persistence", "encryption", "typeorm", "llm"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/llm/src/infra/repositories/AIProviderRepository.ts:AIProviderRepository",
+      "type": "class",
+      "name": "AIProviderRepository",
+      "filePath": "packages/llm/src/infra/repositories/AIProviderRepository.ts",
+      "lineRange": [24, 207],
+      "summary": "Repository class persisting provider configs with encrypted API keys.",
+      "tags": ["repository", "persistence", "encryption", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/llm/src/infra/schemas/AIProviderSchema.ts",
+      "type": "file",
+      "name": "AIProviderSchema.ts",
+      "filePath": "packages/llm/src/infra/schemas/AIProviderSchema.ts",
+      "summary": "TypeORM EntitySchema mapping the AI provider configuration table keyed by organization.",
+      "tags": ["schema-definition", "typeorm", "database", "data-model"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/infra/schemas/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/llm/src/infra/schemas/index.ts",
+      "summary": "Barrel exporting the AIProviderSchema and the llmSchemas array registered with TypeORM.",
+      "tags": ["barrel", "typeorm", "schema-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/infra/services/AnthropicService.ts",
+      "type": "file",
+      "name": "AnthropicService.ts",
+      "filePath": "packages/llm/src/infra/services/AnthropicService.ts",
+      "summary": "AIService implementation for Anthropic Claude: lazy client initialization, prompt and chat-history execution with retries, and model listing.",
+      "tags": ["service", "llm", "anthropic", "retry", "integration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/llm/src/infra/services/AnthropicService.ts:AnthropicService",
+      "type": "class",
+      "name": "AnthropicService",
+      "filePath": "packages/llm/src/infra/services/AnthropicService.ts",
+      "lineRange": [24, 439],
+      "summary": "Anthropic Claude client wrapper implementing AIService.",
+      "tags": ["service", "llm", "anthropic", "class"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/llm/src/infra/services/AzureOpenAIService.ts",
+      "type": "file",
+      "name": "AzureOpenAIService.ts",
+      "filePath": "packages/llm/src/infra/services/AzureOpenAIService.ts",
+      "summary": "Azure OpenAI variant of BaseOpenAIService configuring the Azure client (endpoint, deployment, API version); model listing unsupported.",
+      "tags": ["service", "llm", "azure", "integration", "inheritance"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/llm/src/infra/services/AzureOpenAIService.ts:AzureOpenAIService",
+      "type": "class",
+      "name": "AzureOpenAIService",
+      "filePath": "packages/llm/src/infra/services/AzureOpenAIService.ts",
+      "lineRange": [16, 96],
+      "summary": "Azure OpenAI client wrapper extending BaseOpenAIService.",
+      "tags": ["service", "llm", "azure", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/llm/src/infra/services/BaseOpenAIService.ts",
+      "type": "file",
+      "name": "BaseOpenAIService.ts",
+      "filePath": "packages/llm/src/infra/services/BaseOpenAIService.ts",
+      "summary": "Abstract base AIService over the OpenAI SDK providing prompt execution, history mapping, retry logic and model listing for OpenAI-style providers.",
+      "tags": ["service", "llm", "openai", "base-class", "retry"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/llm/src/infra/services/BaseOpenAIService.ts:BaseOpenAIService",
+      "type": "class",
+      "name": "BaseOpenAIService",
+      "filePath": "packages/llm/src/infra/services/BaseOpenAIService.ts",
+      "lineRange": [20, 362],
+      "summary": "Abstract OpenAI SDK-based AIService with shared prompting and retry logic.",
+      "tags": ["service", "llm", "openai", "class"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/llm/src/infra/services/GeminiService.ts",
+      "type": "file",
+      "name": "GeminiService.ts",
+      "filePath": "packages/llm/src/infra/services/GeminiService.ts",
+      "summary": "AIService implementation for Google Gemini with prompt and conversation execution, role mapping, retries and model listing.",
+      "tags": ["service", "llm", "gemini", "retry", "integration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/llm/src/infra/services/GeminiService.ts:GeminiService",
+      "type": "class",
+      "name": "GeminiService",
+      "filePath": "packages/llm/src/infra/services/GeminiService.ts",
+      "lineRange": [24, 401],
+      "summary": "Google Gemini client wrapper implementing AIService.",
+      "tags": ["service", "llm", "gemini", "class"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/llm/src/infra/services/OpenAIAPICompatibleService.ts",
+      "type": "file",
+      "name": "OpenAIAPICompatibleService.ts",
+      "filePath": "packages/llm/src/infra/services/OpenAIAPICompatibleService.ts",
+      "summary": "BaseOpenAIService variant for OpenAI-compatible endpoints (custom base URL), stripping model thinking tags from responses.",
+      "tags": [
+        "service",
+        "llm",
+        "openai-compatible",
+        "integration",
+        "inheritance"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/llm/src/infra/services/OpenAIAPICompatibleService.ts:OpenAIAPICompatibleService",
+      "type": "class",
+      "name": "OpenAIAPICompatibleService",
+      "filePath": "packages/llm/src/infra/services/OpenAIAPICompatibleService.ts",
+      "lineRange": [18, 140],
+      "summary": "OpenAI-compatible endpoint wrapper removing thinking tags from outputs.",
+      "tags": ["service", "llm", "openai-compatible", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/llm/src/infra/services/OpenAIService.ts",
+      "type": "file",
+      "name": "OpenAIService.ts",
+      "filePath": "packages/llm/src/infra/services/OpenAIService.ts",
+      "summary": "OpenAI AIService built on BaseOpenAIService with service-tier selection, prompt/history execution and model listing.",
+      "tags": ["service", "llm", "openai", "integration", "inheritance"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/llm/src/infra/services/OpenAIService.ts:OpenAIService",
+      "type": "class",
+      "name": "OpenAIService",
+      "filePath": "packages/llm/src/infra/services/OpenAIService.ts",
+      "lineRange": [23, 390],
+      "summary": "OpenAI client wrapper with service-tier support.",
+      "tags": ["service", "llm", "openai", "class"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/llm/src/infra/services/PackmindService.ts",
+      "type": "file",
+      "name": "PackmindService.ts",
+      "filePath": "packages/llm/src/infra/services/PackmindService.ts",
+      "summary": "Packmind-hosted AIService that delegates to an underlying OpenAI, Anthropic or Gemini service chosen from server configuration.",
+      "tags": ["service", "llm", "delegation", "proxy", "configuration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/llm/src/infra/services/PackmindService.ts:PackmindService",
+      "type": "class",
+      "name": "PackmindService",
+      "filePath": "packages/llm/src/infra/services/PackmindService.ts",
+      "lineRange": [28, 270],
+      "summary": "Packmind-hosted provider delegating to a configured underlying service.",
+      "tags": ["service", "llm", "delegation", "class"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "type": "file",
+      "name": "classifyProviderError.ts",
+      "filePath": "packages/llm/src/infra/services/classifyProviderError.ts",
+      "summary": "Classifies raw LLM provider errors into typed categories (auth, connection, rate limit, etc.) by extracting HTTP status and connection signals.",
+      "tags": ["utility", "error-handling", "llm", "classification"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/llm/src/infra/services/classifyProviderError.ts:extractProviderStatus",
+      "type": "function",
+      "name": "extractProviderStatus",
+      "filePath": "packages/llm/src/infra/services/classifyProviderError.ts",
+      "lineRange": [49, 65],
+      "summary": "Extracts an HTTP status code from a provider error object.",
+      "tags": ["utility", "error-handling", "llm", "function"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/llm/src/infra/services/classifyProviderError.ts:isConnectionError",
+      "type": "function",
+      "name": "isConnectionError",
+      "filePath": "packages/llm/src/infra/services/classifyProviderError.ts",
+      "lineRange": [67, 88],
+      "summary": "Detects network/connection failures from error codes and messages.",
+      "tags": ["utility", "error-handling", "llm", "function"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/llm/src/infra/services/classifyProviderError.ts:classifyProviderError",
+      "type": "function",
+      "name": "classifyProviderError",
+      "filePath": "packages/llm/src/infra/services/classifyProviderError.ts",
+      "lineRange": [94, 119],
+      "summary": "Maps a provider error into a typed error category.",
+      "tags": ["utility", "error-handling", "llm", "function"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts",
+      "type": "file",
+      "name": "extractUserFriendlyErrorMessage.ts",
+      "filePath": "packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts",
+      "summary": "Extracts a readable error message from nested LLM provider error payloads.",
+      "tags": ["utility", "error-handling", "llm", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts:extractUserFriendlyErrorMessage",
+      "type": "function",
+      "name": "extractUserFriendlyErrorMessage",
+      "filePath": "packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts",
+      "lineRange": [7, 36],
+      "summary": "Digs into error payloads to find the most user-readable message.",
+      "tags": ["utility", "error-handling", "llm", "function"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/types/LLMServiceConfig.ts",
+      "type": "file",
+      "name": "LLMServiceConfig.ts",
+      "filePath": "packages/llm/src/types/LLMServiceConfig.ts",
+      "summary": "Re-exports LLM provider and service config types from @packmind/types for local use.",
+      "tags": ["type-definition", "barrel", "llm", "configuration"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/llm/src/infra/repositories/AIProviderRepository.ts",
+      "target": "class:packages/llm/src/infra/repositories/AIProviderRepository.ts:AIProviderRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/repositories/AIProviderRepository.ts",
+      "target": "class:packages/llm/src/infra/repositories/AIProviderRepository.ts:AIProviderRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AnthropicService.ts",
+      "target": "class:packages/llm/src/infra/services/AnthropicService.ts:AnthropicService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AnthropicService.ts",
+      "target": "class:packages/llm/src/infra/services/AnthropicService.ts:AnthropicService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AzureOpenAIService.ts",
+      "target": "class:packages/llm/src/infra/services/AzureOpenAIService.ts:AzureOpenAIService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AzureOpenAIService.ts",
+      "target": "class:packages/llm/src/infra/services/AzureOpenAIService.ts:AzureOpenAIService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/BaseOpenAIService.ts",
+      "target": "class:packages/llm/src/infra/services/BaseOpenAIService.ts:BaseOpenAIService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/BaseOpenAIService.ts",
+      "target": "class:packages/llm/src/infra/services/BaseOpenAIService.ts:BaseOpenAIService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/GeminiService.ts",
+      "target": "class:packages/llm/src/infra/services/GeminiService.ts:GeminiService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/GeminiService.ts",
+      "target": "class:packages/llm/src/infra/services/GeminiService.ts:GeminiService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIAPICompatibleService.ts",
+      "target": "class:packages/llm/src/infra/services/OpenAIAPICompatibleService.ts:OpenAIAPICompatibleService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIAPICompatibleService.ts",
+      "target": "class:packages/llm/src/infra/services/OpenAIAPICompatibleService.ts:OpenAIAPICompatibleService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIService.ts",
+      "target": "class:packages/llm/src/infra/services/OpenAIService.ts:OpenAIService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIService.ts",
+      "target": "class:packages/llm/src/infra/services/OpenAIService.ts:OpenAIService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/PackmindService.ts",
+      "target": "class:packages/llm/src/infra/services/PackmindService.ts:PackmindService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/PackmindService.ts",
+      "target": "class:packages/llm/src/infra/services/PackmindService.ts:PackmindService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "target": "function:packages/llm/src/infra/services/classifyProviderError.ts:extractProviderStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "target": "function:packages/llm/src/infra/services/classifyProviderError.ts:extractProviderStatus",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "target": "function:packages/llm/src/infra/services/classifyProviderError.ts:isConnectionError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "target": "function:packages/llm/src/infra/services/classifyProviderError.ts:classifyProviderError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "target": "function:packages/llm/src/infra/services/classifyProviderError.ts:classifyProviderError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts",
+      "target": "function:packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts:extractUserFriendlyErrorMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts",
+      "target": "function:packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts:extractUserFriendlyErrorMessage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/infra/repositories/AIProviderRepository.ts",
+      "target": "file:packages/llm/src/domain/repositories/IAIProviderRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/repositories/AIProviderRepository.ts",
+      "target": "file:packages/llm/src/infra/schemas/AIProviderSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/schemas/index.ts",
+      "target": "file:packages/llm/src/infra/schemas/AIProviderSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AnthropicService.ts",
+      "target": "file:packages/llm/src/constants/defaultModels.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AnthropicService.ts",
+      "target": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AnthropicService.ts",
+      "target": "file:packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AnthropicService.ts",
+      "target": "file:packages/llm/src/types/LLMServiceConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AzureOpenAIService.ts",
+      "target": "file:packages/llm/src/constants/defaultModels.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AzureOpenAIService.ts",
+      "target": "file:packages/llm/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AzureOpenAIService.ts",
+      "target": "file:packages/llm/src/infra/services/BaseOpenAIService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/AzureOpenAIService.ts",
+      "target": "file:packages/llm/src/types/LLMServiceConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/BaseOpenAIService.ts",
+      "target": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/BaseOpenAIService.ts",
+      "target": "file:packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/GeminiService.ts",
+      "target": "file:packages/llm/src/constants/defaultModels.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/GeminiService.ts",
+      "target": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/GeminiService.ts",
+      "target": "file:packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/GeminiService.ts",
+      "target": "file:packages/llm/src/types/LLMServiceConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIAPICompatibleService.ts",
+      "target": "file:packages/llm/src/infra/services/BaseOpenAIService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIAPICompatibleService.ts",
+      "target": "file:packages/llm/src/types/LLMServiceConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIService.ts",
+      "target": "file:packages/llm/src/constants/defaultModels.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIService.ts",
+      "target": "file:packages/llm/src/infra/services/BaseOpenAIService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIService.ts",
+      "target": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIService.ts",
+      "target": "file:packages/llm/src/infra/services/extractUserFriendlyErrorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/OpenAIService.ts",
+      "target": "file:packages/llm/src/types/LLMServiceConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/PackmindService.ts",
+      "target": "file:packages/llm/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/PackmindService.ts",
+      "target": "file:packages/llm/src/infra/services/AnthropicService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/PackmindService.ts",
+      "target": "file:packages/llm/src/infra/services/GeminiService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/PackmindService.ts",
+      "target": "file:packages/llm/src/infra/services/OpenAIService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/infra/services/PackmindService.ts",
+      "target": "file:packages/llm/src/types/LLMServiceConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/llm/src/infra/services/AzureOpenAIService.ts:AzureOpenAIService",
+      "target": "class:packages/llm/src/infra/services/BaseOpenAIService.ts:BaseOpenAIService",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/llm/src/infra/services/OpenAIService.ts:OpenAIService",
+      "target": "class:packages/llm/src/infra/services/BaseOpenAIService.ts:BaseOpenAIService",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/llm/src/infra/services/OpenAIAPICompatibleService.ts:OpenAIAPICompatibleService",
+      "target": "class:packages/llm/src/infra/services/BaseOpenAIService.ts:BaseOpenAIService",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/llm/src/infra/repositories/AIProviderRepository.ts:AIProviderRepository",
+      "target": "file:packages/llm/src/domain/repositories/IAIProviderRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

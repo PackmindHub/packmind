@@ -1,0 +1,466 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "file",
+      "name": "ISpaceService.ts",
+      "filePath": "apps/cli/src/domain/services/ISpaceService.ts",
+      "summary": "Domain port for the CLI space service, exposing default space lookup, space listing, slug resolution and the API host/organization context.",
+      "tags": ["type-definition", "service", "port", "spaces", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IAddToPackageUseCase.ts",
+      "type": "file",
+      "name": "IAddToPackageUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IAddToPackageUseCase.ts",
+      "summary": "Port contract for adding standards, commands or skills (by slug) to a Packmind package, returning which items were added versus skipped.",
+      "tags": ["type-definition", "use-case-port", "packages", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/ICheckCliVersionUseCase.ts",
+      "type": "file",
+      "name": "ICheckCliVersionUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/ICheckCliVersionUseCase.ts",
+      "summary": "Port contract for checking the running CLI version against the latest published release and reporting whether an update is available.",
+      "tags": ["type-definition", "use-case-port", "versioning", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/ICheckDiffsUseCase.ts",
+      "type": "file",
+      "name": "ICheckDiffsUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/ICheckDiffsUseCase.ts",
+      "summary": "Port contract for checking grouped artefact diffs against the server, reporting for each diff whether a matching change proposal already exists.",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "change-proposals",
+        "diff",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/ICheckUpgradesUseCase.ts",
+      "type": "file",
+      "name": "ICheckUpgradesUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/ICheckUpgradesUseCase.ts",
+      "summary": "Port contract for previewing package upgrades from packmind.json, describing per-package version moves and per-artifact added/updated/removed/rerendered changes, plus orphan artifact changes.",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "upgrades",
+        "packages",
+        "cli"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/ICreatePackageUseCase.ts",
+      "type": "file",
+      "name": "ICreatePackageUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/ICreatePackageUseCase.ts",
+      "summary": "Port contract for creating a new Packmind package in a space, returning the created package id, name, slug and space slug.",
+      "tags": ["type-definition", "use-case-port", "packages", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "file",
+      "name": "IDiffArtefactsUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "summary": "Defines the ArtefactDiff type and the use case contract that diffs locally installed artefacts against the server versions for given packages, git target and agents.",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "diff",
+        "change-proposals",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IEnsureCliVersionUseCase.ts",
+      "type": "file",
+      "name": "IEnsureCliVersionUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IEnsureCliVersionUseCase.ts",
+      "summary": "Port contract that reconciles the running CLI version with the cliVersion recorded in packmind-lock.json, returning a discriminated outcome (no-lockfile, match, newer with skill reinstall, older).",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "versioning",
+        "lockfile",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IExecuteSingleFileAstUseCase.ts",
+      "type": "file",
+      "name": "IExecuteSingleFileAstUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IExecuteSingleFileAstUseCase.ts",
+      "summary": "Port contract for running a detection program against a single file's content for a given programming language, returning violation line/character positions.",
+      "tags": ["type-definition", "use-case-port", "linting", "ast", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IGetGitRemoteUrlUseCase.ts",
+      "type": "file",
+      "name": "IGetGitRemoteUrlUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IGetGitRemoteUrlUseCase.ts",
+      "summary": "Port type alias for the git remote URL lookup use case, reusing command/result types declared in the application-layer implementation.",
+      "tags": ["type-definition", "use-case-port", "git", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IGetPackageSummaryUseCase.ts",
+      "type": "file",
+      "name": "IGetPackageSummaryUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IGetPackageSummaryUseCase.ts",
+      "summary": "Port contract for fetching a package summary from the API, deriving the CLI command from the shared GetPackageSummaryCommand minus user and organization ids.",
+      "tags": ["type-definition", "use-case-port", "packages", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IInstallDefaultSkillsUseCase.ts",
+      "type": "file",
+      "name": "IInstallDefaultSkillsUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IInstallDefaultSkillsUseCase.ts",
+      "summary": "Port contract for installing Packmind default skills into a workspace (version and beta filtering, agent override), reporting created/updated files and incompatible skills, plus bootstrapping packmind.json in empty directories.",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "skills",
+        "installation",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IInstallPackagesUseCase.ts",
+      "type": "file",
+      "name": "IInstallPackagesUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IInstallPackagesUseCase.ts",
+      "summary": "Port contract for pulling package content and rendering it into the workspace, with git target info for removal detection and counts of created/updated/deleted files and artefacts.",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "installation",
+        "packages",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IInstallUseCase.ts",
+      "type": "file",
+      "name": "IInstallUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IInstallUseCase.ts",
+      "summary": "Port contract for the top-level install command: installs parsed packages with optional upgrade and home-agent modes, and returns file change counts, resolved agents, source artifacts and access issues.",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "installation",
+        "packages",
+        "cli"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/ILintFilesAgainstRule.ts",
+      "type": "file",
+      "name": "ILintFilesAgainstRule.ts",
+      "filePath": "apps/cli/src/domain/useCases/ILintFilesAgainstRule.ts",
+      "summary": "Port contract for linting files under a path against a single standard rule (draft, language and diff modes supported), returning violations and a summary.",
+      "tags": ["type-definition", "use-case-port", "linting", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/ILintFilesFromConfig.ts",
+      "type": "file",
+      "name": "ILintFilesFromConfig.ts",
+      "filePath": "apps/cli/src/domain/useCases/ILintFilesFromConfig.ts",
+      "summary": "Port contract for linting files using the standards configured in the workspace, with diff mode and ignore patterns, returning violations and a summary.",
+      "tags": ["type-definition", "use-case-port", "linting", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IListCommandsUseCase.ts",
+      "type": "file",
+      "name": "IListCommandsUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IListCommandsUseCase.ts",
+      "summary": "Port contract for listing commands (recipes) of a space, returning their id, slug, name and space id.",
+      "tags": ["type-definition", "use-case-port", "commands", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IListFilesInDirectoryUseCase.ts",
+      "type": "file",
+      "name": "IListFilesInDirectoryUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IListFilesInDirectoryUseCase.ts",
+      "summary": "Port type alias for the directory file listing use case, reusing command/result types from the application-layer implementation.",
+      "tags": ["type-definition", "use-case-port", "filesystem", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IListPackagesUseCase.ts",
+      "type": "file",
+      "name": "IListPackagesUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IListPackagesUseCase.ts",
+      "summary": "Port contract for listing the packages of a space.",
+      "tags": ["type-definition", "use-case-port", "packages", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IListSkillsUseCase.ts",
+      "type": "file",
+      "name": "IListSkillsUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IListSkillsUseCase.ts",
+      "summary": "Defines the ListedSkill shape and the use case contract for listing skills of a space.",
+      "tags": ["type-definition", "use-case-port", "skills", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IListStandardsUseCase.ts",
+      "type": "file",
+      "name": "IListStandardsUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IListStandardsUseCase.ts",
+      "summary": "Port contract for listing standards of a space, returning ListedStandard entries from the Packmind gateway types.",
+      "tags": ["type-definition", "use-case-port", "standards", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/ILoginUseCase.ts",
+      "type": "file",
+      "name": "ILoginUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/ILoginUseCase.ts",
+      "summary": "Port contract for logging the CLI into a Packmind host, optionally with a login code, returning the stored credentials path.",
+      "tags": ["type-definition", "use-case-port", "authentication", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/ILogoutUseCase.ts",
+      "type": "file",
+      "name": "ILogoutUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/ILogoutUseCase.ts",
+      "summary": "Port contract for logging out of the CLI, reporting whether a credentials file or environment variable was present.",
+      "tags": ["type-definition", "use-case-port", "authentication", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IMoveToPackageUseCase.ts",
+      "type": "file",
+      "name": "IMoveToPackageUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IMoveToPackageUseCase.ts",
+      "summary": "Port contract for moving artefacts into a target package, reporting per artefact whether it was added and which packages it was removed from.",
+      "tags": ["type-definition", "use-case-port", "packages", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IRemoveFromPackageUseCase.ts",
+      "type": "file",
+      "name": "IRemoveFromPackageUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IRemoveFromPackageUseCase.ts",
+      "summary": "Port contract for removing artefacts from a package, reporting per artefact whether it was removed and which packages still hold it.",
+      "tags": ["type-definition", "use-case-port", "packages", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/ISubmitDiffsUseCase.ts",
+      "type": "file",
+      "name": "ISubmitDiffsUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/ISubmitDiffsUseCase.ts",
+      "summary": "Port contract for submitting grouped artefact diffs as change proposals with a message, reporting submitted, already-submitted, skipped and errored items.",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "change-proposals",
+        "diff",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IUninstallUseCase.ts",
+      "type": "file",
+      "name": "IUninstallUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IUninstallUseCase.ts",
+      "summary": "Port contract for uninstalling packages from a workspace, reusing the install result shape since uninstall runs an install pass.",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "installation",
+        "packages",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IUploadSkillUseCase.ts",
+      "type": "file",
+      "name": "IUploadSkillUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IUploadSkillUseCase.ts",
+      "summary": "Port contract for uploading a local skill directory to Packmind, returning the skill id, version and upload size details.",
+      "tags": ["type-definition", "use-case-port", "skills", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/IWhoamiUseCase.ts",
+      "type": "file",
+      "name": "IWhoamiUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/IWhoamiUseCase.ts",
+      "summary": "Port contract for the whoami command, returning a discriminated authenticated/unauthenticated result with host, organization, user and expiry details.",
+      "tags": ["type-definition", "use-case-port", "authentication", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/trackRepository/IGetTrackingInfoUseCase.ts",
+      "type": "file",
+      "name": "IGetTrackingInfoUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/trackRepository/IGetTrackingInfoUseCase.ts",
+      "summary": "Port contract returning a read-only view of whether Packmind tracks the local git repository, including tracked versus current branch and detached-HEAD state.",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "repository-tracking",
+        "git",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/useCases/trackRepository/ITrackRepositoryUseCase.ts",
+      "type": "file",
+      "name": "ITrackRepositoryUseCase.ts",
+      "filePath": "apps/cli/src/domain/useCases/trackRepository/ITrackRepositoryUseCase.ts",
+      "summary": "Port contract for setting, moving or removing Packmind tracking of a git repository branch, delegating confirmation to a caller-provided callback before any mutation.",
+      "tags": [
+        "type-definition",
+        "use-case-port",
+        "repository-tracking",
+        "git",
+        "cli"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/embedded-wasm.ts",
+      "type": "file",
+      "name": "embedded-wasm.ts",
+      "filePath": "apps/cli/src/embedded-wasm.ts",
+      "summary": "Auto-generated module embedding tree-sitter WASM grammar binaries as base64 strings so the bundled CLI can extract them at runtime for AST-based linting.",
+      "tags": ["generated", "wasm", "tree-sitter", "embedded-assets", "cli"],
+      "complexity": "simple",
+      "languageNotes": "Generated by apps/cli/scripts/embed-wasm-files.ts; large base64 payloads inlined in a Record<string,string> to ship binaries inside a single-file bundle."
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/domain/useCases/IAddToPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/ICheckDiffsUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/IGetGitRemoteUrlUseCase.ts",
+      "target": "file:apps/cli/src/application/useCases/GetGitRemoteUrlUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/IInstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/ILintFilesAgainstRule.ts",
+      "target": "file:apps/cli/src/domain/entities/DiffMode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/ILintFilesAgainstRule.ts",
+      "target": "file:apps/cli/src/domain/entities/LintViolation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/ILintFilesFromConfig.ts",
+      "target": "file:apps/cli/src/domain/entities/DiffMode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/ILintFilesFromConfig.ts",
+      "target": "file:apps/cli/src/domain/entities/LintViolation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/IListFilesInDirectoryUseCase.ts",
+      "target": "file:apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/IListStandardsUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/IMoveToPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/IRemoveFromPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/ISubmitDiffsUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/useCases/IUninstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IInstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/embedded-wasm.ts",
+      "target": "file:apps/cli/src/wasm-runtime.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

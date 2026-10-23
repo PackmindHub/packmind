@@ -1,0 +1,1248 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/app/routes/_public.activate.tsx",
+      "type": "file",
+      "name": "_public.activate.tsx",
+      "filePath": "apps/frontend/app/routes/_public.activate.tsx",
+      "summary": "Public route that validates an invitation token and renders the account activation form, redirecting already-authenticated users.",
+      "tags": [
+        "route",
+        "component",
+        "authentication",
+        "invitation",
+        "react-router"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.activate.tsx:ActivateRoute",
+      "type": "function",
+      "name": "ActivateRoute",
+      "filePath": "apps/frontend/app/routes/_public.activate.tsx",
+      "lineRange": [19, 144],
+      "summary": "Route component that validates the invitation token and shows the activation form or an invalid-link state.",
+      "tags": ["route", "component", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.cli-login.tsx",
+      "type": "file",
+      "name": "_public.cli-login.tsx",
+      "filePath": "apps/frontend/app/routes/_public.cli-login.tsx",
+      "summary": "Public route used by the Packmind CLI login flow: ensures the user is signed in, generates a CLI login code and posts it back to the CLI's local callback URL or lets the user copy it manually.",
+      "tags": ["route", "cli", "authentication", "component", "react-router"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.cli-login.tsx:CliLoginRoute",
+      "type": "function",
+      "name": "CliLoginRoute",
+      "filePath": "apps/frontend/app/routes/_public.cli-login.tsx",
+      "lineRange": [25, 280],
+      "summary": "Route component that redirects unauthenticated users, creates a CLI login code, and sends it to the CLI callback URL with manual copy fallback.",
+      "tags": ["route", "component", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.create-account.tsx",
+      "type": "file",
+      "name": "_public.create-account.tsx",
+      "filePath": "apps/frontend/app/routes/_public.create-account.tsx",
+      "summary": "Legacy route that immediately redirects to the /sign-up/create-account page.",
+      "tags": ["route", "redirect", "sign-up", "react-router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.create-account.tsx:CreateAccountRouteModule",
+      "type": "function",
+      "name": "CreateAccountRouteModule",
+      "filePath": "apps/frontend/app/routes/_public.create-account.tsx",
+      "lineRange": [14, 22],
+      "summary": "Route component for account creation.",
+      "tags": ["route", "component", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.forgot-password.tsx",
+      "type": "file",
+      "name": "_public.forgot-password.tsx",
+      "filePath": "apps/frontend/app/routes/_public.forgot-password.tsx",
+      "summary": "Public route rendering the forgot-password form, redirecting authenticated users away.",
+      "tags": ["route", "password-reset", "authentication", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.forgot-password.tsx:ForgotPasswordRoute",
+      "type": "function",
+      "name": "ForgotPasswordRoute",
+      "filePath": "apps/frontend/app/routes/_public.forgot-password.tsx",
+      "lineRange": [7, 42],
+      "summary": "Route component rendering the forgot-password form for unauthenticated users.",
+      "tags": ["route", "component", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx",
+      "type": "file",
+      "name": "_public.integrations.github-app.install-callback.tsx",
+      "filePath": "apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx",
+      "summary": "Callback route hit after a GitHub App installation; validates installation_id/setup_action/state params and submits them once to the backend, with retry and error states.",
+      "tags": [
+        "route",
+        "github-app",
+        "integration",
+        "callback",
+        "git-provider"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx:GithubAppCallbackRouteModule",
+      "type": "function",
+      "name": "GithubAppCallbackRouteModule",
+      "filePath": "apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx",
+      "lineRange": [16, 178],
+      "summary": "Handles GitHub App installation redirects by submitting installation id and state once, then redirecting to settings or showing errors.",
+      "tags": ["route", "component", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx",
+      "type": "file",
+      "name": "_public.integrations.github-app.manifest-callback.tsx",
+      "filePath": "apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx",
+      "summary": "Callback route for the GitHub App manifest flow; exchanges the returned code and state with the backend exactly once to finish creating the GitHub App.",
+      "tags": [
+        "route",
+        "github-app",
+        "integration",
+        "callback",
+        "git-provider"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx:GithubAppManifestCallbackRouteModule",
+      "type": "function",
+      "name": "GithubAppManifestCallbackRouteModule",
+      "filePath": "apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx",
+      "lineRange": [16, 187],
+      "summary": "Handles GitHub App manifest redirects by submitting the code and state once and rendering progress, success or retryable errors.",
+      "tags": ["route", "component", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.reset-password.tsx",
+      "type": "file",
+      "name": "_public.reset-password.tsx",
+      "filePath": "apps/frontend/app/routes/_public.reset-password.tsx",
+      "summary": "Public route that validates a password reset token and renders the reset password form or an invalid-token message.",
+      "tags": ["route", "password-reset", "authentication", "component"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.reset-password.tsx:ResetPasswordRoute",
+      "type": "function",
+      "name": "ResetPasswordRoute",
+      "filePath": "apps/frontend/app/routes/_public.reset-password.tsx",
+      "lineRange": [16, 105],
+      "summary": "Route component validating the reset token and rendering the reset password form.",
+      "tags": ["route", "component", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.sign-in.tsx",
+      "type": "file",
+      "name": "_public.sign-in.tsx",
+      "filePath": "apps/frontend/app/routes/_public.sign-in.tsx",
+      "summary": "Public sign-in page route rendering the SignInForm alongside the product tour entry point.",
+      "tags": ["route", "sign-in", "authentication", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.sign-in.tsx:SignInRoute",
+      "type": "function",
+      "name": "SignInRoute",
+      "filePath": "apps/frontend/app/routes/_public.sign-in.tsx",
+      "lineRange": [14, 45],
+      "summary": "Sign-in page component rendering the sign-in form and product tour trigger.",
+      "tags": ["route", "component", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.sign-up.create-account.tsx",
+      "type": "file",
+      "name": "_public.sign-up.create-account.tsx",
+      "filePath": "apps/frontend/app/routes/_public.sign-up.create-account.tsx",
+      "summary": "Sign-up page route presenting the organization sign-up form with a link back to sign-in.",
+      "tags": ["route", "sign-up", "component", "onboarding"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.sign-up.create-account.tsx:CreateAccountRouteModule",
+      "type": "function",
+      "name": "CreateAccountRouteModule",
+      "filePath": "apps/frontend/app/routes/_public.sign-up.create-account.tsx",
+      "lineRange": [13, 52],
+      "summary": "Route component for account creation.",
+      "tags": ["route", "component", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.settings.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.settings.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.settings.tsx",
+      "summary": "Thin route module that renders the space settings page from the spaces domain.",
+      "tags": ["route", "spaces", "settings", "barrel"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.settings.tsx:SpaceSettingsRouteModule",
+      "type": "function",
+      "name": "SpaceSettingsRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.settings.tsx",
+      "lineRange": [3, 5],
+      "summary": "Renders the space settings page.",
+      "tags": ["route", "component", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts",
+      "type": "file",
+      "name": "AuthGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts",
+      "summary": "HTTP gateway implementing IAuthGateway for all authentication calls: sign-up/in/out, current user, API keys, invitations, password reset, organization selection, CLI login codes and social providers.",
+      "tags": ["api-client", "gateway", "authentication", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts:AuthGatewayApi",
+      "type": "class",
+      "name": "AuthGatewayApi",
+      "filePath": "apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts",
+      "lineRange": [32, 156],
+      "summary": "Gateway class issuing authentication-related HTTP requests to the Packmind API.",
+      "tags": ["gateway", "api-client", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/gateways/IOrganizationGateway.ts",
+      "type": "file",
+      "name": "IOrganizationGateway.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/gateways/IOrganizationGateway.ts",
+      "summary": "Port interface describing organization operations available to the frontend: create, lookup by name, list user organizations, invite/remove users and rename.",
+      "tags": ["type-definition", "gateway", "organizations", "interface"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/gateways/IUserGateway.ts",
+      "type": "file",
+      "name": "IUserGateway.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/gateways/IUserGateway.ts",
+      "summary": "Port interface and UserMeResponse type for user-related frontend operations: listing organization users, their statuses and changing roles.",
+      "tags": ["type-definition", "gateway", "users", "interface"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts",
+      "type": "file",
+      "name": "OrganizationGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts",
+      "summary": "HTTP gateway implementing IOrganizationGateway on top of PackmindGateway for organization creation, lookup, membership and renaming.",
+      "tags": ["api-client", "gateway", "organizations", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts:OrganizationGatewayApi",
+      "type": "class",
+      "name": "OrganizationGatewayApi",
+      "filePath": "apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts",
+      "lineRange": [20, 73],
+      "summary": "Gateway class for organization CRUD, membership and invitation HTTP calls.",
+      "tags": ["gateway", "api-client", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts",
+      "type": "file",
+      "name": "UserGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts",
+      "summary": "HTTP gateway implementing IUserGateway that lists organization users, fetches their statuses and changes user roles.",
+      "tags": ["api-client", "gateway", "users", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts:UserGatewayApi",
+      "type": "class",
+      "name": "UserGatewayApi",
+      "filePath": "apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts",
+      "lineRange": [17, 48],
+      "summary": "Gateway class for organization user listing, statuses and role changes.",
+      "tags": ["gateway", "api-client", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "summary": "Barrel that instantiates and exports singleton organization, user and auth gateways plus auth response types.",
+      "tags": ["barrel", "singleton", "gateway", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "file",
+      "name": "AuthQueries.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "summary": "TanStack Query hooks wrapping the auth gateway: sign-up, sign-in/out, API key management, CLI login codes, invitation activation, password reset, social providers and organization selection with cache invalidation.",
+      "tags": ["hook", "react-query", "authentication", "api-client"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignUpWithOrganizationMutation",
+      "type": "function",
+      "name": "useSignUpWithOrganizationMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [41, 65],
+      "summary": "React Query hook/helper useSignUpWithOrganizationMutation wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignInMutation",
+      "type": "function",
+      "name": "useSignInMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [67, 88],
+      "summary": "React Query hook/helper useSignInMutation wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignOutMutation",
+      "type": "function",
+      "name": "useSignOutMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [90, 108],
+      "summary": "React Query hook/helper useSignOutMutation wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useGetCurrentApiKeyQuery",
+      "type": "function",
+      "name": "useGetCurrentApiKeyQuery",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [110, 120],
+      "summary": "React Query hook/helper useGetCurrentApiKeyQuery wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useGenerateApiKeyMutation",
+      "type": "function",
+      "name": "useGenerateApiKeyMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [122, 141],
+      "summary": "React Query hook/helper useGenerateApiKeyMutation wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useCreateCliLoginCodeMutation",
+      "type": "function",
+      "name": "useCreateCliLoginCodeMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [143, 153],
+      "summary": "React Query hook/helper useCreateCliLoginCodeMutation wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useCheckEmailAvailabilityMutation",
+      "type": "function",
+      "name": "useCheckEmailAvailabilityMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [155, 165],
+      "summary": "React Query hook/helper useCheckEmailAvailabilityMutation wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useValidateInvitationQuery",
+      "type": "function",
+      "name": "useValidateInvitationQuery",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [167, 176],
+      "summary": "React Query hook/helper useValidateInvitationQuery wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useActivateUserAccountMutation",
+      "type": "function",
+      "name": "useActivateUserAccountMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [178, 197],
+      "summary": "React Query hook/helper useActivateUserAccountMutation wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useRequestPasswordResetMutation",
+      "type": "function",
+      "name": "useRequestPasswordResetMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [199, 212],
+      "summary": "React Query hook/helper useRequestPasswordResetMutation wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useValidatePasswordResetTokenQuery",
+      "type": "function",
+      "name": "useValidatePasswordResetTokenQuery",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [214, 223],
+      "summary": "React Query hook/helper useValidatePasswordResetTokenQuery wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useResetPasswordMutation",
+      "type": "function",
+      "name": "useResetPasswordMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [225, 244],
+      "summary": "React Query hook/helper useResetPasswordMutation wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:getSelectOrganizationQueryOptions",
+      "type": "function",
+      "name": "getSelectOrganizationQueryOptions",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [246, 252],
+      "summary": "React Query hook/helper getSelectOrganizationQueryOptions wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSocialProvidersQuery",
+      "type": "function",
+      "name": "useSocialProvidersQuery",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [254, 261],
+      "summary": "React Query hook/helper useSocialProvidersQuery wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSelectOrganizationMutation",
+      "type": "function",
+      "name": "useSelectOrganizationMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "lineRange": [263, 295],
+      "summary": "React Query hook/helper useSelectOrganizationMutation wrapping the corresponding auth gateway call with cache handling.",
+      "tags": ["hook", "react-query", "authentication"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/app/routes/_public.activate.tsx",
+      "target": "function:apps/frontend/app/routes/_public.activate.tsx:ActivateRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.activate.tsx",
+      "target": "function:apps/frontend/app/routes/_public.activate.tsx:ActivateRoute",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.activate.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.activate.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/ActivationForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.activate.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.cli-login.tsx",
+      "target": "function:apps/frontend/app/routes/_public.cli-login.tsx:CliLoginRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.cli-login.tsx",
+      "target": "function:apps/frontend/app/routes/_public.cli-login.tsx:CliLoginRoute",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.cli-login.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.cli-login.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.cli-login.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.create-account.tsx",
+      "target": "function:apps/frontend/app/routes/_public.create-account.tsx:CreateAccountRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.create-account.tsx",
+      "target": "function:apps/frontend/app/routes/_public.create-account.tsx:CreateAccountRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.create-account.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.create-account.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.forgot-password.tsx",
+      "target": "function:apps/frontend/app/routes/_public.forgot-password.tsx:ForgotPasswordRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.forgot-password.tsx",
+      "target": "function:apps/frontend/app/routes/_public.forgot-password.tsx:ForgotPasswordRoute",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.forgot-password.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.forgot-password.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx",
+      "target": "function:apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx:GithubAppCallbackRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx",
+      "target": "function:apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx:GithubAppCallbackRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx",
+      "target": "function:apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx:GithubAppManifestCallbackRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx",
+      "target": "function:apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx:GithubAppManifestCallbackRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.reset-password.tsx",
+      "target": "function:apps/frontend/app/routes/_public.reset-password.tsx:ResetPasswordRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.reset-password.tsx",
+      "target": "function:apps/frontend/app/routes/_public.reset-password.tsx:ResetPasswordRoute",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.reset-password.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.reset-password.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.reset-password.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-in.tsx",
+      "target": "function:apps/frontend/app/routes/_public.sign-in.tsx:SignInRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-in.tsx",
+      "target": "function:apps/frontend/app/routes/_public.sign-in.tsx:SignInRoute",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-in.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-in.tsx",
+      "target": "file:apps/frontend/src/shared/components/StartProductTour.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up.create-account.tsx",
+      "target": "function:apps/frontend/app/routes/_public.sign-up.create-account.tsx:CreateAccountRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up.create-account.tsx",
+      "target": "function:apps/frontend/app/routes/_public.sign-up.create-account.tsx:CreateAccountRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up.create-account.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.settings.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.settings.tsx:SpaceSettingsRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.settings.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.settings.tsx:SpaceSettingsRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.settings.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts:AuthGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts:AuthGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts:AuthGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IAuthGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts:OrganizationGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts:OrganizationGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts:OrganizationGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IOrganizationGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts:UserGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts:UserGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts:UserGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IUserGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IAuthGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IOrganizationGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IUserGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignUpWithOrganizationMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignUpWithOrganizationMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignInMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignInMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignOutMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignOutMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useGetCurrentApiKeyQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useGetCurrentApiKeyQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useGenerateApiKeyMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useGenerateApiKeyMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useCreateCliLoginCodeMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useCreateCliLoginCodeMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useCheckEmailAvailabilityMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useCheckEmailAvailabilityMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useValidateInvitationQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useValidateInvitationQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useActivateUserAccountMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useActivateUserAccountMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useRequestPasswordResetMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useRequestPasswordResetMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useValidatePasswordResetTokenQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useValidatePasswordResetTokenQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useResetPasswordMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useResetPasswordMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:getSelectOrganizationQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:getSelectOrganizationQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSocialProvidersQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSocialProvidersQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSelectOrganizationMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSelectOrganizationMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.activate.tsx:ActivateRoute",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useValidateInvitationQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.activate.tsx:ActivateRoute",
+      "target": "function:apps/frontend/src/domain/accounts/components/ActivationForm.tsx:ActivationForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.activate.tsx:ActivateRoute",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts:useIsAuthenticated",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.reset-password.tsx:ResetPasswordRoute",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useValidatePasswordResetTokenQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.reset-password.tsx:ResetPasswordRoute",
+      "target": "function:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx:ResetPasswordForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.forgot-password.tsx:ForgotPasswordRoute",
+      "target": "function:apps/frontend/src/domain/accounts/components/ForgotPasswordForm.tsx:ForgotPasswordForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.sign-in.tsx:SignInRoute",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignInForm.tsx:SignInForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.sign-in.tsx:SignInRoute",
+      "target": "function:apps/frontend/src/shared/components/StartProductTour.tsx:StartProductTour",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.sign-up.create-account.tsx:CreateAccountRouteModule",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx:SignUpWithOrganizationForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.cli-login.tsx:CliLoginRoute",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.integrations.github-app.install-callback.tsx:GithubAppCallbackRouteModule",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppCallbackMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.integrations.github-app.manifest-callback.tsx:GithubAppManifestCallbackRouteModule",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppManifestCallbackMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/accounts/api/gateways/AuthGatewayApi.ts:AuthGatewayApi",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IAuthGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/frontend/src/domain/accounts/api/gateways/OrganizationGatewayApi.ts:OrganizationGatewayApi",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IOrganizationGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/frontend/src/domain/accounts/api/gateways/UserGatewayApi.ts:UserGatewayApi",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IUserGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

@@ -1,0 +1,47 @@
+{
+  "nodes": [
+    {
+      "id": "document:.github/ISSUE_TEMPLATE/bug_report.md",
+      "type": "document",
+      "name": "bug_report.md",
+      "filePath": ".github/ISSUE_TEMPLATE/bug_report.md",
+      "summary": "GitHub issue template for bug reports, prompting for description, reproduction steps, expected behavior, and environment details.",
+      "tags": ["documentation", "github", "issue-template", "bug-report"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.github/ISSUE_TEMPLATE/feature_request.md",
+      "type": "document",
+      "name": "feature_request.md",
+      "filePath": ".github/ISSUE_TEMPLATE/feature_request.md",
+      "summary": "GitHub issue template for proposing new features, asking for the problem, proposed solution, and alternatives.",
+      "tags": ["documentation", "github", "issue-template", "feature-request"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.github/ISSUE_TEMPLATE/improvement.md",
+      "type": "document",
+      "name": "improvement.md",
+      "filePath": ".github/ISSUE_TEMPLATE/improvement.md",
+      "summary": "GitHub issue template for suggesting improvements to existing functionality.",
+      "tags": ["documentation", "github", "issue-template", "improvement"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:.github/ISSUE_TEMPLATE/bug_report.md",
+      "target": "document:.github/ISSUE_TEMPLATE/improvement.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:.github/ISSUE_TEMPLATE/feature_request.md",
+      "target": "document:.github/ISSUE_TEMPLATE/improvement.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

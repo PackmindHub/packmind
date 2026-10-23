@@ -1,0 +1,600 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts",
+      "type": "file",
+      "name": "DefaultSpaceNotFoundError.ts",
+      "filePath": "packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts",
+      "summary": "Internal error raised when an organization has no default space.",
+      "tags": ["error", "internal-error", "default-space"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts:DefaultSpaceNotFoundError",
+      "type": "class",
+      "name": "DefaultSpaceNotFoundError",
+      "filePath": "packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts",
+      "lineRange": [9, 18],
+      "summary": "Error class: Internal error raised when an organization has no default space.",
+      "tags": ["error", "internal-error", "default-space"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/errors/InvalidSpaceNameError.ts",
+      "type": "file",
+      "name": "InvalidSpaceNameError.ts",
+      "filePath": "packages/spaces/src/domain/errors/InvalidSpaceNameError.ts",
+      "summary": "Domain error raised when a space name fails validation.",
+      "tags": ["error", "domain-error", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/errors/InvalidSpaceNameError.ts:InvalidSpaceNameError",
+      "type": "class",
+      "name": "InvalidSpaceNameError",
+      "filePath": "packages/spaces/src/domain/errors/InvalidSpaceNameError.ts",
+      "lineRange": [8, 18],
+      "summary": "Error class: Domain error raised when a space name fails validation.",
+      "tags": ["error", "domain-error", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/errors/MemberNotFoundError.ts",
+      "type": "file",
+      "name": "MemberNotFoundError.ts",
+      "filePath": "packages/spaces/src/domain/errors/MemberNotFoundError.ts",
+      "summary": "Domain error raised when a targeted user is not a member of the space.",
+      "tags": ["error", "domain-error", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/errors/MemberNotFoundError.ts:MemberNotFoundError",
+      "type": "class",
+      "name": "MemberNotFoundError",
+      "filePath": "packages/spaces/src/domain/errors/MemberNotFoundError.ts",
+      "lineRange": [8, 18],
+      "summary": "Error class: Domain error raised when a targeted user is not a member of the space.",
+      "tags": ["error", "domain-error", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/errors/SpaceNotFoundError.ts",
+      "type": "file",
+      "name": "SpaceNotFoundError.ts",
+      "filePath": "packages/spaces/src/domain/errors/SpaceNotFoundError.ts",
+      "summary": "Domain error raised when a space cannot be found by id or slug.",
+      "tags": ["error", "domain-error", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/errors/SpaceNotFoundError.ts:SpaceNotFoundError",
+      "type": "class",
+      "name": "SpaceNotFoundError",
+      "filePath": "packages/spaces/src/domain/errors/SpaceNotFoundError.ts",
+      "lineRange": [12, 22],
+      "summary": "Error class: Domain error raised when a space cannot be found by id or slug.",
+      "tags": ["error", "domain-error", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/errors/SpaceSlugConflictError.ts",
+      "type": "file",
+      "name": "SpaceSlugConflictError.ts",
+      "filePath": "packages/spaces/src/domain/errors/SpaceSlugConflictError.ts",
+      "summary": "Domain error raised when a new or renamed space's slug collides with an existing one in the organization.",
+      "tags": ["error", "domain-error", "slug"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/errors/SpaceSlugConflictError.ts:SpaceSlugConflictError",
+      "type": "class",
+      "name": "SpaceSlugConflictError",
+      "filePath": "packages/spaces/src/domain/errors/SpaceSlugConflictError.ts",
+      "lineRange": [10, 20],
+      "summary": "Error class: Domain error raised when a new or renamed space's slug collides with an existing one in the organization.",
+      "tags": ["error", "domain-error", "slug"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/errors/SpacesError.ts",
+      "type": "file",
+      "name": "SpacesError.ts",
+      "filePath": "packages/spaces/src/domain/errors/SpacesError.ts",
+      "summary": "Base DomainError class for the spaces domain carrying an HTTP-mapped kind, a literal reason code and structured log context.",
+      "tags": ["error", "base-class", "domain-error", "type-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/errors/SpacesError.ts:SpacesError",
+      "type": "class",
+      "name": "SpacesError",
+      "filePath": "packages/spaces/src/domain/errors/SpacesError.ts",
+      "lineRange": [26, 43],
+      "summary": "Base spaces domain error with kind, reason and context.",
+      "tags": ["error", "base-class", "domain-error", "type-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/errors/SpacesInternalError.ts",
+      "type": "file",
+      "name": "SpacesInternalError.ts",
+      "filePath": "packages/spaces/src/domain/errors/SpacesInternalError.ts",
+      "summary": "Base internal error for the spaces domain, extending PackmindInternalError for non-client-facing failures.",
+      "tags": ["error", "base-class", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/errors/SpacesInternalError.ts:SpacesInternalError",
+      "type": "class",
+      "name": "SpacesInternalError",
+      "filePath": "packages/spaces/src/domain/errors/SpacesInternalError.ts",
+      "lineRange": [21, 30],
+      "summary": "Base internal spaces error.",
+      "tags": ["error", "base-class", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/repositories/ISpaceRepository.ts",
+      "type": "file",
+      "name": "ISpaceRepository.ts",
+      "filePath": "packages/spaces/src/domain/repositories/ISpaceRepository.ts",
+      "summary": "Repository port interface for Space persistence: slug lookup, listing by organization, field updates and paginated queries.",
+      "tags": ["type-definition", "repository", "port", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/repositories/ISpacesRepositories.ts",
+      "type": "file",
+      "name": "ISpacesRepositories.ts",
+      "filePath": "packages/spaces/src/domain/repositories/ISpacesRepositories.ts",
+      "summary": "Aggregate interface giving access to the space and membership repositories.",
+      "tags": ["type-definition", "repository", "port"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/repositories/IUserSpaceMembershipRepository.ts",
+      "type": "file",
+      "name": "IUserSpaceMembershipRepository.ts",
+      "filePath": "packages/spaces/src/domain/repositories/IUserSpaceMembershipRepository.ts",
+      "summary": "Repository port interface for user-space memberships, including role/pinned updates and bulk per-space aggregation queries.",
+      "tags": ["type-definition", "repository", "port", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/infra/repositories/SpaceRepository.ts",
+      "type": "file",
+      "name": "SpaceRepository.ts",
+      "filePath": "packages/spaces/src/infra/repositories/SpaceRepository.ts",
+      "summary": "TypeORM repository for spaces built on AbstractRepository, with slug lookups, duplicate-slug error messages and paginated organization queries.",
+      "tags": ["repository", "typeorm", "persistence", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/spaces/src/infra/repositories/SpaceRepository.ts:SpaceRepository",
+      "type": "class",
+      "name": "SpaceRepository",
+      "filePath": "packages/spaces/src/infra/repositories/SpaceRepository.ts",
+      "lineRange": [17, 130],
+      "summary": "TypeORM-backed space repository with slug and organization queries.",
+      "tags": ["repository", "typeorm", "persistence", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "type": "file",
+      "name": "SpacesRepositories.ts",
+      "filePath": "packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "summary": "Factory implementing ISpacesRepositories that builds the TypeORM-backed space and membership repositories from a DataSource.",
+      "tags": ["repository", "factory", "typeorm", "dependency-injection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/infra/repositories/SpacesRepositories.ts:SpacesRepositories",
+      "type": "class",
+      "name": "SpacesRepositories",
+      "filePath": "packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "lineRange": [11, 40],
+      "summary": "Factory class instantiating SpaceRepository and UserSpaceMembershipRepository.",
+      "tags": ["repository", "factory", "typeorm", "dependency-injection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts",
+      "type": "file",
+      "name": "UserSpaceMembershipRepository.ts",
+      "filePath": "packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts",
+      "summary": "TypeORM repository for user-space memberships with soft-deletion, role/pin updates and grouped SQL queries counting admins and members per space.",
+      "tags": ["repository", "typeorm", "persistence", "membership"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts:UserSpaceMembershipRepository",
+      "type": "class",
+      "name": "UserSpaceMembershipRepository",
+      "filePath": "packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts",
+      "lineRange": [19, 353],
+      "summary": "TypeORM-backed membership repository with aggregation queries per space.",
+      "tags": ["repository", "typeorm", "persistence", "membership"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/spaces/src/infra/schemas/SpaceSchema.ts",
+      "type": "file",
+      "name": "SpaceSchema.ts",
+      "filePath": "packages/spaces/src/infra/schemas/SpaceSchema.ts",
+      "summary": "TypeORM EntitySchema mapping the Space entity (name, slug, type, color, organization) with timestamps and soft delete.",
+      "tags": ["data-model", "typeorm", "schema-definition", "database"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/spaces/src/infra/schemas/UserSpaceMembershipSchema.ts",
+      "type": "file",
+      "name": "UserSpaceMembershipSchema.ts",
+      "filePath": "packages/spaces/src/infra/schemas/UserSpaceMembershipSchema.ts",
+      "summary": "TypeORM EntitySchema mapping user-space memberships with role, pinned flag and relations to users and spaces.",
+      "tags": ["data-model", "typeorm", "schema-definition", "database"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/spaces/src/infra/schemas/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/spaces/src/infra/schemas/index.ts",
+      "summary": "Barrel re-exporting the spaces TypeORM schemas and the spacesSchemas array for DataSource registration.",
+      "tags": ["barrel", "typeorm", "schema-definition"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpacesInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts",
+      "target": "class:packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts:DefaultSpaceNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts",
+      "target": "class:packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts:DefaultSpaceNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/InvalidSpaceNameError.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpacesError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/InvalidSpaceNameError.ts",
+      "target": "class:packages/spaces/src/domain/errors/InvalidSpaceNameError.ts:InvalidSpaceNameError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/InvalidSpaceNameError.ts",
+      "target": "class:packages/spaces/src/domain/errors/InvalidSpaceNameError.ts:InvalidSpaceNameError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/MemberNotFoundError.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpacesError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/MemberNotFoundError.ts",
+      "target": "class:packages/spaces/src/domain/errors/MemberNotFoundError.ts:MemberNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/MemberNotFoundError.ts",
+      "target": "class:packages/spaces/src/domain/errors/MemberNotFoundError.ts:MemberNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/SpaceNotFoundError.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpacesError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/SpaceNotFoundError.ts",
+      "target": "class:packages/spaces/src/domain/errors/SpaceNotFoundError.ts:SpaceNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/SpaceNotFoundError.ts",
+      "target": "class:packages/spaces/src/domain/errors/SpaceNotFoundError.ts:SpaceNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/SpaceSlugConflictError.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpacesError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/SpaceSlugConflictError.ts",
+      "target": "class:packages/spaces/src/domain/errors/SpaceSlugConflictError.ts:SpaceSlugConflictError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/SpaceSlugConflictError.ts",
+      "target": "class:packages/spaces/src/domain/errors/SpaceSlugConflictError.ts:SpaceSlugConflictError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/SpacesError.ts",
+      "target": "class:packages/spaces/src/domain/errors/SpacesError.ts:SpacesError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/SpacesError.ts",
+      "target": "class:packages/spaces/src/domain/errors/SpacesError.ts:SpacesError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/SpacesInternalError.ts",
+      "target": "class:packages/spaces/src/domain/errors/SpacesInternalError.ts:SpacesInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/SpacesInternalError.ts",
+      "target": "class:packages/spaces/src/domain/errors/SpacesInternalError.ts:SpacesInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/repositories/ISpacesRepositories.ts",
+      "target": "file:packages/spaces/src/domain/repositories/ISpaceRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/domain/repositories/ISpacesRepositories.ts",
+      "target": "file:packages/spaces/src/domain/repositories/IUserSpaceMembershipRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpaceRepository.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpaceNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpaceRepository.ts",
+      "target": "file:packages/spaces/src/domain/repositories/ISpaceRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpaceRepository.ts",
+      "target": "file:packages/spaces/src/infra/schemas/SpaceSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpaceRepository.ts",
+      "target": "class:packages/spaces/src/infra/repositories/SpaceRepository.ts:SpaceRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpaceRepository.ts",
+      "target": "class:packages/spaces/src/infra/repositories/SpaceRepository.ts:SpaceRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "target": "file:packages/spaces/src/domain/repositories/ISpaceRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "target": "file:packages/spaces/src/domain/repositories/ISpacesRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "target": "file:packages/spaces/src/domain/repositories/IUserSpaceMembershipRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "target": "file:packages/spaces/src/infra/repositories/SpaceRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "target": "file:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "target": "file:packages/spaces/src/infra/schemas/SpaceSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "target": "file:packages/spaces/src/infra/schemas/UserSpaceMembershipSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "target": "class:packages/spaces/src/infra/repositories/SpacesRepositories.ts:SpacesRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "target": "class:packages/spaces/src/infra/repositories/SpacesRepositories.ts:SpacesRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts",
+      "target": "file:packages/spaces/src/domain/repositories/IUserSpaceMembershipRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts",
+      "target": "file:packages/spaces/src/infra/schemas/UserSpaceMembershipSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts",
+      "target": "class:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts:UserSpaceMembershipRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts",
+      "target": "class:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts:UserSpaceMembershipRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/infra/schemas/index.ts",
+      "target": "file:packages/spaces/src/infra/schemas/SpaceSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/infra/schemas/index.ts",
+      "target": "file:packages/spaces/src/infra/schemas/UserSpaceMembershipSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/spaces/src/domain/errors/MemberNotFoundError.ts:MemberNotFoundError",
+      "target": "class:packages/spaces/src/domain/errors/SpacesError.ts:SpacesError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts:DefaultSpaceNotFoundError",
+      "target": "class:packages/spaces/src/domain/errors/SpacesInternalError.ts:SpacesInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/spaces/src/domain/errors/SpaceNotFoundError.ts:SpaceNotFoundError",
+      "target": "class:packages/spaces/src/domain/errors/SpacesError.ts:SpacesError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/spaces/src/domain/errors/SpaceSlugConflictError.ts:SpaceSlugConflictError",
+      "target": "class:packages/spaces/src/domain/errors/SpacesError.ts:SpacesError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/spaces/src/domain/errors/InvalidSpaceNameError.ts:InvalidSpaceNameError",
+      "target": "class:packages/spaces/src/domain/errors/SpacesError.ts:SpacesError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/spaces/src/infra/repositories/SpacesRepositories.ts:SpacesRepositories",
+      "target": "class:packages/spaces/src/infra/repositories/SpaceRepository.ts:SpaceRepository",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/infra/repositories/SpacesRepositories.ts:SpacesRepositories",
+      "target": "class:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts:UserSpaceMembershipRepository",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/SpaceRepository.ts",
+      "target": "file:packages/spaces/src/infra/schemas/SpaceSchema.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/spaces/src/infra/repositories/UserSpaceMembershipRepository.ts",
+      "target": "file:packages/spaces/src/infra/schemas/UserSpaceMembershipSchema.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

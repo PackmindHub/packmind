@@ -1,0 +1,723 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/llm/src/LlmHexa.ts",
+      "type": "file",
+      "name": "LlmHexa.ts",
+      "filePath": "packages/llm/src/LlmHexa.ts",
+      "summary": "Hexa entry point for the LLM domain package: wires the LlmAdapter, exposes it as the ILlmPort and manages its lifecycle.",
+      "tags": [
+        "entry-point",
+        "hexagonal-architecture",
+        "llm",
+        "dependency-injection"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/llm/src/LlmHexa.ts:LlmHexa",
+      "type": "class",
+      "name": "LlmHexa",
+      "filePath": "packages/llm/src/LlmHexa.ts",
+      "lineRange": [14, 83],
+      "summary": "Hexa class extending BaseHexa that creates the LlmAdapter, initializes it with ports and exposes the LLM port.",
+      "tags": ["entry-point", "hexagonal-architecture", "llm", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "type": "file",
+      "name": "LlmAdapter.ts",
+      "filePath": "packages/llm/src/application/adapter/LlmAdapter.ts",
+      "summary": "Application adapter implementing ILlmPort: builds the AI provider repository and delegates every LLM operation (service resolution, connection tests, models, config CRUD, providers) to dedicated use cases.",
+      "tags": ["adapter", "facade", "llm", "hexagonal-architecture", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/llm/src/application/adapter/LlmAdapter.ts:LlmAdapter",
+      "type": "class",
+      "name": "LlmAdapter",
+      "filePath": "packages/llm/src/application/adapter/LlmAdapter.ts",
+      "lineRange": [37, 194],
+      "summary": "Adapter class implementing ILlmPort that instantiates use cases and repository and forwards LLM requests to them.",
+      "tags": ["adapter", "facade", "llm", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts",
+      "type": "file",
+      "name": "GetAiServiceForOrganizationUseCase.ts",
+      "filePath": "packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts",
+      "summary": "Resolves the AIService for an organization from its stored provider configuration, falling back to the Packmind provider when available.",
+      "tags": ["use-case", "llm", "factory", "organization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts:GetAiServiceForOrganizationUseCase",
+      "type": "class",
+      "name": "GetAiServiceForOrganizationUseCase",
+      "filePath": "packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts",
+      "lineRange": [14, 72],
+      "summary": "Loads the org's stored provider config and builds the matching AIService, or Packmind fallback.",
+      "tags": ["use-case", "llm", "factory", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts",
+      "type": "file",
+      "name": "GetAvailableProvidersUseCase.ts",
+      "filePath": "packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts",
+      "summary": "Member use case listing the LLM providers an organization can choose, filtering out the Packmind provider when it is not enabled.",
+      "tags": ["use-case", "llm", "providers", "filtering"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts:GetAvailableProvidersUseCase",
+      "type": "class",
+      "name": "GetAvailableProvidersUseCase",
+      "filePath": "packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts",
+      "lineRange": [16, 61],
+      "summary": "Returns the list of selectable LLM providers filtered by Packmind provider availability.",
+      "tags": ["use-case", "llm", "providers", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts",
+      "type": "file",
+      "name": "GetLLMConfigurationUseCase.ts",
+      "filePath": "packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts",
+      "summary": "Retrieves an organization's LLM configuration as a DTO (provider, models, endpoint, API version), with a Packmind fallback when nothing is stored.",
+      "tags": ["use-case", "llm", "configuration", "dto"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts:GetLLMConfigurationUseCase",
+      "type": "class",
+      "name": "GetLLMConfigurationUseCase",
+      "filePath": "packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts",
+      "lineRange": [20, 129],
+      "summary": "Builds an LLM configuration DTO from stored or fallback configuration.",
+      "tags": ["use-case", "llm", "configuration", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts",
+      "type": "file",
+      "name": "GetModelsUseCase.ts",
+      "filePath": "packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts",
+      "summary": "Member use case that instantiates an LLM service from a supplied config and lists its available models, classifying provider errors.",
+      "tags": ["use-case", "llm", "models", "error-handling"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts:GetModelsUseCase",
+      "type": "class",
+      "name": "GetModelsUseCase",
+      "filePath": "packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts",
+      "lineRange": [17, 80],
+      "summary": "Lists models for a given provider config, returning classified errors on failure.",
+      "tags": ["use-case", "llm", "models", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/llm/src/application/useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase.ts",
+      "type": "file",
+      "name": "SaveLLMConfigurationUseCase.ts",
+      "filePath": "packages/llm/src/application/useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase.ts",
+      "summary": "Admin-only use case persisting an organization's LLM provider configuration via the AI provider repository.",
+      "tags": ["use-case", "llm", "configuration", "persistence"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/llm/src/application/useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase.ts:SaveLLMConfigurationUseCase",
+      "type": "class",
+      "name": "SaveLLMConfigurationUseCase",
+      "filePath": "packages/llm/src/application/useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase.ts",
+      "lineRange": [14, 49],
+      "summary": "Saves an LLM configuration for an organization (admin only).",
+      "tags": ["use-case", "llm", "configuration", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts",
+      "type": "file",
+      "name": "TestLLMConnectionUseCase.ts",
+      "filePath": "packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts",
+      "summary": "Member use case that validates an unsaved LLM configuration by sending a test prompt to the main and fast models and reporting classified errors.",
+      "tags": ["use-case", "llm", "connection-test", "error-handling"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts:TestLLMConnectionUseCase",
+      "type": "class",
+      "name": "TestLLMConnectionUseCase",
+      "filePath": "packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts",
+      "lineRange": [22, 170],
+      "summary": "Tests a provider config by prompting standard and fast models.",
+      "tags": ["use-case", "llm", "connection-test", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts",
+      "type": "file",
+      "name": "TestSavedLLMConfigurationUseCase.ts",
+      "filePath": "packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts",
+      "summary": "Admin use case that tests an organization's stored LLM configuration (or Packmind fallback) against both standard and fast models, handling unreadable secrets.",
+      "tags": ["use-case", "llm", "connection-test", "configuration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts:TestSavedLLMConfigurationUseCase",
+      "type": "class",
+      "name": "TestSavedLLMConfigurationUseCase",
+      "filePath": "packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts",
+      "lineRange": [29, 256],
+      "summary": "Tests the stored provider config of an organization, including fallback and unreadable secret handling.",
+      "tags": ["use-case", "llm", "connection-test", "class"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/llm/src/application/useCases/utils.ts",
+      "type": "file",
+      "name": "utils.ts",
+      "filePath": "packages/llm/src/application/useCases/utils.ts",
+      "summary": "Helper determining whether the Packmind-hosted AI provider is available (proprietary edition plus feature config flag).",
+      "tags": ["utility", "llm", "edition", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/llm/src/application/useCases/utils.ts:isPackmindProviderAvailable",
+      "type": "function",
+      "name": "isPackmindProviderAvailable",
+      "filePath": "packages/llm/src/application/useCases/utils.ts",
+      "lineRange": [3, 10],
+      "summary": "Returns true when the edition is proprietary and the Packmind AI provider flag is enabled.",
+      "tags": ["utility", "llm", "edition", "function"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/constants/defaultModels.ts",
+      "type": "file",
+      "name": "defaultModels.ts",
+      "filePath": "packages/llm/src/constants/defaultModels.ts",
+      "summary": "Constants for default model names per LLM provider (OpenAI, Anthropic, Gemini) and the default Azure OpenAI API version.",
+      "tags": ["constants", "llm", "configuration", "models"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/domain/errors/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/llm/src/domain/errors/index.ts",
+      "summary": "Barrel re-exporting LLM domain error classes (unknown provider, unsupported model listing, missing ports, Packmind provider errors).",
+      "tags": ["barrel", "errors", "domain", "llm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/domain/repositories/IAIProviderRepository.ts",
+      "type": "file",
+      "name": "IAIProviderRepository.ts",
+      "filePath": "packages/llm/src/domain/repositories/IAIProviderRepository.ts",
+      "summary": "Domain port defining persistence of per-organization AI provider configuration, including a flag for undecryptable secrets.",
+      "tags": ["type-definition", "repository", "port", "domain", "llm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/factories/createLLMService.ts",
+      "type": "file",
+      "name": "createLLMService.ts",
+      "filePath": "packages/llm/src/factories/createLLMService.ts",
+      "summary": "Factory that instantiates the concrete AIService implementation matching an LLMServiceConfig provider.",
+      "tags": ["factory", "llm", "providers", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/llm/src/factories/createLLMService.ts:createLLMService",
+      "type": "function",
+      "name": "createLLMService",
+      "filePath": "packages/llm/src/factories/createLLMService.ts",
+      "lineRange": [15, 37],
+      "summary": "Switches on provider type to instantiate the corresponding AIService implementation.",
+      "tags": ["factory", "llm", "providers", "function"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/llm/src/LlmHexa.ts",
+      "target": "class:packages/llm/src/LlmHexa.ts:LlmHexa",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/LlmHexa.ts",
+      "target": "class:packages/llm/src/LlmHexa.ts:LlmHexa",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "class:packages/llm/src/application/adapter/LlmAdapter.ts:LlmAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "class:packages/llm/src/application/adapter/LlmAdapter.ts:LlmAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts:GetAiServiceForOrganizationUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts:GetAiServiceForOrganizationUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts:GetAvailableProvidersUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts:GetAvailableProvidersUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts:GetLLMConfigurationUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts:GetLLMConfigurationUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts:GetModelsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts:GetModelsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase.ts:SaveLLMConfigurationUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase.ts:SaveLLMConfigurationUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts:TestLLMConnectionUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts:TestLLMConnectionUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts:TestSavedLLMConfigurationUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts",
+      "target": "class:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts:TestSavedLLMConfigurationUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/utils.ts",
+      "target": "function:packages/llm/src/application/useCases/utils.ts:isPackmindProviderAvailable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/utils.ts",
+      "target": "function:packages/llm/src/application/useCases/utils.ts:isPackmindProviderAvailable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/factories/createLLMService.ts",
+      "target": "function:packages/llm/src/factories/createLLMService.ts:createLLMService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/factories/createLLMService.ts",
+      "target": "function:packages/llm/src/factories/createLLMService.ts:createLLMService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/LlmHexa.ts",
+      "target": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/application/useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/domain/repositories/IAIProviderRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/infra/repositories/AIProviderRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/adapter/LlmAdapter.ts",
+      "target": "file:packages/llm/src/infra/schemas/AIProviderSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts",
+      "target": "file:packages/llm/src/application/useCases/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts",
+      "target": "file:packages/llm/src/domain/repositories/IAIProviderRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts",
+      "target": "file:packages/llm/src/factories/createLLMService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts",
+      "target": "file:packages/llm/src/application/useCases/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts",
+      "target": "file:packages/llm/src/application/useCases/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts",
+      "target": "file:packages/llm/src/domain/repositories/IAIProviderRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts",
+      "target": "file:packages/llm/src/factories/createLLMService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts",
+      "target": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/saveLLMConfiguration/SaveLLMConfigurationUseCase.ts",
+      "target": "file:packages/llm/src/domain/repositories/IAIProviderRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts",
+      "target": "file:packages/llm/src/factories/createLLMService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts",
+      "target": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts",
+      "target": "file:packages/llm/src/application/useCases/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts",
+      "target": "file:packages/llm/src/domain/repositories/IAIProviderRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts",
+      "target": "file:packages/llm/src/factories/createLLMService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts",
+      "target": "file:packages/llm/src/infra/services/classifyProviderError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/factories/createLLMService.ts",
+      "target": "file:packages/llm/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/factories/createLLMService.ts",
+      "target": "file:packages/llm/src/infra/services/AnthropicService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/factories/createLLMService.ts",
+      "target": "file:packages/llm/src/infra/services/AzureOpenAIService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/factories/createLLMService.ts",
+      "target": "file:packages/llm/src/infra/services/GeminiService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/factories/createLLMService.ts",
+      "target": "file:packages/llm/src/infra/services/OpenAIAPICompatibleService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/factories/createLLMService.ts",
+      "target": "file:packages/llm/src/infra/services/OpenAIService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/factories/createLLMService.ts",
+      "target": "file:packages/llm/src/infra/services/PackmindService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/src/factories/createLLMService.ts",
+      "target": "file:packages/llm/src/types/LLMServiceConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts:GetAiServiceForOrganizationUseCase",
+      "target": "function:packages/llm/src/factories/createLLMService.ts:createLLMService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts:GetModelsUseCase",
+      "target": "function:packages/llm/src/factories/createLLMService.ts:createLLMService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts:TestLLMConnectionUseCase",
+      "target": "function:packages/llm/src/factories/createLLMService.ts:createLLMService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts:TestSavedLLMConfigurationUseCase",
+      "target": "function:packages/llm/src/factories/createLLMService.ts:createLLMService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/getModels/GetModelsUseCase.ts:GetModelsUseCase",
+      "target": "function:packages/llm/src/infra/services/classifyProviderError.ts:classifyProviderError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/testLLMConnection/TestLLMConnectionUseCase.ts:TestLLMConnectionUseCase",
+      "target": "function:packages/llm/src/infra/services/classifyProviderError.ts:classifyProviderError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts:TestSavedLLMConfigurationUseCase",
+      "target": "function:packages/llm/src/infra/services/classifyProviderError.ts:classifyProviderError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/getAiServiceForOrganization/GetAiServiceForOrganizationUseCase.ts:GetAiServiceForOrganizationUseCase",
+      "target": "function:packages/llm/src/application/useCases/utils.ts:isPackmindProviderAvailable",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/getAvailableProviders/GetAvailableProvidersUseCase.ts:GetAvailableProvidersUseCase",
+      "target": "function:packages/llm/src/application/useCases/utils.ts:isPackmindProviderAvailable",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/getLLMConfiguration/GetLLMConfigurationUseCase.ts:GetLLMConfigurationUseCase",
+      "target": "function:packages/llm/src/application/useCases/utils.ts:isPackmindProviderAvailable",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/llm/src/application/useCases/testSavedLLMConfiguration/TestSavedLLMConfigurationUseCase.ts:TestSavedLLMConfigurationUseCase",
+      "target": "function:packages/llm/src/application/useCases/utils.ts:isPackmindProviderAvailable",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

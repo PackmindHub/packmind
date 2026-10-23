@@ -1,0 +1,272 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "type": "file",
+      "name": "PackageContentResolver.ts",
+      "filePath": "packages/deployments/src/application/services/PackageContentResolver.ts",
+      "summary": "Resolves a set of package version specs into concrete artifact content, either from the live package or from a released version, memoizing artifact reads and merging the three component families.",
+      "tags": ["service", "package-resolution", "versioning", "memoization"],
+      "complexity": "complex",
+      "languageNotes": "Caches promises (not values) per key so concurrent callers share a single in-flight read."
+    },
+    {
+      "id": "class:packages/deployments/src/application/services/PackageContentResolver.ts:PackageContentResolver",
+      "type": "class",
+      "name": "PackageContentResolver",
+      "filePath": "packages/deployments/src/application/services/PackageContentResolver.ts",
+      "lineRange": [100, 348],
+      "summary": "Resolves packages at requested versions into artifact content, from live packages or releases.",
+      "tags": ["class", "service", "package-resolution", "versioning"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/PackageContentResolver.ts:once",
+      "type": "function",
+      "name": "once",
+      "filePath": "packages/deployments/src/application/services/PackageContentResolver.ts",
+      "lineRange": [34, 44],
+      "summary": "Memoizes an async loader per key by caching the promise.",
+      "tags": ["function", "utility", "package-resolution", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/PackageContentResolver.ts:highestVersionOf",
+      "type": "function",
+      "name": "highestVersionOf",
+      "filePath": "packages/deployments/src/application/services/PackageContentResolver.ts",
+      "lineRange": [351, 370],
+      "summary": "Returns the highest release version from a list by parsed semver triple.",
+      "tags": ["function", "utility", "package-resolution", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/PackageContentResolver.ts:sortVersionsLatestFirst",
+      "type": "function",
+      "name": "sortVersionsLatestFirst",
+      "filePath": "packages/deployments/src/application/services/PackageContentResolver.ts",
+      "lineRange": [373, 382],
+      "summary": "Sorts release versions in descending semver order.",
+      "tags": ["function", "utility", "package-resolution", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/PackageContentResolver.ts:readPackageVersionSpec",
+      "type": "function",
+      "name": "readPackageVersionSpec",
+      "filePath": "packages/deployments/src/application/services/PackageContentResolver.ts",
+      "lineRange": [392, 408],
+      "summary": "Parses a package version spec from packmind.json, rejecting invalid specs.",
+      "tags": ["function", "utility", "package-resolution", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/services/PackageReleaseService.ts",
+      "type": "file",
+      "name": "PackageReleaseService.ts",
+      "filePath": "packages/deployments/src/application/services/PackageReleaseService.ts",
+      "summary": "Service over the package release repository: cuts releases with resolved component versions, lists releases, and finds releases by version, highest version or content.",
+      "tags": ["service", "package-release", "versioning", "repository-access"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/services/PackageReleaseService.ts:PackageReleaseService",
+      "type": "class",
+      "name": "PackageReleaseService",
+      "filePath": "packages/deployments/src/application/services/PackageReleaseService.ts",
+      "lineRange": [16, 155],
+      "summary": "Creates and queries package releases.",
+      "tags": ["class", "service", "package-release", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/services/PackageService.ts",
+      "type": "file",
+      "name": "PackageService.ts",
+      "filePath": "packages/deployments/src/application/services/PackageService.ts",
+      "summary": "Package domain service handling lookups by id, space, organization and slug (with artefacts or standards), plus package creation, update and deletion.",
+      "tags": ["service", "packages", "repository-access", "crud"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/application/services/PackageService.ts:PackageService",
+      "type": "class",
+      "name": "PackageService",
+      "filePath": "packages/deployments/src/application/services/PackageService.ts",
+      "lineRange": [21, 398],
+      "summary": "Queries and mutates packages and their artefacts.",
+      "tags": ["class", "service", "packages", "repository-access"],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "class:packages/deployments/src/application/services/PackageContentResolver.ts:PackageContentResolver",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "class:packages/deployments/src/application/services/PackageContentResolver.ts:PackageContentResolver",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "function:packages/deployments/src/application/services/PackageContentResolver.ts:once",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "function:packages/deployments/src/application/services/PackageContentResolver.ts:highestVersionOf",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "function:packages/deployments/src/application/services/PackageContentResolver.ts:highestVersionOf",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "function:packages/deployments/src/application/services/PackageContentResolver.ts:sortVersionsLatestFirst",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "function:packages/deployments/src/application/services/PackageContentResolver.ts:sortVersionsLatestFirst",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "function:packages/deployments/src/application/services/PackageContentResolver.ts:readPackageVersionSpec",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "function:packages/deployments/src/application/services/PackageContentResolver.ts:readPackageVersionSpec",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "file:packages/deployments/src/application/services/PackageReleaseService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "file:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "file:packages/deployments/src/domain/errors/InvalidPackageVersionSpecError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageContentResolver.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageVersionNotAvailableError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageReleaseService.ts",
+      "target": "class:packages/deployments/src/application/services/PackageReleaseService.ts:PackageReleaseService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageReleaseService.ts",
+      "target": "class:packages/deployments/src/application/services/PackageReleaseService.ts:PackageReleaseService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageReleaseService.ts",
+      "target": "file:packages/deployments/src/application/services/packageReleaseResolution.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageReleaseService.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageReleaseRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageService.ts",
+      "target": "class:packages/deployments/src/application/services/PackageService.ts:PackageService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageService.ts",
+      "target": "class:packages/deployments/src/application/services/PackageService.ts:PackageService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageService.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageService.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageReloadFailedError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackageService.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/services/PackageReleaseService.ts:PackageReleaseService",
+      "target": "function:packages/deployments/src/application/services/packageReleaseResolution.ts:resolveLatestComponentVersions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/services/PackageContentResolver.ts:PackageContentResolver",
+      "target": "class:packages/deployments/src/application/services/PackageReleaseService.ts:PackageReleaseService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

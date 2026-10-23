@@ -1,0 +1,692 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts",
+      "type": "file",
+      "name": "ActivateUserAccountUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts",
+      "summary": "Use case that activates an invited user's account from an invitation token, setting the password and removing the invitation.",
+      "tags": ["use-case", "invitation", "activation", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts:ActivateUserAccountUseCase",
+      "type": "class",
+      "name": "ActivateUserAccountUseCase",
+      "filePath": "packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts",
+      "lineRange": [20, 132],
+      "summary": "Activates invited user accounts from invitation tokens.",
+      "tags": ["use-case", "invitation", "activation", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts",
+      "type": "file",
+      "name": "ChangeUserRoleUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts",
+      "summary": "Admin-only use case changing a member's role within an organization, guarding against self-demotion.",
+      "tags": ["use-case", "authorization", "roles", "admin"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts:ChangeUserRoleUseCase",
+      "type": "class",
+      "name": "ChangeUserRoleUseCase",
+      "filePath": "packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts",
+      "lineRange": [21, 102],
+      "summary": "Admin use case changing a user's role in an organization.",
+      "tags": ["use-case", "authorization", "roles", "admin"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase.ts",
+      "type": "file",
+      "name": "CheckEmailAvailabilityUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase.ts",
+      "summary": "Use case reporting whether an email address is free for sign-up via case-insensitive user lookup.",
+      "tags": ["use-case", "validation", "sign-up", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase.ts:CheckEmailAvailabilityUseCase",
+      "type": "class",
+      "name": "CheckEmailAvailabilityUseCase",
+      "filePath": "packages/accounts/src/application/useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase.ts",
+      "lineRange": [11, 51],
+      "summary": "Checks whether an email is available for registration.",
+      "tags": ["use-case", "validation", "sign-up", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts",
+      "type": "file",
+      "name": "CreateCliLoginCodeUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts",
+      "summary": "Use case generating a short-lived one-time code used by the CLI browser login flow.",
+      "tags": ["use-case", "cli", "authentication", "login-code"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts:CreateCliLoginCodeUseCase",
+      "type": "class",
+      "name": "CreateCliLoginCodeUseCase",
+      "filePath": "packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts",
+      "lineRange": [19, 51],
+      "summary": "Creates a temporary CLI login code for a user.",
+      "tags": ["use-case", "cli", "authentication", "login-code"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts",
+      "type": "file",
+      "name": "CreateInvitationsUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts",
+      "summary": "Admin use case that normalizes emails and either adds existing users directly to the organization or creates invitations, adding members to the default space and returning per-email results.",
+      "tags": ["use-case", "invitation", "admin", "organization", "membership"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts:CreateInvitationsUseCase",
+      "type": "class",
+      "name": "CreateInvitationsUseCase",
+      "filePath": "packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts",
+      "lineRange": [31, 413],
+      "summary": "Admin use case inviting users to an organization by email.",
+      "tags": ["use-case", "invitation", "admin", "organization"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts",
+      "type": "file",
+      "name": "CreateOrganizationUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts",
+      "summary": "Use case creating an organization, adding the creator as admin and emitting organization-created events.",
+      "tags": ["use-case", "organization", "domain-events", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts:CreateOrganizationUseCase",
+      "type": "class",
+      "name": "CreateOrganizationUseCase",
+      "filePath": "packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts",
+      "lineRange": [24, 124],
+      "summary": "Creates an organization and makes the requesting user its admin.",
+      "tags": ["use-case", "organization", "domain-events", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "type": "file",
+      "name": "ExchangeCliLoginCodeUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "summary": "Use case exchanging a CLI login code for a freshly generated API key, deleting the consumed code.",
+      "tags": ["use-case", "cli", "authentication", "api-key"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts:ExchangeCliLoginCodeUseCase",
+      "type": "class",
+      "name": "ExchangeCliLoginCodeUseCase",
+      "filePath": "packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "lineRange": [25, 107],
+      "summary": "Exchanges a CLI login code for an API key.",
+      "tags": ["use-case", "cli", "authentication", "api-key"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts",
+      "type": "file",
+      "name": "GenerateApiKeyUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts",
+      "summary": "Use case generating a new API key for the current user and organization, emitting an analytics event.",
+      "tags": ["use-case", "api-key", "authentication", "security"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts:GenerateApiKeyUseCase",
+      "type": "class",
+      "name": "GenerateApiKeyUseCase",
+      "filePath": "packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts",
+      "lineRange": [25, 99],
+      "summary": "Generates an API key for the current user.",
+      "tags": ["use-case", "api-key", "authentication", "security"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts",
+      "type": "file",
+      "name": "GenerateUserTokenUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts",
+      "summary": "Use case producing a user/organization token payload used to sign JWT session tokens.",
+      "tags": ["use-case", "authentication", "jwt", "token"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts:GenerateUserTokenUseCase",
+      "type": "class",
+      "name": "GenerateUserTokenUseCase",
+      "filePath": "packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts",
+      "lineRange": [14, 51],
+      "summary": "Builds a user token payload for an organization membership.",
+      "tags": ["use-case", "authentication", "jwt", "token"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/getCurrentApiKey/GetCurrentApiKeyUseCase.ts",
+      "type": "file",
+      "name": "GetCurrentApiKeyUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/getCurrentApiKey/GetCurrentApiKeyUseCase.ts",
+      "summary": "Thin use case returning the expiration information of the user's current API key.",
+      "tags": ["use-case", "api-key", "query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/getCurrentApiKey/GetCurrentApiKeyUseCase.ts:GetCurrentApiKeyUseCase",
+      "type": "class",
+      "name": "GetCurrentApiKeyUseCase",
+      "filePath": "packages/accounts/src/application/useCases/getCurrentApiKey/GetCurrentApiKeyUseCase.ts",
+      "lineRange": [10, 28],
+      "summary": "Returns current API key expiration details.",
+      "tags": ["use-case", "api-key", "query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/getOrganizationById/GetOrganizationByIdUseCase.ts",
+      "type": "file",
+      "name": "GetOrganizationByIdUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/getOrganizationById/GetOrganizationByIdUseCase.ts",
+      "summary": "Query use case fetching an organization by its id.",
+      "tags": ["use-case", "organization", "query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/getOrganizationById/GetOrganizationByIdUseCase.ts:GetOrganizationByIdUseCase",
+      "type": "class",
+      "name": "GetOrganizationByIdUseCase",
+      "filePath": "packages/accounts/src/application/useCases/getOrganizationById/GetOrganizationByIdUseCase.ts",
+      "lineRange": [11, 48],
+      "summary": "Fetches an organization by id.",
+      "tags": ["use-case", "organization", "query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/getOrganizationByName/GetOrganizationByNameUseCase.ts",
+      "type": "file",
+      "name": "GetOrganizationByNameUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/getOrganizationByName/GetOrganizationByNameUseCase.ts",
+      "summary": "Query use case fetching an organization by its name.",
+      "tags": ["use-case", "organization", "query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/getOrganizationByName/GetOrganizationByNameUseCase.ts:GetOrganizationByNameUseCase",
+      "type": "class",
+      "name": "GetOrganizationByNameUseCase",
+      "filePath": "packages/accounts/src/application/useCases/getOrganizationByName/GetOrganizationByNameUseCase.ts",
+      "lineRange": [12, 56],
+      "summary": "Fetches an organization by name.",
+      "tags": ["use-case", "organization", "query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase.ts",
+      "type": "file",
+      "name": "GetOrganizationBySlugUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase.ts",
+      "summary": "Query use case fetching an organization by its URL slug.",
+      "tags": ["use-case", "organization", "query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase.ts:GetOrganizationBySlugUseCase",
+      "type": "class",
+      "name": "GetOrganizationBySlugUseCase",
+      "filePath": "packages/accounts/src/application/useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase.ts",
+      "lineRange": [11, 48],
+      "summary": "Fetches an organization by slug.",
+      "tags": ["use-case", "organization", "query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/getUserById/GetUserByIdUseCase.ts",
+      "type": "file",
+      "name": "GetUserByIdUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/getUserById/GetUserByIdUseCase.ts",
+      "summary": "Query use case fetching a user by id.",
+      "tags": ["use-case", "user-management", "query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/getUserById/GetUserByIdUseCase.ts:GetUserByIdUseCase",
+      "type": "class",
+      "name": "GetUserByIdUseCase",
+      "filePath": "packages/accounts/src/application/useCases/getUserById/GetUserByIdUseCase.ts",
+      "lineRange": [11, 38],
+      "summary": "Fetches a user by id.",
+      "tags": ["use-case", "user-management", "query", "accounts"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts:ActivateUserAccountUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts:ActivateUserAccountUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/InvitationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts",
+      "target": "file:packages/accounts/src/domain/entities/Invitation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts:ChangeUserRoleUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts:ChangeUserRoleUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase.ts:CheckEmailAvailabilityUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase.ts:CheckEmailAvailabilityUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts:CreateCliLoginCodeUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts:CreateCliLoginCodeUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts",
+      "target": "file:packages/accounts/src/domain/entities/CliLoginCode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts",
+      "target": "file:packages/accounts/src/domain/repositories/ICliLoginCodeRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts:CreateInvitationsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts:CreateInvitationsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/InvitationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts:CreateOrganizationUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts:CreateOrganizationUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts:ExchangeCliLoginCodeUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts:ExchangeCliLoginCodeUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "target": "file:packages/accounts/src/domain/entities/CliLoginCode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "target": "file:packages/accounts/src/domain/repositories/ICliLoginCodeRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts:GenerateApiKeyUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts:GenerateApiKeyUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts:GenerateUserTokenUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts:GenerateUserTokenUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getCurrentApiKey/GetCurrentApiKeyUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/getCurrentApiKey/GetCurrentApiKeyUseCase.ts:GetCurrentApiKeyUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getCurrentApiKey/GetCurrentApiKeyUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/getCurrentApiKey/GetCurrentApiKeyUseCase.ts:GetCurrentApiKeyUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getOrganizationById/GetOrganizationByIdUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/getOrganizationById/GetOrganizationByIdUseCase.ts:GetOrganizationByIdUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getOrganizationById/GetOrganizationByIdUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/getOrganizationById/GetOrganizationByIdUseCase.ts:GetOrganizationByIdUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getOrganizationById/GetOrganizationByIdUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getOrganizationByName/GetOrganizationByNameUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/getOrganizationByName/GetOrganizationByNameUseCase.ts:GetOrganizationByNameUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getOrganizationByName/GetOrganizationByNameUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/getOrganizationByName/GetOrganizationByNameUseCase.ts:GetOrganizationByNameUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getOrganizationByName/GetOrganizationByNameUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase.ts:GetOrganizationBySlugUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase.ts:GetOrganizationBySlugUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getUserById/GetUserByIdUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/getUserById/GetUserByIdUseCase.ts:GetUserByIdUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getUserById/GetUserByIdUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/getUserById/GetUserByIdUseCase.ts:GetUserByIdUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/getUserById/GetUserByIdUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

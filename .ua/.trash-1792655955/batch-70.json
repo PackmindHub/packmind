@@ -1,0 +1,119 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx",
+      "type": "file",
+      "name": "AnalyticsProvider.tsx",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx",
+      "summary": "OSS edition stub of the analytics React context provider, exposing the no-op Analytics service and a useAnalytics hook.",
+      "tags": ["context-provider", "stub", "analytics", "oss-edition", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx:AnalyticsProvider",
+      "type": "function",
+      "name": "AnalyticsProvider",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx",
+      "lineRange": [6, 14],
+      "summary": "Context provider supplying the no-op Analytics instance to children.",
+      "tags": ["context-provider", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx:useAnalytics",
+      "type": "function",
+      "name": "useAnalytics",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx",
+      "lineRange": [16, 16],
+      "summary": "Hook returning the Analytics instance from context.",
+      "tags": ["hook", "analytics"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/analytics.ts",
+      "type": "file",
+      "name": "analytics.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/analytics.ts",
+      "summary": "No-op analytics service implementation used in the OSS edition in place of Amplitude tracking.",
+      "tags": ["stub", "analytics", "service", "oss-edition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/analytics.ts:NoopAnalyticsService",
+      "type": "class",
+      "name": "NoopAnalyticsService",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/analytics.ts",
+      "lineRange": [8, 51],
+      "summary": "Implements the analytics API (init, track, setUserId, organization groups...) with empty methods.",
+      "tags": ["stub", "service", "null-object"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/types.ts",
+      "type": "file",
+      "name": "types.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/types.ts",
+      "summary": "Type definitions for the analytics layer: the typed event map of tracked product events, event names, options and user properties.",
+      "tags": ["type-definition", "analytics", "events", "oss-edition"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx:AnalyticsProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx:AnalyticsProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx:useAnalytics",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx:useAnalytics",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/analytics.ts",
+      "target": "class:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/analytics.ts:NoopAnalyticsService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx",
+      "target": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/analytics.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/analytics.ts",
+      "target": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "direction": "forward",
+      "source": "function:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/AnalyticsProvider.tsx:useAnalytics",
+      "target": "file:apps/frontend/src/domain/editions/stubs/domain/amplitude/providers/analytics.ts",
+      "type": "depends_on",
+      "weight": 0.6
+    }
+  ]
+}

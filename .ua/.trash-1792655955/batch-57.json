@@ -1,0 +1,858 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/node-utils/src/application/AbstractAdminUseCase.ts",
+      "type": "file",
+      "name": "AbstractAdminUseCase.ts",
+      "filePath": "packages/node-utils/src/application/AbstractAdminUseCase.ts",
+      "summary": "Base use case restricting execution to organization admins; extends AbstractMemberUseCase and rejects non-admin members with OrganizationAdminRequiredError.",
+      "tags": [
+        "use-case",
+        "authorization",
+        "base-class",
+        "hexagonal-architecture"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Generic abstract class chaining Template Method overrides (executeForMembers -> executeForAdmins)."
+    },
+    {
+      "id": "file:packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "type": "file",
+      "name": "AbstractMemberUseCase.ts",
+      "filePath": "packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "summary": "Core base class for organization-member use cases: resolves user, organization and membership via IAccountsPort, wraps execution in an OpenTelemetry span, and translates access errors.",
+      "tags": ["use-case", "authorization", "base-class", "observability"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+      "type": "file",
+      "name": "AbstractSpaceAdminUseCase.ts",
+      "filePath": "packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+      "summary": "Base use case requiring the caller to be an admin of the target space, checked through ISpacesPort on top of organization membership.",
+      "tags": ["use-case", "authorization", "base-class", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+      "type": "file",
+      "name": "AbstractSpaceMemberUseCase.ts",
+      "filePath": "packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+      "summary": "Base use case requiring the caller to be a member of the target space, checked through ISpacesPort on top of organization membership.",
+      "tags": ["use-case", "authorization", "base-class", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "type": "file",
+      "name": "UserAccessErrors.ts",
+      "filePath": "packages/node-utils/src/application/UserAccessErrors.ts",
+      "summary": "Defines the hierarchy of user-access domain errors (user not found, not in organization, admin required, missing organization, internal) thrown by the member/admin use case base classes.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "authorization",
+        "type-definition"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "type": "file",
+      "name": "instrumentMethods.ts",
+      "filePath": "packages/node-utils/src/observability/instrumentMethods.ts",
+      "summary": "Observability helper that walks an instance's prototype chain and wraps every async method in an OpenTelemetry span, with bulk helpers for components and use cases and an env-var kill switch.",
+      "tags": [
+        "observability",
+        "tracing",
+        "opentelemetry",
+        "utility",
+        "metaprogramming"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Uses Symbol.for markers to avoid double-patching across module copies and compares against the AsyncFunction constructor by identity."
+    },
+    {
+      "id": "file:packages/node-utils/src/observability/withSpan.ts",
+      "type": "file",
+      "name": "withSpan.ts",
+      "filePath": "packages/node-utils/src/observability/withSpan.ts",
+      "summary": "Small helper that runs an async function inside an active OpenTelemetry span, recording exceptions and status.",
+      "tags": ["observability", "tracing", "opentelemetry", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/repositories/AbstractRepository.ts",
+      "type": "file",
+      "name": "AbstractRepository.ts",
+      "filePath": "packages/node-utils/src/repositories/AbstractRepository.ts",
+      "summary": "Generic TypeORM base repository providing add/addMany, find, soft/hard delete and restore operations with logging, duplicate-key error handling and automatic method instrumentation.",
+      "tags": [
+        "repository",
+        "data-access",
+        "typeorm",
+        "base-class",
+        "soft-delete"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/node-utils/src/repositories/OrganizationScopedRepository.ts",
+      "type": "file",
+      "name": "OrganizationScopedRepository.ts",
+      "filePath": "packages/node-utils/src/repositories/OrganizationScopedRepository.ts",
+      "summary": "Abstract repository extending AbstractRepository that builds query builders scoped to an organization id.",
+      "tags": ["repository", "data-access", "typeorm", "multi-tenancy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/repositories/SpaceScopedRepository.ts",
+      "type": "file",
+      "name": "SpaceScopedRepository.ts",
+      "filePath": "packages/node-utils/src/repositories/SpaceScopedRepository.ts",
+      "summary": "Abstract repository extending AbstractRepository that builds query builders scoped to a space id.",
+      "tags": ["repository", "data-access", "typeorm", "multi-tenancy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/AbstractAdminUseCase.ts:AbstractAdminUseCase",
+      "type": "class",
+      "name": "AbstractAdminUseCase",
+      "filePath": "packages/node-utils/src/application/AbstractAdminUseCase.ts",
+      "lineRange": [18, 83],
+      "summary": "Abstract admin-only use case that validates admin role and delegates to executeForAdmins.",
+      "tags": ["use-case", "authorization", "base-class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/AbstractMemberUseCase.ts:AbstractMemberUseCase",
+      "type": "class",
+      "name": "AbstractMemberUseCase",
+      "filePath": "packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "lineRange": [35, 210],
+      "summary": "Abstract IUseCase implementation that loads user/organization/membership, traces execute in a span and delegates to executeForMembers.",
+      "tags": ["use-case", "authorization", "base-class", "observability"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts:SpaceAdminRequiredError",
+      "type": "class",
+      "name": "SpaceAdminRequiredError",
+      "filePath": "packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+      "lineRange": [16, 27],
+      "summary": "Access error raised when the user is not an admin of the requested space.",
+      "tags": ["error-handling", "domain-error", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts:AbstractSpaceAdminUseCase",
+      "type": "class",
+      "name": "AbstractSpaceAdminUseCase",
+      "filePath": "packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+      "lineRange": [29, 59],
+      "summary": "Abstract use case that verifies space admin rights via ISpacesPort before delegating to executeForSpaceAdmins.",
+      "tags": ["use-case", "authorization", "base-class", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts:SpaceMembershipRequiredError",
+      "type": "class",
+      "name": "SpaceMembershipRequiredError",
+      "filePath": "packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+      "lineRange": [15, 26],
+      "summary": "Access error raised when the user is not a member of the requested space.",
+      "tags": ["error-handling", "domain-error", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts:AbstractSpaceMemberUseCase",
+      "type": "class",
+      "name": "AbstractSpaceMemberUseCase",
+      "filePath": "packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+      "lineRange": [28, 58],
+      "summary": "Abstract use case that verifies space membership via ISpacesPort before delegating to executeForSpaceMembers.",
+      "tags": ["use-case", "authorization", "base-class", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessError",
+      "type": "class",
+      "name": "UserAccessError",
+      "filePath": "packages/node-utils/src/application/UserAccessErrors.ts",
+      "lineRange": [27, 44],
+      "summary": "Base domain error for user-access failures carrying user/organization context.",
+      "tags": ["error-handling", "domain-error", "base-class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserNotFoundError",
+      "type": "class",
+      "name": "UserNotFoundError",
+      "filePath": "packages/node-utils/src/application/UserAccessErrors.ts",
+      "lineRange": [46, 56],
+      "summary": "Error raised when the requesting user does not exist.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserNotInOrganizationError",
+      "type": "class",
+      "name": "UserNotInOrganizationError",
+      "filePath": "packages/node-utils/src/application/UserAccessErrors.ts",
+      "lineRange": [63, 73],
+      "summary": "Error raised when the user is not a member of the target organization.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/UserAccessErrors.ts:OrganizationAdminRequiredError",
+      "type": "class",
+      "name": "OrganizationAdminRequiredError",
+      "filePath": "packages/node-utils/src/application/UserAccessErrors.ts",
+      "lineRange": [75, 85],
+      "summary": "Error raised when a non-admin attempts an admin-only operation.",
+      "tags": ["error-handling", "domain-error", "authorization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/UserAccessErrors.ts:MembershipOrganizationNotFoundError",
+      "type": "class",
+      "name": "MembershipOrganizationNotFoundError",
+      "filePath": "packages/node-utils/src/application/UserAccessErrors.ts",
+      "lineRange": [91, 101],
+      "summary": "Error raised when a membership references an organization that cannot be found.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessInternalError",
+      "type": "class",
+      "name": "UserAccessInternalError",
+      "filePath": "packages/node-utils/src/application/UserAccessErrors.ts",
+      "lineRange": [105, 114],
+      "summary": "Internal error wrapping unexpected failures during access validation.",
+      "tags": ["error-handling", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/repositories/AbstractRepository.ts:AbstractRepository",
+      "type": "class",
+      "name": "AbstractRepository",
+      "filePath": "packages/node-utils/src/repositories/AbstractRepository.ts",
+      "lineRange": [22, 311],
+      "summary": "Generic base repository over TypeORM with CRUD, soft-delete/restore, duplicate-key handling and logging.",
+      "tags": ["repository", "typeorm", "base-class", "soft-delete"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/node-utils/src/repositories/OrganizationScopedRepository.ts:OrganizationScopedRepository",
+      "type": "class",
+      "name": "OrganizationScopedRepository",
+      "filePath": "packages/node-utils/src/repositories/OrganizationScopedRepository.ts",
+      "lineRange": [6, 32],
+      "summary": "Repository base adding organization-scoped query builder helpers.",
+      "tags": ["repository", "typeorm", "multi-tenancy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/repositories/SpaceScopedRepository.ts:SpaceScopedRepository",
+      "type": "class",
+      "name": "SpaceScopedRepository",
+      "filePath": "packages/node-utils/src/repositories/SpaceScopedRepository.ts",
+      "lineRange": [6, 32],
+      "summary": "Repository base adding space-scoped query builder helpers.",
+      "tags": ["repository", "typeorm", "multi-tenancy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentMethods",
+      "type": "function",
+      "name": "instrumentMethods",
+      "filePath": "packages/node-utils/src/observability/instrumentMethods.ts",
+      "lineRange": [65, 81],
+      "summary": "Patches every async method on an instance's prototype chain to emit a span, honoring a skip list.",
+      "tags": ["observability", "tracing", "instrumentation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentComponents",
+      "type": "function",
+      "name": "instrumentComponents",
+      "filePath": "packages/node-utils/src/observability/instrumentMethods.ts",
+      "lineRange": [95, 104],
+      "summary": "Applies instrumentMethods to each component in a collection.",
+      "tags": ["observability", "tracing", "instrumentation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentUseCase",
+      "type": "function",
+      "name": "instrumentUseCase",
+      "filePath": "packages/node-utils/src/observability/instrumentMethods.ts",
+      "lineRange": [118, 121],
+      "summary": "Instruments a single use case instance and returns it.",
+      "tags": ["observability", "tracing", "instrumentation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentUseCases",
+      "type": "function",
+      "name": "instrumentUseCases",
+      "filePath": "packages/node-utils/src/observability/instrumentMethods.ts",
+      "lineRange": [146, 158],
+      "summary": "Instruments every use case in a record/map of use cases.",
+      "tags": ["observability", "tracing", "instrumentation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/observability/instrumentMethods.ts:patchPrototype",
+      "type": "function",
+      "name": "patchPrototype",
+      "filePath": "packages/node-utils/src/observability/instrumentMethods.ts",
+      "lineRange": [160, 200],
+      "summary": "Wraps async own methods of one prototype with span-producing wrappers, marking it as instrumented.",
+      "tags": ["observability", "tracing", "instrumentation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrument",
+      "type": "function",
+      "name": "instrument",
+      "filePath": "packages/node-utils/src/observability/instrumentMethods.ts",
+      "lineRange": [202, 224],
+      "summary": "Builds the wrapper function that runs the original method inside withSpan named Class.method.",
+      "tags": ["observability", "tracing", "instrumentation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/observability/withSpan.ts:withSpan",
+      "type": "function",
+      "name": "withSpan",
+      "filePath": "packages/node-utils/src/observability/withSpan.ts",
+      "lineRange": [21, 46],
+      "summary": "Starts an active span, runs the callback with it, records exceptions and ends the span.",
+      "tags": ["observability", "tracing", "opentelemetry"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/node-utils/src/application/AbstractAdminUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractAdminUseCase.ts:AbstractAdminUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractAdminUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractAdminUseCase.ts:AbstractAdminUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/AbstractAdminUseCase.ts:AbstractAdminUseCase",
+      "target": "class:packages/node-utils/src/application/AbstractMemberUseCase.ts:AbstractMemberUseCase",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractMemberUseCase.ts:AbstractMemberUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractMemberUseCase.ts:AbstractMemberUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts:SpaceAdminRequiredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts:SpaceAdminRequiredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts:SpaceAdminRequiredError",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts:AbstractSpaceAdminUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts:AbstractSpaceAdminUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts:AbstractSpaceAdminUseCase",
+      "target": "class:packages/node-utils/src/application/AbstractMemberUseCase.ts:AbstractMemberUseCase",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts:SpaceMembershipRequiredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts:SpaceMembershipRequiredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts:SpaceMembershipRequiredError",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts:AbstractSpaceMemberUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+      "target": "class:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts:AbstractSpaceMemberUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts:AbstractSpaceMemberUseCase",
+      "target": "class:packages/node-utils/src/application/AbstractMemberUseCase.ts:AbstractMemberUseCase",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserNotFoundError",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserNotInOrganizationError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserNotInOrganizationError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserNotInOrganizationError",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:OrganizationAdminRequiredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:OrganizationAdminRequiredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/UserAccessErrors.ts:OrganizationAdminRequiredError",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:MembershipOrganizationNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:MembershipOrganizationNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/UserAccessErrors.ts:MembershipOrganizationNotFoundError",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "target": "class:packages/node-utils/src/application/UserAccessErrors.ts:UserAccessInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/repositories/AbstractRepository.ts",
+      "target": "class:packages/node-utils/src/repositories/AbstractRepository.ts:AbstractRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/repositories/AbstractRepository.ts",
+      "target": "class:packages/node-utils/src/repositories/AbstractRepository.ts:AbstractRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/repositories/OrganizationScopedRepository.ts",
+      "target": "class:packages/node-utils/src/repositories/OrganizationScopedRepository.ts:OrganizationScopedRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/repositories/OrganizationScopedRepository.ts",
+      "target": "class:packages/node-utils/src/repositories/OrganizationScopedRepository.ts:OrganizationScopedRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/repositories/OrganizationScopedRepository.ts:OrganizationScopedRepository",
+      "target": "class:packages/node-utils/src/repositories/AbstractRepository.ts:AbstractRepository",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/repositories/SpaceScopedRepository.ts",
+      "target": "class:packages/node-utils/src/repositories/SpaceScopedRepository.ts:SpaceScopedRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/repositories/SpaceScopedRepository.ts",
+      "target": "class:packages/node-utils/src/repositories/SpaceScopedRepository.ts:SpaceScopedRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/repositories/SpaceScopedRepository.ts:SpaceScopedRepository",
+      "target": "class:packages/node-utils/src/repositories/AbstractRepository.ts:AbstractRepository",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentMethods",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentMethods",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentComponents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentComponents",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentUseCases",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentUseCases",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:patchPrototype",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrument",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/withSpan.ts",
+      "target": "function:packages/node-utils/src/observability/withSpan.ts:withSpan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/withSpan.ts",
+      "target": "function:packages/node-utils/src/observability/withSpan.ts:withSpan",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrument",
+      "target": "function:packages/node-utils/src/observability/withSpan.ts:withSpan",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentComponents",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentMethods",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentUseCase",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentMethods",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentMethods",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:patchPrototype",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/node-utils/src/observability/instrumentMethods.ts:patchPrototype",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrument",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/AbstractMemberUseCase.ts:AbstractMemberUseCase",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentMethods",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/application/AbstractMemberUseCase.ts:AbstractMemberUseCase",
+      "target": "function:packages/node-utils/src/observability/withSpan.ts:withSpan",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/repositories/AbstractRepository.ts:AbstractRepository",
+      "target": "function:packages/node-utils/src/observability/instrumentMethods.ts:instrumentMethods",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractAdminUseCase.ts",
+      "target": "file:packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractAdminUseCase.ts",
+      "target": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "target": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "target": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "target": "file:packages/node-utils/src/observability/withSpan.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+      "target": "file:packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceAdminUseCase.ts",
+      "target": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+      "target": "file:packages/node-utils/src/application/AbstractMemberUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/application/AbstractSpaceMemberUseCase.ts",
+      "target": "file:packages/node-utils/src/application/UserAccessErrors.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "target": "file:packages/node-utils/src/observability/withSpan.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/repositories/AbstractRepository.ts",
+      "target": "file:packages/node-utils/src/observability/instrumentMethods.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/repositories/OrganizationScopedRepository.ts",
+      "target": "file:packages/node-utils/src/repositories/AbstractRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/repositories/SpaceScopedRepository.ts",
+      "target": "file:packages/node-utils/src/repositories/AbstractRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

@@ -1,0 +1,159 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageInstallSnippets/PackageInstallSnippets.tsx",
+      "type": "file",
+      "name": "PackageInstallSnippets.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageInstallSnippets/PackageInstallSnippets.tsx",
+      "summary": "Shared React component rendering copiable `packmind install @space/package` CLI commands for a package, reused by the package page and context pane.",
+      "tags": ["component", "react", "cli-snippet", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/PackageInstallSnippets/PackageInstallSnippets.tsx:PackageInstallSnippets",
+      "type": "function",
+      "name": "PackageInstallSnippets",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageInstallSnippets/PackageInstallSnippets.tsx",
+      "lineRange": [21, 62],
+      "summary": "Builds install command strings from space and package slugs and renders them as copiable text fields.",
+      "tags": ["component", "react", "cli-snippet"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/SetupSkillsPage.tsx",
+      "type": "file",
+      "name": "SetupSkillsPage.tsx",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupSkillsPage.tsx",
+      "summary": "Setup page listing Packmind default skills (onboard, update playbook...) in a table with their minimum CLI versions and a popover to install them.",
+      "tags": ["component", "react", "page", "skills", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/SetupSkillsPage.tsx:SetupSkillsPage",
+      "type": "function",
+      "name": "SetupSkillsPage",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupSkillsPage.tsx",
+      "lineRange": [62, 108],
+      "summary": "Renders the default skills table and the get-default-skills popover inside a page section.",
+      "tags": ["component", "react", "page"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/GetDefaultSkillsPopover.tsx",
+      "type": "file",
+      "name": "GetDefaultSkillsPopover.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/GetDefaultSkillsPopover.tsx",
+      "summary": "Popover button component showing the CLI command to install Packmind default skills, with configurable button variant, size, label and placement.",
+      "tags": ["component", "react", "popover", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/GetDefaultSkillsPopover.tsx:GetDefaultSkillsPopover",
+      "type": "function",
+      "name": "GetDefaultSkillsPopover",
+      "filePath": "apps/frontend/src/domain/skills/components/GetDefaultSkillsPopover.tsx",
+      "lineRange": [11, 56],
+      "summary": "Renders a trigger button and popover containing a copiable default-skills install command.",
+      "tags": ["component", "react", "popover"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/inputs/CopiableTextField.tsx",
+      "type": "file",
+      "name": "CopiableTextField.tsx",
+      "filePath": "apps/frontend/src/shared/components/inputs/CopiableTextField.tsx",
+      "summary": "Reusable input component combining a text field with a copy-to-clipboard button, optional label and read-only mode.",
+      "tags": ["component", "react", "input", "clipboard", "shared-ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/inputs/CopiableTextField.tsx:CopiableTextField",
+      "type": "function",
+      "name": "CopiableTextField",
+      "filePath": "apps/frontend/src/shared/components/inputs/CopiableTextField.tsx",
+      "lineRange": [20, 75],
+      "summary": "Input group wrapping PMInput with a PMCopiable copy icon button and onCopy callback.",
+      "tags": ["component", "react", "clipboard"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageInstallSnippets/PackageInstallSnippets.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageInstallSnippets/PackageInstallSnippets.tsx:PackageInstallSnippets",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageInstallSnippets/PackageInstallSnippets.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/PackageInstallSnippets/PackageInstallSnippets.tsx:PackageInstallSnippets",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupSkillsPage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupSkillsPage.tsx:SetupSkillsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupSkillsPage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupSkillsPage.tsx:SetupSkillsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/GetDefaultSkillsPopover.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/GetDefaultSkillsPopover.tsx:GetDefaultSkillsPopover",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/GetDefaultSkillsPopover.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/GetDefaultSkillsPopover.tsx:GetDefaultSkillsPopover",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/inputs/CopiableTextField.tsx",
+      "target": "function:apps/frontend/src/shared/components/inputs/CopiableTextField.tsx:CopiableTextField",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/inputs/CopiableTextField.tsx",
+      "target": "function:apps/frontend/src/shared/components/inputs/CopiableTextField.tsx:CopiableTextField",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageInstallSnippets/PackageInstallSnippets.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/CopiableTextField.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupSkillsPage.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/GetDefaultSkillsPopover.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/GetDefaultSkillsPopover.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/CopiableTextField.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

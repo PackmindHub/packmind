@@ -1,0 +1,952 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/application/utils/lockFileUtils.ts",
+      "type": "file",
+      "name": "lockFileUtils.ts",
+      "filePath": "apps/cli/src/application/utils/lockFileUtils.ts",
+      "summary": "Helpers locating the packmind-lock.json entry (and file) that corresponds to a given path.",
+      "tags": ["utility", "lock-file", "paths"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryForPath",
+      "type": "function",
+      "name": "findLockFileEntryForPath",
+      "filePath": "apps/cli/src/application/utils/lockFileUtils.ts",
+      "lineRange": [7, 13],
+      "summary": "Finds the lock file entry owning a path.",
+      "tags": ["lock-file", "lookup", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryAndFileForPath",
+      "type": "function",
+      "name": "findLockFileEntryAndFileForPath",
+      "filePath": "apps/cli/src/application/utils/lockFileUtils.ts",
+      "lineRange": [15, 35],
+      "summary": "Finds lock file entry and matching file record for a normalized path.",
+      "tags": ["lock-file", "lookup", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "type": "file",
+      "name": "normalizePackageSlugs.ts",
+      "filePath": "apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "summary": "Normalizes package slugs to the @space/package form using the default space, both for CLI arguments and packmind.json package maps.",
+      "tags": ["utility", "packages", "normalization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/normalizePackageSlugs.ts:normalizePackageSlugs",
+      "type": "function",
+      "name": "normalizePackageSlugs",
+      "filePath": "apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "lineRange": [3, 22],
+      "summary": "Prefixes unqualified package slugs with the default space slug.",
+      "tags": ["normalization", "packages", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/normalizePackageSlugs.ts:normalizeConfigPackages",
+      "type": "function",
+      "name": "normalizeConfigPackages",
+      "filePath": "apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "lineRange": [36, 59],
+      "summary": "Normalizes package keys in a packmind.json packages map.",
+      "tags": ["normalization", "packages", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/normalizeSemver.ts",
+      "type": "file",
+      "name": "normalizeSemver.ts",
+      "filePath": "apps/cli/src/application/utils/normalizeSemver.ts",
+      "summary": "Single source of truth for stripping the -next prerelease suffix from CLI versions before semver comparisons.",
+      "tags": ["utility", "versioning", "semver"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/normalizeSemver.ts:stripPrerelease",
+      "type": "function",
+      "name": "stripPrerelease",
+      "filePath": "apps/cli/src/application/utils/normalizeSemver.ts",
+      "lineRange": [14, 16],
+      "summary": "Strips -next suffix from a version string.",
+      "tags": ["semver", "versioning", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/parseCommandFile.ts",
+      "type": "file",
+      "name": "parseCommandFile.ts",
+      "filePath": "apps/cli/src/application/utils/parseCommandFile.ts",
+      "summary": "Parses a command markdown file into name and content, resolving the name from frontmatter or a humanized filename slug.",
+      "tags": ["utility", "parsing", "commands", "frontmatter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseCommandFile.ts:parseCommandFile",
+      "type": "function",
+      "name": "parseCommandFile",
+      "filePath": "apps/cli/src/application/utils/parseCommandFile.ts",
+      "lineRange": [11, 50],
+      "summary": "Parses command markdown into name and body.",
+      "tags": ["parsing", "commands", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseCommandFile.ts:extractFrontmatterValue",
+      "type": "function",
+      "name": "extractFrontmatterValue",
+      "filePath": "apps/cli/src/application/utils/parseCommandFile.ts",
+      "lineRange": [59, 68],
+      "summary": "Reads a single frontmatter key value.",
+      "tags": ["parsing", "frontmatter", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseCommandFile.ts:extractFilenameSlug",
+      "type": "function",
+      "name": "extractFilenameSlug",
+      "filePath": "apps/cli/src/application/utils/parseCommandFile.ts",
+      "lineRange": [80, 90],
+      "summary": "Derives a slug from a command filename, removing agent-specific extensions.",
+      "tags": ["parsing", "paths", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/parseLenientStandard.ts",
+      "type": "file",
+      "name": "parseLenientStandard.ts",
+      "filePath": "apps/cli/src/application/utils/parseLenientStandard.ts",
+      "summary": "Lenient parser turning loosely-formatted standard markdown into name, description, scope and rules for staging new standards.",
+      "tags": ["utility", "parsing", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseLenientStandard.ts:parseLenientStandard",
+      "type": "function",
+      "name": "parseLenientStandard",
+      "filePath": "apps/cli/src/application/utils/parseLenientStandard.ts",
+      "lineRange": [9, 109],
+      "summary": "Leniently parses standard markdown into structured fields.",
+      "tags": ["parsing", "standards", "utility"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/parseSkillDirectory.ts",
+      "type": "file",
+      "name": "parseSkillDirectory.ts",
+      "filePath": "apps/cli/src/application/utils/parseSkillDirectory.ts",
+      "summary": "Parses a skill directory's files into a validated NewSkillPayload, requiring SKILL.md frontmatter and mapping supporting files.",
+      "tags": ["utility", "parsing", "skills", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseSkillDirectory.ts:parseSkillDirectory",
+      "type": "function",
+      "name": "parseSkillDirectory",
+      "filePath": "apps/cli/src/application/utils/parseSkillDirectory.ts",
+      "lineRange": [42, 168],
+      "summary": "Builds and validates a NewSkillPayload from skill directory files.",
+      "tags": ["parsing", "skills", "validation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/parseSkillMd.ts",
+      "type": "file",
+      "name": "parseSkillMd.ts",
+      "filePath": "apps/cli/src/application/utils/parseSkillMd.ts",
+      "summary": "Barrel re-exporting parseSkillMd and ParsedSkillMd from @packmind/node-utils.",
+      "tags": ["barrel", "re-export", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "type": "file",
+      "name": "parseStandardMd.ts",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "summary": "Parses standard markdown rendered for any supported agent (Packmind, Claude, Cursor, Continue, Kiro, Copilot) back into name, description, scope and rules, handling agent-specific frontmatter.",
+      "tags": ["utility", "parsing", "standards", "multi-agent"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMd",
+      "type": "function",
+      "name": "parseStandardMd",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [39, 48],
+      "summary": "Parses standard markdown, detecting format from file path.",
+      "tags": ["parsing", "standards", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMdForAgent",
+      "type": "function",
+      "name": "parseStandardMdForAgent",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [73, 78],
+      "summary": "Parses standard markdown using an explicitly specified agent format.",
+      "tags": ["parsing", "standards", "multi-agent"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:parsePackmindStandard",
+      "type": "function",
+      "name": "parsePackmindStandard",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [80, 155],
+      "summary": "Parses Packmind-native standard markdown with headings and rule bullets.",
+      "tags": ["parsing", "standards", "helper"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:extractScopeSection",
+      "type": "function",
+      "name": "extractScopeSection",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [217, 233],
+      "summary": "Extracts the scope section from a standard markdown body.",
+      "tags": ["parsing", "scope", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:extractRulesList",
+      "type": "function",
+      "name": "extractRulesList",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [235, 252],
+      "summary": "Collects rule bullet lines from markdown.",
+      "tags": ["parsing", "rules", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:extractFrontmatter",
+      "type": "function",
+      "name": "extractFrontmatter",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [254, 267],
+      "summary": "Splits YAML frontmatter from body content.",
+      "tags": ["parsing", "frontmatter", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseIdeStandardBody",
+      "type": "function",
+      "name": "parseIdeStandardBody",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [269, 318],
+      "summary": "Parses IDE-agent standard bodies (Cursor/Continue/Kiro/Copilot) into name, description and rules.",
+      "tags": ["parsing", "multi-agent", "helper"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:addFrontmatterFields",
+      "type": "function",
+      "name": "addFrontmatterFields",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [320, 331],
+      "summary": "Merges frontmatter-derived fields such as scope into a parsed standard.",
+      "tags": ["parsing", "frontmatter", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:extractFrontmatterValue",
+      "type": "function",
+      "name": "extractFrontmatterValue",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [333, 343],
+      "summary": "Reads a single frontmatter key value.",
+      "tags": ["parsing", "frontmatter", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:extractScopeFromKey",
+      "type": "function",
+      "name": "extractScopeFromKey",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [355, 372],
+      "summary": "Extracts scope globs from a frontmatter key value.",
+      "tags": ["parsing", "scope", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:normalizeScopeValue",
+      "type": "function",
+      "name": "normalizeScopeValue",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [374, 388],
+      "summary": "Normalizes a scope value into a comma-separated glob list.",
+      "tags": ["parsing", "scope", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/parseStandardMd.ts:splitOutsideBraces",
+      "type": "function",
+      "name": "splitOutsideBraces",
+      "filePath": "apps/cli/src/application/utils/parseStandardMd.ts",
+      "lineRange": [396, 421],
+      "summary": "Splits a string on commas that are not inside glob braces.",
+      "tags": ["parsing", "glob", "helper"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "file",
+      "name": "pathUtils.ts",
+      "filePath": "apps/cli/src/application/utils/pathUtils.ts",
+      "summary": "Path helpers normalizing separators, checking path prefixes and resolving skill directory paths.",
+      "tags": ["utility", "paths", "cross-platform"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "function",
+      "name": "normalizePath",
+      "filePath": "apps/cli/src/application/utils/pathUtils.ts",
+      "lineRange": [9, 11],
+      "summary": "Converts backslashes to forward slashes.",
+      "tags": ["paths", "cross-platform", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/pathUtils.ts:pathStartsWith",
+      "type": "function",
+      "name": "pathStartsWith",
+      "filePath": "apps/cli/src/application/utils/pathUtils.ts",
+      "lineRange": [17, 24],
+      "summary": "Checks whether a path lies under a prefix directory.",
+      "tags": ["paths", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/pathUtils.ts:resolveSkillDirPath",
+      "type": "function",
+      "name": "resolveSkillDirPath",
+      "filePath": "apps/cli/src/application/utils/pathUtils.ts",
+      "lineRange": [31, 36],
+      "summary": "Resolves the directory of a skill from a path to it or its SKILL.md.",
+      "tags": ["paths", "skills", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/resolveArtefactFromPath.ts",
+      "type": "file",
+      "name": "resolveArtefactFromPath.ts",
+      "filePath": "apps/cli/src/application/utils/resolveArtefactFromPath.ts",
+      "summary": "Barrel re-exporting resolveArtefactFromPath from @packmind/types.",
+      "tags": ["barrel", "re-export", "artefacts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/resolveDeployedContext.ts",
+      "type": "file",
+      "name": "resolveDeployedContext.ts",
+      "filePath": "apps/cli/src/application/utils/resolveDeployedContext.ts",
+      "summary": "Resolves the default space, git remote/branch and relative path for a directory, then fetches the content deployed there from the API.",
+      "tags": ["utility", "deployment", "git", "context"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/resolveDeployedContext.ts:resolveDeployedContext",
+      "type": "function",
+      "name": "resolveDeployedContext",
+      "filePath": "apps/cli/src/application/utils/resolveDeployedContext.ts",
+      "lineRange": [11, 49],
+      "summary": "Builds deployed context (space, target, content) for a directory or returns null.",
+      "tags": ["deployment", "git", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "type": "file",
+      "name": "ruleSimilarity.ts",
+      "filePath": "apps/cli/src/application/utils/ruleSimilarity.ts",
+      "summary": "Rule matching helpers pairing deleted/added rules as updates using combined Jaccard and Levenshtein similarity.",
+      "tags": ["utility", "similarity", "diff", "algorithm"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/ruleSimilarity.ts:matchUpdatedRules",
+      "type": "function",
+      "name": "matchUpdatedRules",
+      "filePath": "apps/cli/src/application/utils/ruleSimilarity.ts",
+      "lineRange": [14, 49],
+      "summary": "Pairs deleted and added rules into updates when similarity is high enough.",
+      "tags": ["similarity", "rules", "diff"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/ruleSimilarity.ts:jaccardSimilarity",
+      "type": "function",
+      "name": "jaccardSimilarity",
+      "filePath": "apps/cli/src/application/utils/ruleSimilarity.ts",
+      "lineRange": [51, 59],
+      "summary": "Token-set Jaccard similarity between two strings.",
+      "tags": ["similarity", "algorithm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/ruleSimilarity.ts:combinedSimilarity",
+      "type": "function",
+      "name": "combinedSimilarity",
+      "filePath": "apps/cli/src/application/utils/ruleSimilarity.ts",
+      "lineRange": [61, 63],
+      "summary": "Averages Jaccard and Levenshtein similarity.",
+      "tags": ["similarity", "algorithm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/ruleSimilarity.ts:levenshteinSimilarity",
+      "type": "function",
+      "name": "levenshteinSimilarity",
+      "filePath": "apps/cli/src/application/utils/ruleSimilarity.ts",
+      "lineRange": [65, 87],
+      "summary": "Normalized Levenshtein edit-distance similarity.",
+      "tags": ["similarity", "algorithm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/scopeMatcher.ts",
+      "type": "file",
+      "name": "scopeMatcher.ts",
+      "filePath": "apps/cli/src/application/utils/scopeMatcher.ts",
+      "summary": "Glob matching that combines a target path and rule scope patterns (including negations) to decide whether a file is in scope for linting.",
+      "tags": ["utility", "glob", "scope", "linting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/scopeMatcher.ts:buildEffectivePattern",
+      "type": "function",
+      "name": "buildEffectivePattern",
+      "filePath": "apps/cli/src/application/utils/scopeMatcher.ts",
+      "lineRange": [3, 41],
+      "summary": "Combines target path and scope into an effective glob pattern.",
+      "tags": ["glob", "scope", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/scopeMatcher.ts:fileMatchesTargetAndScope",
+      "type": "function",
+      "name": "fileMatchesTargetAndScope",
+      "filePath": "apps/cli/src/application/utils/scopeMatcher.ts",
+      "lineRange": [47, 95],
+      "summary": "Checks whether a file matches the target and positive/negative scope patterns.",
+      "tags": ["glob", "scope", "linting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/stripFrontmatter.ts",
+      "type": "file",
+      "name": "stripFrontmatter.ts",
+      "filePath": "apps/cli/src/application/utils/stripFrontmatter.ts",
+      "summary": "Removes a leading YAML frontmatter block from markdown content.",
+      "tags": ["utility", "markdown", "frontmatter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/stripFrontmatter.ts:stripFrontmatter",
+      "type": "function",
+      "name": "stripFrontmatter",
+      "filePath": "apps/cli/src/application/utils/stripFrontmatter.ts",
+      "lineRange": [5, 24],
+      "summary": "Strips YAML frontmatter from markdown.",
+      "tags": ["markdown", "frontmatter", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/entities/DiffMode.ts",
+      "type": "file",
+      "name": "DiffMode.ts",
+      "filePath": "apps/cli/src/domain/entities/DiffMode.ts",
+      "summary": "Domain enum for lint diff modes (files vs lines) and ModifiedLine type describing changed line ranges.",
+      "tags": ["type-definition", "domain-entity", "linting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "type": "file",
+      "name": "ItemType.ts",
+      "filePath": "apps/cli/src/domain/entities/ItemType.ts",
+      "summary": "Domain type for the three package artefact kinds (standard, command, skill) with a user-facing pluralizing formatter.",
+      "tags": ["type-definition", "domain-entity", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/domain/entities/ItemType.ts:formatItemType",
+      "type": "function",
+      "name": "formatItemType",
+      "filePath": "apps/cli/src/domain/entities/ItemType.ts",
+      "lineRange": [9, 12],
+      "summary": "Capitalizes and pluralizes an item type for user messages.",
+      "tags": ["formatting", "packages", "utility"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/application/utils/lockFileUtils.ts",
+      "target": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryForPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/lockFileUtils.ts",
+      "target": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryForPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/lockFileUtils.ts",
+      "target": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryAndFileForPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/lockFileUtils.ts",
+      "target": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryAndFileForPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/lockFileUtils.ts",
+      "target": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/lockFileUtils.ts",
+      "target": "file:apps/cli/src/domain/repositories/PackmindLockFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "target": "function:apps/cli/src/application/utils/normalizePackageSlugs.ts:normalizePackageSlugs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "target": "function:apps/cli/src/application/utils/normalizePackageSlugs.ts:normalizePackageSlugs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "target": "function:apps/cli/src/application/utils/normalizePackageSlugs.ts:normalizeConfigPackages",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "target": "function:apps/cli/src/application/utils/normalizePackageSlugs.ts:normalizeConfigPackages",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/normalizeSemver.ts",
+      "target": "function:apps/cli/src/application/utils/normalizeSemver.ts:stripPrerelease",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/normalizeSemver.ts",
+      "target": "function:apps/cli/src/application/utils/normalizeSemver.ts:stripPrerelease",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseCommandFile.ts",
+      "target": "function:apps/cli/src/application/utils/parseCommandFile.ts:parseCommandFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseCommandFile.ts",
+      "target": "function:apps/cli/src/application/utils/parseCommandFile.ts:parseCommandFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseCommandFile.ts",
+      "target": "function:apps/cli/src/application/utils/parseCommandFile.ts:extractFrontmatterValue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseCommandFile.ts",
+      "target": "function:apps/cli/src/application/utils/parseCommandFile.ts:extractFilenameSlug",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseLenientStandard.ts",
+      "target": "function:apps/cli/src/application/utils/parseLenientStandard.ts:parseLenientStandard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseLenientStandard.ts",
+      "target": "function:apps/cli/src/application/utils/parseLenientStandard.ts:parseLenientStandard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseSkillDirectory.ts",
+      "target": "function:apps/cli/src/application/utils/parseSkillDirectory.ts:parseSkillDirectory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseSkillDirectory.ts",
+      "target": "function:apps/cli/src/application/utils/parseSkillDirectory.ts:parseSkillDirectory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMdForAgent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMdForAgent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parsePackmindStandard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:extractScopeSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:extractRulesList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:extractFrontmatter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseIdeStandardBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:addFrontmatterFields",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:extractFrontmatterValue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:extractScopeFromKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:normalizeScopeValue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:splitOutsideBraces",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:pathStartsWith",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:pathStartsWith",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:resolveSkillDirPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:resolveSkillDirPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/resolveDeployedContext.ts",
+      "target": "function:apps/cli/src/application/utils/resolveDeployedContext.ts:resolveDeployedContext",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/resolveDeployedContext.ts",
+      "target": "function:apps/cli/src/application/utils/resolveDeployedContext.ts:resolveDeployedContext",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/resolveDeployedContext.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:matchUpdatedRules",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:matchUpdatedRules",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:jaccardSimilarity",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:jaccardSimilarity",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:combinedSimilarity",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:combinedSimilarity",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:levenshteinSimilarity",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:levenshteinSimilarity",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/scopeMatcher.ts",
+      "target": "function:apps/cli/src/application/utils/scopeMatcher.ts:buildEffectivePattern",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/scopeMatcher.ts",
+      "target": "function:apps/cli/src/application/utils/scopeMatcher.ts:buildEffectivePattern",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/scopeMatcher.ts",
+      "target": "function:apps/cli/src/application/utils/scopeMatcher.ts:fileMatchesTargetAndScope",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/scopeMatcher.ts",
+      "target": "function:apps/cli/src/application/utils/scopeMatcher.ts:fileMatchesTargetAndScope",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/stripFrontmatter.ts",
+      "target": "function:apps/cli/src/application/utils/stripFrontmatter.ts:stripFrontmatter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/stripFrontmatter.ts",
+      "target": "function:apps/cli/src/application/utils/stripFrontmatter.ts:stripFrontmatter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "target": "function:apps/cli/src/domain/entities/ItemType.ts:formatItemType",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "target": "function:apps/cli/src/domain/entities/ItemType.ts:formatItemType",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryAndFileForPath",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/application/utils/ruleSimilarity.ts:combinedSimilarity",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:jaccardSimilarity",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/application/utils/ruleSimilarity.ts:combinedSimilarity",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:levenshteinSimilarity",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/application/utils/scopeMatcher.ts:fileMatchesTargetAndScope",
+      "target": "function:apps/cli/src/application/utils/scopeMatcher.ts:buildEffectivePattern",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMd",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parsePackmindStandard",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMdForAgent",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseIdeStandardBody",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

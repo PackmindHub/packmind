@@ -1,0 +1,1125 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/infra/commands/trackHandler.ts",
+      "type": "file",
+      "name": "trackHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/trackHandler.ts",
+      "summary": "Handler for `git track` that confirms with the user and registers the current repository/branch for Packmind tracking, reporting the outcome.",
+      "tags": ["api-handler", "tracking", "git", "cli-command"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/trackHandler.ts:trackHandler",
+      "type": "function",
+      "name": "trackHandler",
+      "filePath": "apps/cli/src/infra/commands/trackHandler.ts",
+      "lineRange": [37, 121],
+      "summary": "Confirms and executes repository tracking, printing success, already-tracked or error outcomes.",
+      "tags": ["function", "api-handler", "tracking", "git"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/trackingErrors.ts",
+      "type": "file",
+      "name": "trackingErrors.ts",
+      "filePath": "apps/cli/src/infra/commands/trackingErrors.ts",
+      "summary": "Centralized error reporting for repository tracking commands, mapping not-logged-in and API errors to console messages.",
+      "tags": ["error-handling", "tracking", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/trackingErrors.ts:handleTrackingError",
+      "type": "function",
+      "name": "handleTrackingError",
+      "filePath": "apps/cli/src/infra/commands/trackingErrors.ts",
+      "lineRange": [8, 42],
+      "summary": "Maps tracking errors (not logged in, API failures) to user-facing console errors.",
+      "tags": ["function", "error-handling", "tracking", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "type": "file",
+      "name": "trackingInfoHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "summary": "Handler for `git info` that displays tracking status of the current repository and warns when the local remote/branch mismatch the tracked one.",
+      "tags": ["api-handler", "tracking", "git", "cli-command"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/trackingInfoHandler.ts:trackingInfoHandler",
+      "type": "function",
+      "name": "trackingInfoHandler",
+      "filePath": "apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "lineRange": [27, 65],
+      "summary": "Displays repository tracking information and mismatch warnings.",
+      "tags": ["function", "api-handler", "tracking", "git"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/trackingInfoHandler.ts:mismatchWarning",
+      "type": "function",
+      "name": "mismatchWarning",
+      "filePath": "apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "lineRange": [77, 95],
+      "summary": "Builds a warning when local git remote/branch differ from tracked values.",
+      "tags": ["function", "api-handler", "tracking", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/trackingPrompts.ts",
+      "type": "file",
+      "name": "trackingPrompts.ts",
+      "filePath": "apps/cli/src/infra/commands/trackingPrompts.ts",
+      "summary": "Builds the track/untrack confirmation message and a TTY-aware confirmation prompt factory used by tracking handlers.",
+      "tags": ["utility", "prompt", "tracking"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/trackingPrompts.ts:buildTrackConfirmationMessage",
+      "type": "function",
+      "name": "buildTrackConfirmationMessage",
+      "filePath": "apps/cli/src/infra/commands/trackingPrompts.ts",
+      "lineRange": [11, 24],
+      "summary": "Builds the confirmation question for tracking a repository/branch.",
+      "tags": ["function", "utility", "prompt", "tracking"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/trackingPrompts.ts:defaultConfirmPrompt",
+      "type": "function",
+      "name": "defaultConfirmPrompt",
+      "filePath": "apps/cli/src/infra/commands/trackingPrompts.ts",
+      "lineRange": [35, 45],
+      "summary": "Default interactive yes/no confirmation prompt.",
+      "tags": ["function", "utility", "prompt", "tracking"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/trackingPrompts.ts:createTrackConfirm",
+      "type": "function",
+      "name": "createTrackConfirm",
+      "filePath": "apps/cli/src/infra/commands/trackingPrompts.ts",
+      "lineRange": [53, 64],
+      "summary": "Creates a confirm function that auto-skips in non-TTY or uses the provided prompt.",
+      "tags": ["function", "utility", "prompt", "tracking"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/untrackHandler.ts",
+      "type": "file",
+      "name": "untrackHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/untrackHandler.ts",
+      "summary": "Handler for `git untrack` that confirms and removes the current repository from Packmind tracking.",
+      "tags": ["api-handler", "tracking", "git", "cli-command"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/untrackHandler.ts:untrackHandler",
+      "type": "function",
+      "name": "untrackHandler",
+      "filePath": "apps/cli/src/infra/commands/untrackHandler.ts",
+      "lineRange": [26, 69],
+      "summary": "Confirms and executes repository untracking, reporting the result.",
+      "tags": ["function", "api-handler", "tracking", "git"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "type": "file",
+      "name": "updateHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "summary": "Self-update logic for the Packmind CLI: resolves the latest version from npm or GitHub releases, then updates via npm or by downloading and atomically replacing the standalone executable, handling legacy exec aliases and Homebrew installs.",
+      "tags": [
+        "self-update",
+        "cli-command",
+        "service",
+        "download",
+        "installation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:getPlatformAssetSuffix",
+      "type": "function",
+      "name": "getPlatformAssetSuffix",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [59, 75],
+      "summary": "Maps Node platform/arch to the release asset suffix.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:getReleaseAssetName",
+      "type": "function",
+      "name": "getReleaseAssetName",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [88, 97],
+      "summary": "Builds the release asset filename for a platform.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:fetchLatestVersionFromNpm",
+      "type": "function",
+      "name": "fetchLatestVersionFromNpm",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [99, 110],
+      "summary": "Fetches the latest CLI version from the npm registry.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:fetchLatestVersionFromGitHub",
+      "type": "function",
+      "name": "fetchLatestVersionFromGitHub",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [112, 140],
+      "summary": "Fetches the latest CLI release tag from GitHub.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:downloadExecutable",
+      "type": "function",
+      "name": "downloadExecutable",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [142, 178],
+      "summary": "Downloads the standalone executable release asset to a temp path.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:resolveUpdateTargetPath",
+      "type": "function",
+      "name": "resolveUpdateTargetPath",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [214, 227],
+      "summary": "Determines which executable path should be replaced during update.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:createLegacyExecAlias",
+      "type": "function",
+      "name": "createLegacyExecAlias",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [254, 301],
+      "summary": "Creates a legacy executable alias pointing at the new binary.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:checkTargetBeforeReplacing",
+      "type": "function",
+      "name": "checkTargetBeforeReplacing",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [325, 354],
+      "summary": "Verifies the target executable is writable and replaceable before update.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:updateViaExecutableReplace",
+      "type": "function",
+      "name": "updateViaExecutableReplace",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [363, 419],
+      "summary": "Downloads and atomically replaces the standalone executable.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:isLocalNpmPackage",
+      "type": "function",
+      "name": "isLocalNpmPackage",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [421, 424],
+      "summary": "Detects if the CLI runs from a local npm package.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:isHomebrewInstall",
+      "type": "function",
+      "name": "isHomebrewInstall",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [426, 433],
+      "summary": "Detects if the CLI was installed with Homebrew.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:resolveUpdateFailureMessage",
+      "type": "function",
+      "name": "resolveUpdateFailureMessage",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [447, 474],
+      "summary": "Builds a user-facing failure message for update errors.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/updateHandler.ts:updateHandler",
+      "type": "function",
+      "name": "updateHandler",
+      "filePath": "apps/cli/src/infra/commands/updateHandler.ts",
+      "lineRange": [476, 582],
+      "summary": "Main update entry: checks for a newer version and updates via npm or executable replacement.",
+      "tags": ["function", "self-update", "cli-command", "service"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/versionCheckNotice.ts",
+      "type": "file",
+      "name": "versionCheckNotice.ts",
+      "filePath": "apps/cli/src/infra/commands/versionCheckNotice.ts",
+      "summary": "Prints a notice when a newer CLI version is available, with the upgrade command.",
+      "tags": ["utility", "versioning", "notification"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/versionCheckNotice.ts:displayVersionNotice",
+      "type": "function",
+      "name": "displayVersionNotice",
+      "filePath": "apps/cli/src/infra/commands/versionCheckNotice.ts",
+      "lineRange": [5, 16],
+      "summary": "Prints an upgrade notice when a newer CLI version exists.",
+      "tags": ["function", "utility", "versioning", "notification"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "type": "file",
+      "name": "PackmindHttpClient.ts",
+      "filePath": "apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "summary": "HTTP client used by all CLI gateways: decodes the API key into auth context, builds an undici dispatcher honoring proxies, sends authenticated requests with diagnostic errors and resolves the server edition.",
+      "tags": ["service", "http-client", "authentication", "api"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/http/PackmindHttpClient.ts:buildDispatcher",
+      "type": "function",
+      "name": "buildDispatcher",
+      "filePath": "apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "lineRange": [11, 41],
+      "summary": "Builds an undici dispatcher honoring proxy environment variables.",
+      "tags": ["function", "service", "http-client", "authentication"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "type": "class",
+      "name": "PackmindHttpClient",
+      "filePath": "apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "lineRange": [58, 254],
+      "summary": "Authenticated HTTP client decoding the API key JWT, performing requests with diagnostics and resolving server edition.",
+      "tags": ["class", "service", "http-client", "authentication"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/infra/http/packmindEdition.ts",
+      "type": "file",
+      "name": "packmindEdition.ts",
+      "filePath": "apps/cli/src/infra/http/packmindEdition.ts",
+      "summary": "Parses the Packmind server edition (enterprise/community, with legacy cloud/oss aliases) from response headers and throws CommunityEditionError when a feature is absent.",
+      "tags": ["utility", "edition", "validation", "http"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/http/packmindEdition.ts:parsePackmindEdition",
+      "type": "function",
+      "name": "parsePackmindEdition",
+      "filePath": "apps/cli/src/infra/http/packmindEdition.ts",
+      "lineRange": [20, 35],
+      "summary": "Parses an edition string, mapping legacy cloud/oss to enterprise/community.",
+      "tags": ["function", "utility", "edition", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/http/packmindEdition.ts:readPackmindEdition",
+      "type": "function",
+      "name": "readPackmindEdition",
+      "filePath": "apps/cli/src/infra/http/packmindEdition.ts",
+      "lineRange": [41, 45],
+      "summary": "Reads the edition from the response header.",
+      "tags": ["function", "utility", "edition", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/http/packmindEdition.ts:throwIfFeatureAbsent",
+      "type": "function",
+      "name": "throwIfFeatureAbsent",
+      "filePath": "apps/cli/src/infra/http/packmindEdition.ts",
+      "lineRange": [53, 71],
+      "summary": "Throws CommunityEditionError when a 404 indicates the feature is unavailable on community edition.",
+      "tags": ["function", "utility", "edition", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/repositories/ChangeProposalGateway.ts",
+      "type": "file",
+      "name": "ChangeProposalGateway.ts",
+      "filePath": "apps/cli/src/infra/repositories/ChangeProposalGateway.ts",
+      "summary": "HTTP gateway for batch creating, applying and checking playbook change proposals, guarding against community-edition servers.",
+      "tags": ["gateway", "api-client", "change-proposals", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/infra/repositories/ChangeProposalGateway.ts:ChangeProposalGateway",
+      "type": "class",
+      "name": "ChangeProposalGateway",
+      "filePath": "apps/cli/src/infra/repositories/ChangeProposalGateway.ts",
+      "lineRange": [15, 64],
+      "summary": "Gateway for change-proposal batch create/apply/check API calls.",
+      "tags": ["class", "gateway", "api-client", "change-proposals"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/repositories/CliOutput.ts",
+      "type": "file",
+      "name": "CliOutput.ts",
+      "filePath": "apps/cli/src/infra/repositories/CliOutput.ts",
+      "summary": "IOutput implementation that formats CLI messages, loaders, artefact listings and help text with chalk styling.",
+      "tags": ["output", "formatting", "adapter", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/infra/repositories/CliOutput.ts:CliFormatter",
+      "type": "class",
+      "name": "CliFormatter",
+      "filePath": "apps/cli/src/infra/repositories/CliOutput.ts",
+      "lineRange": [12, 48],
+      "summary": "Chalk-based formatter for CLI message styles.",
+      "tags": ["class", "output", "formatting", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/infra/repositories/CliOutput.ts:CliOutput",
+      "type": "class",
+      "name": "CliOutput",
+      "filePath": "apps/cli/src/infra/repositories/CliOutput.ts",
+      "lineRange": [50, 172],
+      "summary": "Console output adapter implementing IOutput with loaders and artefact listings.",
+      "tags": ["class", "output", "formatting", "adapter"],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/infra/commands/trackHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/trackHandler.ts:trackHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/trackHandler.ts:trackHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackHandler.ts",
+      "target": "file:apps/cli/src/domain/useCases/trackRepository/ITrackRepositoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/trackingErrors.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/trackingPrompts.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingErrors.ts",
+      "target": "function:apps/cli/src/infra/commands/trackingErrors.ts:handleTrackingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingErrors.ts",
+      "target": "function:apps/cli/src/infra/commands/trackingErrors.ts:handleTrackingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingErrors.ts",
+      "target": "file:apps/cli/src/domain/errors/NotLoggedInError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingErrors.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/trackingInfoHandler.ts:trackingInfoHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/trackingInfoHandler.ts:trackingInfoHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/trackingInfoHandler.ts:mismatchWarning",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "target": "file:apps/cli/src/domain/useCases/trackRepository/IGetTrackingInfoUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/trackingErrors.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingInfoHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingPrompts.ts",
+      "target": "function:apps/cli/src/infra/commands/trackingPrompts.ts:buildTrackConfirmationMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingPrompts.ts",
+      "target": "function:apps/cli/src/infra/commands/trackingPrompts.ts:defaultConfirmPrompt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingPrompts.ts",
+      "target": "function:apps/cli/src/infra/commands/trackingPrompts.ts:defaultConfirmPrompt",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingPrompts.ts",
+      "target": "function:apps/cli/src/infra/commands/trackingPrompts.ts:createTrackConfirm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingPrompts.ts",
+      "target": "function:apps/cli/src/infra/commands/trackingPrompts.ts:createTrackConfirm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/trackingPrompts.ts",
+      "target": "file:apps/cli/src/domain/useCases/trackRepository/ITrackRepositoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/untrackHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/untrackHandler.ts:untrackHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/untrackHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/untrackHandler.ts:untrackHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/untrackHandler.ts",
+      "target": "file:apps/cli/src/domain/useCases/trackRepository/ITrackRepositoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/untrackHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/trackHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/untrackHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/trackingErrors.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/untrackHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/trackingPrompts.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/untrackHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:getPlatformAssetSuffix",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:getPlatformAssetSuffix",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:getReleaseAssetName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:getReleaseAssetName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:fetchLatestVersionFromNpm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:fetchLatestVersionFromNpm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:fetchLatestVersionFromGitHub",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:fetchLatestVersionFromGitHub",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:downloadExecutable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:resolveUpdateTargetPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:resolveUpdateTargetPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:createLegacyExecAlias",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:createLegacyExecAlias",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:checkTargetBeforeReplacing",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:updateViaExecutableReplace",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:isLocalNpmPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:isLocalNpmPackage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:isHomebrewInstall",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:isHomebrewInstall",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:resolveUpdateFailureMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:updateHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:updateHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/versionCheckNotice.ts",
+      "target": "function:apps/cli/src/infra/commands/versionCheckNotice.ts:displayVersionNotice",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/versionCheckNotice.ts",
+      "target": "function:apps/cli/src/infra/commands/versionCheckNotice.ts:displayVersionNotice",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/versionCheckNotice.ts",
+      "target": "file:apps/cli/src/domain/useCases/ICheckCliVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/versionCheckNotice.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/versionCheckNotice.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "target": "function:apps/cli/src/infra/http/PackmindHttpClient.ts:buildDispatcher",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "target": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "target": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "target": "file:apps/cli/package.json",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "target": "file:apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "target": "file:apps/cli/src/domain/errors/NotLoggedInError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "target": "file:apps/cli/src/infra/http/packmindEdition.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "target": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/packmindEdition.ts",
+      "target": "function:apps/cli/src/infra/http/packmindEdition.ts:parsePackmindEdition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/packmindEdition.ts",
+      "target": "function:apps/cli/src/infra/http/packmindEdition.ts:parsePackmindEdition",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/packmindEdition.ts",
+      "target": "function:apps/cli/src/infra/http/packmindEdition.ts:readPackmindEdition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/packmindEdition.ts",
+      "target": "function:apps/cli/src/infra/http/packmindEdition.ts:readPackmindEdition",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/packmindEdition.ts",
+      "target": "function:apps/cli/src/infra/http/packmindEdition.ts:throwIfFeatureAbsent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/packmindEdition.ts",
+      "target": "function:apps/cli/src/infra/http/packmindEdition.ts:throwIfFeatureAbsent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/http/packmindEdition.ts",
+      "target": "file:apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/ChangeProposalGateway.ts",
+      "target": "class:apps/cli/src/infra/repositories/ChangeProposalGateway.ts:ChangeProposalGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/ChangeProposalGateway.ts",
+      "target": "class:apps/cli/src/infra/repositories/ChangeProposalGateway.ts:ChangeProposalGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/ChangeProposalGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/IChangeProposalGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/ChangeProposalGateway.ts",
+      "target": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/ChangeProposalGateway.ts",
+      "target": "file:apps/cli/src/infra/http/packmindEdition.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/CliOutput.ts",
+      "target": "class:apps/cli/src/infra/repositories/CliOutput.ts:CliFormatter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/CliOutput.ts",
+      "target": "class:apps/cli/src/infra/repositories/CliOutput.ts:CliOutput",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/CliOutput.ts",
+      "target": "class:apps/cli/src/infra/repositories/CliOutput.ts:CliOutput",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/CliOutput.ts",
+      "target": "file:apps/cli/src/domain/repositories/IOutput.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/CliOutput.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/trackHandler.ts:trackHandler",
+      "target": "function:apps/cli/src/infra/commands/trackingPrompts.ts:createTrackConfirm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/trackHandler.ts:trackHandler",
+      "target": "function:apps/cli/src/infra/commands/trackingErrors.ts:handleTrackingError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/untrackHandler.ts:untrackHandler",
+      "target": "function:apps/cli/src/infra/commands/trackingPrompts.ts:createTrackConfirm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/untrackHandler.ts:untrackHandler",
+      "target": "function:apps/cli/src/infra/commands/trackingErrors.ts:handleTrackingError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/trackingInfoHandler.ts:trackingInfoHandler",
+      "target": "function:apps/cli/src/infra/commands/trackingErrors.ts:handleTrackingError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/trackingInfoHandler.ts:trackingInfoHandler",
+      "target": "function:apps/cli/src/infra/commands/trackingInfoHandler.ts:mismatchWarning",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/trackingPrompts.ts:createTrackConfirm",
+      "target": "function:apps/cli/src/infra/commands/trackingPrompts.ts:defaultConfirmPrompt",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/http/packmindEdition.ts:readPackmindEdition",
+      "target": "function:apps/cli/src/infra/http/packmindEdition.ts:parsePackmindEdition",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "target": "function:apps/cli/src/infra/http/packmindEdition.ts:readPackmindEdition",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "target": "function:apps/cli/src/infra/http/packmindEdition.ts:parsePackmindEdition",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:createDiagnosticError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:reportError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/ChangeProposalGateway.ts:ChangeProposalGateway",
+      "target": "function:apps/cli/src/infra/http/packmindEdition.ts:throwIfFeatureAbsent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/updateHandler.ts:updateHandler",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:updateViaExecutableReplace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/updateHandler.ts:updateHandler",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:fetchLatestVersionFromNpm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/updateHandler.ts:updateViaExecutableReplace",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:downloadExecutable",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/updateHandler.ts:updateViaExecutableReplace",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:checkTargetBeforeReplacing",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

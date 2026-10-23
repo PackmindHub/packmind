@@ -1,0 +1,186 @@
+{
+  "nodes": [
+    {
+      "id": "config:packages/linter-ast/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/linter-ast/package.json",
+      "summary": "Package manifest for the private CommonJS workspace library @packmind/linter-ast, declaring no runtime dependencies (grammars are committed WASM files).",
+      "tags": [
+        "configuration",
+        "package-manifest",
+        "dependencies",
+        "nx-library"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/linter-ast/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/linter-ast/project.json",
+      "summary": "Nx project definition for linter-ast: node-tagged library built with @nx/js:swc, shipping markdown docs and tree-sitter WASM grammars as assets, with a Jest test target run in-band under experimental VM modules.",
+      "tags": ["configuration", "build-system", "nx", "swc"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/linter-ast/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/linter-ast/tsconfig.json",
+      "summary": "Root TypeScript project config for linter-ast, extending tsconfig.base.json with strict CommonJS settings (noImplicitOverride, noPropertyAccessFromIndexSignature) and referencing lib/spec tsconfigs.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system",
+        "project-references"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/linter-ast/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/linter-ast/tsconfig.lib.json",
+      "summary": "TypeScript library build config for linter-ast that compiles src/**/*.ts with declarations while excluding specs and jest config.",
+      "tags": ["configuration", "typescript", "build-system", "library-build"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:packages/linter-ast/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "packages/linter-ast/CLAUDE.md",
+      "summary": "Agent guidance for the linter-ast package: explains committed tree-sitter WASM grammars in res/, the ParserRegistry language map, known gaps (missing CSS grammar, unexported YAMLParser, no TSX parser) and the steps to add a language.",
+      "tags": [
+        "documentation",
+        "agent-instructions",
+        "tree-sitter",
+        "parser-registry"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:packages/linter-ast/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/linter-ast/README.md",
+      "summary": "Package documentation for @packmind/linter-ast covering its core/parsers/application layers, the LinterAst port and adapter integration with linter-execution, WASM grammar location, supported languages, known limitations, webpack deployment and testing.",
+      "tags": [
+        "documentation",
+        "architecture",
+        "tree-sitter",
+        "linter",
+        "port-adapter"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/linter-ast/package.json",
+      "target": "file:packages/linter-ast/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-ast/project.json",
+      "target": "file:packages/linter-ast/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-ast/tsconfig.json",
+      "target": "config:packages/linter-ast/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-ast/tsconfig.lib.json",
+      "target": "file:packages/linter-ast/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-ast/project.json",
+      "target": "config:packages/linter-ast/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-ast/project.json",
+      "target": "config:packages/linter-ast/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/linter-ast/CLAUDE.md",
+      "target": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/CLAUDE.md",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/CLAUDE.md",
+      "target": "file:packages/linter-ast/src/application/LinterAstAdapter.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/CLAUDE.md",
+      "target": "file:packages/linter-ast/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/README.md",
+      "target": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/README.md",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/README.md",
+      "target": "file:packages/linter-ast/src/application/LinterAstAdapter.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/README.md",
+      "target": "file:packages/linter-ast/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/linter-ast/README.md",
+      "target": "config:packages/linter-execution/package.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

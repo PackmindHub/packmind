@@ -1,0 +1,297 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/deployments/src/application/listeners/DeploymentsListener.ts",
+      "type": "file",
+      "name": "DeploymentsListener.ts",
+      "filePath": "packages/deployments/src/application/listeners/DeploymentsListener.ts",
+      "summary": "Domain event listener that removes deleted commands, skills and standards from packages and announces component create/update events as space content changes.",
+      "tags": ["event-handler", "listener", "domain-events", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/listeners/DeploymentsListener.ts:DeploymentsListener",
+      "type": "class",
+      "name": "DeploymentsListener",
+      "filePath": "packages/deployments/src/application/listeners/DeploymentsListener.ts",
+      "lineRange": [41, 148],
+      "summary": "Subscribes to command/skill/standard events to clean packages and announce space content changes.",
+      "tags": ["class", "event-handler", "listener", "domain-events"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "file",
+      "name": "DeploymentsServices.ts",
+      "filePath": "packages/deployments/src/application/services/DeploymentsServices.ts",
+      "summary": "Service locator aggregating the deployments repositories and the target, render-mode, package and package-release services.",
+      "tags": [
+        "service",
+        "service-locator",
+        "dependency-injection",
+        "deployments"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/services/DeploymentsServices.ts:DeploymentsServices",
+      "type": "class",
+      "name": "DeploymentsServices",
+      "filePath": "packages/deployments/src/application/services/DeploymentsServices.ts",
+      "lineRange": [8, 59],
+      "summary": "Aggregates deployments repositories and domain services for injection into use cases.",
+      "tags": ["class", "service", "service-locator", "dependency-injection"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "type": "file",
+      "name": "LockFileDistributionRecorder.ts",
+      "filePath": "packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "summary": "Records distributions derived from packmind-lock.json files: reads locked packages, resolves slugs, spaces and artifact versions, and saves new distributed-package entries while skipping already-active versions.",
+      "tags": ["service", "lockfile", "distribution", "persistence"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:LockFileDistributionRecorder",
+      "type": "class",
+      "name": "LockFileDistributionRecorder",
+      "filePath": "packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "lineRange": [65, 422],
+      "summary": "Turns lockfile contents into persisted distributed-package records.",
+      "tags": ["class", "service", "lockfile", "distribution"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:newDistributedPackage",
+      "type": "function",
+      "name": "newDistributedPackage",
+      "filePath": "packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "lineRange": [424, 443],
+      "summary": "Builds a new distributed-package record for a lockfile entry.",
+      "tags": ["function", "utility", "lockfile", "distribution"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:groupArtifactsByPackageId",
+      "type": "function",
+      "name": "groupArtifactsByPackageId",
+      "filePath": "packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "lineRange": [445, 459],
+      "summary": "Groups lockfile artifacts by the package id they belong to.",
+      "tags": ["function", "utility", "lockfile", "distribution"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:isAlreadyActive",
+      "type": "function",
+      "name": "isAlreadyActive",
+      "filePath": "packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "lineRange": [461, 475],
+      "summary": "Checks whether a package distribution is already active with the same versions.",
+      "tags": ["function", "utility", "lockfile", "distribution"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:hasSameVersions",
+      "type": "function",
+      "name": "hasSameVersions",
+      "filePath": "packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "lineRange": [477, 487],
+      "summary": "Compares two sets of artifact version ids for equality.",
+      "tags": ["function", "utility", "lockfile", "distribution"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/deployments/src/application/listeners/DeploymentsListener.ts",
+      "target": "class:packages/deployments/src/application/listeners/DeploymentsListener.ts:DeploymentsListener",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/listeners/DeploymentsListener.ts",
+      "target": "class:packages/deployments/src/application/listeners/DeploymentsListener.ts:DeploymentsListener",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/listeners/DeploymentsListener.ts",
+      "target": "file:packages/deployments/src/application/services/SpaceContentNotifier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/listeners/DeploymentsListener.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "target": "class:packages/deployments/src/application/services/DeploymentsServices.ts:DeploymentsServices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "target": "class:packages/deployments/src/application/services/DeploymentsServices.ts:DeploymentsServices",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "target": "file:packages/deployments/src/application/services/PackageReleaseService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "target": "file:packages/deployments/src/application/services/PackageService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "target": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "target": "file:packages/deployments/src/application/services/TargetService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDeploymentsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "class:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:LockFileDistributionRecorder",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "class:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:LockFileDistributionRecorder",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "function:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:newDistributedPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "function:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:groupArtifactsByPackageId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "function:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:isAlreadyActive",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "function:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:hasSameVersions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "file:packages/deployments/src/application/services/PackageReleaseService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "file:packages/deployments/src/application/services/PackageService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "file:packages/deployments/src/application/services/packageSlugHelpers.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/listeners/DeploymentsListener.ts:DeploymentsListener",
+      "target": "class:packages/deployments/src/application/services/SpaceContentNotifier.ts:SpaceContentNotifier",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:LockFileDistributionRecorder",
+      "target": "class:packages/deployments/src/application/services/PackageService.ts:PackageService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:LockFileDistributionRecorder",
+      "target": "class:packages/deployments/src/application/services/PackageReleaseService.ts:PackageReleaseService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/services/LockFileDistributionRecorder.ts:LockFileDistributionRecorder",
+      "target": "function:packages/deployments/src/application/services/packageSlugHelpers.ts:parsePackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

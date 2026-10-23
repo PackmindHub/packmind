@@ -1,0 +1,1404 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts",
+      "type": "file",
+      "name": "ListOrganizationUserStatusesUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts",
+      "summary": "Admin-only use case listing every organization member with their activation status, resolving pending/expired invitations and building invitation URLs from the configured web app URL.",
+      "tags": [
+        "use-case",
+        "admin-authorization",
+        "invitation",
+        "user-management"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts:ListOrganizationUserStatusesUseCase",
+      "type": "class",
+      "name": "ListOrganizationUserStatusesUseCase",
+      "filePath": "packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts",
+      "lineRange": [26, 147],
+      "summary": "Admin use case that joins organization users with their invitations to compute invitation status and invitation links.",
+      "tags": ["use-case", "service", "admin-authorization", "invitation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts",
+      "type": "file",
+      "name": "ListOrganizationUsersUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts",
+      "summary": "Member-scoped use case returning the users belonging to the caller organization via UserService.",
+      "tags": ["use-case", "user-management", "organization", "query"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts:ListOrganizationUsersUseCase",
+      "type": "class",
+      "name": "ListOrganizationUsersUseCase",
+      "filePath": "packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts",
+      "lineRange": [14, 67],
+      "summary": "Member use case fetching and mapping the users of an organization.",
+      "tags": ["use-case", "service", "user-management", "organization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts",
+      "type": "file",
+      "name": "ListUserOrganizationsUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts",
+      "summary": "Use case returning the organizations a given user is a member of, logging and handling the user-not-found case.",
+      "tags": ["use-case", "organization", "membership", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts:ListUserOrganizationsUseCase",
+      "type": "class",
+      "name": "ListUserOrganizationsUseCase",
+      "filePath": "packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts",
+      "lineRange": [12, 54],
+      "summary": "Looks up a user and returns the organizations from their memberships.",
+      "tags": ["use-case", "service", "organization", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts",
+      "type": "file",
+      "name": "RemoveUserFromOrganizationUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts",
+      "summary": "Admin-only use case that excludes a user from an organization and removes them from its spaces, preventing self-exclusion.",
+      "tags": [
+        "use-case",
+        "admin-authorization",
+        "membership",
+        "user-management"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts:RemoveUserFromOrganizationUseCase",
+      "type": "class",
+      "name": "RemoveUserFromOrganizationUseCase",
+      "filePath": "packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts",
+      "lineRange": [21, 105],
+      "summary": "Excludes a member from the organization and cleans up their space memberships through the spaces port.",
+      "tags": ["use-case", "service", "admin-authorization", "membership"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts",
+      "type": "file",
+      "name": "RenameOrganizationUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts",
+      "summary": "Admin-only use case validating and applying a new organization name through OrganizationService.",
+      "tags": ["use-case", "admin-authorization", "organization", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts:RenameOrganizationUseCase",
+      "type": "class",
+      "name": "RenameOrganizationUseCase",
+      "filePath": "packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts",
+      "lineRange": [14, 62],
+      "summary": "Validates the new name then renames the organization.",
+      "tags": ["use-case", "service", "admin-authorization", "organization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "type": "file",
+      "name": "SignInSocialUserUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "summary": "Handles social (OAuth/SSO) sign-in: creates a new user with an organization on first login or records the social provider and resolves memberships for existing users, emitting sign-in events.",
+      "tags": ["use-case", "authentication", "social-login", "event-emission"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts:SignInSocialUserUseCase",
+      "type": "class",
+      "name": "SignInSocialUserUseCase",
+      "filePath": "packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "lineRange": [20, 116],
+      "summary": "Branches between new-user sign-up and existing-user sign-in for social providers.",
+      "tags": ["use-case", "service", "authentication", "social-login"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "type": "file",
+      "name": "SignInUserUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "summary": "Email/password sign-in use case with rate limiting on failed attempts, password validation, membership resolution and sign-in event emission.",
+      "tags": ["use-case", "authentication", "rate-limiting", "security"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts:SignInUserUseCase",
+      "type": "class",
+      "name": "SignInUserUseCase",
+      "filePath": "packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "lineRange": [19, 83],
+      "summary": "Validates credentials under login rate limiting and resolves the user organizations.",
+      "tags": ["use-case", "service", "authentication", "rate-limiting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts",
+      "type": "file",
+      "name": "SignUpWithOrganizationUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts",
+      "summary": "Sign-up use case creating a new organization with a unique generated name plus its first admin user (password or social), provisioning the default Global space and emitting sign-up events.",
+      "tags": [
+        "use-case",
+        "sign-up",
+        "organization",
+        "onboarding",
+        "event-emission"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts:SignUpWithOrganizationUseCase",
+      "type": "class",
+      "name": "SignUpWithOrganizationUseCase",
+      "filePath": "packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts",
+      "lineRange": [25, 212],
+      "summary": "Orchestrates organization creation, user creation, default space provisioning and analytics events for new sign-ups.",
+      "tags": ["use-case", "service", "sign-up", "organization"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts",
+      "type": "file",
+      "name": "UpdateUserDisplayNameUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts",
+      "summary": "Member use case normalizing and validating a user display name before persisting it via UserService.",
+      "tags": ["use-case", "user-profile", "validation", "user-management"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts:UpdateUserDisplayNameUseCase",
+      "type": "class",
+      "name": "UpdateUserDisplayNameUseCase",
+      "filePath": "packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts",
+      "lineRange": [17, 60],
+      "summary": "Normalizes and saves the caller display name.",
+      "tags": ["use-case", "service", "user-profile", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts",
+      "type": "file",
+      "name": "ValidateInvitationTokenUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts",
+      "summary": "Validates an invitation token by checking existence, expiration and that the invited user is not yet active, masking tokens and emails in logs.",
+      "tags": ["use-case", "invitation", "validation", "security"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts:ValidateInvitationTokenUseCase",
+      "type": "class",
+      "name": "ValidateInvitationTokenUseCase",
+      "filePath": "packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts",
+      "lineRange": [13, 119],
+      "summary": "Checks invitation token validity and returns the invited email when valid.",
+      "tags": ["use-case", "service", "invitation", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts",
+      "type": "file",
+      "name": "ValidatePasswordUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts",
+      "summary": "Thin use case verifying a plaintext password against a stored hash through UserService.",
+      "tags": ["use-case", "authentication", "password", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts:ValidatePasswordUseCase",
+      "type": "class",
+      "name": "ValidatePasswordUseCase",
+      "filePath": "packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts",
+      "lineRange": [12, 38],
+      "summary": "Delegates password/hash comparison to UserService.",
+      "tags": ["use-case", "service", "authentication", "password"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/entities/ApiKey.ts",
+      "type": "file",
+      "name": "ApiKey.ts",
+      "filePath": "packages/accounts/src/domain/entities/ApiKey.ts",
+      "summary": "Type definitions for API key payloads (host + JWT) and the decoded API key validation result.",
+      "tags": ["type-definition", "data-model", "api-key", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/entities/CliLoginCode.ts",
+      "type": "file",
+      "name": "CliLoginCode.ts",
+      "filePath": "packages/accounts/src/domain/entities/CliLoginCode.ts",
+      "summary": "Domain entity for short-lived CLI login codes with branded id/token types, a UUID-based code generator and a 5-minute expiration constant.",
+      "tags": ["data-model", "entity", "cli-authentication", "branded-types"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/accounts/src/domain/entities/CliLoginCode.ts:generateCliLoginCode",
+      "type": "function",
+      "name": "generateCliLoginCode",
+      "filePath": "packages/accounts/src/domain/entities/CliLoginCode.ts",
+      "lineRange": [23, 25],
+      "summary": "Generates a new random CLI login code token from a UUID v4.",
+      "tags": ["factory", "utility", "cli-authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/entities/Invitation.ts",
+      "type": "file",
+      "name": "Invitation.ts",
+      "filePath": "packages/accounts/src/domain/entities/Invitation.ts",
+      "summary": "Domain entity describing user invitations with branded InvitationId/InvitationToken types and expiration date.",
+      "tags": ["data-model", "entity", "invitation", "branded-types"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/entities/PasswordResetToken.ts",
+      "type": "file",
+      "name": "PasswordResetToken.ts",
+      "filePath": "packages/accounts/src/domain/entities/PasswordResetToken.ts",
+      "summary": "Domain entity for password reset tokens with branded id/token types tied to a user and expiration date.",
+      "tags": ["data-model", "entity", "password-reset", "branded-types"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/AccountsAdapterPortsMissingError.ts",
+      "type": "file",
+      "name": "AccountsAdapterPortsMissingError.ts",
+      "filePath": "packages/accounts/src/domain/errors/AccountsAdapterPortsMissingError.ts",
+      "summary": "Internal error raised when the AccountsAdapter is used before its required ports are initialized.",
+      "tags": ["error-handling", "domain-error", "accounts", "authorization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/AccountsAdapterPortsMissingError.ts:AccountsAdapterPortsMissingError",
+      "type": "class",
+      "name": "AccountsAdapterPortsMissingError",
+      "filePath": "packages/accounts/src/domain/errors/AccountsAdapterPortsMissingError.ts",
+      "lineRange": [9, 18],
+      "summary": "Internal error raised when the AccountsAdapter is used before its required ports are initialized.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "file",
+      "name": "AccountsError.ts",
+      "filePath": "packages/accounts/src/domain/errors/AccountsError.ts",
+      "summary": "Base class for accounts domain errors carrying a DomainErrorKind (mapped to HTTP status), a literal reason code clients branch on, and a structured logging context.",
+      "tags": [
+        "error-handling",
+        "base-class",
+        "domain-error",
+        "type-definition"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "class",
+      "name": "AccountsError",
+      "filePath": "packages/accounts/src/domain/errors/AccountsError.ts",
+      "lineRange": [40, 57],
+      "summary": "Base class for accounts domain errors carrying a DomainErrorKind (mapped to HTTP status), a literal reason code clients branch on, and a structured logging context.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "file",
+      "name": "AccountsInternalError.ts",
+      "filePath": "packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "summary": "Base class for internal accounts failures extending PackmindInternalError; always surfaced as 500 with the message withheld from clients.",
+      "tags": [
+        "error-handling",
+        "base-class",
+        "internal-error",
+        "domain-error"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "class",
+      "name": "AccountsInternalError",
+      "filePath": "packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "lineRange": [42, 52],
+      "summary": "Base class for internal accounts failures extending PackmindInternalError; always surfaced as 500 with the message withheld from clients.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts",
+      "type": "file",
+      "name": "ApiKeyEncodingFailedError.ts",
+      "filePath": "packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts",
+      "summary": "Internal error raised when an API key cannot be encoded.",
+      "tags": ["error-handling", "domain-error", "accounts", "api-key"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts:ApiKeyEncodingFailedError",
+      "type": "class",
+      "name": "ApiKeyEncodingFailedError",
+      "filePath": "packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts",
+      "lineRange": [6, 13],
+      "summary": "Internal error raised when an API key cannot be encoded.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/ApiKeyExpirationMissingError.ts",
+      "type": "file",
+      "name": "ApiKeyExpirationMissingError.ts",
+      "filePath": "packages/accounts/src/domain/errors/ApiKeyExpirationMissingError.ts",
+      "summary": "Internal error raised when an API key expiration cannot be determined.",
+      "tags": ["error-handling", "domain-error", "accounts", "api-key"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/ApiKeyExpirationMissingError.ts:ApiKeyExpirationMissingError",
+      "type": "class",
+      "name": "ApiKeyExpirationMissingError",
+      "filePath": "packages/accounts/src/domain/errors/ApiKeyExpirationMissingError.ts",
+      "lineRange": [3, 8],
+      "summary": "Internal error raised when an API key expiration cannot be determined.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/ApiKeyGenerationFailedError.ts",
+      "type": "file",
+      "name": "ApiKeyGenerationFailedError.ts",
+      "filePath": "packages/accounts/src/domain/errors/ApiKeyGenerationFailedError.ts",
+      "summary": "Internal error raised when API key generation fails, wrapping the underlying cause.",
+      "tags": ["error-handling", "domain-error", "accounts", "api-key"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/ApiKeyGenerationFailedError.ts:ApiKeyGenerationFailedError",
+      "type": "class",
+      "name": "ApiKeyGenerationFailedError",
+      "filePath": "packages/accounts/src/domain/errors/ApiKeyGenerationFailedError.ts",
+      "lineRange": [8, 18],
+      "summary": "Internal error raised when API key generation fails, wrapping the underlying cause.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/CannotDemoteLastAdminError.ts",
+      "type": "file",
+      "name": "CannotDemoteLastAdminError.ts",
+      "filePath": "packages/accounts/src/domain/errors/CannotDemoteLastAdminError.ts",
+      "summary": "Domain error preventing demotion of the last remaining organization admin.",
+      "tags": ["error-handling", "domain-error", "accounts", "authorization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/CannotDemoteLastAdminError.ts:CannotDemoteLastAdminError",
+      "type": "class",
+      "name": "CannotDemoteLastAdminError",
+      "filePath": "packages/accounts/src/domain/errors/CannotDemoteLastAdminError.ts",
+      "lineRange": [3, 13],
+      "summary": "Domain error preventing demotion of the last remaining organization admin.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/CliLoginCodeApiKeyError.ts",
+      "type": "file",
+      "name": "CliLoginCodeApiKeyError.ts",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeApiKeyError.ts",
+      "summary": "Internal error raised when an API key cannot be produced while exchanging a CLI login code.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "accounts",
+        "cli-authentication"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/CliLoginCodeApiKeyError.ts:CliLoginCodeApiKeyError",
+      "type": "class",
+      "name": "CliLoginCodeApiKeyError",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeApiKeyError.ts",
+      "lineRange": [3, 12],
+      "summary": "Internal error raised when an API key cannot be produced while exchanging a CLI login code.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/CliLoginCodeExpiredError.ts",
+      "type": "file",
+      "name": "CliLoginCodeExpiredError.ts",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeExpiredError.ts",
+      "summary": "Domain error raised when a CLI login code has passed its expiration time.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "accounts",
+        "cli-authentication"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/CliLoginCodeExpiredError.ts:CliLoginCodeExpiredError",
+      "type": "class",
+      "name": "CliLoginCodeExpiredError",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeExpiredError.ts",
+      "lineRange": [10, 20],
+      "summary": "Domain error raised when a CLI login code has passed its expiration time.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/CliLoginCodeMembershipNotFoundError.ts",
+      "type": "file",
+      "name": "CliLoginCodeMembershipNotFoundError.ts",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeMembershipNotFoundError.ts",
+      "summary": "Domain error raised when the CLI login code user is no longer a member of the target organization.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "accounts",
+        "cli-authentication"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/CliLoginCodeMembershipNotFoundError.ts:CliLoginCodeMembershipNotFoundError",
+      "type": "class",
+      "name": "CliLoginCodeMembershipNotFoundError",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeMembershipNotFoundError.ts",
+      "lineRange": [3, 13],
+      "summary": "Domain error raised when the CLI login code user is no longer a member of the target organization.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/CliLoginCodeNotFoundError.ts",
+      "type": "file",
+      "name": "CliLoginCodeNotFoundError.ts",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeNotFoundError.ts",
+      "summary": "Domain error raised when an exchanged CLI login code does not exist.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "accounts",
+        "cli-authentication"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/CliLoginCodeNotFoundError.ts:CliLoginCodeNotFoundError",
+      "type": "class",
+      "name": "CliLoginCodeNotFoundError",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeNotFoundError.ts",
+      "lineRange": [3, 13],
+      "summary": "Domain error raised when an exchanged CLI login code does not exist.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/CliLoginCodeOrganizationNotFoundError.ts",
+      "type": "file",
+      "name": "CliLoginCodeOrganizationNotFoundError.ts",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeOrganizationNotFoundError.ts",
+      "summary": "Internal error raised when the organization referenced by a CLI login code cannot be found.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "accounts",
+        "cli-authentication"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/CliLoginCodeOrganizationNotFoundError.ts:CliLoginCodeOrganizationNotFoundError",
+      "type": "class",
+      "name": "CliLoginCodeOrganizationNotFoundError",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeOrganizationNotFoundError.ts",
+      "lineRange": [3, 12],
+      "summary": "Internal error raised when the organization referenced by a CLI login code cannot be found.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/CliLoginCodeUserNotFoundError.ts",
+      "type": "file",
+      "name": "CliLoginCodeUserNotFoundError.ts",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeUserNotFoundError.ts",
+      "summary": "Domain error raised when the user referenced by a CLI login code no longer exists.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "accounts",
+        "cli-authentication"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/CliLoginCodeUserNotFoundError.ts:CliLoginCodeUserNotFoundError",
+      "type": "class",
+      "name": "CliLoginCodeUserNotFoundError",
+      "filePath": "packages/accounts/src/domain/errors/CliLoginCodeUserNotFoundError.ts",
+      "lineRange": [3, 13],
+      "summary": "Domain error raised when the user referenced by a CLI login code no longer exists.",
+      "tags": ["error-handling", "error-class", "domain-error"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts:ListOrganizationUserStatusesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts:ListOrganizationUserStatusesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/InvitationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts",
+      "target": "file:packages/accounts/src/domain/entities/Invitation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts:ListOrganizationUserStatusesUseCase",
+      "target": "class:packages/accounts/src/application/services/InvitationService.ts:InvitationService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts:ListOrganizationUserStatusesUseCase",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts:ListOrganizationUsersUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts:ListOrganizationUsersUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts:ListOrganizationUsersUseCase",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts:ListUserOrganizationsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts:ListUserOrganizationsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts:ListUserOrganizationsUseCase",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts:RemoveUserFromOrganizationUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts:RemoveUserFromOrganizationUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts:RemoveUserFromOrganizationUseCase",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts:RenameOrganizationUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts:RenameOrganizationUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts:RenameOrganizationUseCase",
+      "target": "class:packages/accounts/src/application/services/OrganizationService.ts:OrganizationService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts:SignInSocialUserUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts:SignInSocialUserUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserMetadataService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts:SignInSocialUserUseCase",
+      "target": "class:packages/accounts/src/application/services/MembershipResolutionService.ts:MembershipResolutionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts:SignInSocialUserUseCase",
+      "target": "class:packages/accounts/src/application/services/UserMetadataService.ts:UserMetadataService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts:SignInSocialUserUseCase",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts:SignInUserUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts:SignInUserUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/LoginRateLimiterService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/MissingEmailError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts:SignInUserUseCase",
+      "target": "class:packages/accounts/src/application/services/LoginRateLimiterService.ts:LoginRateLimiterService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts:SignInUserUseCase",
+      "target": "class:packages/accounts/src/application/services/MembershipResolutionService.ts:MembershipResolutionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts:SignInUserUseCase",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts:SignUpWithOrganizationUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts:SignUpWithOrganizationUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts:SignUpWithOrganizationUseCase",
+      "target": "class:packages/accounts/src/application/services/OrganizationService.ts:OrganizationService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts:SignUpWithOrganizationUseCase",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts:UpdateUserDisplayNameUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts:UpdateUserDisplayNameUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts:UpdateUserDisplayNameUseCase",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts:ValidateInvitationTokenUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts:ValidateInvitationTokenUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/InvitationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts",
+      "target": "file:packages/accounts/src/domain/entities/Invitation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts:ValidateInvitationTokenUseCase",
+      "target": "class:packages/accounts/src/application/services/InvitationService.ts:InvitationService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts:ValidateInvitationTokenUseCase",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts:ValidatePasswordUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts:ValidatePasswordUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts:ValidatePasswordUseCase",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/entities/CliLoginCode.ts",
+      "target": "function:packages/accounts/src/domain/entities/CliLoginCode.ts:generateCliLoginCode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/entities/CliLoginCode.ts",
+      "target": "function:packages/accounts/src/domain/entities/CliLoginCode.ts:generateCliLoginCode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/AccountsAdapterPortsMissingError.ts",
+      "target": "class:packages/accounts/src/domain/errors/AccountsAdapterPortsMissingError.ts:AccountsAdapterPortsMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/AccountsAdapterPortsMissingError.ts",
+      "target": "class:packages/accounts/src/domain/errors/AccountsAdapterPortsMissingError.ts:AccountsAdapterPortsMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/AccountsAdapterPortsMissingError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts",
+      "target": "class:packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts:ApiKeyEncodingFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts",
+      "target": "class:packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts:ApiKeyEncodingFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/ApiKeyExpirationMissingError.ts",
+      "target": "class:packages/accounts/src/domain/errors/ApiKeyExpirationMissingError.ts:ApiKeyExpirationMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/ApiKeyExpirationMissingError.ts",
+      "target": "class:packages/accounts/src/domain/errors/ApiKeyExpirationMissingError.ts:ApiKeyExpirationMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/ApiKeyExpirationMissingError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/ApiKeyGenerationFailedError.ts",
+      "target": "class:packages/accounts/src/domain/errors/ApiKeyGenerationFailedError.ts:ApiKeyGenerationFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/ApiKeyGenerationFailedError.ts",
+      "target": "class:packages/accounts/src/domain/errors/ApiKeyGenerationFailedError.ts:ApiKeyGenerationFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/ApiKeyGenerationFailedError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CannotDemoteLastAdminError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CannotDemoteLastAdminError.ts:CannotDemoteLastAdminError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CannotDemoteLastAdminError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CannotDemoteLastAdminError.ts:CannotDemoteLastAdminError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CannotDemoteLastAdminError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeApiKeyError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeApiKeyError.ts:CliLoginCodeApiKeyError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeApiKeyError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeApiKeyError.ts:CliLoginCodeApiKeyError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeApiKeyError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeExpiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeExpiredError.ts:CliLoginCodeExpiredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeExpiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeExpiredError.ts:CliLoginCodeExpiredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeExpiredError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeMembershipNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeMembershipNotFoundError.ts:CliLoginCodeMembershipNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeMembershipNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeMembershipNotFoundError.ts:CliLoginCodeMembershipNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeMembershipNotFoundError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeNotFoundError.ts:CliLoginCodeNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeNotFoundError.ts:CliLoginCodeNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeNotFoundError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeOrganizationNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeOrganizationNotFoundError.ts:CliLoginCodeOrganizationNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeOrganizationNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeOrganizationNotFoundError.ts:CliLoginCodeOrganizationNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeOrganizationNotFoundError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeUserNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeUserNotFoundError.ts:CliLoginCodeUserNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeUserNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/CliLoginCodeUserNotFoundError.ts:CliLoginCodeUserNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/CliLoginCodeUserNotFoundError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/AccountsAdapterPortsMissingError.ts:AccountsAdapterPortsMissingError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts:ApiKeyEncodingFailedError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/ApiKeyExpirationMissingError.ts:ApiKeyExpirationMissingError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/ApiKeyGenerationFailedError.ts:ApiKeyGenerationFailedError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/CannotDemoteLastAdminError.ts:CannotDemoteLastAdminError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/CliLoginCodeApiKeyError.ts:CliLoginCodeApiKeyError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/CliLoginCodeExpiredError.ts:CliLoginCodeExpiredError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/CliLoginCodeMembershipNotFoundError.ts:CliLoginCodeMembershipNotFoundError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/CliLoginCodeNotFoundError.ts:CliLoginCodeNotFoundError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/CliLoginCodeOrganizationNotFoundError.ts:CliLoginCodeOrganizationNotFoundError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/CliLoginCodeUserNotFoundError.ts:CliLoginCodeUserNotFoundError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

@@ -1,0 +1,194 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts",
+      "type": "file",
+      "name": "SSESubscriptionAuthorizer.ts",
+      "filePath": "packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts",
+      "summary": "Framework-free authorizer deciding whether a user may subscribe to a server-sent event stream, checking event scope and space membership or organization match.",
+      "tags": ["security", "authorization", "sse", "service", "real-time"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts:SSESubscriptionAuthorizer",
+      "type": "class",
+      "name": "SSESubscriptionAuthorizer",
+      "filePath": "packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts",
+      "lineRange": [41, 109],
+      "summary": "Asserts a user may subscribe to an SSE event type by resolving its scope and checking space membership or organization.",
+      "tags": ["authorization", "sse", "security"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "type": "file",
+      "name": "SSESubscriptionErrors.ts",
+      "filePath": "packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "summary": "Domain errors for refused SSE subscriptions: a base SSESubscriptionError plus unknown-event-type and inaccessible-subject variants.",
+      "tags": ["error-handling", "domain-error", "sse", "authorization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:SSESubscriptionError",
+      "type": "class",
+      "name": "SSESubscriptionError",
+      "filePath": "packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "lineRange": [13, 30],
+      "summary": "Base error for refused SSE subscriptions carrying user, event type and params context.",
+      "tags": ["error-handling", "sse", "base-class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:EventTypeNotSubscribableError",
+      "type": "class",
+      "name": "EventTypeNotSubscribableError",
+      "filePath": "packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "lineRange": [40, 50],
+      "summary": "Refusal for event types that have no subscribable scope.",
+      "tags": ["error-handling", "sse", "authorization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:SubscriptionSubjectNotAccessibleError",
+      "type": "class",
+      "name": "SubscriptionSubjectNotAccessibleError",
+      "filePath": "packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "lineRange": [63, 73],
+      "summary": "Refusal when the named space or organization is not accessible to the caller.",
+      "tags": ["error-handling", "sse", "authorization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/sse/sseSubscriptionScopes.ts",
+      "type": "file",
+      "name": "sseSubscriptionScopes.ts",
+      "filePath": "packages/node-utils/src/sse/sseSubscriptionScopes.ts",
+      "summary": "Maps each publishable SSE event type to the subscription scope (space, organization, targeted) it must prove, refusing unrouted or unpublished types.",
+      "tags": [
+        "sse",
+        "authorization",
+        "type-definition",
+        "configuration",
+        "real-time"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/sse/sseSubscriptionScopes.ts:resolveSSESubscriptionScope",
+      "type": "function",
+      "name": "resolveSSESubscriptionScope",
+      "filePath": "packages/node-utils/src/sse/sseSubscriptionScopes.ts",
+      "lineRange": [83, 87],
+      "summary": "Looks up the subscription scope for an SSE event type, returning undefined for non-subscribable types.",
+      "tags": ["utility", "sse", "authorization"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts",
+      "target": "class:packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts:SSESubscriptionAuthorizer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts",
+      "target": "class:packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts:SSESubscriptionAuthorizer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts:SSESubscriptionAuthorizer",
+      "target": "function:packages/node-utils/src/sse/sseSubscriptionScopes.ts:resolveSSESubscriptionScope",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts",
+      "target": "file:packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/SSESubscriptionAuthorizer.ts",
+      "target": "file:packages/node-utils/src/sse/sseSubscriptionScopes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "target": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:SSESubscriptionError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "target": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:SSESubscriptionError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "target": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:EventTypeNotSubscribableError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "target": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:EventTypeNotSubscribableError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:EventTypeNotSubscribableError",
+      "target": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:SSESubscriptionError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "target": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:SubscriptionSubjectNotAccessibleError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/SSESubscriptionErrors.ts",
+      "target": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:SubscriptionSubjectNotAccessibleError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:SubscriptionSubjectNotAccessibleError",
+      "target": "class:packages/node-utils/src/sse/SSESubscriptionErrors.ts:SSESubscriptionError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/sseSubscriptionScopes.ts",
+      "target": "function:packages/node-utils/src/sse/sseSubscriptionScopes.ts:resolveSSESubscriptionScope",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/node-utils/src/sse/sseSubscriptionScopes.ts",
+      "target": "function:packages/node-utils/src/sse/sseSubscriptionScopes.ts:resolveSSESubscriptionScope",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

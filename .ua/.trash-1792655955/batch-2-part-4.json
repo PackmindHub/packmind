@@ -1,0 +1,1289 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "type": "file",
+      "name": "buildPackageDriftOverview.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "summary": "Pure selectors that pivot distributed package data into a per-package drift overview (artifacts, installs, pending work) plus counting, status and sorting helpers.",
+      "tags": [
+        "selector",
+        "drift",
+        "deployments",
+        "pure-function",
+        "data-transformation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensurePackage",
+      "type": "function",
+      "name": "ensurePackage",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [71, 93],
+      "summary": "Gets or creates a package drift accumulator entry.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensureArtifact",
+      "type": "function",
+      "name": "ensureArtifact",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [95, 124],
+      "summary": "Gets or creates an artifact drift entry within a package.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:deployedDriftReason",
+      "type": "function",
+      "name": "deployedDriftReason",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [144, 154],
+      "summary": "Computes the drift reason for a deployed artifact.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushStandard",
+      "type": "function",
+      "name": "pushStandard",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [156, 186],
+      "summary": "Adds a deployed standard into the package drift overview.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushCommand",
+      "type": "function",
+      "name": "pushCommand",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [188, 218],
+      "summary": "Adds a deployed command into the package drift overview.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushSkill",
+      "type": "function",
+      "name": "pushSkill",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [220, 250],
+      "summary": "Adds a deployed skill into the package drift overview.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingStandard",
+      "type": "function",
+      "name": "pushPendingStandard",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [252, 275],
+      "summary": "Adds a not-yet-distributed standard into the overview.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingCommand",
+      "type": "function",
+      "name": "pushPendingCommand",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [277, 299],
+      "summary": "Adds a not-yet-distributed command into the overview.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingSkill",
+      "type": "function",
+      "name": "pushPendingSkill",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [301, 323],
+      "summary": "Adds a not-yet-distributed skill into the overview.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:sortArtifacts",
+      "type": "function",
+      "name": "sortArtifacts",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [325, 336],
+      "summary": "Sorts artifacts by drift and name.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:sortInstallLocations",
+      "type": "function",
+      "name": "sortInstallLocations",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [338, 348],
+      "summary": "Sorts install locations of a package.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "type": "function",
+      "name": "buildPackageDriftOverview",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [360, 444],
+      "summary": "Builds per-package drift overviews from distributed package data.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasDrift",
+      "type": "function",
+      "name": "packageHasDrift",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [458, 462],
+      "summary": "Whether a package has any drifting install.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasSendableWork",
+      "type": "function",
+      "name": "packageHasSendableWork",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [472, 476],
+      "summary": "Whether a package has installs that can be distributed now.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageRepositoryCount",
+      "type": "function",
+      "name": "packageRepositoryCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [490, 494],
+      "summary": "Counts distinct repositories a package is installed in.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "type": "function",
+      "name": "packageBehindInstallCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [496, 504],
+      "summary": "Counts installs of a package that are behind.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageSendableInstallCount",
+      "type": "function",
+      "name": "packageSendableInstallCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [507, 515],
+      "summary": "Counts installs of a package that can be sent.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:totalBehindInstallCount",
+      "type": "function",
+      "name": "totalBehindInstallCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [517, 523],
+      "summary": "Totals behind installs across packages.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasFailedDistribution",
+      "type": "function",
+      "name": "packageHasFailedDistribution",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [525, 529],
+      "summary": "Whether any install's last distribution failed.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageIsWaiting",
+      "type": "function",
+      "name": "packageIsWaiting",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [544, 551],
+      "summary": "Whether a package's drift is only waiting on in-progress distributions.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageFailedInstallCount",
+      "type": "function",
+      "name": "packageFailedInstallCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [553, 559],
+      "summary": "Counts installs whose last distribution failed.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:totalFailedInstallCount",
+      "type": "function",
+      "name": "totalFailedInstallCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [561, 565],
+      "summary": "Totals failed installs across packages.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageAttentionInstallCount",
+      "type": "function",
+      "name": "packageAttentionInstallCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [575, 588],
+      "summary": "Counts installs needing attention (behind or failed).",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:sortPackagesByDriftFirst",
+      "type": "function",
+      "name": "sortPackagesByDriftFirst",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "lineRange": [590, 599],
+      "summary": "Sorts packages with drifting ones first.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "type": "file",
+      "name": "buildRepositoryDriftOverview.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "summary": "Selectors pivoting package drift overviews into a per-repository/target view with drift, failure, lock profile and activity helpers and drift-first sorting.",
+      "tags": [
+        "selector",
+        "drift",
+        "repository",
+        "pure-function",
+        "data-transformation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:buildRepositoryDriftOverview",
+      "type": "function",
+      "name": "buildRepositoryDriftOverview",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [36, 82],
+      "summary": "Pivots package drift overviews into per-repository/target drift overviews.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:targetDriftedPackageCount",
+      "type": "function",
+      "name": "targetDriftedPackageCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [110, 116],
+      "summary": "Counts drifted packages on a target.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:targetFailedPackageCount",
+      "type": "function",
+      "name": "targetFailedPackageCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [119, 125],
+      "summary": "Counts packages with failed distribution on a target.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasDrift",
+      "type": "function",
+      "name": "repositoryHasDrift",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [144, 146],
+      "summary": "Whether a repository has any drift.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasFailedDistribution",
+      "type": "function",
+      "name": "repositoryHasFailedDistribution",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [148, 152],
+      "summary": "Whether a repository has failed distributions.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryBehindInstallCount",
+      "type": "function",
+      "name": "repositoryBehindInstallCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [162, 166],
+      "summary": "Counts behind installs in a repository.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryFailedInstallCount",
+      "type": "function",
+      "name": "repositoryFailedInstallCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [168, 172],
+      "summary": "Counts failed installs in a repository.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftedTargetCount",
+      "type": "function",
+      "name": "repositoryDriftedTargetCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [186, 190],
+      "summary": "Counts drifted targets in a repository.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryPackageCount",
+      "type": "function",
+      "name": "repositoryPackageCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [200, 202],
+      "summary": "Counts distinct packages in a repository.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftedPackageCount",
+      "type": "function",
+      "name": "repositoryDriftedPackageCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [211, 213],
+      "summary": "Counts distinct drifted packages in a repository.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:collectPackageIds",
+      "type": "function",
+      "name": "collectPackageIds",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [215, 226],
+      "summary": "Collects package ids from a repository's targets, optionally filtered.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:totalDriftedRepoCount",
+      "type": "function",
+      "name": "totalDriftedRepoCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [228, 232],
+      "summary": "Counts drifted repositories.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:totalFailedRepoCount",
+      "type": "function",
+      "name": "totalFailedRepoCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [234, 238],
+      "summary": "Counts repositories with failed distributions.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryLastActivityAt",
+      "type": "function",
+      "name": "repositoryLastActivityAt",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [245, 258],
+      "summary": "Returns the latest distribution activity date of a repository.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryLockProfile",
+      "type": "function",
+      "name": "repositoryLockProfile",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [273, 286],
+      "summary": "Aggregates the lock profile across a repository's installs.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftIsWaiting",
+      "type": "function",
+      "name": "repositoryDriftIsWaiting",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [301, 317],
+      "summary": "Whether a repository's drift is only waiting on in-progress distributions.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:sortRepositoriesByDriftFirst",
+      "type": "function",
+      "name": "sortRepositoriesByDriftFirst",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [326, 340],
+      "summary": "Sorts repositories with drift and failures first.",
+      "tags": ["selector", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:flattenRepositoryTargetPackages",
+      "type": "function",
+      "name": "flattenRepositoryTargetPackages",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "lineRange": [353, 363],
+      "summary": "Flattens a repository's targets into a list of package-on-target entries.",
+      "tags": ["selector", "deployments"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensurePackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensureArtifact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:deployedDriftReason",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushStandard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushSkill",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingStandard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingSkill",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:sortArtifacts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:sortInstallLocations",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasDrift",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasDrift",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasSendableWork",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasSendableWork",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageRepositoryCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageRepositoryCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageSendableInstallCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageSendableInstallCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:totalBehindInstallCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:totalBehindInstallCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasFailedDistribution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasFailedDistribution",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageIsWaiting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageIsWaiting",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageFailedInstallCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageFailedInstallCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:totalFailedInstallCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:totalFailedInstallCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageAttentionInstallCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageAttentionInstallCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:sortPackagesByDriftFirst",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:sortPackagesByDriftFirst",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushStandard",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensureArtifact",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushStandard",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:deployedDriftReason",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushCommand",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensureArtifact",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushCommand",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:deployedDriftReason",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushSkill",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensureArtifact",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushSkill",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:deployedDriftReason",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingStandard",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensureArtifact",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingCommand",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensureArtifact",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingSkill",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensureArtifact",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:ensurePackage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushStandard",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushSkill",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingStandard",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:pushPendingSkill",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:sortArtifacts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:sortInstallLocations",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasDrift",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasDrift",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:needsAttention",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasSendableWork",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:needsAttention",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageSendableInstallCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:totalBehindInstallCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:totalFailedInstallCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageFailedInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageAttentionInstallCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageAttentionInstallCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationStanding.ts:needsAttention",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:sortPackagesByDriftFirst",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:buildRepositoryDriftOverview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:buildRepositoryDriftOverview",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:targetDriftedPackageCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:targetDriftedPackageCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:targetFailedPackageCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:targetFailedPackageCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasDrift",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasDrift",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasFailedDistribution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasFailedDistribution",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryBehindInstallCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryBehindInstallCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryFailedInstallCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryFailedInstallCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftedTargetCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftedTargetCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryPackageCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryPackageCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftedPackageCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftedPackageCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:collectPackageIds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:totalDriftedRepoCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:totalDriftedRepoCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:totalFailedRepoCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:totalFailedRepoCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryLastActivityAt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryLastActivityAt",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryLockProfile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryLockProfile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftIsWaiting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftIsWaiting",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:sortRepositoriesByDriftFirst",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:sortRepositoriesByDriftFirst",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:flattenRepositoryTargetPackages",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:flattenRepositoryTargetPackages",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:buildRepositoryDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:buildPackageDriftOverview",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:buildRepositoryDriftOverview",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:isRootTargetPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryPackageCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:collectPackageIds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftedPackageCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:collectPackageIds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftedPackageCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:totalDriftedRepoCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:totalFailedRepoCount",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasFailedDistribution",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryLockProfile",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryLockProfile",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftIsWaiting",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftIsWaiting",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:sortRepositoriesByDriftFirst",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasFailedDistribution",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:sortRepositoriesByDriftFirst",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

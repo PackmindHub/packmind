@@ -1,0 +1,164 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/commands/src/domain/errors/CommandsAdapterPortsMissingError.ts",
+      "type": "file",
+      "name": "CommandsAdapterPortsMissingError.ts",
+      "filePath": "packages/commands/src/domain/errors/CommandsAdapterPortsMissingError.ts",
+      "summary": "Internal error raised when the commands domain adapter is used before its required ports are provided.",
+      "tags": ["error-handling", "domain-error", "commands", "wiring"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/domain/errors/CommandsAdapterPortsMissingError.ts:CommandsAdapterPortsMissingError",
+      "type": "class",
+      "name": "CommandsAdapterPortsMissingError",
+      "filePath": "packages/commands/src/domain/errors/CommandsAdapterPortsMissingError.ts",
+      "lineRange": [10, 19],
+      "summary": "Signals that the commands adapter was used without its required ports.",
+      "tags": ["error-handling", "domain-error", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/domain/errors/CommandsInternalError.ts",
+      "type": "file",
+      "name": "CommandsInternalError.ts",
+      "filePath": "packages/commands/src/domain/errors/CommandsInternalError.ts",
+      "summary": "Base class for commands-domain broken-invariant errors, extending PackmindInternalError with a reason union and typed context, always surfaced as a 500.",
+      "tags": ["error-handling", "domain-error", "base-class", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/domain/errors/CommandsInternalError.ts:CommandsInternalError",
+      "type": "class",
+      "name": "CommandsInternalError",
+      "filePath": "packages/commands/src/domain/errors/CommandsInternalError.ts",
+      "lineRange": [24, 33],
+      "summary": "Base for commands-domain internal invariant failures with reason and context.",
+      "tags": ["error-handling", "base-class", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts",
+      "type": "file",
+      "name": "DeployCommandsQueueErrors.ts",
+      "filePath": "packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts",
+      "summary": "Lifecycle-guard internal errors for the deploy-commands BullMQ queue handle, raised when the queue or delayed job is used before initialization.",
+      "tags": ["error-handling", "domain-error", "job-queue", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts:DeployCommandsQueueNotInitializedError",
+      "type": "class",
+      "name": "DeployCommandsQueueNotInitializedError",
+      "filePath": "packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts",
+      "lineRange": [10, 19],
+      "summary": "Thrown when the deploy-commands queue is used before initialize().",
+      "tags": ["error-handling", "job-queue", "lifecycle"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts:DeployCommandsDelayedJobNotCreatedError",
+      "type": "class",
+      "name": "DeployCommandsDelayedJobNotCreatedError",
+      "filePath": "packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts",
+      "lineRange": [21, 30],
+      "summary": "Thrown when the delayed job is used before createQueue().",
+      "tags": ["error-handling", "job-queue", "lifecycle"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandsAdapterPortsMissingError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandsAdapterPortsMissingError.ts:CommandsAdapterPortsMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandsAdapterPortsMissingError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandsAdapterPortsMissingError.ts:CommandsAdapterPortsMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/commands/src/domain/errors/CommandsAdapterPortsMissingError.ts:CommandsAdapterPortsMissingError",
+      "target": "class:packages/commands/src/domain/errors/CommandsInternalError.ts:CommandsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandsAdapterPortsMissingError.ts",
+      "target": "file:packages/commands/src/domain/errors/CommandsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandsInternalError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandsInternalError.ts:CommandsInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/CommandsInternalError.ts",
+      "target": "class:packages/commands/src/domain/errors/CommandsInternalError.ts:CommandsInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts",
+      "target": "class:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts:DeployCommandsQueueNotInitializedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts",
+      "target": "class:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts:DeployCommandsQueueNotInitializedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts:DeployCommandsQueueNotInitializedError",
+      "target": "class:packages/commands/src/domain/errors/CommandsInternalError.ts:CommandsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts",
+      "target": "class:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts:DeployCommandsDelayedJobNotCreatedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts",
+      "target": "class:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts:DeployCommandsDelayedJobNotCreatedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts:DeployCommandsDelayedJobNotCreatedError",
+      "target": "class:packages/commands/src/domain/errors/CommandsInternalError.ts:CommandsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/commands/src/domain/errors/DeployCommandsQueueErrors.ts",
+      "target": "file:packages/commands/src/domain/errors/CommandsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

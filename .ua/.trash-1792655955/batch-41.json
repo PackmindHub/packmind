@@ -1,0 +1,1146 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/accounts/src/domain/repositories/IOrganizationRepository.ts",
+      "type": "file",
+      "name": "IOrganizationRepository.ts",
+      "filePath": "packages/accounts/src/domain/repositories/IOrganizationRepository.ts",
+      "summary": "Domain port for organization persistence, extending the generic IRepository with a lookup by organization slug.",
+      "tags": [
+        "type-definition",
+        "repository-port",
+        "domain",
+        "hexagonal-architecture"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/repositories/IPasswordResetTokenRepository.ts",
+      "type": "file",
+      "name": "IPasswordResetTokenRepository.ts",
+      "filePath": "packages/accounts/src/domain/repositories/IPasswordResetTokenRepository.ts",
+      "summary": "Domain port for password reset token persistence: lookup by plaintext token (deterministically encrypted), by id or latest per user, plus save and deletion by id or user.",
+      "tags": ["type-definition", "repository-port", "domain", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/repositories/IUserMetadataRepository.ts",
+      "type": "file",
+      "name": "IUserMetadataRepository.ts",
+      "filePath": "packages/accounts/src/domain/repositories/IUserMetadataRepository.ts",
+      "summary": "Domain port for reading and writing per-user metadata (onboarding state, social providers) keyed by user id.",
+      "tags": ["type-definition", "repository-port", "domain"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/repositories/IUserOrganizationMembershipRepository.ts",
+      "type": "file",
+      "name": "IUserOrganizationMembershipRepository.ts",
+      "filePath": "packages/accounts/src/domain/repositories/IUserOrganizationMembershipRepository.ts",
+      "summary": "Domain port for managing user-to-organization memberships, exposing membership removal and role updates that report whether a row matched.",
+      "tags": ["type-definition", "repository-port", "domain", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/repositories/IUserRepository.ts",
+      "type": "file",
+      "name": "IUserRepository.ts",
+      "filePath": "packages/accounts/src/domain/repositories/IUserRepository.ts",
+      "summary": "Domain port for user persistence, extending IRepository with lookups by email (exact and case-insensitive) and listing users of an organization.",
+      "tags": ["type-definition", "repository-port", "domain"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/useCases/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/accounts/src/domain/useCases/index.ts",
+      "summary": "Barrel re-exporting the accounts use case contracts (command, response and interface types) for sign-up, sign-in, password reset, organizations, invitations, API keys and CLI login codes.",
+      "tags": ["barrel", "type-definition", "use-case", "entry-point"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/utils/api-key.utils.ts",
+      "type": "file",
+      "name": "api-key.utils.ts",
+      "filePath": "packages/accounts/src/domain/utils/api-key.utils.ts",
+      "summary": "Utilities that encode an API key payload (host + JWT) as base64 JSON and decode/validate it back, raising domain errors on malformed keys.",
+      "tags": ["utility", "api-key", "serialization", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/accounts/src/domain/utils/api-key.utils.ts:encodeApiKey",
+      "type": "function",
+      "name": "encodeApiKey",
+      "filePath": "packages/accounts/src/domain/utils/api-key.utils.ts",
+      "lineRange": [4, 11],
+      "summary": "Serializes host and JWT into a base64-encoded JSON API key string.",
+      "tags": ["utility", "api-key", "serialization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/accounts/src/domain/utils/api-key.utils.ts:decodeApiKey",
+      "type": "function",
+      "name": "decodeApiKey",
+      "filePath": "packages/accounts/src/domain/utils/api-key.utils.ts",
+      "lineRange": [13, 46],
+      "summary": "Decodes a base64 API key, parses and validates its host/jwt payload, returning structured result or error.",
+      "tags": ["utility", "api-key", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "type": "file",
+      "name": "AccountsRepositories.ts",
+      "filePath": "packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "summary": "Aggregate repository registry for the accounts domain that instantiates all TypeORM-backed repositories from a DataSource and exposes typed getters for each.",
+      "tags": [
+        "factory",
+        "repository",
+        "infrastructure",
+        "dependency-injection"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/infra/repositories/AccountsRepositories.ts:AccountsRepositories",
+      "type": "class",
+      "name": "AccountsRepositories",
+      "filePath": "packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "lineRange": [26, 99],
+      "summary": "Constructs and holds every accounts repository from a DataSource and exposes getters satisfying IAccountsRepositories.",
+      "tags": ["factory", "repository", "registry"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts",
+      "type": "file",
+      "name": "CliLoginCodeRepository.ts",
+      "filePath": "packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts",
+      "summary": "TypeORM repository for short-lived CLI login codes, storing codes AES-encrypted with a deterministic IV so lookups by code work, and purging expired entries.",
+      "tags": [
+        "repository",
+        "infrastructure",
+        "encryption",
+        "authentication",
+        "typeorm"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts:CliLoginCodeRepository",
+      "type": "class",
+      "name": "CliLoginCodeRepository",
+      "filePath": "packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts",
+      "lineRange": [20, 167],
+      "summary": "Persists CLI login codes with AES encryption of the code using a key derived from configuration, plus expiry cleanup.",
+      "tags": ["repository", "encryption", "authentication"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/repositories/InvitationRepository.ts",
+      "type": "file",
+      "name": "InvitationRepository.ts",
+      "filePath": "packages/accounts/src/infra/repositories/InvitationRepository.ts",
+      "summary": "TypeORM repository for organization invitations with encrypted tokens, supporting bulk inserts, token/user lookups, latest-invitation queries and masked logging.",
+      "tags": [
+        "repository",
+        "infrastructure",
+        "encryption",
+        "invitation",
+        "typeorm"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/accounts/src/infra/repositories/InvitationRepository.ts:InvitationRepository",
+      "type": "class",
+      "name": "InvitationRepository",
+      "filePath": "packages/accounts/src/infra/repositories/InvitationRepository.ts",
+      "lineRange": [23, 305],
+      "summary": "Persists invitations with encrypted tokens, batch insertion, and multiple lookup strategies by token and user.",
+      "tags": ["repository", "encryption", "invitation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/repositories/OrganizationRepository.ts",
+      "type": "file",
+      "name": "OrganizationRepository.ts",
+      "filePath": "packages/accounts/src/infra/repositories/OrganizationRepository.ts",
+      "summary": "TypeORM repository for organizations built on AbstractRepository, adding slug lookup and a custom duplicate-name error message.",
+      "tags": ["repository", "infrastructure", "typeorm", "organization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/infra/repositories/OrganizationRepository.ts:OrganizationRepository",
+      "type": "class",
+      "name": "OrganizationRepository",
+      "filePath": "packages/accounts/src/infra/repositories/OrganizationRepository.ts",
+      "lineRange": [10, 58],
+      "summary": "AbstractRepository-based organization store adding findBySlug and duplicate-name error messaging.",
+      "tags": ["repository", "organization", "typeorm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts",
+      "type": "file",
+      "name": "PasswordResetTokenRepository.ts",
+      "filePath": "packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts",
+      "summary": "TypeORM repository for password reset tokens that encrypts tokens at rest, supports lookups by token, id and latest per user, and deletes tokens per user.",
+      "tags": [
+        "repository",
+        "infrastructure",
+        "encryption",
+        "security",
+        "typeorm"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts:PasswordResetTokenRepository",
+      "type": "class",
+      "name": "PasswordResetTokenRepository",
+      "filePath": "packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts",
+      "lineRange": [23, 285],
+      "summary": "Stores password reset tokens encrypted at rest and supports lookup and deletion by token, id and user.",
+      "tags": ["repository", "encryption", "security"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/repositories/UserMetadataRepository.ts",
+      "type": "file",
+      "name": "UserMetadataRepository.ts",
+      "filePath": "packages/accounts/src/infra/repositories/UserMetadataRepository.ts",
+      "summary": "TypeORM repository for user metadata records, finding and upserting metadata by user id.",
+      "tags": ["repository", "infrastructure", "typeorm", "user-metadata"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/infra/repositories/UserMetadataRepository.ts:UserMetadataRepository",
+      "type": "class",
+      "name": "UserMetadataRepository",
+      "filePath": "packages/accounts/src/infra/repositories/UserMetadataRepository.ts",
+      "lineRange": [14, 88],
+      "summary": "Finds and saves user metadata by user id with logging.",
+      "tags": ["repository", "user-metadata", "typeorm"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts",
+      "type": "file",
+      "name": "UserOrganizationMembershipRepository.ts",
+      "filePath": "packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts",
+      "summary": "TypeORM repository that removes user memberships from organizations and updates membership roles.",
+      "tags": ["repository", "infrastructure", "typeorm", "membership"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts:UserOrganizationMembershipRepository",
+      "type": "class",
+      "name": "UserOrganizationMembershipRepository",
+      "filePath": "packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts",
+      "lineRange": [17, 108],
+      "summary": "Removes memberships and updates roles in the user-organization join table, returning whether a row was affected.",
+      "tags": ["repository", "membership", "typeorm"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/repositories/UserRepository.ts",
+      "type": "file",
+      "name": "UserRepository.ts",
+      "filePath": "packages/accounts/src/infra/repositories/UserRepository.ts",
+      "summary": "TypeORM repository for users with lookups by id and email (case-insensitive variant), organization member listing, and email-masked logging.",
+      "tags": ["repository", "infrastructure", "typeorm", "user"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/infra/repositories/UserRepository.ts:UserRepository",
+      "type": "class",
+      "name": "UserRepository",
+      "filePath": "packages/accounts/src/infra/repositories/UserRepository.ts",
+      "lineRange": [11, 154],
+      "summary": "User store with email lookups, organization member listing and email masking in logs.",
+      "tags": ["repository", "user", "typeorm"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/schemas/CliLoginCodeSchema.ts",
+      "type": "file",
+      "name": "CliLoginCodeSchema.ts",
+      "filePath": "packages/accounts/src/infra/schemas/CliLoginCodeSchema.ts",
+      "summary": "TypeORM EntitySchema mapping the CliLoginCode entity to its table with user, organization and expiration columns.",
+      "tags": ["data-model", "typeorm", "schema-definition", "database"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/schemas/InvitationSchema.ts",
+      "type": "file",
+      "name": "InvitationSchema.ts",
+      "filePath": "packages/accounts/src/infra/schemas/InvitationSchema.ts",
+      "summary": "TypeORM EntitySchema for invitations, mapping token, user id and expiration date columns with timestamps.",
+      "tags": ["data-model", "typeorm", "schema-definition", "database"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/schemas/OrganizationSchema.ts",
+      "type": "file",
+      "name": "OrganizationSchema.ts",
+      "filePath": "packages/accounts/src/infra/schemas/OrganizationSchema.ts",
+      "summary": "TypeORM EntitySchema for organizations, defining name and slug columns plus timestamp/soft-delete fields.",
+      "tags": ["data-model", "typeorm", "schema-definition", "database"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/schemas/PasswordResetTokenSchema.ts",
+      "type": "file",
+      "name": "PasswordResetTokenSchema.ts",
+      "filePath": "packages/accounts/src/infra/schemas/PasswordResetTokenSchema.ts",
+      "summary": "TypeORM EntitySchema for password reset tokens with user relation, encrypted token and expiration columns.",
+      "tags": [
+        "data-model",
+        "typeorm",
+        "schema-definition",
+        "database",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/schemas/UserMetadataSchema.ts",
+      "type": "file",
+      "name": "UserMetadataSchema.ts",
+      "filePath": "packages/accounts/src/infra/schemas/UserMetadataSchema.ts",
+      "summary": "TypeORM EntitySchema for user metadata storing onboarding completion and social provider info per user.",
+      "tags": ["data-model", "typeorm", "schema-definition", "database"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/schemas/UserOrganizationMembershipSchema.ts",
+      "type": "file",
+      "name": "UserOrganizationMembershipSchema.ts",
+      "filePath": "packages/accounts/src/infra/schemas/UserOrganizationMembershipSchema.ts",
+      "summary": "TypeORM EntitySchema for the user-organization join table with role and relations to user and organization.",
+      "tags": [
+        "data-model",
+        "typeorm",
+        "schema-definition",
+        "database",
+        "membership"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/schemas/UserSchema.ts",
+      "type": "file",
+      "name": "UserSchema.ts",
+      "filePath": "packages/accounts/src/infra/schemas/UserSchema.ts",
+      "summary": "TypeORM EntitySchema for users, mapping email, display name, password hash, activity flags and organization memberships.",
+      "tags": ["data-model", "typeorm", "schema-definition", "database"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/infra/schemas/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/accounts/src/infra/schemas/index.ts",
+      "summary": "Barrel re-exporting all accounts TypeORM entity schemas and an accountsSchemas array used to register them with a DataSource.",
+      "tags": ["barrel", "entry-point", "typeorm", "schema-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/test/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/accounts/test/index.ts",
+      "summary": "Test helper entry point re-exporting account factories and providing createUser/createOrganization helpers that persist factory-built entities via a DataSource.",
+      "tags": ["test", "test-helper", "factory", "barrel"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/accounts/test/index.ts:createUser",
+      "type": "function",
+      "name": "createUser",
+      "filePath": "packages/accounts/test/index.ts",
+      "lineRange": [15, 21],
+      "summary": "Persists a factory-built User through the UserSchema repository of a test DataSource.",
+      "tags": ["test-helper", "factory", "database"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/accounts/test/index.ts:createOrganization",
+      "type": "function",
+      "name": "createOrganization",
+      "filePath": "packages/accounts/test/index.ts",
+      "lineRange": [23, 29],
+      "summary": "Persists a factory-built Organization through the OrganizationSchema repository of a test DataSource.",
+      "tags": ["test-helper", "factory", "database"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/test/invitationFactory.ts",
+      "type": "file",
+      "name": "invitationFactory.ts",
+      "filePath": "packages/accounts/test/invitationFactory.ts",
+      "summary": "Test factory producing Invitation entities with generated ids, tokens and default expiration, overridable via partial input.",
+      "tags": ["test", "factory", "test-fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/accounts/test/invitationFactory.ts:invitationFactory",
+      "type": "function",
+      "name": "invitationFactory",
+      "filePath": "packages/accounts/test/invitationFactory.ts",
+      "lineRange": [10, 20],
+      "summary": "Builds an Invitation test fixture with defaults and overrides.",
+      "tags": ["test", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/test/organizationFactory.ts",
+      "type": "file",
+      "name": "organizationFactory.ts",
+      "filePath": "packages/accounts/test/organizationFactory.ts",
+      "summary": "Test factory producing Organization entities with random name and slug, overridable via partial input.",
+      "tags": ["test", "factory", "test-fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/accounts/test/organizationFactory.ts:organizationFactory",
+      "type": "function",
+      "name": "organizationFactory",
+      "filePath": "packages/accounts/test/organizationFactory.ts",
+      "lineRange": [5, 14],
+      "summary": "Builds an Organization test fixture with random name and slug.",
+      "tags": ["test", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/test/userFactory.ts",
+      "type": "file",
+      "name": "userFactory.ts",
+      "filePath": "packages/accounts/test/userFactory.ts",
+      "summary": "Test factory producing User entities with random email, password hash and memberships, overridable via partial input.",
+      "tags": ["test", "factory", "test-fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/accounts/test/userFactory.ts:userFactory",
+      "type": "function",
+      "name": "userFactory",
+      "filePath": "packages/accounts/test/userFactory.ts",
+      "lineRange": [10, 27],
+      "summary": "Builds a User test fixture with random email and defaults.",
+      "tags": ["test", "factory"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/accounts/src/domain/repositories/IPasswordResetTokenRepository.ts",
+      "target": "file:packages/accounts/src/domain/entities/PasswordResetToken.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/utils/api-key.utils.ts",
+      "target": "file:packages/accounts/src/domain/entities/ApiKey.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/utils/api-key.utils.ts",
+      "target": "file:packages/accounts/src/domain/errors/ApiKeyEncodingFailedError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/utils/api-key.utils.ts",
+      "target": "function:packages/accounts/src/domain/utils/api-key.utils.ts:encodeApiKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/utils/api-key.utils.ts",
+      "target": "function:packages/accounts/src/domain/utils/api-key.utils.ts:encodeApiKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/domain/utils/api-key.utils.ts",
+      "target": "function:packages/accounts/src/domain/utils/api-key.utils.ts:decodeApiKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/utils/api-key.utils.ts",
+      "target": "function:packages/accounts/src/domain/utils/api-key.utils.ts:decodeApiKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/ICliLoginCodeRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IInvitationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IOrganizationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IPasswordResetTokenRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserMetadataRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserOrganizationMembershipRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/repositories/InvitationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/repositories/OrganizationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/repositories/UserMetadataRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/repositories/UserRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/schemas/CliLoginCodeSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/schemas/InvitationSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/schemas/OrganizationSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/schemas/PasswordResetTokenSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/schemas/UserMetadataSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/schemas/UserOrganizationMembershipSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "file:packages/accounts/src/infra/schemas/UserSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "class:packages/accounts/src/infra/repositories/AccountsRepositories.ts:AccountsRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "target": "class:packages/accounts/src/infra/repositories/AccountsRepositories.ts:AccountsRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/infra/repositories/AccountsRepositories.ts:AccountsRepositories",
+      "target": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts",
+      "target": "file:packages/accounts/src/domain/entities/CliLoginCode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts",
+      "target": "file:packages/accounts/src/domain/repositories/ICliLoginCodeRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts",
+      "target": "file:packages/accounts/src/infra/schemas/CliLoginCodeSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts:CliLoginCodeRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts:CliLoginCodeRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/infra/repositories/CliLoginCodeRepository.ts:CliLoginCodeRepository",
+      "target": "file:packages/accounts/src/domain/repositories/ICliLoginCodeRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/InvitationRepository.ts",
+      "target": "file:packages/accounts/src/domain/entities/Invitation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/InvitationRepository.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/InvitationRepository.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IInvitationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/InvitationRepository.ts",
+      "target": "file:packages/accounts/src/infra/schemas/InvitationSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/InvitationRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/InvitationRepository.ts:InvitationRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/InvitationRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/InvitationRepository.ts:InvitationRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/infra/repositories/InvitationRepository.ts:InvitationRepository",
+      "target": "file:packages/accounts/src/domain/repositories/IInvitationRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/OrganizationRepository.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IOrganizationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/OrganizationRepository.ts",
+      "target": "file:packages/accounts/src/infra/schemas/OrganizationSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/OrganizationRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/OrganizationRepository.ts:OrganizationRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/OrganizationRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/OrganizationRepository.ts:OrganizationRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/infra/repositories/OrganizationRepository.ts:OrganizationRepository",
+      "target": "file:packages/accounts/src/domain/repositories/IOrganizationRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts",
+      "target": "file:packages/accounts/src/domain/entities/PasswordResetToken.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IPasswordResetTokenRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts",
+      "target": "file:packages/accounts/src/infra/schemas/PasswordResetTokenSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts:PasswordResetTokenRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts:PasswordResetTokenRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/infra/repositories/PasswordResetTokenRepository.ts:PasswordResetTokenRepository",
+      "target": "file:packages/accounts/src/domain/repositories/IPasswordResetTokenRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserMetadataRepository.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserMetadataRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserMetadataRepository.ts",
+      "target": "file:packages/accounts/src/infra/schemas/UserMetadataSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserMetadataRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/UserMetadataRepository.ts:UserMetadataRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserMetadataRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/UserMetadataRepository.ts:UserMetadataRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/infra/repositories/UserMetadataRepository.ts:UserMetadataRepository",
+      "target": "file:packages/accounts/src/domain/repositories/IUserMetadataRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserOrganizationMembershipRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts",
+      "target": "file:packages/accounts/src/infra/schemas/UserOrganizationMembershipSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts:UserOrganizationMembershipRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts:UserOrganizationMembershipRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/infra/repositories/UserOrganizationMembershipRepository.ts:UserOrganizationMembershipRepository",
+      "target": "file:packages/accounts/src/domain/repositories/IUserOrganizationMembershipRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserRepository.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserRepository.ts",
+      "target": "file:packages/accounts/src/infra/schemas/UserSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/UserRepository.ts:UserRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/infra/repositories/UserRepository.ts",
+      "target": "class:packages/accounts/src/infra/repositories/UserRepository.ts:UserRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/infra/repositories/UserRepository.ts:UserRepository",
+      "target": "file:packages/accounts/src/domain/repositories/IUserRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/infra/schemas/CliLoginCodeSchema.ts",
+      "target": "file:packages/accounts/src/domain/entities/CliLoginCode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/schemas/InvitationSchema.ts",
+      "target": "file:packages/accounts/src/domain/entities/Invitation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/schemas/PasswordResetTokenSchema.ts",
+      "target": "file:packages/accounts/src/domain/entities/PasswordResetToken.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/schemas/index.ts",
+      "target": "file:packages/accounts/src/infra/schemas/CliLoginCodeSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/schemas/index.ts",
+      "target": "file:packages/accounts/src/infra/schemas/InvitationSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/schemas/index.ts",
+      "target": "file:packages/accounts/src/infra/schemas/OrganizationSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/schemas/index.ts",
+      "target": "file:packages/accounts/src/infra/schemas/PasswordResetTokenSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/schemas/index.ts",
+      "target": "file:packages/accounts/src/infra/schemas/UserMetadataSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/schemas/index.ts",
+      "target": "file:packages/accounts/src/infra/schemas/UserOrganizationMembershipSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/infra/schemas/index.ts",
+      "target": "file:packages/accounts/src/infra/schemas/UserSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/test/index.ts",
+      "target": "file:packages/accounts/src/infra/schemas/UserSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/test/index.ts",
+      "target": "file:packages/accounts/src/infra/schemas/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/test/index.ts",
+      "target": "file:packages/accounts/test/invitationFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/test/index.ts",
+      "target": "file:packages/accounts/test/organizationFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/test/index.ts",
+      "target": "file:packages/accounts/test/userFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/test/index.ts",
+      "target": "function:packages/accounts/test/index.ts:createUser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/test/index.ts",
+      "target": "function:packages/accounts/test/index.ts:createUser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/test/index.ts",
+      "target": "function:packages/accounts/test/index.ts:createOrganization",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/test/index.ts",
+      "target": "function:packages/accounts/test/index.ts:createOrganization",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/test/invitationFactory.ts",
+      "target": "file:packages/accounts/src/domain/entities/Invitation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/test/invitationFactory.ts",
+      "target": "function:packages/accounts/test/invitationFactory.ts:invitationFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/test/invitationFactory.ts",
+      "target": "function:packages/accounts/test/invitationFactory.ts:invitationFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/test/organizationFactory.ts",
+      "target": "function:packages/accounts/test/organizationFactory.ts:organizationFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/test/organizationFactory.ts",
+      "target": "function:packages/accounts/test/organizationFactory.ts:organizationFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/test/userFactory.ts",
+      "target": "function:packages/accounts/test/userFactory.ts:userFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/test/userFactory.ts",
+      "target": "function:packages/accounts/test/userFactory.ts:userFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/accounts/test/index.ts:createUser",
+      "target": "function:packages/accounts/test/userFactory.ts:userFactory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/accounts/test/index.ts:createOrganization",
+      "target": "function:packages/accounts/test/organizationFactory.ts:organizationFactory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "nodes": [
+    {
+      "id": "config:packages/linter-execution/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/linter-execution/package.json",
+      "summary": "Package manifest for the private CommonJS workspace library @packmind/linter-execution, declaring dependencies on @packmind/linter-ast and @packmind/logger.",
+      "tags": [
+        "configuration",
+        "package-manifest",
+        "dependencies",
+        "nx-library"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/linter-execution/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/linter-execution/project.json",
+      "summary": "Nx project definition for linter-execution: node-tagged library built with @nx/js:swc, with a typecheck target covering both lib and spec tsconfigs.",
+      "tags": ["configuration", "build-system", "nx", "swc"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/linter-execution/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/linter-execution/tsconfig.json",
+      "summary": "Root TypeScript project config for linter-execution, extending tsconfig.base.json with CommonJS output and referencing the lib and spec tsconfigs.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system",
+        "project-references"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/linter-execution/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/linter-execution/tsconfig.lib.json",
+      "summary": "TypeScript library build config for linter-execution that compiles src/**/*.ts with declarations while excluding specs and jest config.",
+      "tags": ["configuration", "typescript", "build-system", "library-build"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/linter-execution/package.json",
+      "target": "file:packages/linter-execution/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-execution/project.json",
+      "target": "file:packages/linter-execution/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-execution/tsconfig.json",
+      "target": "config:packages/linter-execution/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-execution/tsconfig.lib.json",
+      "target": "file:packages/linter-execution/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-execution/project.json",
+      "target": "config:packages/linter-execution/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-execution/project.json",
+      "target": "config:packages/linter-execution/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-execution/package.json",
+      "target": "config:packages/linter-ast/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/linter-execution/package.json",
+      "target": "config:packages/logger/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

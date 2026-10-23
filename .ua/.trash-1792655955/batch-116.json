@@ -1,0 +1,1075 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/shared/components/inputs/CopiableTextarea.tsx",
+      "type": "file",
+      "name": "CopiableTextarea.tsx",
+      "filePath": "apps/frontend/src/shared/components/inputs/CopiableTextarea.tsx",
+      "summary": "React component rendering a read-only textarea with a copy-to-clipboard action, used to display snippets users must copy.",
+      "tags": ["component", "react", "clipboard", "ui-input"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/inputs/CopiableTextarea.tsx:CopiableTextarea",
+      "type": "function",
+      "name": "CopiableTextarea",
+      "filePath": "apps/frontend/src/shared/components/inputs/CopiableTextarea.tsx",
+      "lineRange": [18, 53],
+      "summary": "Renders a textarea paired with a copy button that writes its value to the clipboard and shows copy feedback.",
+      "tags": ["component", "clipboard", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/hooks/useDebouncedValue.ts",
+      "type": "file",
+      "name": "useDebouncedValue.ts",
+      "filePath": "apps/frontend/src/shared/hooks/useDebouncedValue.ts",
+      "summary": "Generic React hook that returns a debounced copy of a value after a configurable delay.",
+      "tags": ["hook", "utility", "debounce", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/hooks/useDebouncedValue.ts:useDebouncedValue",
+      "type": "function",
+      "name": "useDebouncedValue",
+      "filePath": "apps/frontend/src/shared/hooks/useDebouncedValue.ts",
+      "lineRange": [7, 16],
+      "summary": "Delays propagating a changing value until it has been stable for the given delay, clearing pending timers on change.",
+      "tags": ["hook", "debounce", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts",
+      "type": "file",
+      "name": "useModalLayerRecovery.ts",
+      "filePath": "apps/frontend/src/shared/hooks/useModalLayerRecovery.ts",
+      "summary": "React hook that detects and clears leaked modal/overlay barriers (aria-hidden, pointer-events, scroll lock) left behind when dialog layers unmount abnormally, restoring page interactivity.",
+      "tags": ["hook", "accessibility", "modal", "dom-recovery", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts:clearLeakedBarrier",
+      "type": "function",
+      "name": "clearLeakedBarrier",
+      "filePath": "apps/frontend/src/shared/hooks/useModalLayerRecovery.ts",
+      "lineRange": [75, 90],
+      "summary": "Removes leftover aria-hidden/inert attributes and pointer-event or scroll locks from the document once no modal layer is open.",
+      "tags": ["dom", "modal", "cleanup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts:useModalLayerRecovery",
+      "type": "function",
+      "name": "useModalLayerRecovery",
+      "filePath": "apps/frontend/src/shared/hooks/useModalLayerRecovery.ts",
+      "lineRange": [98, 132],
+      "summary": "Observes DOM mutations and route changes to detect a leaked modal barrier with no open layer and clears it.",
+      "tags": ["hook", "modal", "mutation-observer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/hooks/useWarnBeforeUnload.ts",
+      "type": "file",
+      "name": "useWarnBeforeUnload.ts",
+      "filePath": "apps/frontend/src/shared/hooks/useWarnBeforeUnload.ts",
+      "summary": "React hook that registers a beforeunload listener to warn users about unsaved changes before leaving the page.",
+      "tags": ["hook", "unsaved-changes", "event-handler", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/hooks/useWarnBeforeUnload.ts:useWarnBeforeUnload",
+      "type": "function",
+      "name": "useWarnBeforeUnload",
+      "filePath": "apps/frontend/src/shared/hooks/useWarnBeforeUnload.ts",
+      "lineRange": [13, 27],
+      "summary": "Attaches and detaches a beforeunload handler while a condition is true, prompting the browser leave-page confirmation.",
+      "tags": ["hook", "event-handler", "browser"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/utils/dateUtils.ts",
+      "type": "file",
+      "name": "dateUtils.ts",
+      "filePath": "apps/frontend/src/shared/utils/dateUtils.ts",
+      "summary": "Date formatting helper for displaying timestamps consistently across the frontend.",
+      "tags": ["utility", "date", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/utils/dateUtils.ts:formatDate",
+      "type": "function",
+      "name": "formatDate",
+      "filePath": "apps/frontend/src/shared/utils/dateUtils.ts",
+      "lineRange": [6, 21],
+      "summary": "Formats a date value into a localized human-readable string for UI display.",
+      "tags": ["utility", "date", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/utils/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/shared/utils/index.ts",
+      "summary": "Barrel re-exporting the frontend routes helper from the shared utils folder.",
+      "tags": ["barrel", "entry-point", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/utils/isLocalhost.ts",
+      "type": "file",
+      "name": "isLocalhost.ts",
+      "filePath": "apps/frontend/src/shared/utils/isLocalhost.ts",
+      "summary": "Tiny helper reporting whether the frontend is running on a localhost hostname.",
+      "tags": ["utility", "environment", "browser"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/utils/isLocalhost.ts:isLocalhost",
+      "type": "function",
+      "name": "isLocalhost",
+      "filePath": "apps/frontend/src/shared/utils/isLocalhost.ts",
+      "lineRange": [1, 5],
+      "summary": "Returns true when window.location.hostname is a local loopback address.",
+      "tags": ["utility", "environment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/test-setup.ts",
+      "type": "file",
+      "name": "test-setup.ts",
+      "filePath": "apps/frontend/src/test-setup.ts",
+      "summary": "Vitest global setup for the frontend: loads jest-dom matchers, shims jest fake-timer detection for testing-library, cleans up DOM/timers after each test and resets modules between specs since isolate is disabled.",
+      "tags": ["test", "test-setup", "vitest", "testing-library"],
+      "complexity": "moderate",
+      "languageNotes": "Provides a one-method `globalThis.jest` shim so @testing-library/dom honours Vitest fake timers while stray jest.fn() calls still fail."
+    },
+    {
+      "id": "file:apps/frontend/src/test/loaderArgs.ts",
+      "type": "file",
+      "name": "loaderArgs.ts",
+      "filePath": "apps/frontend/src/test/loaderArgs.ts",
+      "summary": "Test factory building react-router LoaderFunctionArgs so specs only specify url, params and pattern.",
+      "tags": ["test", "factory", "react-router", "test-utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/test/loaderArgs.ts:makeLoaderArgs",
+      "type": "function",
+      "name": "makeLoaderArgs",
+      "filePath": "apps/frontend/src/test/loaderArgs.ts",
+      "lineRange": [17, 29],
+      "summary": "Builds a complete LoaderFunctionArgs object (request, url, params, pattern, context) from minimal options for loader specs.",
+      "tags": ["test", "factory", "react-router"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/test/mutationResultMocks.ts",
+      "type": "file",
+      "name": "mutationResultMocks.ts",
+      "filePath": "apps/frontend/src/test/mutationResultMocks.ts",
+      "summary": "Typed factories producing TanStack Query UseMutationResult mocks in idle, pending, success and error states for frontend component tests.",
+      "tags": ["test", "factory", "tanstack-query", "mocks"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/test/mutationResultMocks.ts:createIdleMutationResult",
+      "type": "function",
+      "name": "createIdleMutationResult",
+      "filePath": "apps/frontend/src/test/mutationResultMocks.ts",
+      "lineRange": [40, 56],
+      "summary": "Creates a fully-typed UseMutationResult mock in the idle state with no-op mutate functions.",
+      "tags": ["test", "factory", "mocks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/test/mutationResultMocks.ts:createPendingMutationResult",
+      "type": "function",
+      "name": "createPendingMutationResult",
+      "filePath": "apps/frontend/src/test/mutationResultMocks.ts",
+      "lineRange": [62, 81],
+      "summary": "Creates a fully-typed UseMutationResult mock in the pending state with no-op mutate functions.",
+      "tags": ["test", "factory", "mocks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/test/mutationResultMocks.ts:createSuccessMutationResult",
+      "type": "function",
+      "name": "createSuccessMutationResult",
+      "filePath": "apps/frontend/src/test/mutationResultMocks.ts",
+      "lineRange": [88, 109],
+      "summary": "Creates a fully-typed UseMutationResult mock in the success state with no-op mutate functions.",
+      "tags": ["test", "factory", "mocks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/test/mutationResultMocks.ts:createFailedMutationResult",
+      "type": "function",
+      "name": "createFailedMutationResult",
+      "filePath": "apps/frontend/src/test/mutationResultMocks.ts",
+      "lineRange": [120, 142],
+      "summary": "Creates a fully-typed UseMutationResult mock in the error state with no-op mutate functions.",
+      "tags": ["test", "factory", "mocks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/test/queryResultMocks.ts",
+      "type": "file",
+      "name": "queryResultMocks.ts",
+      "filePath": "apps/frontend/src/test/queryResultMocks.ts",
+      "summary": "Typed factories producing TanStack Query UseQueryResult mocks in success, pending and error states for frontend tests.",
+      "tags": ["test", "factory", "tanstack-query", "mocks"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/test/queryResultMocks.ts:createSuccessQueryResult",
+      "type": "function",
+      "name": "createSuccessQueryResult",
+      "filePath": "apps/frontend/src/test/queryResultMocks.ts",
+      "lineRange": [46, 66],
+      "summary": "Creates a fully-typed UseQueryResult mock in the success state with consistent status flags.",
+      "tags": ["test", "factory", "mocks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/test/queryResultMocks.ts:createPendingQueryResult",
+      "type": "function",
+      "name": "createPendingQueryResult",
+      "filePath": "apps/frontend/src/test/queryResultMocks.ts",
+      "lineRange": [71, 94],
+      "summary": "Creates a fully-typed UseQueryResult mock in the pending state with consistent status flags.",
+      "tags": ["test", "factory", "mocks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/test/queryResultMocks.ts:createFailedQueryResult",
+      "type": "function",
+      "name": "createFailedQueryResult",
+      "filePath": "apps/frontend/src/test/queryResultMocks.ts",
+      "lineRange": [99, 122],
+      "summary": "Creates a fully-typed UseQueryResult mock in the error state with consistent status flags.",
+      "tags": ["test", "factory", "mocks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/vite.config.storybook.ts",
+      "type": "file",
+      "name": "vite.config.storybook.ts",
+      "filePath": "apps/frontend/vite.config.storybook.ts",
+      "summary": "Vite configuration used by Storybook for the frontend, aliasing @packmind/proprietary/frontend to OSS stubs or real sources depending on PACKMIND_EDITION.",
+      "tags": ["config", "build-system", "storybook", "vite"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/vite.config.ts",
+      "type": "file",
+      "name": "vite.config.ts",
+      "filePath": "apps/frontend/vite.config.ts",
+      "summary": "Main Vite and Vitest configuration for the React frontend: tsconfig path aliases, edition-specific proprietary aliasing, dev server /api proxy, build options and test settings (setup file, isolate:false).",
+      "tags": ["config", "build-system", "vite", "vitest", "entry-point"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/vite.config.ts:tsconfigPathAliases",
+      "type": "function",
+      "name": "tsconfigPathAliases",
+      "filePath": "apps/frontend/vite.config.ts",
+      "lineRange": [20, 43],
+      "summary": "Reads tsconfig path mappings and converts them into Vite resolve aliases.",
+      "tags": ["build-system", "aliases", "config"],
+      "complexity": "simple"
+    },
+    {
+      "id": "pipeline:auto-update/.gitlab-ci.yml",
+      "type": "pipeline",
+      "name": ".gitlab-ci.yml",
+      "filePath": "auto-update/.gitlab-ci.yml",
+      "summary": "GitLab CI pipeline running a scheduled/manual nightly job that installs the Packmind CLI, runs `packmind install`, and pushes artifact changes to a branch with an auto-created merge request.",
+      "tags": ["ci-cd", "automation", "gitlab", "packmind-cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:docker-bake.hcl",
+      "type": "file",
+      "name": "docker-bake.hcl",
+      "filePath": "docker-bake.hcl",
+      "summary": "Docker Buildx Bake definition building Packmind API/frontend/CLI images with edition-aware (oss/proprietary) naming, versioning and multi-platform release targets.",
+      "tags": [
+        "build-system",
+        "containerization",
+        "docker-bake",
+        "infrastructure"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "HCL variables drive tag suffixes per edition; a release group targets multi-platform pushes."
+    },
+    {
+      "id": "file:docker/nginx/nginx.conf",
+      "type": "file",
+      "name": "nginx.conf",
+      "filePath": "docker/nginx/nginx.conf",
+      "summary": "Local TLS-terminating nginx reverse proxy forwarding HTTPS traffic with websocket upgrade headers to the frontend dev server, with a body size limit aligned to the API body parser.",
+      "tags": ["reverse-proxy", "nginx", "tls", "infrastructure"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:docker/otel/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "docker/otel/README.md",
+      "summary": "Extensive guide to local OpenTelemetry tracing: running the collector stack, routing to Datadog or Grafana, query cookbook, logs-traces correlation, alerting on slow requests, instrumentation and custom spans, hosted backends, Sentry and gotchas.",
+      "tags": [
+        "documentation",
+        "observability",
+        "opentelemetry",
+        "grafana",
+        "monitoring"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "config:docker/otel/grafana/dashboards/packmind-api.json",
+      "type": "config",
+      "name": "packmind-api.json",
+      "filePath": "docker/otel/grafana/dashboards/packmind-api.json",
+      "summary": "Grafana dashboard definition visualizing Packmind API traces and RED metrics (rate, errors, duration) from the local OTel stack.",
+      "tags": ["monitoring", "grafana", "dashboard", "observability"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:docker/otel/grafana/provisioning-alerting.yaml",
+      "type": "config",
+      "name": "provisioning-alerting.yaml",
+      "filePath": "docker/otel/grafana/provisioning-alerting.yaml",
+      "summary": "Grafana alerting provisioning defining a local email contact point and a rule firing when Packmind API root-span p95 latency exceeds 2s.",
+      "tags": ["monitoring", "alerting", "grafana", "configuration"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:docker/otel/grafana/provisioning-dashboards.yaml",
+      "type": "config",
+      "name": "provisioning-dashboards.yaml",
+      "filePath": "docker/otel/grafana/provisioning-dashboards.yaml",
+      "summary": "Grafana dashboard provider provisioning that loads dashboard JSON files from the mounted dashboards directory.",
+      "tags": ["grafana", "provisioning", "configuration", "monitoring"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:dockerfile/local/docker-compose.yaml",
+      "type": "service",
+      "name": "docker-compose.yaml",
+      "filePath": "dockerfile/local/docker-compose.yaml",
+      "summary": "Docker Compose stack running locally built Packmind API and frontend images alongside PostgreSQL 17 and Redis with persistent volumes.",
+      "tags": [
+        "orchestration",
+        "infrastructure",
+        "docker-compose",
+        "local-dev"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "service:dockerfile/local/docker-compose.yaml:postgres",
+      "type": "service",
+      "name": "postgres",
+      "filePath": "dockerfile/local/docker-compose.yaml",
+      "summary": "PostgreSQL 17 database service with persistent local volume.",
+      "tags": ["service", "docker-compose", "local-dev"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:dockerfile/local/docker-compose.yaml:redis",
+      "type": "service",
+      "name": "redis",
+      "filePath": "dockerfile/local/docker-compose.yaml",
+      "summary": "Redis 7 cache/queue service with persistent local volume.",
+      "tags": ["service", "docker-compose", "local-dev"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:dockerfile/local/docker-compose.yaml:api",
+      "type": "service",
+      "name": "api",
+      "filePath": "dockerfile/local/docker-compose.yaml",
+      "summary": "Packmind API container from the locally built packmind-api-local image.",
+      "tags": ["service", "docker-compose", "local-dev"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:dockerfile/local/docker-compose.yaml:frontend",
+      "type": "service",
+      "name": "frontend",
+      "filePath": "dockerfile/local/docker-compose.yaml",
+      "summary": "Packmind frontend container from the locally built packmind-frontend-local image.",
+      "tags": ["service", "docker-compose", "local-dev"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:dockerfile/nginx.compose.conf",
+      "type": "file",
+      "name": "nginx.compose.conf",
+      "filePath": "dockerfile/nginx.compose.conf",
+      "summary": "Nginx config for the Docker Compose frontend image: serves the SPA, caches static assets, and proxies /api to the packmind-api upstream with cookie passthrough.",
+      "tags": ["nginx", "reverse-proxy", "docker-compose", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:dockerfile/nginx.k8s.conf",
+      "type": "file",
+      "name": "nginx.k8s.conf",
+      "filePath": "dockerfile/nginx.k8s.conf",
+      "summary": "Nginx config for the Kubernetes frontend image when an ingress handles API routing: serves the SPA with static asset caching and history fallback.",
+      "tags": ["nginx", "kubernetes", "static-hosting", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:dockerfile/nginx.k8s.no-ingress.conf",
+      "type": "file",
+      "name": "nginx.k8s.no-ingress.conf",
+      "filePath": "dockerfile/nginx.k8s.no-ingress.conf",
+      "summary": "Nginx config for Kubernetes deployments without ingress: serves the SPA and proxies /api to an upstream built from API_SERVICE_HOST/PORT env variables.",
+      "tags": ["nginx", "kubernetes", "reverse-proxy", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "type": "file",
+      "name": "errors.ts",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "summary": "Test fixture of domain error classes with valid and invalid kind/reason shapes, exercised by the throw-kind-carrying-error ESLint rule spec.",
+      "tags": ["test", "fixture", "eslint-rule", "error-handling"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackageError",
+      "type": "class",
+      "name": "PackageError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [7, 15],
+      "summary": "Base domain error carrying a DomainErrorKind and a literal reason union, the canonical valid shape.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackageNotFoundError",
+      "type": "class",
+      "name": "PackageNotFoundError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [17, 21],
+      "summary": "Subclass of PackageError fixing kind not_found and reason package_not_found.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackmindInternalError",
+      "type": "class",
+      "name": "PackmindInternalError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [23, 31],
+      "summary": "Error with a readonly literal internal kind and string reason.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:TooManyAttemptsError",
+      "type": "class",
+      "name": "TooManyAttemptsError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [33, 36],
+      "summary": "Rate-limited error with literal kind and defaulted reason field.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:ExpectedAuthError",
+      "type": "class",
+      "name": "ExpectedAuthError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [38, 38],
+      "summary": "Abstract base for expected authentication errors without kind/reason.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:InvalidPasswordError",
+      "type": "class",
+      "name": "InvalidPasswordError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [40, 40],
+      "summary": "Concrete subclass of ExpectedAuthError used to test inherited error shapes.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:StringKindError",
+      "type": "class",
+      "name": "StringKindError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [42, 45],
+      "summary": "Invalid fixture whose kind is a plain string instead of a literal kind.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:UnknownKindError",
+      "type": "class",
+      "name": "UnknownKindError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [47, 50],
+      "summary": "Invalid fixture whose kind is an unrecognized value.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:KindWithoutReasonError",
+      "type": "class",
+      "name": "KindWithoutReasonError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [52, 54],
+      "summary": "Invalid fixture declaring a kind but no reason.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:NullableKindError",
+      "type": "class",
+      "name": "NullableKindError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [56, 59],
+      "summary": "Invalid fixture with a nullable kind.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:OptionalKindError",
+      "type": "class",
+      "name": "OptionalKindError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [61, 64],
+      "summary": "Invalid fixture with an optional kind.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:NumericReasonError",
+      "type": "class",
+      "name": "NumericReasonError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [66, 69],
+      "summary": "Invalid fixture with a numeric reason.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:OptionalReasonError",
+      "type": "class",
+      "name": "OptionalReasonError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [71, 74],
+      "summary": "Invalid fixture with an optional reason.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:NullableReasonError",
+      "type": "class",
+      "name": "NullableReasonError",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "lineRange": [76, 79],
+      "summary": "Invalid fixture with a nullable reason.",
+      "tags": ["fixture", "error-class", "eslint-rule"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/shared/components/inputs/CopiableTextarea.tsx",
+      "target": "function:apps/frontend/src/shared/components/inputs/CopiableTextarea.tsx:CopiableTextarea",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/inputs/CopiableTextarea.tsx",
+      "target": "function:apps/frontend/src/shared/components/inputs/CopiableTextarea.tsx:CopiableTextarea",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useDebouncedValue.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useDebouncedValue.ts:useDebouncedValue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useDebouncedValue.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useDebouncedValue.ts:useDebouncedValue",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts:clearLeakedBarrier",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts:useModalLayerRecovery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts:useModalLayerRecovery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts:useModalLayerRecovery",
+      "target": "function:apps/frontend/src/shared/hooks/useModalLayerRecovery.ts:clearLeakedBarrier",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useWarnBeforeUnload.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useWarnBeforeUnload.ts:useWarnBeforeUnload",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useWarnBeforeUnload.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useWarnBeforeUnload.ts:useWarnBeforeUnload",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/dateUtils.ts",
+      "target": "function:apps/frontend/src/shared/utils/dateUtils.ts:formatDate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/dateUtils.ts",
+      "target": "function:apps/frontend/src/shared/utils/dateUtils.ts:formatDate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/isLocalhost.ts",
+      "target": "function:apps/frontend/src/shared/utils/isLocalhost.ts:isLocalhost",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/isLocalhost.ts",
+      "target": "function:apps/frontend/src/shared/utils/isLocalhost.ts:isLocalhost",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/test/loaderArgs.ts",
+      "target": "function:apps/frontend/src/test/loaderArgs.ts:makeLoaderArgs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/test/loaderArgs.ts",
+      "target": "function:apps/frontend/src/test/loaderArgs.ts:makeLoaderArgs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/test/mutationResultMocks.ts",
+      "target": "function:apps/frontend/src/test/mutationResultMocks.ts:createIdleMutationResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/test/mutationResultMocks.ts",
+      "target": "function:apps/frontend/src/test/mutationResultMocks.ts:createIdleMutationResult",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/test/mutationResultMocks.ts",
+      "target": "function:apps/frontend/src/test/mutationResultMocks.ts:createPendingMutationResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/test/mutationResultMocks.ts",
+      "target": "function:apps/frontend/src/test/mutationResultMocks.ts:createPendingMutationResult",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/test/mutationResultMocks.ts",
+      "target": "function:apps/frontend/src/test/mutationResultMocks.ts:createSuccessMutationResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/test/mutationResultMocks.ts",
+      "target": "function:apps/frontend/src/test/mutationResultMocks.ts:createSuccessMutationResult",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/test/mutationResultMocks.ts",
+      "target": "function:apps/frontend/src/test/mutationResultMocks.ts:createFailedMutationResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/test/mutationResultMocks.ts",
+      "target": "function:apps/frontend/src/test/mutationResultMocks.ts:createFailedMutationResult",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/test/queryResultMocks.ts",
+      "target": "function:apps/frontend/src/test/queryResultMocks.ts:createSuccessQueryResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/test/queryResultMocks.ts",
+      "target": "function:apps/frontend/src/test/queryResultMocks.ts:createSuccessQueryResult",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/test/queryResultMocks.ts",
+      "target": "function:apps/frontend/src/test/queryResultMocks.ts:createPendingQueryResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/test/queryResultMocks.ts",
+      "target": "function:apps/frontend/src/test/queryResultMocks.ts:createPendingQueryResult",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/test/queryResultMocks.ts",
+      "target": "function:apps/frontend/src/test/queryResultMocks.ts:createFailedQueryResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/test/queryResultMocks.ts",
+      "target": "function:apps/frontend/src/test/queryResultMocks.ts:createFailedQueryResult",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/vite.config.ts",
+      "target": "function:apps/frontend/vite.config.ts:tsconfigPathAliases",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/vite.config.ts",
+      "target": "file:apps/frontend/src/test-setup.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:docker/otel/grafana/provisioning-dashboards.yaml",
+      "target": "config:docker/otel/grafana/dashboards/packmind-api.json",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:dockerfile/local/docker-compose.yaml",
+      "target": "service:dockerfile/local/docker-compose.yaml:postgres",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:dockerfile/local/docker-compose.yaml",
+      "target": "service:dockerfile/local/docker-compose.yaml:redis",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:dockerfile/local/docker-compose.yaml",
+      "target": "service:dockerfile/local/docker-compose.yaml:api",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "service:dockerfile/local/docker-compose.yaml",
+      "target": "service:dockerfile/local/docker-compose.yaml:frontend",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:dockerfile/nginx.k8s.no-ingress.conf",
+      "target": "file:dockerfile/nginx.compose.conf",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:dockerfile/nginx.k8s.conf",
+      "target": "file:dockerfile/nginx.k8s.no-ingress.conf",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:dockerfile/nginx.compose.conf",
+      "target": "service:dockerfile/local/docker-compose.yaml:api",
+      "type": "routes",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackageError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackageError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackageNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackageNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackmindInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackmindInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:TooManyAttemptsError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:TooManyAttemptsError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:ExpectedAuthError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:ExpectedAuthError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:InvalidPasswordError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:InvalidPasswordError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:StringKindError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:StringKindError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:UnknownKindError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:UnknownKindError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:KindWithoutReasonError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:KindWithoutReasonError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:NullableKindError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:NullableKindError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:OptionalKindError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:OptionalKindError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:NumericReasonError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:NumericReasonError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:OptionalReasonError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:OptionalReasonError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:NullableReasonError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:NullableReasonError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackageNotFoundError",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:PackageError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:InvalidPasswordError",
+      "target": "class:eslint-rules/rules/fixtures/throw-kind-carrying-error/errors.ts:ExpectedAuthError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

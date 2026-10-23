@@ -1,0 +1,88 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/api/webpack.config.js",
+      "type": "file",
+      "name": "webpack.config.js",
+      "filePath": "apps/api/webpack.config.js",
+      "summary": "Webpack build configuration for the NestJS API, bundling src/main.ts with swc-loader (decorator metadata), filesystem caching, and edition-dependent module aliases chosen via PACKMIND_EDITION.",
+      "tags": ["build-system", "configuration", "webpack", "edition-switch"],
+      "complexity": "moderate",
+      "languageNotes": "CommonJS config selecting OSS vs proprietary alias maps at build time from an environment variable."
+    },
+    {
+      "id": "file:apps/api/webpack.paths.base.js",
+      "type": "file",
+      "name": "webpack.paths.base.js",
+      "filePath": "apps/api/webpack.paths.base.js",
+      "summary": "Exports a factory returning the base @packmind/* package alias map (accounts, standards, deployments, skills, etc.) shared by OSS and proprietary API builds.",
+      "tags": ["build-system", "configuration", "module-resolution", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/webpack.paths.oss.js",
+      "type": "file",
+      "name": "webpack.paths.oss.js",
+      "filePath": "apps/api/webpack.paths.oss.js",
+      "summary": "Extends base webpack aliases for the OSS edition, redirecting proprietary-only packages (linter, amplitude, plugins, marketplaces...) to the editions stub package.",
+      "tags": [
+        "build-system",
+        "configuration",
+        "oss-edition",
+        "module-resolution"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/webpack.paths.proprietary.js",
+      "type": "file",
+      "name": "webpack.paths.proprietary.js",
+      "filePath": "apps/api/webpack.paths.proprietary.js",
+      "summary": "Extends base webpack aliases for the proprietary edition, mapping proprietary-only packages to their real source directories.",
+      "tags": [
+        "build-system",
+        "configuration",
+        "proprietary-edition",
+        "module-resolution"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/api/webpack.config.js",
+      "target": "file:apps/api/webpack.paths.oss.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/webpack.config.js",
+      "target": "file:apps/api/webpack.paths.proprietary.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/webpack.paths.oss.js",
+      "target": "file:apps/api/webpack.paths.base.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/webpack.paths.proprietary.js",
+      "target": "file:apps/api/webpack.paths.base.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "direction": "forward",
+      "source": "file:apps/api/webpack.config.js",
+      "target": "file:apps/api/src/main.ts",
+      "type": "configures",
+      "weight": 0.6
+    }
+  ]
+}

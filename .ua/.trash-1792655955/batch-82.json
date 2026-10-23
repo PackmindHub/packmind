@@ -1,0 +1,86 @@
+{
+  "nodes": [
+    {
+      "id": "document:apps/cli/.github/instructions/packmind-cli-command-structure.instructions.md",
+      "type": "document",
+      "name": "packmind-cli-command-structure.instructions.md",
+      "filePath": "apps/cli/.github/instructions/packmind-cli-command-structure.instructions.md",
+      "summary": "GitHub Copilot instructions file (with applyTo scope) rendering the Packmind 'CLI Command Structure' standard: rules for separating command definitions from Handler.ts files containing validation, execution, output, and exit codes in apps/cli/src/infra/commands/.",
+      "tags": [
+        "documentation",
+        "coding-standard",
+        "copilot-instructions",
+        "cli",
+        "commands"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/cli/.github/instructions/packmind-cli-packmindgateway-method-implementation.instructions.md",
+      "type": "document",
+      "name": "packmind-cli-packmindgateway-method-implementation.instructions.md",
+      "filePath": "apps/cli/.github/instructions/packmind-cli-packmindgateway-method-implementation.instructions.md",
+      "summary": "GitHub Copilot instructions file (with applyTo scope) rendering the Packmind 'CLI Gateway Implementation' standard: rules for implementing new PackmindGateway methods via the PackmindHttpClient abstraction with Gateway<UseCase> typing instead of duplicated boilerplate.",
+      "tags": [
+        "documentation",
+        "coding-standard",
+        "copilot-instructions",
+        "cli",
+        "gateway"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/cli/.github/instructions/packmind-cli-use-case-structure.instructions.md",
+      "type": "document",
+      "name": "packmind-cli-use-case-structure.instructions.md",
+      "filePath": "apps/cli/.github/instructions/packmind-cli-use-case-structure.instructions.md",
+      "summary": "GitHub Copilot instructions file (with applyTo scope) rendering the Packmind 'CLI Use Case Structure' standard: rules for basing CLI use cases on IPublicUseCase<Command, Response> and keeping presentation concerns out of domain/application use cases.",
+      "tags": [
+        "documentation",
+        "coding-standard",
+        "copilot-instructions",
+        "cli",
+        "use-case"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:apps/cli/.github/instructions/packmind-cli-command-structure.instructions.md",
+      "target": "document:apps/cli/.packmind/standards/cli-command-structure.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/.github/instructions/packmind-cli-command-structure.instructions.md",
+      "target": "file:apps/cli/src/main.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/.github/instructions/packmind-cli-packmindgateway-method-implementation.instructions.md",
+      "target": "document:apps/cli/.packmind/standards/cli-packmindgateway-method-implementation.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/.github/instructions/packmind-cli-packmindgateway-method-implementation.instructions.md",
+      "target": "file:apps/cli/src/infra/repositories/PackmindGateway.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/.github/instructions/packmind-cli-use-case-structure.instructions.md",
+      "target": "document:apps/cli/.packmind/standards/cli-use-case-structure.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

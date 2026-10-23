@@ -1,0 +1,954 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/packageDescriptionPreview.ts",
+      "type": "file",
+      "name": "packageDescriptionPreview.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/packageDescriptionPreview.ts",
+      "summary": "Reduces a package's markdown description to plain opening prose for the Context pane header, stripping code fences, tables, headings, images and emphasis.",
+      "tags": ["utility", "markdown", "formatting", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/packageDescriptionPreview.ts:packageDescriptionPreview",
+      "type": "function",
+      "name": "packageDescriptionPreview",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/packageDescriptionPreview.ts",
+      "lineRange": [15, 43],
+      "summary": "Strips markdown formatting from a description and returns its opening prose.",
+      "tags": ["function", "utility", "markdown"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/resolveContextView.ts",
+      "type": "file",
+      "name": "resolveContextView.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/resolveContextView.ts",
+      "summary": "Decides whether the Context surface renders the blank, inventory or package view based on what the space holds and what the URL requests.",
+      "tags": ["utility", "view-state", "context-surface", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/resolveContextView.ts:resolveContextView",
+      "type": "function",
+      "name": "resolveContextView",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/resolveContextView.ts",
+      "lineRange": [33, 46],
+      "summary": "Returns blank, inventory or package depending on package/component presence and the inventory request.",
+      "tags": ["function", "utility", "view-state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/searchPackages.ts",
+      "type": "file",
+      "name": "searchPackages.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/searchPackages.ts",
+      "summary": "Implements the Context rail search: matches packages by name/description and by contained components, pinning the currently open package and hoisting selection.",
+      "tags": ["utility", "search", "packages", "context-surface"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/searchPackages.ts:searchPackages",
+      "type": "function",
+      "name": "searchPackages",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/searchPackages.ts",
+      "lineRange": [53, 90],
+      "summary": "Builds the rail search result: packages matched by name, description or contained components.",
+      "tags": ["function", "utility", "search"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/searchPackages.ts:hoistSelected",
+      "type": "function",
+      "name": "hoistSelected",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/searchPackages.ts",
+      "lineRange": [100, 116],
+      "summary": "Moves the currently selected package to the top of the result rows, pinning it if not matched.",
+      "tags": ["function", "utility", "search"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts",
+      "type": "file",
+      "name": "useDeleteContextComponents.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts",
+      "summary": "React hook deleting a mixed selection of standards, commands and skills via their batch-delete mutations, reporting per-component outcomes.",
+      "tags": ["hook", "mutation", "deletion", "context-surface"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts:useDeleteContextComponents",
+      "type": "function",
+      "name": "useDeleteContextComponents",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts",
+      "lineRange": [52, 129],
+      "summary": "Hook grouping selected components by type and issuing batch deletions for standards, commands and skills.",
+      "tags": ["hook", "react", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/packageForm/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/packageForm/index.ts",
+      "summary": "Barrel re-exporting package form helpers (HeldByPackage, toArtefactOption, ArtefactOption).",
+      "tags": ["barrel", "packages", "form"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/splitButton.ts",
+      "type": "file",
+      "name": "splitButton.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/splitButton.ts",
+      "summary": "Shared styling constants and helper for split buttons in the package header, defining the seam width so focus rings do not overlap the neighbouring half.",
+      "tags": ["utility", "ui-styling", "component", "design-system"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/splitButton.ts:splitButtonHalf",
+      "type": "function",
+      "name": "splitButtonHalf",
+      "filePath": "apps/frontend/src/domain/deployments/components/splitButton.ts",
+      "lineRange": [56, 60],
+      "summary": "Returns style props for one half of a split button.",
+      "tags": ["function", "utility", "ui-styling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "type": "file",
+      "name": "messages.ts",
+      "filePath": "apps/frontend/src/domain/deployments/constants/messages.ts",
+      "summary": "Centralized user-facing alert messages for the packages/deployments domain, plus a helper building release-verdict messages.",
+      "tags": ["constants", "messages", "packages", "ux-copy"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/constants/messages.ts:getReleaseVerdictMessage",
+      "type": "function",
+      "name": "getReleaseVerdictMessage",
+      "filePath": "apps/frontend/src/domain/deployments/constants/messages.ts",
+      "lineRange": [95, 118],
+      "summary": "Builds the user message describing a package release verdict.",
+      "tags": ["function", "constants", "messages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/index.ts",
+      "summary": "Barrel re-exporting the deployments domain hooks (deploy command/standard/package, remove from targets, package ownership).",
+      "tags": ["barrel", "entry-point", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts",
+      "type": "file",
+      "name": "useActiveDistributions.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts",
+      "summary": "Hook returning the distributions where a package is actively deployed on a live target.",
+      "tags": ["hook", "distributions", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts:useActiveDistributions",
+      "type": "function",
+      "name": "useActiveDistributions",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts",
+      "lineRange": [11, 24],
+      "summary": "Combines distribution history with live targets to list active distributions of a package.",
+      "tags": ["hook", "react", "distributions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "type": "file",
+      "name": "useArtefactPackageOwners.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "summary": "Hook and pure helper mapping each artefact id to the package that owns it in the current space.",
+      "tags": ["hook", "packages", "ownership", "data-mapping"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts:getOwnerByArtefactId",
+      "type": "function",
+      "name": "getOwnerByArtefactId",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "lineRange": [29, 49],
+      "summary": "Maps artefact ids to their owning package from a package list.",
+      "tags": ["function", "hook", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts:useArtefactPackageOwners",
+      "type": "function",
+      "name": "useArtefactPackageOwners",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "lineRange": [52, 69],
+      "summary": "Hook returning the owner package map for the current space.",
+      "tags": ["hook", "react", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "file",
+      "name": "useCreateIntoPackage.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "summary": "URL package-parameter helpers and hooks that attach freshly created components to the package the create form was opened from.",
+      "tags": ["hook", "packages", "routing", "creation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:withPackageParam",
+      "type": "function",
+      "name": "withPackageParam",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "lineRange": [22, 24],
+      "summary": "Appends the package query parameter to a create route href.",
+      "tags": ["function", "hook", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:useAttachToPackage",
+      "type": "function",
+      "name": "useAttachToPackage",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "lineRange": [62, 84],
+      "summary": "Hook attaching newly created artefacts to a package and reporting the outcome.",
+      "tags": ["hook", "react", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:usePackageInAddress",
+      "type": "function",
+      "name": "usePackageInAddress",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "lineRange": [95, 100],
+      "summary": "Reads the package id from the current URL query string.",
+      "tags": ["hook", "react", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:useCreateIntoPackage",
+      "type": "function",
+      "name": "useCreateIntoPackage",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "lineRange": [107, 111],
+      "summary": "Combines the URL package and attach hook for create forms.",
+      "tags": ["hook", "react", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts",
+      "type": "file",
+      "name": "useDeployPackage.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts",
+      "summary": "Hook orchestrating package deployment to targets via the deploy-packages mutation and surfacing toast notifications of the results.",
+      "tags": ["hook", "deployments", "mutation", "notifications"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts:useDeployPackage",
+      "type": "function",
+      "name": "useDeployPackage",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts",
+      "lineRange": [28, 142],
+      "summary": "Hook deploying packages to targets and showing result notifications.",
+      "tags": ["hook", "react", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "type": "file",
+      "name": "useDeployStandard.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "summary": "Hook resolving the current standard version and deploying it to targets, with loading state and result notifications.",
+      "tags": ["hook", "deployments", "standards", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts:getStandardVersionId",
+      "type": "function",
+      "name": "getStandardVersionId",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "lineRange": [25, 51],
+      "summary": "Resolves the latest version id of a standard via the standards gateway.",
+      "tags": ["function", "hook", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts:useDeployStandard",
+      "type": "function",
+      "name": "useDeployStandard",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "lineRange": [53, 193],
+      "summary": "Hook deploying a standard version to targets with notifications.",
+      "tags": ["hook", "react", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "type": "file",
+      "name": "useLivePackageIds.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "summary": "Hook returning the set of package ids that are currently live (actively distributed) in the current space.",
+      "tags": ["hook", "packages", "distributions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts:useLivePackageIds",
+      "type": "function",
+      "name": "useLivePackageIds",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "lineRange": [12, 21],
+      "summary": "Returns ids of packages actively distributed in the current space.",
+      "tags": ["hook", "react", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "file",
+      "name": "useLiveTargetIds.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "summary": "Hooks and helper computing which targets are live and counting items deployed on live targets.",
+      "tags": ["hook", "targets", "distributions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useLiveTargetIds",
+      "type": "function",
+      "name": "useLiveTargetIds",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "lineRange": [9, 16],
+      "summary": "Returns the set of live target ids.",
+      "tags": ["hook", "react", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:isOnLiveTarget",
+      "type": "function",
+      "name": "isOnLiveTarget",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "lineRange": [19, 22],
+      "summary": "Tells whether an entry is deployed on one of the live targets.",
+      "tags": ["function", "hook", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useCountOnLiveTargets",
+      "type": "function",
+      "name": "useCountOnLiveTargets",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "lineRange": [25, 34],
+      "summary": "Counts entries deployed on live targets.",
+      "tags": ["hook", "react", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "type": "file",
+      "name": "usePackageDeploymentStatus.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "summary": "Computes per-package deployed target counts and exposes a hook giving a package's deployment status.",
+      "tags": ["hook", "deployments", "status", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts:getDeployedTargetCountByPackage",
+      "type": "function",
+      "name": "getDeployedTargetCountByPackage",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "lineRange": [16, 37],
+      "summary": "Counts deployed targets per package from active distributions.",
+      "tags": ["function", "hook", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts:usePackageDeploymentStatus",
+      "type": "function",
+      "name": "usePackageDeploymentStatus",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "lineRange": [44, 81],
+      "summary": "Hook exposing a package's deployment status and target counts.",
+      "tags": ["hook", "react", "deployments"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/packageDescriptionPreview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/packageDescriptionPreview.ts:packageDescriptionPreview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/packageDescriptionPreview.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/packageDescriptionPreview.ts:packageDescriptionPreview",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/resolveContextView.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/resolveContextView.ts:resolveContextView",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/resolveContextView.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/resolveContextView.ts:resolveContextView",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/searchPackages.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/searchPackages.ts:searchPackages",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/searchPackages.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/searchPackages.ts:searchPackages",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/searchPackages.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/searchPackages.ts:hoistSelected",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/searchPackages.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts:useDeleteContextComponents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts:useDeleteContextComponents",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildMoveTargets.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/splitButton.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/splitButton.ts:splitButtonHalf",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/splitButton.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/splitButton.ts:splitButtonHalf",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "target": "function:apps/frontend/src/domain/deployments/constants/messages.ts:getReleaseVerdictMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "target": "function:apps/frontend/src/domain/deployments/constants/messages.ts:getReleaseVerdictMessage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts:useActiveDistributions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts:useActiveDistributions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts",
+      "target": "file:apps/frontend/src/domain/deployments/utils/listActiveDistributions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts:getOwnerByArtefactId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts:getOwnerByArtefactId",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts:useArtefactPackageOwners",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts:useArtefactPackageOwners",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:withPackageParam",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:withPackageParam",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:useAttachToPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:useAttachToPackage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:usePackageInAddress",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:usePackageInAddress",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:useCreateIntoPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:useCreateIntoPackage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts:useDeployPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts:useDeployPackage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts:getStandardVersionId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts:useDeployStandard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts:useDeployStandard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts",
+      "target": "file:apps/frontend/src/domain/standards/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts:useLivePackageIds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts:useLivePackageIds",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useLiveTargetIds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useLiveTargetIds",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:isOnLiveTarget",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:isOnLiveTarget",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useCountOnLiveTargets",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useCountOnLiveTargets",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts:getDeployedTargetCountByPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts:getDeployedTargetCountByPackage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts:usePackageDeploymentStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts:usePackageDeploymentStatus",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts:useDeleteContextComponents",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useDeleteCommandsBatchMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts:useDeleteContextComponents",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useDeleteSkillsBatchMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts:useDeleteContextComponents",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useDeleteStandardsBatchMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts:useActiveDistributions",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useLiveTargetIds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts:useActiveDistributions",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:isOnLiveTarget",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts:useActiveDistributions",
+      "target": "function:apps/frontend/src/domain/deployments/utils/listActiveDistributions.ts:listActiveDistributions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts:useArtefactPackageOwners",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:useAttachToPackage",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useAddArtefactsToPackagesMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:useAttachToPackage",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts:useDeployPackage",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployPackagesMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts:useDeployStandard",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts:useDeployStandard",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployStandardsMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useDeployStandard.ts:useDeployStandard",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts:useLivePackageIds",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts:useLivePackageIds",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts:useLivePackageIds",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useLiveTargetIds",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetTargetsByOrganizationQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts:usePackageDeploymentStatus",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListActiveDistributedPackagesBySpaceQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

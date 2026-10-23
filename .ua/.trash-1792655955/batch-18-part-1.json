@@ -1,0 +1,1136 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/app/routes/_index.tsx",
+      "type": "file",
+      "name": "_index.tsx",
+      "filePath": "apps/frontend/app/routes/_index.tsx",
+      "summary": "Root index route that waits on auth state and redirects users to sign-in or to their organization dashboard while showing a loading spinner.",
+      "tags": ["entry-point", "routing", "authentication", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_index.tsx:IndexRoute",
+      "type": "function",
+      "name": "IndexRoute",
+      "filePath": "apps/frontend/app/routes/_index.tsx",
+      "lineRange": [8, 43],
+      "summary": "Root route component that redirects unauthenticated users to sign-in and authenticated users to their org dashboard.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/_public.sign-up.tsx",
+      "type": "file",
+      "name": "_public.sign-up.tsx",
+      "filePath": "apps/frontend/app/routes/_public.sign-up.tsx",
+      "summary": "Layout route for public sign-up pages whose loader redirects already-onboarded users to their organization home.",
+      "tags": ["routing", "authentication", "loader", "layout"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.sign-up.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/_public.sign-up.tsx",
+      "lineRange": [10, 36],
+      "summary": "Fetches the current user and redirects authenticated users with an organization away from sign-up, tolerating API failures.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/_public.sign-up.tsx:SignUpLayout",
+      "type": "function",
+      "name": "SignUpLayout",
+      "filePath": "apps/frontend/app/routes/_public.sign-up.tsx",
+      "lineRange": [38, 40],
+      "summary": "Pass-through layout rendering the nested sign-up route outlet.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "summary": "Organization root route that redirects to the default space of the organization.",
+      "tags": ["routing", "redirect", "loader", "spaces"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "lineRange": [7, 20],
+      "summary": "Ensures org context, loads spaces and redirects to the default (or first) space.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx:OrgDashboardRedirect",
+      "type": "function",
+      "name": "OrgDashboardRedirect",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "lineRange": [22, 24],
+      "summary": "Empty component placeholder; navigation is handled by the loader redirect.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.deployments.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "summary": "Legacy organization-level deployments route that redirects to the default space.",
+      "tags": ["routing", "redirect", "loader", "deployments"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "lineRange": [6, 18],
+      "summary": "Resolves the organization default space and redirects there.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx:OrgDeploymentsRedirect",
+      "type": "function",
+      "name": "OrgDeploymentsRedirect",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "lineRange": [20, 22],
+      "summary": "Empty component placeholder for the redirecting deployments route.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.profile.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.profile.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.profile.tsx",
+      "summary": "Thin route module rendering the user profile page.",
+      "tags": ["routing", "component", "profile"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.profile.tsx:ProfileRouteModule",
+      "type": "function",
+      "name": "ProfileRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.profile.tsx",
+      "lineRange": [3, 5],
+      "summary": "Renders the ProfilePage component for the profile route.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.settings.spaces._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "summary": "Settings route for managing organization spaces, prefetching spaces and rendering the spaces management page with its toolbar.",
+      "tags": ["routing", "settings", "spaces", "loader"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "lineRange": [16, 26],
+      "summary": "Ensures org context and prefetches the organization spaces list.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:SettingsSpacesRouteModule",
+      "type": "function",
+      "name": "SettingsSpacesRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "lineRange": [28, 54],
+      "summary": "Renders the spaces management page with toolbar inside a settings page layout.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.settings.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "summary": "Admin-only organization settings layout with a vertical sidebar navigation (users, spaces, distribution, etc.) and an access guard in both loader and component.",
+      "tags": ["routing", "settings", "access-control", "layout", "component"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:hasAccess",
+      "type": "function",
+      "name": "hasAccess",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "lineRange": [40, 53],
+      "summary": "Determines whether the current user is an organization admin and builds the toast/redirect payload when not.",
+      "tags": ["access-control", "validation", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "lineRange": [55, 63],
+      "summary": "Guards settings routes by checking admin access and redirecting non-admins with a toast.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:SettingsIndexRouteModule",
+      "type": "function",
+      "name": "SettingsIndexRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "lineRange": [65, 147],
+      "summary": "Settings layout with sidebar navigation links and nested outlet, re-checking access on user changes.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.setup.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "summary": "Organization setup layout providing a sidebar for dev tooling pages (CLI, auto-update, MCP) with a permissive access guard.",
+      "tags": ["routing", "setup", "layout", "component", "onboarding"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:hasAccess",
+      "type": "function",
+      "name": "hasAccess",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "lineRange": [39, 42],
+      "summary": "Access check for setup pages; currently grants access to all authenticated users.",
+      "tags": ["access-control", "validation", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "lineRange": [44, 52],
+      "summary": "Loads the current user and applies the setup access guard.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:SetupIndexRouteModule",
+      "type": "function",
+      "name": "SetupIndexRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "lineRange": [54, 121],
+      "summary": "Setup layout with vertical navigation for dev tooling pages and a nested outlet.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "summary": "Space overview route that redirects plugin-first navigation users to Context, otherwise prefetches space and distributed packages before rendering the overview page.",
+      "tags": ["routing", "spaces", "loader", "navigation-mode"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "lineRange": [13, 53],
+      "summary": "Resolves navigation mode, redirects to Context in plugin-first mode, else prefetches space and active distributed packages.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:SpaceOverviewRouteModule",
+      "type": "function",
+      "name": "SpaceOverviewRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "lineRange": [55, 57],
+      "summary": "Renders the SpaceOverviewPage component.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "summary": "Command detail index route that redirects to the Context pane in plugin-first navigation and otherwise renders CommandDetails.",
+      "tags": ["routing", "commands", "component", "redirect"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "lineRange": [16, 18],
+      "summary": "Delegates to redirectToContextComponent to send the command to the Context pane when applicable.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx:CommandDetailsIndexRouteModule",
+      "type": "function",
+      "name": "CommandDetailsIndexRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "lineRange": [20, 50],
+      "summary": "Renders CommandDetails for the current command ID or a not-found page.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx",
+      "summary": "Command edit route that loads the command and renders the EditCommand form with a version history header.",
+      "tags": ["routing", "commands", "form", "component"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx:EditCommandRouteModule",
+      "type": "function",
+      "name": "EditCommandRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx",
+      "lineRange": [8, 59],
+      "summary": "Loads the command by ID and renders the edit form with loading and error states.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/app/routes/_index.tsx",
+      "target": "function:apps/frontend/app/routes/_index.tsx:IndexRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_index.tsx",
+      "target": "function:apps/frontend/app/routes/_index.tsx:IndexRoute",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_index.tsx:IndexRoute",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_index.tsx:IndexRoute",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts:useAuthErrorHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_index.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up.tsx",
+      "target": "function:apps/frontend/app/routes/_public.sign-up.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up.tsx",
+      "target": "function:apps/frontend/app/routes/_public.sign-up.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/_public.sign-up.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up.tsx",
+      "target": "function:apps/frontend/app/routes/_public.sign-up.tsx:SignUpLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up.tsx",
+      "target": "function:apps/frontend/app/routes/_public.sign-up.tsx:SignUpLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/_public.sign-up.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpacesQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx:OrgDashboardRedirect",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx:OrgDashboardRedirect",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpacesQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx:OrgDeploymentsRedirect",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx:OrgDeploymentsRedirect",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "target": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.deployments.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.profile.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.profile.tsx:ProfileRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.profile.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.profile.tsx:ProfileRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.profile.tsx:ProfileRouteModule",
+      "target": "function:apps/frontend/src/domain/accounts/components/ProfilePage.tsx:ProfilePage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.profile.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/ProfilePage.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpacesQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:SettingsSpacesRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:SettingsSpacesRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:SettingsSpacesRouteModule",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:SettingsSpacesRouteModule",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpacesManagementPage/SpacesToolbar.tsx:SpacesToolbar",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx:SettingsSpacesRouteModule",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpacesManagementPage/index.ts:SpacesManagementPage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/SpacesManagementPage/SpacesToolbar.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/SpacesManagementPage/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.spaces._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:hasAccess",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:SettingsIndexRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:SettingsIndexRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:SettingsIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:SettingsIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:StaticSidebarCollapseProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx:SettingsIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigationLink",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IAuthGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:hasAccess",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:SetupIndexRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:SetupIndexRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:SetupIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:SetupIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:StaticSidebarCollapseProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx:SetupIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigationLink",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IAuthGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.setup.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getListActiveDistributedPackagesBySpaceOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:resolveSpaceNavMode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:withNavMode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceBySlugQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:SpaceOverviewRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:SpaceOverviewRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx:SpaceOverviewRouteModule",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx:SpaceOverviewPage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected._index.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextComponent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx:CommandDetailsIndexRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx:CommandDetailsIndexRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx:CommandDetailsIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx:CommandDetailsIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandDetails.tsx:CommandDetails",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx:EditCommandRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx:EditCommandRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx:EditCommandRouteModule",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandByIdQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx:EditCommandRouteModule",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx:CommandVersionHistoryHeader",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx:EditCommandRouteModule",
+      "target": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.commands.$commandId.edit.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

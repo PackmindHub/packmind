@@ -1,0 +1,1107 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "type": "file",
+      "name": "PackageDetailPane.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "summary": "Detail pane for a selected package in the deployments redesign, showing summary stats, per-install rows with drift state, distribution history, filters and selection for syncing.",
+      "tags": ["component", "deployments", "detail-pane", "drift", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:PackageDetailPane",
+      "type": "function",
+      "name": "PackageDetailPane",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [148, 619],
+      "summary": "Detail view for a package: stats, installs grouped by mode, filters, selection and sync actions.",
+      "tags": ["component", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:SummaryStat",
+      "type": "function",
+      "name": "SummaryStat",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [621, 659],
+      "summary": "Presentational stat block within the package summary.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:InstallRow",
+      "type": "function",
+      "name": "InstallRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [681, 842],
+      "summary": "Row for one package install (repository/target) with its drift state, artifacts and actions.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:BranchChip",
+      "type": "function",
+      "name": "BranchChip",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [844, 867],
+      "summary": "Chip displaying the branch an install tracks.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:RowStateLine",
+      "type": "function",
+      "name": "RowStateLine",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [876, 977],
+      "summary": "Status line describing an install's drift/standing/lock state.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:DistributionEventLine",
+      "type": "function",
+      "name": "DistributionEventLine",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [979, 1043],
+      "summary": "Line describing the most recent distribution event for an install.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:DistributionHistoryTrigger",
+      "type": "function",
+      "name": "DistributionHistoryTrigger",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [1051, 1073],
+      "summary": "Button opening the distribution history for an install.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:TargetChip",
+      "type": "function",
+      "name": "TargetChip",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [1075, 1097],
+      "summary": "Chip showing the target path of an install.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:InstallFilterControl",
+      "type": "function",
+      "name": "InstallFilterControl",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [1110, 1197],
+      "summary": "Filter control narrowing installs by drift state.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:ModeSectionHeader",
+      "type": "function",
+      "name": "ModeSectionHeader",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [1234, 1277],
+      "summary": "Header for a group of installs by distribution mode (app vs CLI).",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:InstallEmptyState",
+      "type": "function",
+      "name": "InstallEmptyState",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "lineRange": [1279, 1328],
+      "summary": "Empty state for a package without matching installs.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "type": "file",
+      "name": "PackageMasterRail.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "summary": "Master list rail of packages in the deployments redesign with drift badges, drift filters, selection and a bulk action bar.",
+      "tags": ["component", "deployments", "master-list", "filter", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageMasterRail",
+      "type": "function",
+      "name": "PackageMasterRail",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "lineRange": [43, 226],
+      "summary": "Rail listing packages with drift filter, selection checkboxes and bulk action bar.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageRow",
+      "type": "function",
+      "name": "PackageRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "lineRange": [239, 463],
+      "summary": "Row for one package showing drift, failures and repository counts.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:RailActionBar",
+      "type": "function",
+      "name": "RailActionBar",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "lineRange": [476, 586],
+      "summary": "Bulk action bar for selected packages in the rail.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:FilteredZero",
+      "type": "function",
+      "name": "FilteredZero",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "lineRange": [588, 634],
+      "summary": "Message shown when filters hide every package.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:DriftFilterControl",
+      "type": "function",
+      "name": "DriftFilterControl",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "lineRange": [653, 724],
+      "summary": "Control toggling the drift filter of the package rail.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "type": "file",
+      "name": "RepositoryDetailPane.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "summary": "Detail pane for a selected repository showing its targets, the packages installed on each, drift/standing lines, distribution events, filters and lock-file sync actions.",
+      "tags": [
+        "component",
+        "deployments",
+        "detail-pane",
+        "repository",
+        "react"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "type": "function",
+      "name": "RepositoryDetailPane",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "lineRange": [135, 609],
+      "summary": "Detail view for a repository listing targets and installed packages with drift, filters and sync actions.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:TargetSection",
+      "type": "function",
+      "name": "TargetSection",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "lineRange": [629, 712],
+      "summary": "Section grouping packages installed on one repository target.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageOnTargetRow",
+      "type": "function",
+      "name": "PackageOnTargetRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "lineRange": [732, 987],
+      "summary": "Row for a package installed on a target, showing drift state, artifacts and actions.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageRowStateLine",
+      "type": "function",
+      "name": "PackageRowStateLine",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "lineRange": [997, 1078],
+      "summary": "Status line describing a package-on-target drift/standing state.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:standingLine",
+      "type": "function",
+      "name": "standingLine",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "lineRange": [1088, 1102],
+      "summary": "Builds the text describing a destination's standing (drifted/behind).",
+      "tags": ["utility", "deployments", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageRowEventLine",
+      "type": "function",
+      "name": "PackageRowEventLine",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "lineRange": [1104, 1134],
+      "summary": "Line describing the last distribution event for a package on a target.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:SummaryStat",
+      "type": "function",
+      "name": "SummaryStat",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "lineRange": [1136, 1174],
+      "summary": "Presentational stat block within the repository summary.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageFilterControl",
+      "type": "function",
+      "name": "PackageFilterControl",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "lineRange": [1206, 1285],
+      "summary": "Filter control narrowing packages in the repository pane.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:FilteredZero",
+      "type": "function",
+      "name": "FilteredZero",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "lineRange": [1287, 1346],
+      "summary": "Message shown when filters hide every package of the repository.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "type": "file",
+      "name": "RepositoryLockFileSync.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "summary": "Hook and components that sync a repository's packmind lock file back into Packmind, exposing sync buttons and a warnings panel for older CLI locks and unknown packages.",
+      "tags": ["hook", "component", "lock-file", "sync", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:useRepositoryLockFileSync",
+      "type": "function",
+      "name": "useRepositoryLockFileSync",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "lineRange": [39, 92],
+      "summary": "Hook running the lock file sync mutation for a repository and handling toasts and warnings.",
+      "tags": ["hook", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:SyncFromRepositoryButton",
+      "type": "function",
+      "name": "SyncFromRepositoryButton",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "lineRange": [94, 126],
+      "summary": "Text button triggering a sync from the repository's lock file.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:SyncRepositoryIconButton",
+      "type": "function",
+      "name": "SyncRepositoryIconButton",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "lineRange": [128, 164],
+      "summary": "Icon button variant triggering a repository lock file sync.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:LockFileSyncWarnings",
+      "type": "function",
+      "name": "LockFileSyncWarnings",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "lineRange": [166, 258],
+      "summary": "Panel listing warnings from a lock file sync (older CLI locks, unknown packages).",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:TargetLabel",
+      "type": "function",
+      "name": "TargetLabel",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "lineRange": [260, 283],
+      "summary": "Renders a target label inside sync warnings.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:InlineList",
+      "type": "function",
+      "name": "InlineList",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "lineRange": [285, 298],
+      "summary": "Renders a comma-separated inline list of items.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:PackageDetailPane",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:PackageDetailPane",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:SummaryStat",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:InstallRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:BranchChip",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:RowStateLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:DistributionEventLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:DistributionHistoryTrigger",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:TargetChip",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:InstallFilterControl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:ModeSectionHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:InstallEmptyState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/SelectionBar.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/noGitConnection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/DriftArtifactRow.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:PackageDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:PackageDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:packageMostRecentPush",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:PackageDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:PackageDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:multiLandingRepoIds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:PackageDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:installLockReason",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:InstallRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:targetLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageDetailPane.tsx:DistributionEventLine",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:formatRelativeDate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageMasterRail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageMasterRail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:RailActionBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:FilteredZero",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:DriftFilterControl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageMasterRail",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageMasterRail",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasFailedDistribution",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageMasterRail",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageMasterRail",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts:packageLockProfile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageBehindInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasFailedDistribution",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/PackageMasterRail.tsx:PackageRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageFailedInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:TargetSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageOnTargetRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageRowStateLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:standingLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageRowEventLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:SummaryStat",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageFilterControl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:FilteredZero",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/noGitConnection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/DriftArtifactRow.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryLockProfile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:useRepositoryLockFileSync",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasFailedDistribution",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftedPackageCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryBehindInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryFailedInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageIsWaiting",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasFailedDistribution",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:RepositoryDetailPane",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasSendableWork",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:TargetSection",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:targetDriftedPackageCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:TargetSection",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:targetFailedPackageCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageOnTargetRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageOnTargetRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasSendableWork",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageOnTargetRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts:packageHasFailedDistribution",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageOnTargetRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageRowStateLine",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:standingLine",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryDetailPane.tsx:PackageRowEventLine",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:formatRelativeDate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:useRepositoryLockFileSync",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:useRepositoryLockFileSync",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:SyncFromRepositoryButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:SyncFromRepositoryButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:SyncRepositoryIconButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:SyncRepositoryIconButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:LockFileSyncWarnings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:LockFileSyncWarnings",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:TargetLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:InlineList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/lockFileSync.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/shared/connectionStatus.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:useRepositoryLockFileSync",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useCheckProviderAuthQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:useRepositoryLockFileSync",
+      "target": "function:apps/frontend/src/domain/git/components/shared/connectionStatus.ts:deriveConnectionStatus",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:useRepositoryLockFileSync",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useSyncRepositoryFromLockFilesMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:useRepositoryLockFileSync",
+      "target": "function:apps/frontend/src/domain/deployments/components/lockFileSync.ts:syncBrokenConnection",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:SyncFromRepositoryButton",
+      "target": "function:apps/frontend/src/domain/deployments/components/lockFileSync.ts:syncFromRepositoryTooltip",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:SyncRepositoryIconButton",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:useRepositoryLockFileSync",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:SyncRepositoryIconButton",
+      "target": "function:apps/frontend/src/domain/deployments/components/lockFileSync.ts:syncRepositoryTooltip",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:SyncRepositoryIconButton",
+      "target": "function:apps/frontend/src/domain/deployments/components/lockFileSync.ts:syncRepositoryLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:LockFileSyncWarnings",
+      "target": "function:apps/frontend/src/domain/deployments/components/lockFileSync.ts:olderCliLocksMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:LockFileSyncWarnings",
+      "target": "function:apps/frontend/src/domain/deployments/components/lockFileSync.ts:unknownPackagesMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx:LockFileSyncWarnings",
+      "target": "function:apps/frontend/src/domain/deployments/components/lockFileSync.ts:unknownPackagesFix",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

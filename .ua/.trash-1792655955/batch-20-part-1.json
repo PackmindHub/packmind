@@ -1,0 +1,833 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx",
+      "type": "file",
+      "name": "CommandVersionsListDrawer.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx",
+      "summary": "Drawer component that fetches and lists the version history of a command, letting users browse previous command versions.",
+      "tags": ["component", "react", "versioning", "drawer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx:CommandVersionsListDrawer",
+      "type": "function",
+      "name": "CommandVersionsListDrawer",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx",
+      "lineRange": [20, 86],
+      "summary": "Renders a drawer listing all versions of a command fetched via useGetCommandVersionsQuery.",
+      "tags": ["component", "drawer", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx",
+      "type": "file",
+      "name": "CommandsBlankState.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandsBlankState.tsx",
+      "summary": "Empty-state screen for the commands list that explains what commands are and offers create, example, and learn-more actions to get started.",
+      "tags": ["component", "react", "empty-state", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx:CommandsBlankState",
+      "type": "function",
+      "name": "CommandsBlankState",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandsBlankState.tsx",
+      "lineRange": [24, 169],
+      "summary": "Empty-state layout explaining commands with CTA buttons for creating, viewing an example, and learning more.",
+      "tags": ["component", "empty-state", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx",
+      "type": "file",
+      "name": "CommandsCreateButton.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx",
+      "summary": "Small button component that triggers command creation using the options provided by useCommandCreationOptions.",
+      "tags": ["component", "react", "commands", "button"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx:CommandsCreateButton",
+      "type": "function",
+      "name": "CommandsCreateButton",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx",
+      "lineRange": [9, 31],
+      "summary": "Renders the create-command button/menu from useCommandCreationOptions.",
+      "tags": ["component", "button", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx",
+      "type": "file",
+      "name": "CommandsExampleDialog.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx",
+      "summary": "Dialog showing an example command rendered in a read-only Markdown editor, plus the trigger button that opens it.",
+      "tags": ["component", "react", "dialog", "example", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx:CommandsExampleDialogButton",
+      "type": "function",
+      "name": "CommandsExampleDialogButton",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx",
+      "lineRange": [118, 160],
+      "summary": "Button plus dialog that displays a sample command in a read-only Markdown editor.",
+      "tags": ["component", "dialog", "example"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx:CommandsExampleDialog",
+      "type": "function",
+      "name": "CommandsExampleDialog",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx",
+      "lineRange": [162, 170],
+      "summary": "Exported wrapper rendering the example dialog trigger inside a MarkdownEditorProvider.",
+      "tags": ["component", "dialog", "export"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "type": "file",
+      "name": "CommandsList.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "summary": "Main commands listing view for a space: fetches commands, shows package membership chips and counts, supports selection, batch deletion, and adding to packages.",
+      "tags": ["component", "react", "listing", "commands", "batch-actions"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "type": "function",
+      "name": "CommandsList",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "lineRange": [45, 396],
+      "summary": "Space commands list with selection, batch delete, add-to-package actions, package membership chips, author avatars, and blank state.",
+      "tags": ["component", "listing", "batch-actions"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "type": "file",
+      "name": "CreateCommand.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "summary": "Command creation page component wiring CommandForm to the create mutation, handling slug conflicts, success navigation, and optional attachment to a package.",
+      "tags": ["component", "react", "form", "commands", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "type": "function",
+      "name": "CreateCommand",
+      "filePath": "apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "lineRange": [19, 134],
+      "summary": "Handles command creation submit, conflict errors, success toasts, package attachment, and navigation.",
+      "tags": ["component", "form", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "type": "file",
+      "name": "EditCommand.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "summary": "Command edit page component that loads a command into CommandForm, warns about pending change proposals, and saves via the update mutation.",
+      "tags": ["component", "react", "form", "commands", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "type": "function",
+      "name": "EditCommand",
+      "filePath": "apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "lineRange": [27, 160],
+      "summary": "Loads command data into the form, confirms save when change proposals are pending, and submits updates.",
+      "tags": ["component", "form", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/ProposeChangeModal.tsx",
+      "type": "file",
+      "name": "ProposeChangeModal.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/ProposeChangeModal.tsx",
+      "summary": "Modal letting a user propose a new name for a command by submitting an updateCommandName change proposal through the proprietary change-proposals API.",
+      "tags": ["component", "react", "modal", "change-proposal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/ProposeChangeModal.tsx:ProposeChangeModal",
+      "type": "function",
+      "name": "ProposeChangeModal",
+      "filePath": "apps/frontend/src/domain/commands/components/ProposeChangeModal.tsx",
+      "lineRange": [33, 152],
+      "summary": "Modal form proposing a command rename via a change-proposal mutation with error handling.",
+      "tags": ["component", "modal", "change-proposal"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx:CommandVersionsListDrawer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx:CommandVersionsListDrawer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx:CommandsBlankState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx:CommandsBlankState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx:CommandsCreateButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx:CommandsCreateButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx:CommandsExampleDialogButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx:CommandsExampleDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx:CommandsExampleDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/ProposeChangeModal.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/ProposeChangeModal.tsx:ProposeChangeModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/ProposeChangeModal.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/ProposeChangeModal.tsx:ProposeChangeModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedWidget.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandsList.styles.scss",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/commands/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/MembershipChips/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/shared/components/ItemsListing.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandsList.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "file:apps/frontend/src/domain/commands/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CreateCommand.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/useNavigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "file:apps/frontend/src/domain/commands/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "file:apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/EditCommand.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/useNavigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx:CommandVersionsListDrawer",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandVersionsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx:CommandsBlankState",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx:CommandsExampleDialog",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx:CommandsBlankState",
+      "target": "function:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx:GettingStartedLearnMoreDialog",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsCreateButton.tsx:CommandsCreateButton",
+      "target": "function:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx:useCommandCreationOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx:CommandsExampleDialogButton",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditor",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsExampleDialog.tsx:CommandsExampleDialogButton",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditorProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx:UserAvatarWithInitials",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useDeleteCommandsBatchMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandsBlankState.tsx:CommandsBlankState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts:getArtifactPackages",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandsList.tsx:CommandsList",
+      "target": "function:apps/frontend/src/shared/components/ItemsListing.tsx:ItemsListing",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useCreateCommandMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandForm.tsx:CommandForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts:contextPackageHref",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:useCreateIntoPackage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindConflictError.ts:isPackmindConflictError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditorProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CreateCommand.tsx:CreateCommand",
+      "target": "function:apps/frontend/src/shared/hooks/useNavigation.ts:useNavigation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useUpdateCommandMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandForm.tsx:CommandForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts:contextPackageHref",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:usePackageInAddress",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:countPendingChangeProposals",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:PendingChangeProposalsWarning",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:ConfirmSaveWithPendingProposalsDialog",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditorProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/EditCommand.tsx:EditCommand",
+      "target": "function:apps/frontend/src/shared/hooks/useNavigation.ts:useNavigation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

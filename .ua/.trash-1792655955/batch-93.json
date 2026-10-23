@@ -1,0 +1,72 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/assets/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/assets/README.md",
+      "summary": "Short README describing the assets library as the holder of shared fonts, icons, images, styles and a Milkdown theme consumed by the frontend app and UI package.",
+      "tags": ["documentation", "assets", "overview"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/assets/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/assets/package.json",
+      "summary": "Package manifest for the private shared assets library.",
+      "tags": ["configuration", "package-manifest", "assets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/assets/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/assets/project.json",
+      "summary": "Nx project for the shared assets library (env:shared) with an SWC build, a postbuild step copying styles, fonts and images into dist, and a build-all target chaining both.",
+      "tags": ["configuration", "nx", "build-system", "static-assets"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/assets/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/assets/tsconfig.json",
+      "summary": "Root TypeScript config for the assets package extending the base config and referencing the lib tsconfig.",
+      "tags": ["configuration", "typescript", "build-system", "assets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/assets/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/assets/tsconfig.lib.json",
+      "summary": "TypeScript library compilation settings for assets source files.",
+      "tags": ["configuration", "typescript", "build-system", "assets"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/assets/tsconfig.json",
+      "target": "config:packages/assets/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/assets/project.json",
+      "target": "config:packages/assets/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/assets/README.md",
+      "target": "config:packages/assets/project.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}
