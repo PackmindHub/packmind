@@ -35,7 +35,7 @@ const GITLAB_TEMPLATE = `stages:
 
 nightly-packmind-update:
   stage: update
-  image: node:22.17.0
+  image: node:24.22.1
   timeout: 15 minutes
   variables:
     GIT_DEPTH: 0

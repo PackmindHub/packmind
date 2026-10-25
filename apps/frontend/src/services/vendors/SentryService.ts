@@ -1,7 +1,13 @@
 import * as Sentry from '@sentry/react';
 import { getEnvVar } from '../../shared/utils/getEnvVar';
+import { isPackmindCloud } from '../../shared/utils/isPackmindCloud';
 
 export function initSentry() {
+  if (!isPackmindCloud()) {
+    console.debug('Not on Packmind Cloud - skipping Sentry initialization');
+    return;
+  }
+
   const sentryDSN = getEnvVar('VITE_SENTRY_FRONTEND_DSN');
 
   // Use custom environment variable if provided, otherwise fall back to Vite's MODE
