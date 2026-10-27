@@ -12,6 +12,11 @@ switching on `provider.source` against `GitProviderVendors` from `@packmind/type
 - `github/` — `GithubProvider`, `GithubRepository`, plus an `auth/` subfolder
 - `gitlab/` — `GitlabProvider`, `GitlabRepository`, `types.ts`, `linkHeaderUtils.ts`
 
+Both vendors share `http/`: `withTransientRetry` (request timeout and retry of transient statuses),
+`providerHttpsAgent`, `responseHeaders`, and the per-vendor `detectGithubRateLimit` /
+`detectGitlabRateLimit` that classify throttling from the provider's response. Reuse them in a new
+provider rather than re-implementing retry or rate-limit detection.
+
 ## Auth is asymmetric — check which path applies
 
 The two vendors do **not** authenticate the same way, and this is the most common source of
