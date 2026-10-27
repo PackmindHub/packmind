@@ -1,5 +1,8 @@
 import { PackmindLogger } from '@packmind/logger';
-import { PackmindEventEmitterService } from '@packmind/node-utils';
+import {
+  Configuration,
+  PackmindEventEmitterService,
+} from '@packmind/node-utils';
 import {
   mockInterface,
   stubLogger,
@@ -16,8 +19,12 @@ import {
 import { organizationFactory, userFactory } from '../../../../test';
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
+import { OrganizationCreationPolicyService } from '../../services/OrganizationCreationPolicyService';
 import { SignUpWithOrganizationUseCase } from './SignUpWithOrganizationUseCase';
-import { InvalidPasswordError } from '../../../domain/errors';
+import {
+  InvalidPasswordError,
+  OrganizationCreationRestrictedError,
+} from '../../../domain/errors';
 
 describe('SignUpWithOrganizationUseCase', () => {
   let signUpWithOrganizationUseCase: SignUpWithOrganizationUseCase;
@@ -33,6 +40,8 @@ describe('SignUpWithOrganizationUseCase', () => {
     mockOrganizationService = createMockInstance(OrganizationService);
     mockOrganizationService.getOrganizationByName.mockResolvedValue(null);
 
+    jest.spyOn(Configuration, 'getConfig').mockResolvedValue(null);
+
     mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
     mockEventEmitterService.emit.mockReturnValue(true);
 
@@ -43,6 +52,10 @@ describe('SignUpWithOrganizationUseCase', () => {
     signUpWithOrganizationUseCase = new SignUpWithOrganizationUseCase(
       mockUserService,
       mockOrganizationService,
+      new OrganizationCreationPolicyService(
+        mockOrganizationService,
+        stubLogger(),
+      ),
       mockEventEmitterService,
       mockSpacesPort,
       stubbedLogger,
@@ -51,6 +64,7 @@ describe('SignUpWithOrganizationUseCase', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe('execute', () => {
@@ -716,6 +730,73 @@ describe('SignUpWithOrganizationUseCase', () => {
         });
 
         it('still returns created user and organization', async () => {
+          const result = await signUpWithOrganizationUseCase.execute(command);
+
+          expect(result).toEqual({
+            user: mockUser,
+            organization: mockOrganization,
+          });
+        });
+      });
+    });
+
+    describe('when organization creation is restricted to admins', () => {
+      const command: SignUpWithOrganizationCommand = {
+        email: 'newcomer@packmind.com',
+        password: 'password123!@',
+        method: 'password',
+      };
+
+      beforeEach(() => {
+        jest
+          .spyOn(Configuration, 'getConfig')
+          .mockImplementation(async (key) =>
+            key === 'RESTRICT_ORGANIZATION_CREATION_TO_ADMINS' ? 'true' : null,
+          );
+        mockOrganizationService.createOrganization.mockResolvedValue(
+          mockOrganization,
+        );
+        mockUserService.createUser.mockResolvedValue(mockUser);
+      });
+
+      describe('when organizations already exist', () => {
+        let error: unknown;
+
+        beforeEach(async () => {
+          mockOrganizationService.countOrganizations.mockResolvedValue(3);
+
+          try {
+            await signUpWithOrganizationUseCase.execute(command);
+          } catch (e) {
+            error = e;
+          }
+        });
+
+        it('throws OrganizationCreationRestrictedError', () => {
+          expect(error).toBeInstanceOf(OrganizationCreationRestrictedError);
+        });
+
+        it('does not create the organization', () => {
+          expect(
+            mockOrganizationService.createOrganization,
+          ).not.toHaveBeenCalled();
+        });
+
+        it('does not create the user', () => {
+          expect(mockUserService.createUser).not.toHaveBeenCalled();
+        });
+
+        it('does not emit any event', () => {
+          expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when it is the very first organization of the instance', () => {
+        beforeEach(() => {
+          mockOrganizationService.countOrganizations.mockResolvedValue(0);
+        });
+
+        it('returns created user and organization', async () => {
           const result = await signUpWithOrganizationUseCase.execute(command);
 
           expect(result).toEqual({

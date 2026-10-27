@@ -148,4 +148,42 @@ describe('OrganizationRepository', () => {
       });
     });
   });
+
+  describe('.countAll', () => {
+    describe('when no organization is stored', () => {
+      it('returns 0', async () => {
+        expect(await organizationRepository.countAll()).toBe(0);
+      });
+    });
+
+    describe('when organizations are stored', () => {
+      beforeEach(async () => {
+        await organizationRepository.add(
+          organizationFactory({ name: 'First', slug: 'first' }),
+        );
+        await organizationRepository.add(
+          organizationFactory({ name: 'Second', slug: 'second' }),
+        );
+      });
+
+      it('returns their number', async () => {
+        expect(await organizationRepository.countAll()).toBe(2);
+      });
+    });
+
+    describe('when an organization is soft-deleted', () => {
+      beforeEach(async () => {
+        const deleted = organizationFactory({ name: 'Gone', slug: 'gone' });
+        await organizationRepository.add(deleted);
+        await organizationRepository.add(
+          organizationFactory({ name: 'Kept', slug: 'kept' }),
+        );
+        await organizationRepository.deleteById(deleted.id);
+      });
+
+      it('does not count it', async () => {
+        expect(await organizationRepository.countAll()).toBe(1);
+      });
+    });
+  });
 });

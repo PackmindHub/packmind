@@ -16,6 +16,7 @@ export * from './IGetCurrentApiKeyUseCase';
 export * from './IGetOrganizationByIdUseCase';
 export * from './IGetOrganizationByNameUseCase';
 export * from './IGetOrganizationBySlugUseCase';
+export * from './IGetOrganizationCreationPolicyUseCase';
 export * from './IGetUserByIdUseCase';
 export * from './IListOrganizationUsersUseCase';
 export * from './IListOrganizationUserStatusesUseCase';

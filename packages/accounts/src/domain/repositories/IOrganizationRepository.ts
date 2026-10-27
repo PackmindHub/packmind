@@ -3,4 +3,5 @@ import { IRepository } from '@packmind/types';
 
 export interface IOrganizationRepository extends IRepository<Organization> {
   findBySlug(slug: string): Promise<Organization | null>;
+  countAll(): Promise<number>;
 }

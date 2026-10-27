@@ -15,6 +15,7 @@ import {
 } from '@packmind/types';
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
+import { OrganizationCreationPolicyService } from '../../services/OrganizationCreationPolicyService';
 import {
   InvalidPasswordError,
   InvalidAuthenticationTypeError,
@@ -26,6 +27,7 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
   constructor(
     private readonly userService: UserService,
     private readonly organizationService: OrganizationService,
+    private readonly organizationCreationPolicyService: OrganizationCreationPolicyService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly spacesPort: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -79,6 +81,11 @@ export class SignUpWithOrganizationUseCase implements ISignUpWithOrganizationUse
     if (method === 'password') {
       this.validatePasswordForSignup(password);
     }
+
+    // Before anything is written, so a refusal leaves no orphan org or user.
+    await this.organizationCreationPolicyService.assertCanCreateOrganization(
+      null,
+    );
 
     const baseOrganizationName = this.generateBaseOrganizationName(email);
 

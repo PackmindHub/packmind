@@ -11,6 +11,7 @@ export { GetCurrentApiKeyUseCase } from './getCurrentApiKey/GetCurrentApiKeyUseC
 export { GetOrganizationByIdUseCase } from './getOrganizationById/GetOrganizationByIdUseCase';
 export { GetOrganizationByNameUseCase } from './getOrganizationByName/GetOrganizationByNameUseCase';
 export { GetOrganizationBySlugUseCase } from './getOrganizationBySlug/GetOrganizationBySlugUseCase';
+export { GetOrganizationCreationPolicyUseCase } from './getOrganizationCreationPolicy/GetOrganizationCreationPolicyUseCase';
 export { GetUserByIdUseCase } from './getUserById/GetUserByIdUseCase';
 export { ListOrganizationUsersUseCase } from './listOrganizationUsers/ListOrganizationUsersUseCase';
 export { ListOrganizationUserStatusesUseCase } from './listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase';

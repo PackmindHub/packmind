@@ -1,5 +1,6 @@
 import { UserService } from './UserService';
 import { OrganizationService } from './OrganizationService';
+import { OrganizationCreationPolicyService } from './OrganizationCreationPolicyService';
 import { MembershipResolutionService } from './MembershipResolutionService';
 import { InvitationService } from './InvitationService';
 import { ApiKeyService } from './ApiKeyService';
@@ -16,6 +17,7 @@ import { instrumentComponents, SmtpMailService } from '@packmind/node-utils';
 export class EnhancedAccountsServices {
   private readonly userService: UserService;
   private readonly organizationService: OrganizationService;
+  private readonly organizationCreationPolicyService: OrganizationCreationPolicyService;
   private readonly membershipResolutionService: MembershipResolutionService;
   private readonly invitationService: InvitationService;
   private readonly passwordResetTokenService: PasswordResetTokenService;
@@ -35,6 +37,8 @@ export class EnhancedAccountsServices {
     this.organizationService = new OrganizationService(
       this.accountsRepositories.getOrganizationRepository(),
     );
+    this.organizationCreationPolicyService =
+      new OrganizationCreationPolicyService(this.organizationService);
     this.membershipResolutionService = new MembershipResolutionService(
       this.organizationService,
     );
@@ -62,6 +66,7 @@ export class EnhancedAccountsServices {
     instrumentComponents([
       this.userService,
       this.organizationService,
+      this.organizationCreationPolicyService,
       this.membershipResolutionService,
       this.invitationService,
       this.passwordResetTokenService,
@@ -77,6 +82,10 @@ export class EnhancedAccountsServices {
 
   getOrganizationService(): OrganizationService {
     return this.organizationService;
+  }
+
+  getOrganizationCreationPolicyService(): OrganizationCreationPolicyService {
+    return this.organizationCreationPolicyService;
   }
 
   getMembershipResolutionService(): MembershipResolutionService {

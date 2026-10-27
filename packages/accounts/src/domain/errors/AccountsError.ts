@@ -20,7 +20,8 @@ export type AccountsErrorReason =
   | 'invalid_authentication_type'
   | 'user_creation_fields_required'
   | 'invalid_credentials'
-  | 'too_many_login_attempts';
+  | 'too_many_login_attempts'
+  | 'organization_creation_restricted';
 
 export type AccountsErrorContext = {
   organizationId?: string;
