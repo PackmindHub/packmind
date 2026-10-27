@@ -12,6 +12,8 @@ export enum AccountQueryKeys {
   VALIDATE_PASSWORD_RESET_TOKEN = 'validate-password-reset-token',
   SELECT_ORGANIZATION = 'select-organization',
   GET_SOCIAL_PROVIDERS = 'get-social-providers',
+  GET_ORGANIZATION_CREATION_POLICY = 'get-organization-creation-policy',
+  GET_PUBLIC_ORGANIZATION_CREATION_POLICY = 'get-public-organization-creation-policy',
 }
 
 // Base query key arrays for reuse
@@ -66,4 +68,16 @@ export const SELECT_ORGANIZATION_KEY = [
 export const GET_SOCIAL_PROVIDERS_KEY = [
   ACCOUNTS_QUERY_SCOPE,
   AccountQueryKeys.GET_SOCIAL_PROVIDERS,
+] as const;
+
+export const GET_ORGANIZATION_CREATION_POLICY_KEY = [
+  ORGANIZATION_QUERY_SCOPE,
+  ACCOUNTS_QUERY_SCOPE,
+  AccountQueryKeys.GET_ORGANIZATION_CREATION_POLICY,
+] as const;
+
+// Not org-scoped: read by anonymous visitors on the sign-up screen.
+export const GET_PUBLIC_ORGANIZATION_CREATION_POLICY_KEY = [
+  ACCOUNTS_QUERY_SCOPE,
+  AccountQueryKeys.GET_PUBLIC_ORGANIZATION_CREATION_POLICY,
 ] as const;

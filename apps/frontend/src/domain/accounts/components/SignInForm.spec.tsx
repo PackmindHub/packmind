@@ -12,7 +12,10 @@ import {
   useSelectOrganizationMutation,
   useSocialProvidersQuery,
 } from '../api/queries/AuthQueries';
-import { useCreateOrganizationMutation } from '../api/queries/AccountsQueries';
+import {
+  useCreateOrganizationMutation,
+  useGetOrganizationCreationPolicyQuery,
+} from '../api/queries/AccountsQueries';
 import {
   SignInUserResponse,
   User,
@@ -21,6 +24,10 @@ import {
 } from '@packmind/types';
 import type { MockedFunction } from 'vitest';
 import { createSuccessQueryResult } from '../../../test/queryResultMocks';
+import {
+  ORGANIZATION_CREATION_RESTRICTED_MESSAGE,
+  SIGN_UP_INVITATION_ONLY_MESSAGE,
+} from './InvitationOnlyNotice';
 
 vi.mock('../api/queries/AuthQueries', () => ({
   useSignInMutation: vi.fn(),
@@ -30,6 +37,7 @@ vi.mock('../api/queries/AuthQueries', () => ({
 
 vi.mock('../api/queries/AccountsQueries', () => ({
   useCreateOrganizationMutation: vi.fn(),
+  useGetOrganizationCreationPolicyQuery: vi.fn(),
 }));
 
 const mockNavigate = vi.fn();
@@ -78,7 +86,10 @@ const signedInUser: User = {
   memberships: [],
 };
 
-const renderWithProviders = (component: React.ReactElement) => {
+const renderWithProviders = (
+  component: React.ReactElement,
+  initialEntries: string[] = ['/'],
+) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -87,7 +98,7 @@ const renderWithProviders = (component: React.ReactElement) => {
   });
 
   return render(
-    <MemoryRouter>
+    <MemoryRouter initialEntries={initialEntries}>
       <UIProvider>
         <QueryClientProvider client={queryClient}>
           {component}
@@ -112,12 +123,19 @@ describe('SignInForm', () => {
   const mockUseSocialProvidersQuery = useSocialProvidersQuery as MockedFunction<
     typeof useSocialProvidersQuery
   >;
+  const mockUseGetOrganizationCreationPolicyQuery =
+    useGetOrganizationCreationPolicyQuery as MockedFunction<
+      typeof useGetOrganizationCreationPolicyQuery
+    >;
 
   beforeEach(() => {
     vi.clearAllMocks();
     // Mock social providers query to return empty list
     mockUseSocialProvidersQuery.mockReturnValue(
       createSuccessQueryResult<{ providers: string[] }>({ providers: [] }),
+    );
+    mockUseGetOrganizationCreationPolicyQuery.mockReturnValue(
+      createSuccessQueryResult({ canCreateOrganization: true }),
     );
   });
 
@@ -1069,6 +1087,87 @@ describe('SignInForm', () => {
           );
         });
       });
+    });
+  });
+  describe('when the social login callback refused organization creation', () => {
+    beforeEach(() => {
+      mockUseSignInMutation.mockReturnValue(createSignInMutation());
+      mockUseSelectOrganizationMutation.mockReturnValue(
+        createSelectOrganizationMutation(),
+      );
+      mockUseCreateOrganizationMutation.mockReturnValue(
+        createCreateOrganizationMutation(),
+      );
+
+      renderWithProviders(<SignInForm />, [
+        '/sign-in?error=organization-creation-restricted',
+      ]);
+    });
+
+    it('displays the invitation-only message', () => {
+      expect(
+        screen.getByText(SIGN_UP_INVITATION_ONLY_MESSAGE),
+      ).toBeInTheDocument();
+    });
+
+    it('still displays the sign-in form', () => {
+      expect(
+        screen.getByPlaceholderText(/enter your email/i),
+      ).toBeInTheDocument();
+    });
+  });
+
+  describe('when an orgless user may not create an organization', () => {
+    beforeEach(async () => {
+      const user = userEvent.setup();
+      const mockSignInMutation = createSignInMutation();
+      mockUseSignInMutation.mockReturnValue(mockSignInMutation);
+      mockUseSelectOrganizationMutation.mockReturnValue(
+        createSelectOrganizationMutation(),
+      );
+      mockUseCreateOrganizationMutation.mockReturnValue(
+        createCreateOrganizationMutation(),
+      );
+      mockUseGetOrganizationCreationPolicyQuery.mockReturnValue(
+        createSuccessQueryResult({ canCreateOrganization: false }),
+      );
+
+      renderWithProviders(<SignInForm />);
+
+      await user.type(
+        screen.getByPlaceholderText(/enter your email/i),
+        'test@example.com',
+      );
+      await user.type(
+        screen.getByPlaceholderText(/enter your password/i),
+        'password123',
+      );
+      await user.click(screen.getByRole('button', { name: /sign in/i }));
+
+      await waitFor(() => {
+        expect(mockSignInMutation.mutate).toHaveBeenCalled();
+      });
+
+      act(() => {
+        replayMutation(mockSignInMutation.mutate).onSuccess({
+          user: signedInUser,
+          organizations: [],
+        });
+      });
+    });
+
+    it('displays the restricted creation message', async () => {
+      expect(
+        await screen.findByText(ORGANIZATION_CREATION_RESTRICTED_MESSAGE),
+      ).toBeInTheDocument();
+    });
+
+    it('does not display the organization creation form', async () => {
+      await screen.findByText(ORGANIZATION_CREATION_RESTRICTED_MESSAGE);
+
+      expect(
+        screen.queryByPlaceholderText(/enter organization name/i),
+      ).not.toBeInTheDocument();
     });
   });
 });

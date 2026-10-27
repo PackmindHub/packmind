@@ -1,12 +1,36 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 import { SignInUserResponse } from '@packmind/types';
-import { PMAlert } from '@packmind/ui';
+import { PMAlert, PMBox } from '@packmind/ui';
 import SignInCredentialsForm from './SignInCredentialsForm';
 import OrganizationSelectionForm from './OrganizationSelectionForm';
 import OrganizationCreationForm from './OrganizationCreationForm';
 import { routes } from '../../../shared/utils/routes';
 import { useGetMeQuery } from '../api/queries/UserQueries';
+import { useGetOrganizationCreationPolicyQuery } from '../api/queries/AccountsQueries';
+import {
+  InvitationOnlyNotice,
+  ORGANIZATION_CREATION_RESTRICTED_ERROR,
+  ORGANIZATION_CREATION_RESTRICTED_MESSAGE,
+  SIGN_UP_INVITATION_ONLY_MESSAGE,
+} from './InvitationOnlyNotice';
+
+// Rendered only once signed in: the auth cookie is set even without an org,
+// so the per-user policy endpoint is reachable here.
+function NoOrganizationStep() {
+  const { data, isLoading, isError } = useGetOrganizationCreationPolicyQuery();
+
+  if (isLoading) return null;
+  // On a policy read failure, fall back to the form: the server still enforces.
+  if (!isError && data && !data.canCreateOrganization) {
+    return (
+      <InvitationOnlyNotice
+        message={ORGANIZATION_CREATION_RESTRICTED_MESSAGE}
+      />
+    );
+  }
+  return <OrganizationCreationForm />;
+}
 
 export default function SignInForm() {
   const [signInResult, setSignInResult] = useState<SignInUserResponse | null>(
@@ -58,7 +82,7 @@ export default function SignInForm() {
     !signInResult.organization &&
     signInResult.organizations?.length === 0
   ) {
-    return <OrganizationCreationForm />;
+    return <NoOrganizationStep />;
   }
 
   // If we have multiple organizations, show organization selection
@@ -82,6 +106,11 @@ export default function SignInForm() {
             provider.
           </PMAlert.Title>
         </PMAlert.Root>
+      )}
+      {socialError === ORGANIZATION_CREATION_RESTRICTED_ERROR && (
+        <PMBox mb={4}>
+          <InvitationOnlyNotice message={SIGN_UP_INVITATION_ONLY_MESSAGE} />
+        </PMBox>
       )}
       <SignInCredentialsForm onSignInSuccess={handleSignInSuccess} />
     </>

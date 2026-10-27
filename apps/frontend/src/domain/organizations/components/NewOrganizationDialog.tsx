@@ -17,6 +17,7 @@ import {
 import { useCreateOrganizationMutation } from '../../accounts/api/queries/AccountsQueries';
 import { useSelectOrganizationMutation } from '../../accounts/api/queries/AuthQueries';
 import { routes } from '../../../shared/utils/routes';
+import { isPackmindError } from '../../../services/api/errors/PackmindError';
 
 interface NewOrganizationDialogProps {
   open: boolean;
@@ -74,8 +75,9 @@ export const NewOrganizationDialog: React.FC<NewOrganizationDialogProps> = ({
     } catch (error) {
       pmToaster.create({
         title: 'Error',
-        description:
-          error instanceof Error
+        description: isPackmindError(error)
+          ? error.serverError.data.message
+          : error instanceof Error
             ? error.message
             : 'Failed to create organization',
         type: 'error',

@@ -13,7 +13,10 @@ import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { LuBuilding, LuCirclePlus } from 'react-icons/lu';
 import { NewOrganizationDialog } from './NewOrganizationDialog';
 import { useQueryClient } from '@tanstack/react-query';
-import { useGetUserOrganizationsQuery } from '../../accounts/api/queries/AccountsQueries';
+import {
+  useGetOrganizationCreationPolicyQuery,
+  useGetUserOrganizationsQuery,
+} from '../../accounts/api/queries/AccountsQueries';
 import { useSelectOrganizationMutation } from '../../accounts/api/queries/AuthQueries';
 import { getMeQueryOptions } from '../../accounts/api/queries/UserQueries';
 import { ORGANIZATION_QUERY_SCOPE } from '../api/queryKeys';
@@ -34,6 +37,9 @@ export const SidebarOrgaSelector: React.FunctionComponent<
 
   const { data: organizations = [], isLoading } =
     useGetUserOrganizationsQuery();
+  // Hidden until the policy is known, to avoid a flash of the menu item.
+  const { data: creationPolicy } = useGetOrganizationCreationPolicyQuery();
+  const canCreateOrganization = creationPolicy?.canCreateOrganization === true;
 
   // Filter out the current organization from the list
   const availableOrganizations = organizations.filter(
@@ -105,19 +111,23 @@ export const SidebarOrgaSelector: React.FunctionComponent<
                   </PMMenu.Item>
                 ))
               )}
-              <PMMenu.Separator borderColor={'border.tertiary'} />
-              <PMMenu.Item
-                value="new-organizattion"
-                onClick={handleOpenOrganizationCreation}
-                cursor={'pointer'}
-              >
-                <PMText color="secondary">
-                  <PMIcon marginRight={2}>
-                    <LuCirclePlus />
-                  </PMIcon>
-                  New organization
-                </PMText>
-              </PMMenu.Item>
+              {canCreateOrganization && (
+                <>
+                  <PMMenu.Separator borderColor={'border.tertiary'} />
+                  <PMMenu.Item
+                    value="new-organizattion"
+                    onClick={handleOpenOrganizationCreation}
+                    cursor={'pointer'}
+                  >
+                    <PMText color="secondary">
+                      <PMIcon marginRight={2}>
+                        <LuCirclePlus />
+                      </PMIcon>
+                      New organization
+                    </PMText>
+                  </PMMenu.Item>
+                </>
+              )}
             </PMMenu.Content>
           </PMMenu.Positioner>
         </PMPortal>

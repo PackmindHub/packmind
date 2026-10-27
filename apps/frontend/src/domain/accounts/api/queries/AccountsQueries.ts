@@ -5,6 +5,7 @@ import {
   GET_USER_STATUSES_KEY,
   GET_USERS_IN_MY_ORGANIZATION_KEY,
   GET_ME_KEY,
+  GET_ORGANIZATION_CREATION_POLICY_KEY,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
 import { OrganizationId, UserId, UserOrganizationRole } from '@packmind/types';
@@ -26,6 +27,13 @@ export const useGetUserOrganizationsQuery = () => {
   return useQuery(getUserOrganizationsQueryOptions());
 };
 
+export const useGetOrganizationCreationPolicyQuery = () => {
+  return useQuery({
+    queryKey: GET_ORGANIZATION_CREATION_POLICY_KEY,
+    queryFn: () => authGateway.getMyOrganizationCreationPolicy(),
+  });
+};
+
 export const useCreateOrganizationMutation = () => {
   const queryClient = useQueryClient();
 
@@ -38,6 +46,10 @@ export const useCreateOrganizationMutation = () => {
       // Invalidate user organizations list
       await queryClient.invalidateQueries({
         queryKey: GET_USER_ORGANIZATIONS_KEY,
+      });
+      // Becoming admin of a new org can change the creation policy
+      await queryClient.invalidateQueries({
+        queryKey: GET_ORGANIZATION_CREATION_POLICY_KEY,
       });
       // Invalidate spaces cache to fetch the default "Global" space created with the org
       await queryClient.invalidateQueries({

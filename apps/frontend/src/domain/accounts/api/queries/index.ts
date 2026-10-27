@@ -6,6 +6,7 @@ export {
   useResetPasswordMutation,
   useValidatePasswordResetTokenQuery,
   getSelectOrganizationQueryOptions,
+  usePublicOrganizationCreationPolicyQuery,
 } from './AuthQueries';
 export { useGetMeQuery, getMeQueryOptions } from './UserQueries';
 export { getUserOrganizationsQueryOptions } from './AccountsQueries';

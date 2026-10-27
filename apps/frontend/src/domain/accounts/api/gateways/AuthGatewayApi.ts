@@ -6,6 +6,7 @@ import {
   GenerateApiKeyResponse,
   GetCurrentApiKeyResponse,
   CreateCliLoginCodeResponse,
+  GetOrganizationCreationPolicyResponse,
 } from '@packmind/types';
 import {
   CheckEmailAvailabilityCommand,
@@ -142,6 +143,18 @@ export class AuthGatewayApi extends PackmindGateway implements IAuthGateway {
   async getSocialProviders(): Promise<{ providers: string[] }> {
     return this._api.get<{ providers: string[] }>(
       `${this._endpoint}/social/providers`,
+    );
+  }
+
+  async getOrganizationCreationPolicy(): Promise<GetOrganizationCreationPolicyResponse> {
+    return this._api.get<GetOrganizationCreationPolicyResponse>(
+      `${this._endpoint}/organization-creation-policy`,
+    );
+  }
+
+  async getMyOrganizationCreationPolicy(): Promise<GetOrganizationCreationPolicyResponse> {
+    return this._api.get<GetOrganizationCreationPolicyResponse>(
+      `${this._endpoint}/me/organization-creation-policy`,
     );
   }
 
