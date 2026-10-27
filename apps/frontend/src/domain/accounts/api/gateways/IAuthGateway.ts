@@ -9,7 +9,7 @@ import {
   IGetCurrentApiKeyUseCase,
   CreateCliLoginCodeResponse,
   PackmindEdition,
-  GetOrganizationCreationPolicyResponse,
+  IGetOrganizationCreationPolicyUseCase,
 } from '@packmind/types';
 import {
   PublicGateway,
@@ -108,8 +108,8 @@ export interface IAuthGateway {
   ): Promise<SelectOrganizationResponse>;
   createCliLoginCode(): Promise<CreateCliLoginCodeResponse>;
   getSocialProviders(): Promise<{ providers: string[] }>;
-  getOrganizationCreationPolicy(): Promise<GetOrganizationCreationPolicyResponse>;
-  getMyOrganizationCreationPolicy(): Promise<GetOrganizationCreationPolicyResponse>;
+  getOrganizationCreationPolicy: PublicGateway<IGetOrganizationCreationPolicyUseCase>;
+  getMyOrganizationCreationPolicy: Gateway<IGetOrganizationCreationPolicyUseCase>;
   updateProfile(body: {
     displayName?: string | null;
   }): Promise<{ displayName: string | null }>;

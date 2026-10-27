@@ -27,13 +27,6 @@ export const useGetUserOrganizationsQuery = () => {
   return useQuery(getUserOrganizationsQueryOptions());
 };
 
-export const useGetOrganizationCreationPolicyQuery = () => {
-  return useQuery({
-    queryKey: GET_ORGANIZATION_CREATION_POLICY_KEY,
-    queryFn: () => authGateway.getMyOrganizationCreationPolicy(),
-  });
-};
-
 export const useCreateOrganizationMutation = () => {
   const queryClient = useQueryClient();
 

@@ -7,10 +7,8 @@ import '@testing-library/jest-dom';
 import { UIProvider } from '@packmind/ui';
 import { createOrganizationId, Organization } from '@packmind/types';
 import { SidebarOrgaSelector } from './OrgaSelector';
-import {
-  useGetOrganizationCreationPolicyQuery,
-  useGetUserOrganizationsQuery,
-} from '../../accounts/api/queries/AccountsQueries';
+import { useGetUserOrganizationsQuery } from '../../accounts/api/queries/AccountsQueries';
+import { useGetOrganizationCreationPolicyQuery } from '../../accounts/api/queries/AuthQueries';
 import {
   createPendingQueryResult,
   createSuccessQueryResult,
@@ -18,12 +16,12 @@ import {
 
 vi.mock('../../accounts/api/queries/AccountsQueries', () => ({
   useGetUserOrganizationsQuery: vi.fn(),
-  useGetOrganizationCreationPolicyQuery: vi.fn(),
   useCreateOrganizationMutation: vi.fn(() => ({ isPending: false })),
 }));
 
 vi.mock('../../accounts/api/queries/AuthQueries', () => ({
   useSelectOrganizationMutation: vi.fn(() => ({ isPending: false })),
+  useGetOrganizationCreationPolicyQuery: vi.fn(),
 }));
 
 const currentOrganization = {

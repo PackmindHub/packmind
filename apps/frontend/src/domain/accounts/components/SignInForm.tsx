@@ -7,7 +7,7 @@ import OrganizationSelectionForm from './OrganizationSelectionForm';
 import OrganizationCreationForm from './OrganizationCreationForm';
 import { routes } from '../../../shared/utils/routes';
 import { useGetMeQuery } from '../api/queries/UserQueries';
-import { useGetOrganizationCreationPolicyQuery } from '../api/queries/AccountsQueries';
+import { useGetOrganizationCreationPolicyQuery } from '../api/queries/AuthQueries';
 import {
   InvitationOnlyNotice,
   ORGANIZATION_CREATION_RESTRICTED_ERROR,

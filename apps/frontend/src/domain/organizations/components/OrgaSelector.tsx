@@ -13,11 +13,11 @@ import { AuthContextOrganization } from '../../accounts/hooks/useAuthContext';
 import { LuBuilding, LuCirclePlus } from 'react-icons/lu';
 import { NewOrganizationDialog } from './NewOrganizationDialog';
 import { useQueryClient } from '@tanstack/react-query';
+import { useGetUserOrganizationsQuery } from '../../accounts/api/queries/AccountsQueries';
 import {
   useGetOrganizationCreationPolicyQuery,
-  useGetUserOrganizationsQuery,
-} from '../../accounts/api/queries/AccountsQueries';
-import { useSelectOrganizationMutation } from '../../accounts/api/queries/AuthQueries';
+  useSelectOrganizationMutation,
+} from '../../accounts/api/queries/AuthQueries';
 import { getMeQueryOptions } from '../../accounts/api/queries/UserQueries';
 import { ORGANIZATION_QUERY_SCOPE } from '../api/queryKeys';
 import { routes } from '../../../shared/utils/routes';

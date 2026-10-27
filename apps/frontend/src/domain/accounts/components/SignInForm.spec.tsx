@@ -11,11 +11,9 @@ import {
   useSignInMutation,
   useSelectOrganizationMutation,
   useSocialProvidersQuery,
-} from '../api/queries/AuthQueries';
-import {
-  useCreateOrganizationMutation,
   useGetOrganizationCreationPolicyQuery,
-} from '../api/queries/AccountsQueries';
+} from '../api/queries/AuthQueries';
+import { useCreateOrganizationMutation } from '../api/queries/AccountsQueries';
 import {
   SignInUserResponse,
   User,
@@ -33,11 +31,11 @@ vi.mock('../api/queries/AuthQueries', () => ({
   useSignInMutation: vi.fn(),
   useSelectOrganizationMutation: vi.fn(),
   useSocialProvidersQuery: vi.fn(),
+  useGetOrganizationCreationPolicyQuery: vi.fn(),
 }));
 
 vi.mock('../api/queries/AccountsQueries', () => ({
   useCreateOrganizationMutation: vi.fn(),
-  useGetOrganizationCreationPolicyQuery: vi.fn(),
 }));
 
 const mockNavigate = vi.fn();
