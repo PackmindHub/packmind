@@ -98,17 +98,20 @@ export class AuthController {
     return this.authService.getOrganizationCreationPolicy();
   }
 
+  // Public: the token is checked by the service, so users without an organization are accepted.
+  @Public()
   @Get('me/organization-creation-policy')
   @HttpCode(HttpStatus.OK)
   async getMyOrganizationCreationPolicy(
-    @Req() request: AuthenticatedRequest,
+    @Req() request: Request,
   ): Promise<GetOrganizationCreationPolicyResponse> {
     this.logger.log(
       'GET /auth/me/organization-creation-policy - Getting organization creation policy',
-      { userId: request.user.userId },
     );
 
-    return this.authService.getOrganizationCreationPolicy(request.user.userId);
+    return this.authService.getOrganizationCreationPolicyForToken(
+      request.cookies?.auth_token,
+    );
   }
 
   @Public()

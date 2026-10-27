@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   UserOrganizationRole,
@@ -908,5 +908,24 @@ export class AuthService {
     return this.accountsAdapter.getOrganizationCreationPolicy(
       userId ? { userId } : {},
     );
+  }
+
+  // Verified here rather than by AuthGuard: a user without any organization
+  // has no organization in their token, which AuthGuard rejects.
+  async getOrganizationCreationPolicyForToken(
+    accessToken?: string,
+  ): Promise<GetOrganizationCreationPolicyResponse> {
+    if (!accessToken) {
+      throw new UnauthorizedException('No valid access token found');
+    }
+
+    let payload: JwtPayload;
+    try {
+      payload = this.jwtService.verify<JwtPayload>(accessToken);
+    } catch {
+      throw new UnauthorizedException('Invalid or expired access token');
+    }
+
+    return this.getOrganizationCreationPolicy(payload.user.userId);
   }
 }

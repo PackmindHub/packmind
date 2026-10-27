@@ -23,16 +23,19 @@ import {
   CliLoginCodeExpiredError,
   OrganizationCreationRestrictedError,
 } from '@packmind/accounts';
-import { AuthenticatedRequest } from '@packmind/node-utils';
+import { AuthenticatedRequest, IS_PUBLIC_KEY } from '@packmind/node-utils';
 import {
   ConflictException,
   BadRequestException,
+  ExecutionContext,
   HttpException,
   HttpStatus,
   Logger,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { Configuration } from '@packmind/node-utils';
+import { Reflector } from '@nestjs/core';
+import { AuthGuard } from './auth.guard';
 
 // Mock only Configuration, preserve other exports
 jest.mock('@packmind/node-utils', () => ({
@@ -111,6 +114,7 @@ describe('AuthController', () => {
     updateUserDisplayName: jest.fn(),
     exchangeCliLoginCode: jest.fn(),
     getOrganizationCreationPolicy: jest.fn(),
+    getOrganizationCreationPolicyForToken: jest.fn(),
   };
 
   const mockWorkOsService = {
@@ -1152,26 +1156,58 @@ describe('AuthController', () => {
   });
 
   describe('getMyOrganizationCreationPolicy', () => {
-    const userId = createUserId('user-1');
     let result: { canCreateOrganization: boolean };
 
     beforeEach(async () => {
-      mockAuthService.getOrganizationCreationPolicy.mockResolvedValue({
+      mockAuthService.getOrganizationCreationPolicyForToken.mockResolvedValue({
         canCreateOrganization: false,
       });
       result = await controller.getMyOrganizationCreationPolicy({
-        user: { userId },
-      } as unknown as AuthenticatedRequest);
+        cookies: { auth_token: 'token-without-org' },
+      } as unknown as Request);
     });
 
-    it('evaluates the policy for the authenticated user', () => {
+    it('is a public route', () => {
       expect(
-        mockAuthService.getOrganizationCreationPolicy,
-      ).toHaveBeenCalledWith(userId);
+        Reflect.getMetadata(
+          IS_PUBLIC_KEY,
+          AuthController.prototype.getMyOrganizationCreationPolicy,
+        ),
+      ).toBe(true);
+    });
+
+    it('evaluates the policy from the auth cookie', () => {
+      expect(
+        mockAuthService.getOrganizationCreationPolicyForToken,
+      ).toHaveBeenCalledWith('token-without-org');
     });
 
     it('returns the policy', () => {
       expect(result).toEqual({ canCreateOrganization: false });
+    });
+
+    describe('when the request goes through AuthGuard', () => {
+      it('lets a token without organization reach the handler', () => {
+        const jwtService = {
+          verify: jest.fn().mockReturnValue({
+            user: { userId: createUserId('user-1'), name: 'user' },
+          }),
+        } as unknown as JwtService;
+        const guard = new AuthGuard(new Reflector(), jwtService);
+        const context = {
+          getHandler: () =>
+            AuthController.prototype.getMyOrganizationCreationPolicy,
+          getClass: () => AuthController,
+          switchToHttp: () => ({
+            getRequest: () => ({
+              cookies: { auth_token: 'token-without-org' },
+              headers: {},
+            }),
+          }),
+        } as unknown as ExecutionContext;
+
+        expect(guard.canActivate(context)).toBe(true);
+      });
     });
   });
 

@@ -1,5 +1,6 @@
 import { userFactory } from '@packmind/accounts/test';
 import { JwtService } from '@nestjs/jwt';
+import { UnauthorizedException } from '@nestjs/common';
 import { createOrganizationId, createUserId, User } from '@packmind/types';
 import { AuthService, GetMeResponse } from './auth.service';
 import { JwtPayload } from './JwtPayload';
@@ -759,6 +760,84 @@ describe('AuthService - getOrganizationCreationPolicy method', () => {
       expect(
         accountsAdapter.getOrganizationCreationPolicy,
       ).toHaveBeenCalledWith({ userId });
+    });
+  });
+});
+
+describe('AuthService - getOrganizationCreationPolicyForToken method', () => {
+  const userId = createUserId('user-1');
+  let accountsAdapter: { getOrganizationCreationPolicy: jest.Mock };
+  let jwtService: { verify: jest.Mock };
+  let getOrganizationCreationPolicyForToken: AuthService['getOrganizationCreationPolicyForToken'];
+
+  beforeEach(() => {
+    accountsAdapter = {
+      getOrganizationCreationPolicy: jest
+        .fn()
+        .mockResolvedValue({ canCreateOrganization: true }),
+    };
+    jwtService = { verify: jest.fn() };
+    const base = {
+      accountsAdapter,
+      jwtService,
+      getOrganizationCreationPolicy:
+        AuthService.prototype.getOrganizationCreationPolicy,
+    };
+    getOrganizationCreationPolicyForToken =
+      AuthService.prototype.getOrganizationCreationPolicyForToken.bind(base);
+  });
+
+  describe('with a valid token without organization', () => {
+    let result: { canCreateOrganization: boolean };
+
+    beforeEach(async () => {
+      jwtService.verify.mockReturnValue({
+        user: { name: 'user', userId },
+      });
+      result = await getOrganizationCreationPolicyForToken('token');
+    });
+
+    it('verifies the token', () => {
+      expect(jwtService.verify).toHaveBeenCalledWith('token');
+    });
+
+    it('evaluates the policy for the token user', () => {
+      expect(
+        accountsAdapter.getOrganizationCreationPolicy,
+      ).toHaveBeenCalledWith({ userId });
+    });
+
+    it('returns the policy', () => {
+      expect(result).toEqual({ canCreateOrganization: true });
+    });
+  });
+
+  describe('with an invalid token', () => {
+    beforeEach(() => {
+      jwtService.verify.mockImplementation(() => {
+        throw new Error('jwt expired');
+      });
+    });
+
+    it('throws UnauthorizedException', async () => {
+      await expect(
+        getOrganizationCreationPolicyForToken('token'),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
+    });
+
+    it('does not evaluate the policy', async () => {
+      await getOrganizationCreationPolicyForToken('token').catch(() => null);
+      expect(
+        accountsAdapter.getOrganizationCreationPolicy,
+      ).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('without a token', () => {
+    it('throws UnauthorizedException', async () => {
+      await expect(
+        getOrganizationCreationPolicyForToken(undefined),
+      ).rejects.toBeInstanceOf(UnauthorizedException);
     });
   });
 });
