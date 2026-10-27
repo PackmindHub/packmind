@@ -21,6 +21,7 @@ import {
   InvalidDisplayNameError,
   CliLoginCodeNotFoundError,
   CliLoginCodeExpiredError,
+  OrganizationCreationRestrictedError,
 } from '@packmind/accounts';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import {
@@ -109,6 +110,7 @@ describe('AuthController', () => {
     validateInvitationToken: jest.fn(),
     updateUserDisplayName: jest.fn(),
     exchangeCliLoginCode: jest.fn(),
+    getOrganizationCreationPolicy: jest.fn(),
   };
 
   const mockWorkOsService = {
@@ -204,6 +206,20 @@ describe('AuthController', () => {
           /* noop */
         });
         expect(mockAuthService.signUp).toHaveBeenCalledWith(signUpRequest);
+      });
+    });
+
+    describe('when organization creation is restricted', () => {
+      beforeEach(() => {
+        mockAuthService.signUp.mockRejectedValue(
+          new OrganizationCreationRestrictedError(),
+        );
+      });
+
+      it('lets the domain error reach the filter', async () => {
+        await expect(controller.signUp(signUpRequest)).rejects.toBeInstanceOf(
+          OrganizationCreationRestrictedError,
+        );
       });
     });
 
@@ -1114,6 +1130,51 @@ describe('AuthController', () => {
     });
   });
 
+  describe('getOrganizationCreationPolicy', () => {
+    let result: { canCreateOrganization: boolean };
+
+    beforeEach(async () => {
+      mockAuthService.getOrganizationCreationPolicy.mockResolvedValue({
+        canCreateOrganization: true,
+      });
+      result = await controller.getOrganizationCreationPolicy();
+    });
+
+    it('evaluates the policy anonymously', () => {
+      expect(
+        mockAuthService.getOrganizationCreationPolicy,
+      ).toHaveBeenCalledWith();
+    });
+
+    it('returns the anonymous organization creation policy', () => {
+      expect(result).toEqual({ canCreateOrganization: true });
+    });
+  });
+
+  describe('getMyOrganizationCreationPolicy', () => {
+    const userId = createUserId('user-1');
+    let result: { canCreateOrganization: boolean };
+
+    beforeEach(async () => {
+      mockAuthService.getOrganizationCreationPolicy.mockResolvedValue({
+        canCreateOrganization: false,
+      });
+      result = await controller.getMyOrganizationCreationPolicy({
+        user: { userId },
+      } as unknown as AuthenticatedRequest);
+    });
+
+    it('evaluates the policy for the authenticated user', () => {
+      expect(
+        mockAuthService.getOrganizationCreationPolicy,
+      ).toHaveBeenCalledWith(userId);
+    });
+
+    it('returns the policy', () => {
+      expect(result).toEqual({ canCreateOrganization: false });
+    });
+  });
+
   describe('socialCallback', () => {
     describe('with valid code and existing user with single org', () => {
       beforeEach(async () => {
@@ -1173,6 +1234,32 @@ describe('AuthController', () => {
         expect(mockResponse.redirect).toHaveBeenCalledWith(
           '/sign-up/create-organization',
         );
+      });
+    });
+
+    describe('when organization creation is restricted for a new user', () => {
+      beforeEach(async () => {
+        mockWorkOsService.authenticateWithCode.mockResolvedValue({
+          email: 'new@example.com',
+        });
+        mockAuthService.signInSocial.mockRejectedValue(
+          new OrganizationCreationRestrictedError(),
+        );
+        await controller.socialCallback(
+          'code',
+          'mock-state-token',
+          mockResponse,
+        );
+      });
+
+      it('redirects to sign-in with the restriction error', () => {
+        expect(mockResponse.redirect).toHaveBeenCalledWith(
+          '/sign-in?error=organization-creation-restricted',
+        );
+      });
+
+      it('does not set the auth cookie', () => {
+        expect(mockResponse.cookie).not.toHaveBeenCalled();
       });
     });
 

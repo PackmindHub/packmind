@@ -12,6 +12,7 @@ import {
   SignInSocialUserResponse,
   UpdateUserDisplayNameCommand,
   UpdateUserDisplayNameResponse,
+  GetOrganizationCreationPolicyResponse,
 } from '@packmind/types';
 import {
   SignInUserCommand,
@@ -898,5 +899,14 @@ export class AuthService {
       });
       throw error;
     }
+  }
+
+  // Without a userId only the first-organization exception can allow it.
+  async getOrganizationCreationPolicy(
+    userId?: UserId,
+  ): Promise<GetOrganizationCreationPolicyResponse> {
+    return this.accountsAdapter.getOrganizationCreationPolicy(
+      userId ? { userId } : {},
+    );
   }
 }

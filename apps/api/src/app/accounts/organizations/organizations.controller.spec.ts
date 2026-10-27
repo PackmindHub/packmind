@@ -10,6 +10,7 @@ import { AuthenticatedRequest } from '@packmind/node-utils';
 import { ACCOUNTS_ADAPTER_TOKEN } from '../../shared/HexaRegistryModule';
 import {
   InvalidOrganizationNameError,
+  OrganizationCreationRestrictedError,
   OrganizationSlugConflictError,
 } from '@packmind/accounts';
 
@@ -119,6 +120,23 @@ describe('OrganizationsController', () => {
             mockRequest,
           ),
         ).rejects.toBeInstanceOf(OrganizationSlugConflictError);
+      });
+    });
+
+    describe('when organization creation is restricted', () => {
+      beforeEach(() => {
+        jest
+          .spyOn(organizationsService, 'createOrganization')
+          .mockRejectedValue(new OrganizationCreationRestrictedError('user-1'));
+      });
+
+      it('lets the domain error reach the filter', async () => {
+        await expect(
+          organizationsController.createOrganization(
+            { name: 'Acme' },
+            mockRequest,
+          ),
+        ).rejects.toBeInstanceOf(OrganizationCreationRestrictedError);
       });
     });
   });

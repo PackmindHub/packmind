@@ -714,6 +714,55 @@ describe('AuthService - API key methods', () => {
   });
 });
 
+describe('AuthService - getOrganizationCreationPolicy method', () => {
+  let accountsAdapter: { getOrganizationCreationPolicy: jest.Mock };
+  let getOrganizationCreationPolicy: AuthService['getOrganizationCreationPolicy'];
+
+  beforeEach(() => {
+    accountsAdapter = {
+      getOrganizationCreationPolicy: jest
+        .fn()
+        .mockResolvedValue({ canCreateOrganization: false }),
+    };
+    getOrganizationCreationPolicy =
+      AuthService.prototype.getOrganizationCreationPolicy.bind({
+        accountsAdapter,
+      });
+  });
+
+  describe('without a user', () => {
+    let result: { canCreateOrganization: boolean };
+
+    beforeEach(async () => {
+      result = await getOrganizationCreationPolicy();
+    });
+
+    it('evaluates the policy anonymously', () => {
+      expect(
+        accountsAdapter.getOrganizationCreationPolicy,
+      ).toHaveBeenCalledWith({});
+    });
+
+    it('returns the policy', () => {
+      expect(result).toEqual({ canCreateOrganization: false });
+    });
+  });
+
+  describe('with a user', () => {
+    const userId = createUserId('user-1');
+
+    beforeEach(async () => {
+      await getOrganizationCreationPolicy(userId);
+    });
+
+    it('evaluates the policy for that user', () => {
+      expect(
+        accountsAdapter.getOrganizationCreationPolicy,
+      ).toHaveBeenCalledWith({ userId });
+    });
+  });
+});
+
 describe('AuthService - selectOrganization method', () => {
   const organizationId = createOrganizationId('org-1');
   const userId = createUserId('1');
