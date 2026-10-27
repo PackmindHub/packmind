@@ -2,6 +2,8 @@
 
 ## Added
 
+- Self-hosted: `RESTRICT_ORGANIZATION_CREATION_TO_ADMINS` limits organization creation to org admins; once the first organization exists, sign-up is invitation-only (#551)
+
 ## Changed
 
 ## Fixed
