@@ -11,7 +11,11 @@ import {
   useSignInMutation,
   useCheckEmailAvailabilityMutation,
   useSocialProvidersQuery,
+  usePublicOrganizationCreationPolicyQuery,
 } from '../api/queries/AuthQueries';
+import { createSuccessQueryResult } from '../../../test/queryResultMocks';
+import { PackmindError } from '../../../services/api/errors/PackmindError';
+import { SIGN_UP_INVITATION_ONLY_MESSAGE } from './InvitationOnlyNotice';
 import type { MockedFunction } from 'vitest';
 
 // Mock the queries
@@ -20,6 +24,7 @@ vi.mock('../api/queries/AuthQueries', () => ({
   useSignInMutation: vi.fn(),
   useCheckEmailAvailabilityMutation: vi.fn(),
   useSocialProvidersQuery: vi.fn(),
+  usePublicOrganizationCreationPolicyQuery: vi.fn(),
 }));
 
 // Mock the error utility
@@ -68,6 +73,17 @@ describe('SignUpWithOrganizationForm', () => {
   const mockUseSocialProvidersQuery = useSocialProvidersQuery as MockedFunction<
     typeof useSocialProvidersQuery
   >;
+
+  const mockUsePublicOrganizationCreationPolicyQuery =
+    usePublicOrganizationCreationPolicyQuery as MockedFunction<
+      typeof usePublicOrganizationCreationPolicyQuery
+    >;
+
+  beforeEach(() => {
+    mockUsePublicOrganizationCreationPolicyQuery.mockReturnValue(
+      createSuccessQueryResult({ canCreateOrganization: true }),
+    );
+  });
 
   afterEach(() => {
     vi.clearAllMocks();
@@ -418,6 +434,73 @@ describe('SignUpWithOrganizationForm', () => {
       it('navigates to sign-in page', () => {
         expect(mockNavigate).toHaveBeenCalledWith('/sign-in');
       });
+    });
+  });
+  describe('when sign-up is restricted to invitations', () => {
+    beforeEach(() => {
+      mockUsePublicOrganizationCreationPolicyQuery.mockReturnValue(
+        createSuccessQueryResult({ canCreateOrganization: false }),
+      );
+      mockUseSignUpWithOrganizationMutation.mockReturnValue(
+        createSignUpMutation(),
+      );
+      mockUseSignInMutation.mockReturnValue(createSignInMutation());
+      mockUseCheckEmailAvailabilityMutation.mockReturnValue(
+        createEmailCheckMutation(),
+      );
+      mockUseSocialProvidersQuery.mockReturnValue({
+        data: { providers: ['GoogleOAuth'] },
+        isLoading: false,
+      } as unknown as ReturnType<typeof useSocialProvidersQuery>);
+
+      renderWithProviders(<SignUpWithOrganizationForm />);
+    });
+
+    it('displays the invitation-only message', () => {
+      expect(
+        screen.getByText(SIGN_UP_INVITATION_ONLY_MESSAGE),
+      ).toBeInTheDocument();
+    });
+
+    it('does not display the sign-up form', () => {
+      expect(
+        screen.queryByPlaceholderText(/name@yourcompany\.com/i),
+      ).not.toBeInTheDocument();
+    });
+
+    it('does not display social sign-up buttons', () => {
+      expect(screen.queryAllByText(/google/i)).toHaveLength(0);
+    });
+  });
+
+  describe('when the server refuses the sign-up', () => {
+    const serverMessage =
+      'Organization creation is restricted to organization administrators on this instance. Ask an administrator for an invitation.';
+
+    beforeEach(() => {
+      mockUseSignUpWithOrganizationMutation.mockReturnValue(
+        createSignUpMutation({
+          error: new PackmindError({
+            data: { message: serverMessage },
+            status: 403,
+            statusText: 'Forbidden',
+          }),
+        }),
+      );
+      mockUseSignInMutation.mockReturnValue(createSignInMutation());
+      mockUseCheckEmailAvailabilityMutation.mockReturnValue(
+        createEmailCheckMutation(),
+      );
+      mockUseSocialProvidersQuery.mockReturnValue({
+        data: { providers: [] },
+        isLoading: false,
+      } as unknown as ReturnType<typeof useSocialProvidersQuery>);
+
+      renderWithProviders(<SignUpWithOrganizationForm />);
+    });
+
+    it('displays the server message', () => {
+      expect(screen.getByText(serverMessage)).toBeInTheDocument();
     });
   });
 });

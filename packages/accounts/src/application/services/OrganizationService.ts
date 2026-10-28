@@ -69,6 +69,10 @@ export class OrganizationService {
     return await this.organizationRepository.findBySlug(slug);
   }
 
+  async countOrganizations(): Promise<number> {
+    return await this.organizationRepository.countAll();
+  }
+
   async renameOrganization(
     organization: Organization,
     newName: string,

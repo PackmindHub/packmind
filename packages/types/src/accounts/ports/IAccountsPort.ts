@@ -21,6 +21,8 @@ import {
   GetOrganizationByIdCommand,
   GetOrganizationByNameCommand,
   GetOrganizationBySlugCommand,
+  GetOrganizationCreationPolicyCommand,
+  GetOrganizationCreationPolicyResponse,
   GetUserByIdCommand,
   ListOrganizationUserStatusesCommand,
   ListOrganizationUserStatusesResponse,
@@ -107,6 +109,10 @@ export interface IAccountsPort {
   listUserOrganizations(
     command: ListUserOrganizationsCommand,
   ): Promise<ListUserOrganizationsResponse>;
+
+  getOrganizationCreationPolicy(
+    command: GetOrganizationCreationPolicyCommand,
+  ): Promise<GetOrganizationCreationPolicyResponse>;
 
   renameOrganization(
     command: RenameOrganizationCommand,

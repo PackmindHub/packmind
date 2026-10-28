@@ -21,6 +21,8 @@ import {
   SELECT_ORGANIZATION_KEY,
   GET_USER_ORGANIZATIONS_KEY,
   GET_SOCIAL_PROVIDERS_KEY,
+  GET_PUBLIC_ORGANIZATION_CREATION_POLICY_KEY,
+  GET_ORGANIZATION_CREATION_POLICY_KEY,
   ACCOUNTS_QUERY_SCOPE,
 } from '../queryKeys';
 import { ORGANIZATION_QUERY_SCOPE } from '../../../organizations/api/queryKeys';
@@ -258,6 +260,24 @@ export const useSocialProvidersQuery = () => {
     staleTime: 30 * 60 * 1000, // 30 minutes
     retry: false,
   });
+};
+
+export const getPublicOrganizationCreationPolicyQueryOptions = () => ({
+  queryKey: GET_PUBLIC_ORGANIZATION_CREATION_POLICY_KEY,
+  queryFn: () => authGateway.getOrganizationCreationPolicy({}),
+});
+
+export const usePublicOrganizationCreationPolicyQuery = () => {
+  return useQuery(getPublicOrganizationCreationPolicyQueryOptions());
+};
+
+export const getOrganizationCreationPolicyQueryOptions = () => ({
+  queryKey: GET_ORGANIZATION_CREATION_POLICY_KEY,
+  queryFn: () => authGateway.getMyOrganizationCreationPolicy({}),
+});
+
+export const useGetOrganizationCreationPolicyQuery = () => {
+  return useQuery(getOrganizationCreationPolicyQueryOptions());
 };
 
 export const useSelectOrganizationMutation = () => {

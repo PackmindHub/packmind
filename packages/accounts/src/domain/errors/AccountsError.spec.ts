@@ -20,6 +20,7 @@ import { CliLoginCodeOrganizationNotFoundError } from './CliLoginCodeOrganizatio
 import { CliLoginCodeApiKeyError } from './CliLoginCodeApiKeyError';
 import { InvalidEmailOrPasswordError } from './InvalidEmailOrPasswordError';
 import { TooManyLoginAttemptsError } from './TooManyLoginAttemptsError';
+import { OrganizationCreationRestrictedError } from './OrganizationCreationRestrictedError';
 
 describe('EmailAlreadyExistsError', () => {
   const error = new EmailAlreadyExistsError('test@example.com');
@@ -407,5 +408,25 @@ describe('TooManyLoginAttemptsError', () => {
       );
       expect(elapsed.retryAfterSeconds).toBe(1);
     });
+  });
+});
+
+describe('OrganizationCreationRestrictedError', () => {
+  const error = new OrganizationCreationRestrictedError('user-1');
+
+  it('is a domain error', () => {
+    expect(isDomainError(error)).toBe(true);
+  });
+
+  it('answers forbidden', () => {
+    expect(error.kind).toBe('forbidden');
+  });
+
+  it('keeps the user id in the context', () => {
+    expect(error.context).toEqual({ userId: 'user-1' });
+  });
+
+  it('tells the user to ask for an invitation', () => {
+    expect(error.message).toContain('Ask an administrator for an invitation');
   });
 });

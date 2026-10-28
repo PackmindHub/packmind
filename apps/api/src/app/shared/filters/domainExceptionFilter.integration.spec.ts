@@ -16,6 +16,7 @@ import {
   UserNotFoundError,
   UserNotInOrganizationError,
 } from '@packmind/node-utils';
+import { OrganizationCreationRestrictedError } from '@packmind/accounts';
 import { AppModule } from '../../app.module';
 
 const userId = '2b0a2a1e-6f3f-4a6f-9a3f-1f2e3d4c5b6a';
@@ -60,6 +61,11 @@ class ThrowingController {
   @Get('space-admin-required')
   spaceAdminRequired(): never {
     throw new SpaceAdminRequiredError(userId, forbiddenSpaceId);
+  }
+
+  @Get('organization-creation-restricted')
+  organizationCreationRestricted(): never {
+    throw new OrganizationCreationRestrictedError(userId);
   }
 
   @Get('plain-error')
@@ -170,6 +176,14 @@ describe('the domain exception filter over HTTP', () => {
       message: 'You must be an admin of this space to perform this action.',
       reason: 'space_admin_required',
       identifiers: [userId, forbiddenSpaceId],
+    },
+    {
+      route: 'organization-creation-restricted',
+      status: 403,
+      message:
+        'Organization creation is restricted to organization administrators on this instance. Ask an administrator for an invitation.',
+      reason: 'organization_creation_restricted',
+      identifiers: [userId],
     },
   ])(
     'when $route throws',

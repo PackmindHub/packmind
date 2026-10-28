@@ -24,7 +24,10 @@ import {
 } from './auth.service';
 import { JwtService } from '@nestjs/jwt';
 import { WorkOsService } from './workos.service';
-import { SocialProvider } from '@packmind/types';
+import {
+  GetOrganizationCreationPolicyResponse,
+  SocialProvider,
+} from '@packmind/types';
 import { maskEmail } from '@packmind/logger';
 import { getErrorMessage } from '../shared/utils/error.utils';
 import { resolvePackmindEdition } from '../shared/utils/edition';
@@ -41,6 +44,7 @@ import {
   ExchangeCliLoginCodeCommand,
   ExchangeCliLoginCodeResponse,
   CliLoginCodeExpiredError,
+  OrganizationCreationRestrictedError,
 } from '@packmind/accounts';
 import { AuthenticatedRequest } from '@packmind/node-utils';
 import { Configuration } from '@packmind/node-utils';
@@ -81,6 +85,33 @@ export class AuthController {
     );
 
     return result;
+  }
+
+  @Public()
+  @Get('organization-creation-policy')
+  @HttpCode(HttpStatus.OK)
+  async getOrganizationCreationPolicy(): Promise<GetOrganizationCreationPolicyResponse> {
+    this.logger.log(
+      'GET /auth/organization-creation-policy - Getting organization creation policy',
+    );
+
+    return this.authService.getOrganizationCreationPolicy();
+  }
+
+  // Public: the token is checked by the service, so users without an organization are accepted.
+  @Public()
+  @Get('me/organization-creation-policy')
+  @HttpCode(HttpStatus.OK)
+  async getMyOrganizationCreationPolicy(
+    @Req() request: Request,
+  ): Promise<GetOrganizationCreationPolicyResponse> {
+    this.logger.log(
+      'GET /auth/me/organization-creation-policy - Getting organization creation policy',
+    );
+
+    return this.authService.getOrganizationCreationPolicyForToken(
+      request.cookies?.auth_token,
+    );
   }
 
   @Public()
@@ -657,6 +688,15 @@ export class AuthController {
 
       response.redirect(redirectUrl);
     } catch (error) {
+      // A new social user cannot get an organization on a restricted instance.
+      if (error instanceof OrganizationCreationRestrictedError) {
+        this.logger.warn(
+          'Social login refused: organization creation restricted',
+        );
+        response.redirect('/sign-in?error=organization-creation-restricted');
+        return;
+      }
+
       this.logger.error('Social login callback failed', {
         error: getErrorMessage(error),
       });

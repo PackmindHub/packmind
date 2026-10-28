@@ -13,14 +13,32 @@ import {
   useCheckEmailAvailabilityMutation,
   useSignInMutation,
   useSignUpWithOrganizationMutation,
+  usePublicOrganizationCreationPolicyQuery,
 } from '../api/queries';
 import validator from 'validator';
 import { routes } from '../../../shared/utils/routes';
 import { SignUpWithOrganizationFormDataTestIds } from '@packmind/frontend';
 import SocialLoginButtons from './SocialLoginButtons';
 import { StartProductTour } from '../../../shared/components/StartProductTour';
+import { isPackmindError } from '../../../services/api/errors/PackmindError';
+import {
+  InvitationOnlyNotice,
+  SIGN_UP_INVITATION_ONLY_MESSAGE,
+} from './InvitationOnlyNotice';
 
 export default function SignUpWithOrganizationForm() {
+  const { data, isLoading, isError } =
+    usePublicOrganizationCreationPolicyQuery();
+
+  if (isLoading) return null;
+  // On a policy read failure, keep the form: the server still enforces.
+  if (!isError && data && !data.canCreateOrganization) {
+    return <InvitationOnlyNotice message={SIGN_UP_INVITATION_ONLY_MESSAGE} />;
+  }
+  return <SignUpForm />;
+}
+
+function SignUpForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -262,8 +280,11 @@ export default function SignUpWithOrganizationForm() {
             <PMAlert.Root status="error">
               <PMAlert.Indicator />
               <PMAlert.Title>
-                {signUpWithOrganizationMutation.error.message ||
-                  'Failed to create account. Please try again.'}
+                {isPackmindError(signUpWithOrganizationMutation.error)
+                  ? signUpWithOrganizationMutation.error.serverError.data
+                      .message
+                  : signUpWithOrganizationMutation.error.message ||
+                    'Failed to create account. Please try again.'}
               </PMAlert.Title>
             </PMAlert.Root>
           )}

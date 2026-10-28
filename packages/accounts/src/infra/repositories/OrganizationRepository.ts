@@ -55,4 +55,17 @@ export class OrganizationRepository
       throw error;
     }
   }
+
+  async countAll(): Promise<number> {
+    this.logger.info('Counting organizations');
+
+    try {
+      return await this.repository.count();
+    } catch (error) {
+      this.logger.error('Failed to count organizations', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  }
 }

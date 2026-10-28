@@ -1,5 +1,6 @@
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
+import { OrganizationCreationPolicyService } from '../../services/OrganizationCreationPolicyService';
 import { PackmindLogger } from '@packmind/logger';
 import { PackmindEventEmitterService } from '@packmind/node-utils';
 import {
@@ -25,6 +26,7 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
   constructor(
     private readonly organizationService: OrganizationService,
     private readonly userService: UserService,
+    private readonly organizationCreationPolicyService: OrganizationCreationPolicyService,
     private readonly eventEmitterService: PackmindEventEmitterService,
     private readonly spacesPort: ISpacesPort,
     private readonly logger: PackmindLogger = new PackmindLogger(origin),
@@ -54,6 +56,10 @@ export class CreateOrganizationUseCase implements ICreateOrganizationUseCase {
     if (!user) {
       throw new UserNotFoundError({ userId });
     }
+
+    await this.organizationCreationPolicyService.assertCanCreateOrganization(
+      user,
+    );
 
     try {
       const organization = await this.organizationService.createOrganization(

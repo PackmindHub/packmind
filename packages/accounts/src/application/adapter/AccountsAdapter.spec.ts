@@ -12,6 +12,8 @@ import {
   IStandardsPortName,
 } from '@packmind/types';
 import { EnhancedAccountsServices } from '../services/EnhancedAccountsServices';
+import { OrganizationCreationPolicyService } from '../services/OrganizationCreationPolicyService';
+import { UserService } from '../services/UserService';
 import { AccountsAdapter } from './AccountsAdapter';
 
 // Derived from the adapter itself so the "no ports" cases below cannot drift
@@ -46,6 +48,7 @@ describe('AccountsAdapter', () => {
     mockServices = {
       getUserService: jest.fn(),
       getOrganizationService: jest.fn(),
+      getOrganizationCreationPolicyService: jest.fn(),
       getMembershipResolutionService: jest.fn(),
       getLoginRateLimiterService: jest.fn(),
       getInvitationService: jest.fn(),
@@ -134,6 +137,37 @@ describe('AccountsAdapter', () => {
         eventEmitterService: mockEventEmitterService,
       });
       expect(adapter.getPort()).toBe(adapter);
+    });
+  });
+
+  describe('getOrganizationCreationPolicy', () => {
+    let mockPolicyService: jest.Mocked<OrganizationCreationPolicyService>;
+    let mockUserService: jest.Mocked<UserService>;
+
+    beforeEach(async () => {
+      mockPolicyService = createMockInstance(OrganizationCreationPolicyService);
+      mockPolicyService.canCreateOrganization.mockResolvedValue(false);
+      mockUserService = createMockInstance(UserService);
+      jest
+        .mocked(mockServices.getOrganizationCreationPolicyService)
+        .mockReturnValue(mockPolicyService);
+      jest.mocked(mockServices.getUserService).mockReturnValue(mockUserService);
+
+      await adapter.initialize({
+        [ISpacesPortName]: mockSpacesPort,
+        [IGitPortName]: mockGitPort,
+        [IStandardsPortName]: mockStandardsPort,
+        [IDeploymentPortName]: mockDeploymentPort,
+        eventEmitterService: mockEventEmitterService,
+      });
+    });
+
+    describe('when called without a user id', () => {
+      it('returns the policy evaluated for an anonymous caller', async () => {
+        const result = await adapter.getOrganizationCreationPolicy({});
+
+        expect(result).toEqual({ canCreateOrganization: false });
+      });
     });
   });
 });

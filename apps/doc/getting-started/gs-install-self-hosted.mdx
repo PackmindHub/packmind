@@ -195,6 +195,16 @@ Social Login (WorkOS):
 - `WORKOS_CLIENT_ID` - Client ID of your WorkOS application
 - `WORKOS_REDIRECT_URI` - OAuth callback URL, must point to your Packmind instance (e.g., `https://your-packmind-instance.com/api/v0/auth/social/callback`)
 
+Organizations:
+
+- `RESTRICT_ORGANIZATION_CREATION_TO_ADMINS` - Set to `true` so that only users who are an administrator of at least one organization can create new organizations. Leave it unset to let anyone create organizations (default)
+
+When `RESTRICT_ORGANIZATION_CREATION_TO_ADMINS` is set to `true`:
+
+- The very first organization of the instance can still be created by signing up, so a fresh install can be set up.
+- Once an organization exists, public sign-up (email and social login) is closed, because signing up always creates an organization. New people join through an invitation from an organization administrator, and the sign-up page tells them so.
+- Members who are not administrators no longer see **New organization** in the organization menu. A user who belongs to no organization is asked to request an invitation.
+
 API Integration:
 
 - `OPENAI_API_KEY` - API key for accessing OpenAI services for customizing standards and commands for AI Agents.

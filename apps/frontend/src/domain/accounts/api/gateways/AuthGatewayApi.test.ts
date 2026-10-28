@@ -151,4 +151,44 @@ describe('AuthGatewayApi', () => {
       });
     });
   });
+
+  describe('getOrganizationCreationPolicy', () => {
+    const mockResponse = { canCreateOrganization: false };
+    let result: typeof mockResponse;
+
+    beforeEach(async () => {
+      mockApiGet.mockResolvedValue(mockResponse);
+      result = await gateway.getOrganizationCreationPolicy();
+    });
+
+    it('calls the creation policy endpoint', () => {
+      expect(mockApiGet).toHaveBeenCalledWith(
+        '/auth/organization-creation-policy',
+      );
+    });
+
+    it('returns the API response', () => {
+      expect(result).toEqual(mockResponse);
+    });
+  });
+
+  describe('getMyOrganizationCreationPolicy', () => {
+    const mockResponse = { canCreateOrganization: true };
+    let result: typeof mockResponse;
+
+    beforeEach(async () => {
+      mockApiGet.mockResolvedValue(mockResponse);
+      result = await gateway.getMyOrganizationCreationPolicy();
+    });
+
+    it('calls the current user creation policy endpoint', () => {
+      expect(mockApiGet).toHaveBeenCalledWith(
+        '/auth/me/organization-creation-policy',
+      );
+    });
+
+    it('returns the API response', () => {
+      expect(result).toEqual(mockResponse);
+    });
+  });
 });

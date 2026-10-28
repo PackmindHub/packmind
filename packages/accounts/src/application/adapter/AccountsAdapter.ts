@@ -24,6 +24,8 @@ import {
   GetOrganizationByIdCommand,
   GetOrganizationByNameCommand,
   GetOrganizationBySlugCommand,
+  GetOrganizationCreationPolicyCommand,
+  GetOrganizationCreationPolicyResponse,
   GetUserByIdCommand,
   IAccountsPort,
   IActivateUserAccountUseCase,
@@ -42,6 +44,7 @@ import {
   IGetOrganizationByIdUseCase,
   IGetOrganizationByNameUseCase,
   IGetOrganizationBySlugUseCase,
+  IGetOrganizationCreationPolicyUseCase,
   IGetUserByIdUseCase,
   IGitPort,
   IGitPortName,
@@ -114,6 +117,7 @@ import { GetCurrentApiKeyUseCase } from '../useCases/getCurrentApiKey/GetCurrent
 import { GetOrganizationByIdUseCase } from '../useCases/getOrganizationById/GetOrganizationByIdUseCase';
 import { GetOrganizationByNameUseCase } from '../useCases/getOrganizationByName/GetOrganizationByNameUseCase';
 import { GetOrganizationBySlugUseCase } from '../useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase';
+import { GetOrganizationCreationPolicyUseCase } from '../useCases/getOrganizationCreationPolicy/GetOrganizationCreationPolicyUseCase';
 import { GetUserByIdUseCase } from '../useCases/getUserById/GetUserByIdUseCase';
 import { ListOrganizationUserStatusesUseCase } from '../useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase';
 import { ListOrganizationUsersUseCase } from '../useCases/listOrganizationUsers/ListOrganizationUsersUseCase';
@@ -148,6 +152,7 @@ export class AccountsAdapter
   private _getOrganizationById!: IGetOrganizationByIdUseCase;
   private _getOrganizationByName!: IGetOrganizationByNameUseCase;
   private _getOrganizationBySlug!: IGetOrganizationBySlugUseCase;
+  private _getOrganizationCreationPolicy!: IGetOrganizationCreationPolicyUseCase;
   private _generateUserToken!: IGenerateUserTokenUseCase;
   private _createInvitations!: ICreateInvitationsUseCase;
   private _activateUserAccount!: IActivateUserAccountUseCase;
@@ -206,6 +211,7 @@ export class AccountsAdapter
     this._signUpWithOrganization = new SignUpWithOrganizationUseCase(
       this.accountsServices.getUserService(),
       this.accountsServices.getOrganizationService(),
+      this.accountsServices.getOrganizationCreationPolicyService(),
       ports.eventEmitterService,
       this.spacesPort,
     );
@@ -246,6 +252,7 @@ export class AccountsAdapter
     this._createOrganization = new CreateOrganizationUseCase(
       this.accountsServices.getOrganizationService(),
       this.accountsServices.getUserService(),
+      this.accountsServices.getOrganizationCreationPolicyService(),
       ports.eventEmitterService,
       this.spacesPort,
     );
@@ -258,6 +265,11 @@ export class AccountsAdapter
     this._getOrganizationBySlug = new GetOrganizationBySlugUseCase(
       this.accountsServices.getOrganizationService(),
     );
+    this._getOrganizationCreationPolicy =
+      new GetOrganizationCreationPolicyUseCase(
+        this.accountsServices.getUserService(),
+        this.accountsServices.getOrganizationCreationPolicyService(),
+      );
     this._generateUserToken = new GenerateUserTokenUseCase(
       this.accountsServices.getUserService(),
       this.accountsServices.getOrganizationService(),
@@ -448,6 +460,12 @@ export class AccountsAdapter
     command: ListUserOrganizationsCommand,
   ): Promise<ListUserOrganizationsResponse> {
     return this._listUserOrganizations.execute(command);
+  }
+
+  public async getOrganizationCreationPolicy(
+    command: GetOrganizationCreationPolicyCommand,
+  ): Promise<GetOrganizationCreationPolicyResponse> {
+    return this._getOrganizationCreationPolicy.execute(command);
   }
 
   public async generateUserToken(command: GenerateUserTokenCommand) {

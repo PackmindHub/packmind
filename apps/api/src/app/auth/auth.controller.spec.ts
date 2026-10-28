@@ -21,17 +21,21 @@ import {
   InvalidDisplayNameError,
   CliLoginCodeNotFoundError,
   CliLoginCodeExpiredError,
+  OrganizationCreationRestrictedError,
 } from '@packmind/accounts';
-import { AuthenticatedRequest } from '@packmind/node-utils';
+import { AuthenticatedRequest, IS_PUBLIC_KEY } from '@packmind/node-utils';
 import {
   ConflictException,
   BadRequestException,
+  ExecutionContext,
   HttpException,
   HttpStatus,
   Logger,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import { Configuration } from '@packmind/node-utils';
+import { Reflector } from '@nestjs/core';
+import { AuthGuard } from './auth.guard';
 
 // Mock only Configuration, preserve other exports
 jest.mock('@packmind/node-utils', () => ({
@@ -109,6 +113,8 @@ describe('AuthController', () => {
     validateInvitationToken: jest.fn(),
     updateUserDisplayName: jest.fn(),
     exchangeCliLoginCode: jest.fn(),
+    getOrganizationCreationPolicy: jest.fn(),
+    getOrganizationCreationPolicyForToken: jest.fn(),
   };
 
   const mockWorkOsService = {
@@ -204,6 +210,20 @@ describe('AuthController', () => {
           /* noop */
         });
         expect(mockAuthService.signUp).toHaveBeenCalledWith(signUpRequest);
+      });
+    });
+
+    describe('when organization creation is restricted', () => {
+      beforeEach(() => {
+        mockAuthService.signUp.mockRejectedValue(
+          new OrganizationCreationRestrictedError(),
+        );
+      });
+
+      it('lets the domain error reach the filter', async () => {
+        await expect(controller.signUp(signUpRequest)).rejects.toBeInstanceOf(
+          OrganizationCreationRestrictedError,
+        );
       });
     });
 
@@ -1114,6 +1134,83 @@ describe('AuthController', () => {
     });
   });
 
+  describe('getOrganizationCreationPolicy', () => {
+    let result: { canCreateOrganization: boolean };
+
+    beforeEach(async () => {
+      mockAuthService.getOrganizationCreationPolicy.mockResolvedValue({
+        canCreateOrganization: true,
+      });
+      result = await controller.getOrganizationCreationPolicy();
+    });
+
+    it('evaluates the policy anonymously', () => {
+      expect(
+        mockAuthService.getOrganizationCreationPolicy,
+      ).toHaveBeenCalledWith();
+    });
+
+    it('returns the anonymous organization creation policy', () => {
+      expect(result).toEqual({ canCreateOrganization: true });
+    });
+  });
+
+  describe('getMyOrganizationCreationPolicy', () => {
+    let result: { canCreateOrganization: boolean };
+
+    beforeEach(async () => {
+      mockAuthService.getOrganizationCreationPolicyForToken.mockResolvedValue({
+        canCreateOrganization: false,
+      });
+      result = await controller.getMyOrganizationCreationPolicy({
+        cookies: { auth_token: 'token-without-org' },
+      } as unknown as Request);
+    });
+
+    it('is a public route', () => {
+      expect(
+        Reflect.getMetadata(
+          IS_PUBLIC_KEY,
+          AuthController.prototype.getMyOrganizationCreationPolicy,
+        ),
+      ).toBe(true);
+    });
+
+    it('evaluates the policy from the auth cookie', () => {
+      expect(
+        mockAuthService.getOrganizationCreationPolicyForToken,
+      ).toHaveBeenCalledWith('token-without-org');
+    });
+
+    it('returns the policy', () => {
+      expect(result).toEqual({ canCreateOrganization: false });
+    });
+
+    describe('when the request goes through AuthGuard', () => {
+      it('lets a token without organization reach the handler', () => {
+        const jwtService = {
+          verify: jest.fn().mockReturnValue({
+            user: { userId: createUserId('user-1'), name: 'user' },
+          }),
+        } as unknown as JwtService;
+        const guard = new AuthGuard(new Reflector(), jwtService);
+        const context = {
+          getHandler: () =>
+            AuthController.prototype.getMyOrganizationCreationPolicy,
+          getClass: () => AuthController,
+          switchToHttp: () => ({
+            getRequest: () => ({
+              cookies: { auth_token: 'token-without-org' },
+              headers: {},
+            }),
+          }),
+        } as unknown as ExecutionContext;
+
+        expect(guard.canActivate(context)).toBe(true);
+      });
+    });
+  });
+
   describe('socialCallback', () => {
     describe('with valid code and existing user with single org', () => {
       beforeEach(async () => {
@@ -1173,6 +1270,32 @@ describe('AuthController', () => {
         expect(mockResponse.redirect).toHaveBeenCalledWith(
           '/sign-up/create-organization',
         );
+      });
+    });
+
+    describe('when organization creation is restricted for a new user', () => {
+      beforeEach(async () => {
+        mockWorkOsService.authenticateWithCode.mockResolvedValue({
+          email: 'new@example.com',
+        });
+        mockAuthService.signInSocial.mockRejectedValue(
+          new OrganizationCreationRestrictedError(),
+        );
+        await controller.socialCallback(
+          'code',
+          'mock-state-token',
+          mockResponse,
+        );
+      });
+
+      it('redirects to sign-in with the restriction error', () => {
+        expect(mockResponse.redirect).toHaveBeenCalledWith(
+          '/sign-in?error=organization-creation-restricted',
+        );
+      });
+
+      it('does not set the auth cookie', () => {
+        expect(mockResponse.cookie).not.toHaveBeenCalled();
       });
     });
 

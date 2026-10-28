@@ -1,6 +1,7 @@
 import { CreateOrganizationUseCase } from './CreateOrganizationUseCase';
 import { OrganizationService } from '../../services/OrganizationService';
 import { UserService } from '../../services/UserService';
+import { OrganizationCreationPolicyService } from '../../services/OrganizationCreationPolicyService';
 import {
   mockInterface,
   stubLogger,
@@ -24,6 +25,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { userFactory } from '../../../../test';
 import {
   InvalidOrganizationNameError,
+  OrganizationCreationRestrictedError,
   UserIdRequiredError,
 } from '../../../domain/errors';
 
@@ -31,6 +33,7 @@ describe('CreateOrganizationUseCase', () => {
   let createOrganizationUseCase: CreateOrganizationUseCase;
   let mockOrganizationService: jest.Mocked<OrganizationService>;
   let mockUserService: jest.Mocked<UserService>;
+  let mockOrganizationCreationPolicyService: jest.Mocked<OrganizationCreationPolicyService>;
   let mockEventEmitterService: jest.Mocked<PackmindEventEmitterService>;
   let mockSpacesPort: jest.Mocked<ISpacesPort>;
   let stubbedLogger: PackmindLogger;
@@ -39,6 +42,10 @@ describe('CreateOrganizationUseCase', () => {
     mockOrganizationService = createMockInstance(OrganizationService);
 
     mockUserService = createMockInstance(UserService);
+
+    mockOrganizationCreationPolicyService = createMockInstance(
+      OrganizationCreationPolicyService,
+    );
 
     mockEventEmitterService = createMockInstance(PackmindEventEmitterService);
     mockEventEmitterService.emit.mockReturnValue(true);
@@ -50,6 +57,7 @@ describe('CreateOrganizationUseCase', () => {
     createOrganizationUseCase = new CreateOrganizationUseCase(
       mockOrganizationService,
       mockUserService,
+      mockOrganizationCreationPolicyService,
       mockEventEmitterService,
       mockSpacesPort,
       stubbedLogger,
@@ -229,6 +237,43 @@ describe('CreateOrganizationUseCase', () => {
           expect(
             mockUserService.addOrganizationMembership,
           ).not.toHaveBeenCalled();
+        });
+      });
+
+      describe('when the creation policy refuses the user', () => {
+        let error: unknown;
+
+        beforeEach(async () => {
+          mockUserService.getUserById.mockResolvedValue(mockUser);
+          mockOrganizationCreationPolicyService.assertCanCreateOrganization.mockRejectedValue(
+            new OrganizationCreationRestrictedError(userId),
+          );
+
+          try {
+            await createOrganizationUseCase.execute(validCommand);
+          } catch (e) {
+            error = e;
+          }
+        });
+
+        it('throws OrganizationCreationRestrictedError', () => {
+          expect(error).toBeInstanceOf(OrganizationCreationRestrictedError);
+        });
+
+        it('checks the policy against the user loaded from the database', () => {
+          expect(
+            mockOrganizationCreationPolicyService.assertCanCreateOrganization,
+          ).toHaveBeenCalledWith(mockUser);
+        });
+
+        it('does not create organization', () => {
+          expect(
+            mockOrganizationService.createOrganization,
+          ).not.toHaveBeenCalled();
+        });
+
+        it('does not emit event', () => {
+          expect(mockEventEmitterService.emit).not.toHaveBeenCalled();
         });
       });
 

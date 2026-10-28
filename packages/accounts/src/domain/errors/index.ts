@@ -12,6 +12,7 @@ export { UserNotFoundError } from './UserNotFoundError';
 export { TooManyLoginAttemptsError } from './TooManyLoginAttemptsError';
 export { UserNotInOrganizationError } from './UserNotInOrganizationError';
 export { OrganizationAdminRequiredError } from './OrganizationAdminRequiredError';
+export { OrganizationCreationRestrictedError } from './OrganizationCreationRestrictedError';
 export { UserCannotExcludeSelfError } from './UserCannotExcludeSelfError';
 export { PasswordResetTokenNotFoundError } from './PasswordResetTokenNotFoundError';
 export { PasswordResetTokenExpiredError } from './PasswordResetTokenExpiredError';
