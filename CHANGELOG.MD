@@ -1,14 +1,8 @@
-# [Unreleased]
+# [1.21.0] - 2026-10-28
 
 ## Added
 
 - Self-hosted: `RESTRICT_ORGANIZATION_CREATION_TO_ADMINS` limits organization creation to org admins; once the first organization exists, sign-up is invitation-only (#551)
-
-## Changed
-
-## Fixed
-
-## Removed
 
 # [1.20.0] - 2026-10-22
 
@@ -504,7 +498,7 @@ Hotfix release.
 - Bulk deployment across multiple repositories with atomic commits
 - Optional OpenAI integration for enhanced AI-powered features
 
-[Unreleased]: https://github.com/PackmindHub/packmind/compare/release/1.20.0...HEAD
+[1.21.0]: https://github.com/PackmindHub/packmind/compare/release/1.20.0...release/1.21.0
 [1.20.0]: https://github.com/PackmindHub/packmind/compare/release/1.19.0...release/1.20.0
 [1.19.0]: https://github.com/PackmindHub/packmind/compare/release/1.18.1...release/1.19.0
 [1.18.1]: https://github.com/PackmindHub/packmind/compare/release/1.18.0...release/1.18.1
