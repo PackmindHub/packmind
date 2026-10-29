@@ -4,6 +4,8 @@
 
 ## Changed
 
+- Default models move to `claude-sonnet-5-5`, `gemini-3.1-pro-preview` and `gemini-3.8-flash`; Claude 5 and Opus 4.7+ no longer receive a temperature
+
 ## Fixed
 
 ## Removed
