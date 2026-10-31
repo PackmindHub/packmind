@@ -3,7 +3,6 @@ import { lintCommand } from './infra/commands/LinterCommand';
 import { BaseParser } from '@packmind/linter-ast';
 import { extractWasmFiles, hasEmbeddedWasmFiles } from './wasm-runtime';
 import { config as dotenvConfig } from 'dotenv';
-import * as fs from 'fs';
 import * as path from 'path';
 import { installCommand } from './infra/commands/InstallCommand';
 import { uninstallCommand } from './infra/commands/UninstallCommand';
@@ -28,6 +27,7 @@ import { gitCommand } from './infra/commands/git/gitCommand';
 import { distributionCommand } from './infra/commands/distribution/distributionCommand';
 import { warnOnLegacyExecName } from './infra/commands/legacyExecNameWarning';
 import { EXEC_NAME } from './infra/utils/execName';
+import { findEnvFiles } from './infra/utils/findEnvFiles';
 import { reportError } from './infra/utils/errorDiagnostics';
 
 // Warn before anything else runs, so even early-exit flags such as `--version`
@@ -39,11 +39,11 @@ warnOnLegacyExecName();
 const { version: CLI_VERSION } = require('../package.json');
 
 /**
- * Find .env file by searching upwards from current directory
+ * Find .env files by searching upwards from current directory, nearest first
  * Stops at git repository root if in a git repo
  * Searches up to filesystem root if not in a git repo
  */
-function findEnvFile(): string | null {
+function findEnvFilesFromCwd(): string[] {
   const currentDir = process.cwd();
   const gitService = new GitService();
   const gitRoot = gitService.getGitRepositoryRootSync(currentDir);
@@ -52,34 +52,15 @@ function findEnvFile(): string | null {
   const filesystemRoot = path.parse(currentDir).root;
   const stopDir = gitRoot ?? filesystemRoot;
 
-  let searchDir = currentDir;
-  let parentDir = path.dirname(searchDir);
-
-  // Search until we've checked the stop directory
-  // Loop naturally terminates at filesystem root since path.dirname('/') === '/'
-  while (searchDir !== parentDir) {
-    const envPath = path.join(searchDir, '.env');
-    if (fs.existsSync(envPath)) {
-      return envPath;
-    }
-
-    // Reached stop directory, stop after checking it
-    if (searchDir === stopDir) {
-      return null;
-    }
-
-    searchDir = parentDir;
-    parentDir = path.dirname(searchDir);
-  }
-
-  return null;
+  return findEnvFiles(currentDir, stopDir);
 }
 
-// Load environment variables from .env file
-// Priority: 1) Explicitly set env vars, 2) .env file found by searching upwards
+// Load environment variables from .env files
+// Priority: 1) Explicitly set env vars, 2) closest .env file, then each parent .env file
+// dotenv never overrides a variable that is already set, so loading the closest
+// file first lets it win while parent files fill in what it does not define.
 // The search stops at git repository root if in a git repo, or filesystem root otherwise
-const envPath = findEnvFile();
-if (envPath) {
+for (const envPath of findEnvFilesFromCwd()) {
   dotenvConfig({ path: envPath });
 }
 

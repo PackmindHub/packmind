@@ -6,6 +6,8 @@
 
 ## Fixed
 
+- The CLI now reads every `.env` file from the current directory up to the git root, so `PACKMIND_API_KEY_V3` set in a root `.env` is found from a sub folder that has its own `.env`. The closest file still wins
+
 ## Removed
 
 # [0.38.0] - 2026-10-22
