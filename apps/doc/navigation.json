@@ -1,0 +1,80 @@
+{
+  "groups": [
+    {
+      "group": "Getting Started",
+      "icon": "rocket",
+      "pages": [
+        "index",
+        "getting-started/gs-install-cloud",
+        "getting-started/gs-install-self-hosted",
+        "getting-started/gs-cli-setup",
+        "getting-started/gs-onboarding",
+        "getting-started/gs-create-standard",
+        "getting-started/gs-create-command",
+        "getting-started/gs-create-skill",
+        "getting-started/gs-distribute"
+      ]
+    },
+    {
+      "group": "Concepts",
+      "icon": "lightbulb",
+      "pages": [
+        "concepts/standards-management",
+        "concepts/commands-management",
+        "concepts/skills-management",
+        "concepts/packages-management",
+        "concepts/artifact-rendering",
+        "tools/import-from-knowledge-base"
+      ]
+    },
+    {
+      "group": "Playbook Maintenance",
+      "icon": "arrows-rotate",
+      "pages": [
+        "playbook-maintenance/updating-your-playbook",
+        "playbook-maintenance/change-proposals",
+        "playbook-maintenance/update-from-external-sources",
+        "playbook-maintenance/auto-update-artifacts",
+        "concepts/spaces"
+      ]
+    },
+    {
+      "group": "Tools & Integrations",
+      "icon": "wrench",
+      "pages": ["tools/cli"]
+    },
+    {
+      "group": "Governance",
+      "icon": "shield",
+      "pages": [
+        "governance/distribution",
+        "governance/git-repository-connection",
+        "governance/marketplaces",
+        "governance/overview"
+      ]
+    },
+    {
+      "group": "Linter",
+      "icon": "magnifying-glass",
+      "pages": ["linter/linter"]
+    },
+    {
+      "group": "Administration",
+      "icon": "gear",
+      "pages": [
+        "administration/manage-organizations",
+        "administration/manage-users",
+        "administration/manage-ai-agents",
+        "administration/llm-configuration"
+      ]
+    },
+    {
+      "group": "Security & Privacy",
+      "icon": "lock",
+      "pages": [
+        "security/security-privacy",
+        "security/security-privacy-self-hosted"
+      ]
+    }
+  ]
+}

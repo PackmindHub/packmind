@@ -18,7 +18,8 @@ Documentation is automatically deployed to Mintlify Cloud when changes are pushe
 
 ## Documentation Structure
 
-- `docs.json` - Navigation and configuration
+- `docs.json` - Site configuration (its `navigation` key references `navigation.json`)
+- `navigation.json` - Navigation: groups and the pages they list
 - `getting-started/` - Getting started guides
 - `concepts/` - Core concepts documentation
 - `playbook-maintenance/` - Playbook maintenance documentation
