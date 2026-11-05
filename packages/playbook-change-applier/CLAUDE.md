@@ -34,7 +34,7 @@ into `saveNewVersion`.
 ## Adding an artifact type
 
 The `'standard' | 'command' | 'skill'` union is written out inline in several signatures and switched
-on in **six** places inside `ApplyPlaybookUseCase`. Widening it and adding one applier is not enough:
+on in **seven** places inside `ApplyPlaybookUseCase`. Widening it and adding one applier is not enough:
 the reporting and rollback paths will silently omit the new type.
 
 1. Add the version type to `ApplierObjectVersions` in
@@ -48,6 +48,8 @@ the reporting and rollback paths will silently omit the new type.
    switch in `ApplyPlaybookUseCase`:
    - `getApplierForType` — applier selection
    - `getVersionId` — extracts the saved version's id
+   - `createArtifact` — switches on the `ChangeProposalType.create<X>` value and calls the port's
+     create method; its `default` throws at runtime
    - `addToIdBucket` and `addToUpdatedBucket` — the created/updated result buckets
    - `rollback` — **two** switches, one per `entry.action` (`'created'` → `hardDelete<X>`,
      `'updated'` → `hardDelete<X>Version`), so the port must expose both hard-delete methods or a
