@@ -1,5 +1,9 @@
 import { AnthropicService } from './AnthropicService';
-import { AIServiceErrorTypes, LLMProvider } from '@packmind/types';
+import {
+  AIServiceErrorTypes,
+  LLMProvider,
+  PromptConversationRole,
+} from '@packmind/types';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getPrivateAccess = (service: AnthropicService) => service as any;
@@ -85,6 +89,59 @@ describe('AnthropicService', () => {
       const result = await service.executePrompt(mockPrompt);
 
       expect(result.error).toBeUndefined();
+    });
+
+    describe('when a temperature is given', () => {
+      describe('with a Claude 5 model', () => {
+        it('does not send the temperature', async () => {
+          mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+          const claude5Service = new AnthropicService({
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: 'test-api-key',
+            model: 'claude-sonnet-5-5',
+          });
+
+          await claude5Service.executePrompt(mockPrompt, { temperature: 0.7 });
+
+          expect(mockAnthropicInstance.messages.create).toHaveBeenCalledWith(
+            expect.not.objectContaining({ temperature: expect.anything() }),
+          );
+        });
+      });
+
+      describe('with Claude Opus 4.8', () => {
+        it('does not send the temperature', async () => {
+          mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+          const opusService = new AnthropicService({
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: 'test-api-key',
+            model: 'claude-opus-4-8',
+          });
+
+          await opusService.executePrompt(mockPrompt, { temperature: 0.7 });
+
+          expect(mockAnthropicInstance.messages.create).toHaveBeenCalledWith(
+            expect.not.objectContaining({ temperature: expect.anything() }),
+          );
+        });
+      });
+
+      describe('with an earlier Claude model', () => {
+        it('sends the temperature', async () => {
+          mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+          const claude4Service = new AnthropicService({
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: 'test-api-key',
+            model: 'claude-haiku-4-5-20251001',
+          });
+
+          await claude4Service.executePrompt(mockPrompt, { temperature: 0.7 });
+
+          expect(mockAnthropicInstance.messages.create).toHaveBeenCalledWith(
+            expect.objectContaining({ temperature: 0.7 }),
+          );
+        });
+      });
     });
 
     it('executes prompt successfully and returns parsed JSON object', async () => {
@@ -419,6 +476,56 @@ describe('AnthropicService', () => {
         });
 
         expect(mockAnthropicInstance.messages.create).toHaveBeenCalledTimes(3);
+      });
+    });
+  });
+
+  describe('executePromptWithHistory', () => {
+    const history = [
+      { role: PromptConversationRole.USER, message: 'Test prompt for AI' },
+    ];
+    const mockResponse = {
+      content: [{ type: 'text' as const, text: 'Test AI response' }],
+      usage: { input_tokens: 10, output_tokens: 20 },
+    };
+
+    describe('when a temperature is given', () => {
+      describe('with a Claude 5 model', () => {
+        it('does not send the temperature', async () => {
+          mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+          const claude5Service = new AnthropicService({
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: 'test-api-key',
+            model: 'claude-sonnet-5-5',
+          });
+
+          await claude5Service.executePromptWithHistory(history, {
+            temperature: 0.7,
+          });
+
+          expect(mockAnthropicInstance.messages.create).toHaveBeenCalledWith(
+            expect.not.objectContaining({ temperature: expect.anything() }),
+          );
+        });
+      });
+
+      describe('with an earlier Claude model', () => {
+        it('sends the temperature', async () => {
+          mockAnthropicInstance.messages.create.mockResolvedValue(mockResponse);
+          const claude4Service = new AnthropicService({
+            provider: LLMProvider.ANTHROPIC,
+            apiKey: 'test-api-key',
+            model: 'claude-haiku-4-5-20251001',
+          });
+
+          await claude4Service.executePromptWithHistory(history, {
+            temperature: 0.7,
+          });
+
+          expect(mockAnthropicInstance.messages.create).toHaveBeenCalledWith(
+            expect.objectContaining({ temperature: 0.7 }),
+          );
+        });
       });
     });
   });

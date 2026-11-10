@@ -21,6 +21,10 @@ import {
 
 const origin = 'AnthropicService';
 
+// Claude 5 models, and Opus 4.7 and later, reject a non-default temperature.
+const REJECTS_TEMPERATURE =
+  /^claude-(?:[a-z]+-(?:[5-9]|[1-9]\d)|opus-4-[7-9])(?:-|$)/;
+
 export class AnthropicService implements AIService {
   private client: Anthropic | null = null;
   private readonly defaultModel: string;
@@ -133,7 +137,10 @@ export class AnthropicService implements AIService {
           ],
         };
 
-        if (options.temperature !== undefined) {
+        if (
+          options.temperature !== undefined &&
+          !REJECTS_TEMPERATURE.test(model)
+        ) {
           messageParams.temperature = options.temperature;
         }
 
@@ -280,7 +287,10 @@ export class AnthropicService implements AIService {
           messages,
         };
 
-        if (options.temperature !== undefined) {
+        if (
+          options.temperature !== undefined &&
+          !REJECTS_TEMPERATURE.test(model)
+        ) {
           messageParams.temperature = options.temperature;
         }
 
