@@ -1,0 +1,1235 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "file",
+      "name": "PackmindCliHexa.ts",
+      "filePath": "apps/cli/src/PackmindCliHexa.ts",
+      "summary": "Facade of the CLI hexagon exposing every CLI operation (lint, install, upgrades, diffs, listing, login/logout, git helpers, default skills, repository tracking) as methods delegating to use cases built by the factory.",
+      "tags": ["facade", "entry-point", "cli", "hexagonal-architecture"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/cli/src/PackmindCliHexa.ts:PackmindCliHexa",
+      "type": "class",
+      "name": "PackmindCliHexa",
+      "filePath": "apps/cli/src/PackmindCliHexa.ts",
+      "lineRange": [100, 382],
+      "summary": "Main CLI facade class whose ~38 methods delegate to use cases, repositories and services wired by PackmindCliHexaFactory, with error reporting around calls.",
+      "tags": ["facade", "cli", "service"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "type": "file",
+      "name": "PackmindCliHexaFactory.ts",
+      "filePath": "apps/cli/src/PackmindCliHexaFactory.ts",
+      "summary": "Composition root of the CLI: instantiates repositories (gateway, config, lock file, output), services (git, files, spaces) and all use cases, wiring their dependencies together.",
+      "tags": ["factory", "dependency-injection", "composition-root", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/PackmindCliHexaFactory.ts:PackmindCliHexaFactory",
+      "type": "class",
+      "name": "PackmindCliHexaFactory",
+      "filePath": "apps/cli/src/PackmindCliHexaFactory.ts",
+      "lineRange": [66, 203],
+      "summary": "Factory class whose constructor builds and exposes the CLI repositories, services and every use case instance.",
+      "tags": ["factory", "dependency-injection", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/services/AgentArtifactDetectionService.ts",
+      "type": "file",
+      "name": "AgentArtifactDetectionService.ts",
+      "filePath": "apps/cli/src/application/services/AgentArtifactDetectionService.ts",
+      "summary": "Detects which AI coding agents (Claude, Cursor, Copilot, Junie, Codex, Kiro, etc.) are present in a directory by checking for their well-known artifact paths.",
+      "tags": ["service", "agent-detection", "filesystem", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/services/AgentArtifactDetectionService.ts:AgentArtifactDetectionService",
+      "type": "class",
+      "name": "AgentArtifactDetectionService",
+      "filePath": "apps/cli/src/application/services/AgentArtifactDetectionService.ts",
+      "lineRange": [41, 117],
+      "summary": "Service checking agent-specific paths (optionally recursively) to return the list of detected agent artifacts.",
+      "tags": ["service", "agent-detection", "filesystem"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/services/DiffViolationFilterService.ts",
+      "type": "file",
+      "name": "DiffViolationFilterService.ts",
+      "filePath": "apps/cli/src/application/services/DiffViolationFilterService.ts",
+      "summary": "Filters lint violations down to modified files or modified line ranges for diff-based linting modes.",
+      "tags": ["service", "lint", "diff", "filtering"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/services/DiffViolationFilterService.ts:DiffViolationFilterService",
+      "type": "class",
+      "name": "DiffViolationFilterService",
+      "filePath": "apps/cli/src/application/services/DiffViolationFilterService.ts",
+      "lineRange": [5, 92],
+      "summary": "Service filtering violations by changed files or by changed line ranges grouped per file.",
+      "tags": ["service", "lint", "diff"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/services/GitService.ts",
+      "type": "file",
+      "name": "GitService.ts",
+      "filePath": "apps/cli/src/application/services/GitService.ts",
+      "summary": "Git adapter running git commands to resolve repository roots, branches, remotes, modified/untracked/staged files and modified line ranges by parsing git diff output.",
+      "tags": ["service", "git", "adapter", "cli"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/cli/src/application/services/GitService.ts:GitService",
+      "type": "class",
+      "name": "GitService",
+      "filePath": "apps/cli/src/application/services/GitService.ts",
+      "lineRange": [38, 562],
+      "summary": "Wraps git CLI invocations with parsers for branches, remotes, ref names and unified diffs, plus URL normalization.",
+      "tags": ["service", "git", "adapter", "parsing"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/application/services/ListFiles.ts",
+      "type": "file",
+      "name": "ListFiles.ts",
+      "filePath": "apps/cli/src/application/services/ListFiles.ts",
+      "summary": "Recursive file lister with default exclusions and glob-based exclusion matching, plus file content reading for the linter.",
+      "tags": ["service", "filesystem", "glob", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/services/ListFiles.ts:ListFiles",
+      "type": "class",
+      "name": "ListFiles",
+      "filePath": "apps/cli/src/application/services/ListFiles.ts",
+      "lineRange": [14, 113],
+      "summary": "Lists files in a directory recursively applying extension filters and exclude globs, and reads file contents.",
+      "tags": ["service", "filesystem", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/services/ListFiles.ts:matchesGlobPattern",
+      "type": "function",
+      "name": "matchesGlobPattern",
+      "filePath": "apps/cli/src/application/services/ListFiles.ts",
+      "lineRange": [115, 141],
+      "summary": "Matches a path against a simple glob pattern (supports ** and *) used for exclusions and ignore patterns.",
+      "tags": ["utility", "glob", "matching"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "type": "file",
+      "name": "PackageArtefactService.ts",
+      "filePath": "apps/cli/src/application/services/PackageArtefactService.ts",
+      "summary": "Shared lookup logic for packages add/move/remove: resolves artefacts (standards, commands, skills) from slugs and finds which packages of a space contain them.",
+      "tags": ["service", "packages", "artefacts", "lookup"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/services/PackageArtefactService.ts:PackageArtefactService",
+      "type": "class",
+      "name": "PackageArtefactService",
+      "filePath": "apps/cli/src/application/services/PackageArtefactService.ts",
+      "lineRange": [44, 124],
+      "summary": "Resolves space, lists packages, finds packages by slug and resolves artefacts plus their package membership.",
+      "tags": ["service", "packages", "lookup"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/services/PackageArtefactService.ts:artefactIdsByType",
+      "type": "function",
+      "name": "artefactIdsByType",
+      "filePath": "apps/cli/src/application/services/PackageArtefactService.ts",
+      "lineRange": [137, 146],
+      "summary": "Spreads artefact ids into the standard/command/skill id arrays shape expected by add/remove artifact calls.",
+      "tags": ["utility", "packages", "mapping"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/services/PackageArtefactService.ts:fullPackageSlug",
+      "type": "function",
+      "name": "fullPackageSlug",
+      "filePath": "apps/cli/src/application/services/PackageArtefactService.ts",
+      "lineRange": [149, 151],
+      "summary": "Builds the fully qualified @space/package slug.",
+      "tags": ["utility", "packages", "slug"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/services/PackmindIgnoreReader.ts",
+      "type": "file",
+      "name": "PackmindIgnoreReader.ts",
+      "filePath": "apps/cli/src/application/services/PackmindIgnoreReader.ts",
+      "summary": "Reads and parses .packmindignore files walking up from a start directory to the repository root to collect ignore patterns.",
+      "tags": ["service", "ignore-patterns", "filesystem", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/application/services/PackmindIgnoreReader.ts:PackmindIgnoreReader",
+      "type": "class",
+      "name": "PackmindIgnoreReader",
+      "filePath": "apps/cli/src/application/services/PackmindIgnoreReader.ts",
+      "lineRange": [6, 61],
+      "summary": "Collects and parses .packmindignore patterns across directory hierarchy, bounded by a stop directory.",
+      "tags": ["service", "ignore-patterns", "filesystem"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/services/SpaceService.ts",
+      "type": "file",
+      "name": "SpaceService.ts",
+      "filePath": "apps/cli/src/application/services/SpaceService.ts",
+      "summary": "Thin service over the spaces gateway for listing spaces, getting the default space, and resolving a space by slug.",
+      "tags": ["service", "spaces", "gateway", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/application/services/SpaceService.ts:SpaceService",
+      "type": "class",
+      "name": "SpaceService",
+      "filePath": "apps/cli/src/application/services/SpaceService.ts",
+      "lineRange": [5, 31],
+      "summary": "Space lookup service delegating to the spaces gateway with API context resolution.",
+      "tags": ["service", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/services/resolveInstallPackageVersions.ts",
+      "type": "file",
+      "name": "resolveInstallPackageVersions.ts",
+      "filePath": "apps/cli/src/application/services/resolveInstallPackageVersions.ts",
+      "summary": "Pure helpers computing which package version each slug requests during install/upgrade, releasing pins on --upgrade while preserving wildcard tracking.",
+      "tags": ["utility", "versioning", "install", "pure-function"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/services/resolveInstallPackageVersions.ts:releasePins",
+      "type": "function",
+      "name": "releasePins",
+      "filePath": "apps/cli/src/application/services/resolveInstallPackageVersions.ts",
+      "lineRange": [19, 30],
+      "summary": "Drops pinned versions for upgraded slugs so the server resolves the newest release, keeping wildcard-tracked entries.",
+      "tags": ["versioning", "upgrade", "pure-function"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/services/resolveInstallPackageVersions.ts:resolveInstallPackageVersions",
+      "type": "function",
+      "name": "resolveInstallPackageVersions",
+      "filePath": "apps/cli/src/application/services/resolveInstallPackageVersions.ts",
+      "lineRange": [63, 89],
+      "summary": "Combines config packages, explicit command-line packages and upgrade flags into the slugs and version map to request.",
+      "tags": ["versioning", "install", "pure-function"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/AddToPackageUseCase.ts",
+      "type": "file",
+      "name": "AddToPackageUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/AddToPackageUseCase.ts",
+      "summary": "Use case adding standards, commands or skills to a package, refusing when the artefact already belongs to another package.",
+      "tags": ["use-case", "packages", "artefacts", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/AddToPackageUseCase.ts:AddToPackageUseCase",
+      "type": "class",
+      "name": "AddToPackageUseCase",
+      "filePath": "apps/cli/src/application/useCases/AddToPackageUseCase.ts",
+      "lineRange": [24, 92],
+      "summary": "Adds resolved artefacts to a target package via the gateway after checking package membership.",
+      "tags": ["use-case", "packages"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "class:apps/cli/src/PackmindCliHexa.ts:PackmindCliHexa",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "class:apps/cli/src/PackmindCliHexa.ts:PackmindCliHexa",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/repositories/IOutput.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/ICheckCliVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/ICheckDiffsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/ICheckUpgradesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IEnsureCliVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IGetPackageSummaryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IInstallDefaultSkillsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IInstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILintFilesAgainstRule.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILintFilesFromConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListCommandsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListPackagesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListSkillsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListStandardsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILoginUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILogoutUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IUninstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/IWhoamiUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/trackRepository/IGetTrackingInfoUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/domain/useCases/trackRepository/ITrackRepositoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexa.ts",
+      "target": "file:apps/cli/src/infra/utils/errorReporting.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "class:apps/cli/src/PackmindCliHexaFactory.ts:PackmindCliHexaFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "class:apps/cli/src/PackmindCliHexaFactory.ts:PackmindCliHexaFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/services/DiffViolationFilterService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/services/GitService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/services/ListFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/services/SpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/CheckCliVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/CheckDiffsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/CheckUpgradesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/DiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/EnsureCliVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/ExecuteSingleFileAstUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/GetGitRemoteUrlUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/GetPackageSummaryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/InstallDefaultSkillsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/InstallPackagesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/InstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/LintFilesAgainstRuleUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/LintFilesFromConfigUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/ListCommandsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/ListFilesInDirectoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/ListPackagesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/ListSkillsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/ListStandardsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/LoginUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/LogoutUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/SubmitDiffsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/UploadSkillUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/WhoamiUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/services/IPackmindServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/ICheckCliVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/ICheckDiffsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/ICheckUpgradesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IEnsureCliVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IExecuteSingleFileAstUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IGetGitRemoteUrlUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IGetPackageSummaryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IInstallDefaultSkillsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IInstallPackagesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IInstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILintFilesAgainstRule.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILintFilesFromConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListCommandsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListFilesInDirectoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListPackagesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListSkillsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IListStandardsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILoginUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/ILogoutUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/ISubmitDiffsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IUninstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IUploadSkillUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/IWhoamiUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/trackRepository/IGetTrackingInfoUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/domain/useCases/trackRepository/ITrackRepositoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/infra/repositories/CliOutput.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/infra/repositories/ConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/infra/repositories/LockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/infra/repositories/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "target": "file:apps/cli/src/infra/utils/credentialsLoader.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/AgentArtifactDetectionService.ts",
+      "target": "class:apps/cli/src/application/services/AgentArtifactDetectionService.ts:AgentArtifactDetectionService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/AgentArtifactDetectionService.ts",
+      "target": "class:apps/cli/src/application/services/AgentArtifactDetectionService.ts:AgentArtifactDetectionService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/DiffViolationFilterService.ts",
+      "target": "class:apps/cli/src/application/services/DiffViolationFilterService.ts:DiffViolationFilterService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/DiffViolationFilterService.ts",
+      "target": "class:apps/cli/src/application/services/DiffViolationFilterService.ts:DiffViolationFilterService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/DiffViolationFilterService.ts",
+      "target": "file:apps/cli/src/domain/entities/DiffMode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/DiffViolationFilterService.ts",
+      "target": "file:apps/cli/src/domain/entities/LintViolation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/DiffViolationFilterService.ts",
+      "target": "file:apps/cli/src/domain/services/IDiffViolationFilterService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/GitService.ts",
+      "target": "class:apps/cli/src/application/services/GitService.ts:GitService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/GitService.ts",
+      "target": "class:apps/cli/src/application/services/GitService.ts:GitService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/GitService.ts",
+      "target": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/GitService.ts",
+      "target": "file:apps/cli/src/domain/entities/DiffMode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/GitService.ts",
+      "target": "file:apps/cli/src/domain/services/IGitService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/ListFiles.ts",
+      "target": "class:apps/cli/src/application/services/ListFiles.ts:ListFiles",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/ListFiles.ts",
+      "target": "class:apps/cli/src/application/services/ListFiles.ts:ListFiles",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/ListFiles.ts",
+      "target": "function:apps/cli/src/application/services/ListFiles.ts:matchesGlobPattern",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/ListFiles.ts",
+      "target": "function:apps/cli/src/application/services/ListFiles.ts:matchesGlobPattern",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/ListFiles.ts",
+      "target": "file:apps/cli/src/domain/services/IListFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/ListFiles.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "target": "class:apps/cli/src/application/services/PackageArtefactService.ts:PackageArtefactService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "target": "class:apps/cli/src/application/services/PackageArtefactService.ts:PackageArtefactService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "target": "function:apps/cli/src/application/services/PackageArtefactService.ts:artefactIdsByType",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "target": "function:apps/cli/src/application/services/PackageArtefactService.ts:artefactIdsByType",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "target": "function:apps/cli/src/application/services/PackageArtefactService.ts:fullPackageSlug",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "target": "function:apps/cli/src/application/services/PackageArtefactService.ts:fullPackageSlug",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "target": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "target": "file:apps/cli/src/domain/errors/ItemNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackmindIgnoreReader.ts",
+      "target": "class:apps/cli/src/application/services/PackmindIgnoreReader.ts:PackmindIgnoreReader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/PackmindIgnoreReader.ts",
+      "target": "class:apps/cli/src/application/services/PackmindIgnoreReader.ts:PackmindIgnoreReader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/SpaceService.ts",
+      "target": "class:apps/cli/src/application/services/SpaceService.ts:SpaceService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/SpaceService.ts",
+      "target": "class:apps/cli/src/application/services/SpaceService.ts:SpaceService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/SpaceService.ts",
+      "target": "file:apps/cli/src/domain/repositories/ISpacesGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/SpaceService.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/services/resolveInstallPackageVersions.ts",
+      "target": "function:apps/cli/src/application/services/resolveInstallPackageVersions.ts:releasePins",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/resolveInstallPackageVersions.ts",
+      "target": "function:apps/cli/src/application/services/resolveInstallPackageVersions.ts:releasePins",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/services/resolveInstallPackageVersions.ts",
+      "target": "function:apps/cli/src/application/services/resolveInstallPackageVersions.ts:resolveInstallPackageVersions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/services/resolveInstallPackageVersions.ts",
+      "target": "function:apps/cli/src/application/services/resolveInstallPackageVersions.ts:resolveInstallPackageVersions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/AddToPackageUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/AddToPackageUseCase.ts:AddToPackageUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/AddToPackageUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/AddToPackageUseCase.ts:AddToPackageUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/AddToPackageUseCase.ts",
+      "target": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/AddToPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/errors/ArtefactAlreadyInPackageError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/AddToPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/AddToPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/AddToPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IAddToPackageUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/application/services/resolveInstallPackageVersions.ts:resolveInstallPackageVersions",
+      "target": "function:apps/cli/src/application/services/resolveInstallPackageVersions.ts:releasePins",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/services/ListFiles.ts:ListFiles",
+      "target": "function:apps/cli/src/application/services/ListFiles.ts:matchesGlobPattern",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/AddToPackageUseCase.ts:AddToPackageUseCase",
+      "target": "function:apps/cli/src/application/services/PackageArtefactService.ts:fullPackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/AddToPackageUseCase.ts:AddToPackageUseCase",
+      "target": "function:apps/cli/src/application/services/PackageArtefactService.ts:artefactIdsByType",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

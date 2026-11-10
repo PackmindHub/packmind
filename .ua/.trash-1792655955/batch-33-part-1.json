@@ -1,0 +1,473 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/coding-agent/src/CodingAgentHexa.ts",
+      "type": "file",
+      "name": "CodingAgentHexa.ts",
+      "filePath": "packages/coding-agent/src/CodingAgentHexa.ts",
+      "summary": "Hexa entry point of the coding-agent package: wires CodingAgentRepositories, DeployerService, CodingAgentServices and the CodingAgentAdapter, re-initializing them with standards and git ports at startup.",
+      "tags": [
+        "entry-point",
+        "hexagonal-architecture",
+        "dependency-injection",
+        "bootstrap"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/CodingAgentHexa.ts:CodingAgentHexa",
+      "type": "class",
+      "name": "CodingAgentHexa",
+      "filePath": "packages/coding-agent/src/CodingAgentHexa.ts",
+      "lineRange": [20, 103],
+      "summary": "Hexa bootstrapping class composing coding-agent services and exposing the adapter port.",
+      "tags": ["entry-point", "hexagonal-architecture", "bootstrap"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "type": "file",
+      "name": "CodingAgentAdapter.ts",
+      "filePath": "packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "summary": "Port adapter implementing ICodingAgentPort; exposes artifact rendering, deployment, removal, cleanup and preview operations for multiple coding agents to other domains.",
+      "tags": [
+        "adapter",
+        "port",
+        "api-handler",
+        "deployment",
+        "hexagonal-architecture"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts:CodingAgentAdapter",
+      "type": "class",
+      "name": "CodingAgentAdapter",
+      "filePath": "packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "lineRange": [33, 224],
+      "summary": "Implements ICodingAgentPort, delegating render, deploy, removal, cleanup and preview requests to services and use cases.",
+      "tags": ["adapter", "port", "deployment"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/application/services/CodingAgentServices.ts",
+      "type": "file",
+      "name": "CodingAgentServices.ts",
+      "filePath": "packages/coding-agent/src/application/services/CodingAgentServices.ts",
+      "summary": "Application service that renders playbook artifacts for selected coding agents, merges per-agent file updates and generates agent cleanup updates via DeployerService.",
+      "tags": ["service", "rendering", "file-updates", "orchestration"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/application/services/CodingAgentServices.ts:CodingAgentServices",
+      "type": "class",
+      "name": "CodingAgentServices",
+      "filePath": "packages/coding-agent/src/application/services/CodingAgentServices.ts",
+      "lineRange": [17, 214],
+      "summary": "Renders artifacts per agent and merges/cleans file updates.",
+      "tags": ["service", "rendering", "file-updates"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/application/services/DeployerService.ts",
+      "type": "file",
+      "name": "DeployerService.ts",
+      "filePath": "packages/coding-agent/src/application/services/DeployerService.ts",
+      "summary": "Core deployment orchestrator that resolves deployers per coding agent and aggregates commands, standards and skills deployments into merged FileUpdates, de-duplicating AGENTS.md writes across agents.",
+      "tags": [
+        "service",
+        "deployment",
+        "aggregation",
+        "file-updates",
+        "core-logic"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/coding-agent/src/application/services/DeployerService.ts:DeployerService",
+      "type": "class",
+      "name": "DeployerService",
+      "filePath": "packages/coding-agent/src/application/services/DeployerService.ts",
+      "lineRange": [18, 384],
+      "summary": "Aggregates per-agent deployments of commands, standards, skills and artifacts into merged file updates.",
+      "tags": ["service", "deployment", "aggregation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/coding-agent/src/application/services/StandardsIndexService.ts",
+      "type": "file",
+      "name": "StandardsIndexService.ts",
+      "filePath": "packages/coding-agent/src/application/services/StandardsIndexService.ts",
+      "summary": "Builds a markdown index listing standards (name, description, file link) with header and footer, used to generate the Packmind standards index file.",
+      "tags": ["service", "markdown", "standards", "formatting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/application/services/StandardsIndexService.ts:StandardsIndexService",
+      "type": "class",
+      "name": "StandardsIndexService",
+      "filePath": "packages/coding-agent/src/application/services/StandardsIndexService.ts",
+      "lineRange": [1, 76],
+      "summary": "Generates the standards index markdown content.",
+      "tags": ["service", "markdown", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts",
+      "type": "file",
+      "name": "PreviewArtifactRenderingUseCase.ts",
+      "filePath": "packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts",
+      "summary": "Use case that renders artifacts for a chosen coding agent and packages the resulting files as a downloadable preview (single file or ZIP archive).",
+      "tags": ["use-case", "preview", "zip", "rendering"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts:PreviewArtifactRenderingUseCase",
+      "type": "class",
+      "name": "PreviewArtifactRenderingUseCase",
+      "filePath": "packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts",
+      "lineRange": [23, 122],
+      "summary": "Renders artifacts for preview and zips multi-file results.",
+      "tags": ["use-case", "preview", "zip"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts",
+      "type": "file",
+      "name": "RenderArtifactsUseCase.ts",
+      "filePath": "packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts",
+      "summary": "Thin use case delegating artifact rendering for a set of coding agents to CodingAgentServices.",
+      "tags": ["use-case", "rendering", "delegation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts:RenderArtifactsUseCase",
+      "type": "class",
+      "name": "RenderArtifactsUseCase",
+      "filePath": "packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts",
+      "lineRange": [11, 45],
+      "summary": "Delegates artifact rendering to CodingAgentServices.",
+      "tags": ["use-case", "rendering", "delegation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/domain/AgentConfiguration.ts",
+      "type": "file",
+      "name": "AgentConfiguration.ts",
+      "filePath": "packages/coding-agent/src/domain/AgentConfiguration.ts",
+      "summary": "Maps each coding agent to the instruction file path it uses (e.g. CLAUDE.md, AGENTS.md, .cursor rules).",
+      "tags": ["configuration", "constants", "domain", "coding-agents"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/domain/errors/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/coding-agent/src/domain/errors/index.ts",
+      "summary": "Barrel re-exporting coding-agent domain and internal error classes.",
+      "tags": ["barrel", "errors", "domain"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "type": "file",
+      "name": "ICodingAgentRepositories.ts",
+      "filePath": "packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "summary": "Repository aggregate interface exposing access to the coding agent deployer registry.",
+      "tags": ["type-definition", "interface", "repository", "domain"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts:ICodingAgentRepositories",
+      "type": "class",
+      "name": "ICodingAgentRepositories",
+      "filePath": "packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "lineRange": [3, 5],
+      "summary": "Contract exposing the deployer registry.",
+      "tags": ["interface", "type-definition", "port"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/coding-agent/src/CodingAgentHexa.ts",
+      "target": "class:packages/coding-agent/src/CodingAgentHexa.ts:CodingAgentHexa",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/CodingAgentHexa.ts",
+      "target": "class:packages/coding-agent/src/CodingAgentHexa.ts:CodingAgentHexa",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/CodingAgentHexa.ts",
+      "target": "file:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/CodingAgentHexa.ts",
+      "target": "file:packages/coding-agent/src/application/services/CodingAgentServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/CodingAgentHexa.ts",
+      "target": "file:packages/coding-agent/src/application/services/DeployerService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/CodingAgentHexa.ts",
+      "target": "file:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/CodingAgentHexa.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "target": "class:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts:CodingAgentAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "target": "class:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts:CodingAgentAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "target": "file:packages/coding-agent/src/application/services/CodingAgentServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "target": "file:packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "target": "file:packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "target": "file:packages/coding-agent/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts",
+      "target": "file:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/services/CodingAgentServices.ts",
+      "target": "class:packages/coding-agent/src/application/services/CodingAgentServices.ts:CodingAgentServices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/services/CodingAgentServices.ts",
+      "target": "class:packages/coding-agent/src/application/services/CodingAgentServices.ts:CodingAgentServices",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/services/CodingAgentServices.ts",
+      "target": "file:packages/coding-agent/src/application/services/DeployerService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/services/DeployerService.ts",
+      "target": "class:packages/coding-agent/src/application/services/DeployerService.ts:DeployerService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/services/DeployerService.ts",
+      "target": "class:packages/coding-agent/src/application/services/DeployerService.ts:DeployerService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/services/DeployerService.ts",
+      "target": "file:packages/coding-agent/src/domain/AgentConfiguration.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/services/DeployerService.ts",
+      "target": "file:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/services/StandardsIndexService.ts",
+      "target": "class:packages/coding-agent/src/application/services/StandardsIndexService.ts:StandardsIndexService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/services/StandardsIndexService.ts",
+      "target": "class:packages/coding-agent/src/application/services/StandardsIndexService.ts:StandardsIndexService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts",
+      "target": "class:packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts:PreviewArtifactRenderingUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts",
+      "target": "class:packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts:PreviewArtifactRenderingUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts",
+      "target": "file:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts",
+      "target": "class:packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts:RenderArtifactsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts",
+      "target": "class:packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts:RenderArtifactsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts",
+      "target": "file:packages/coding-agent/src/application/services/CodingAgentServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "target": "class:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts:ICodingAgentRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "target": "class:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts:ICodingAgentRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/coding-agent/src/CodingAgentHexa.ts:CodingAgentHexa",
+      "target": "class:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts:CodingAgentRepositories",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/CodingAgentHexa.ts:CodingAgentHexa",
+      "target": "class:packages/coding-agent/src/application/services/DeployerService.ts:DeployerService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/CodingAgentHexa.ts:CodingAgentHexa",
+      "target": "class:packages/coding-agent/src/application/services/CodingAgentServices.ts:CodingAgentServices",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/CodingAgentHexa.ts:CodingAgentHexa",
+      "target": "class:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts:CodingAgentAdapter",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts:CodingAgentAdapter",
+      "target": "class:packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts:RenderArtifactsUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/application/adapter/CodingAgentAdapter.ts:CodingAgentAdapter",
+      "target": "class:packages/coding-agent/src/application/useCases/PreviewArtifactRenderingUseCase.ts:PreviewArtifactRenderingUseCase",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/application/services/CodingAgentServices.ts:CodingAgentServices",
+      "target": "class:packages/coding-agent/src/application/services/DeployerService.ts:DeployerService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/application/useCases/RenderArtifactsUseCase.ts:RenderArtifactsUseCase",
+      "target": "class:packages/coding-agent/src/application/services/CodingAgentServices.ts:CodingAgentServices",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

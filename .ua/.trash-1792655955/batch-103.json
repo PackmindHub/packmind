@@ -1,0 +1,153 @@
+{
+  "nodes": [
+    {
+      "id": "config:packages/llm/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/llm/package.json",
+      "summary": "Package manifest for the private CommonJS workspace library @packmind/llm, declaring dependencies on internal packages (accounts, logger, node-utils, types) and provider SDKs (Anthropic, OpenAI, Google GenAI).",
+      "tags": [
+        "configuration",
+        "package-manifest",
+        "dependencies",
+        "nx-library"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/llm/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/llm/project.json",
+      "summary": "Nx project definition for llm: node-tagged library built with @nx/js:swc, emitting markdown docs as assets.",
+      "tags": ["configuration", "build-system", "nx", "swc"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/llm/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/llm/tsconfig.json",
+      "summary": "Minimal root TypeScript config for the llm package, extending tsconfig.base.json with CommonJS modules and referencing lib/spec tsconfigs.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system",
+        "project-references"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/llm/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/llm/tsconfig.lib.json",
+      "summary": "TypeScript library build config for llm that compiles src/**/*.ts with declarations while excluding specs and jest config.",
+      "tags": ["configuration", "typescript", "build-system", "library-build"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:packages/llm/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "packages/llm/CLAUDE.md",
+      "summary": "Agent guidance for the provider-agnostic LLM package: createLLMService factory switching on LLMProvider, provider-to-service mapping, how to add a provider via @packmind/types, and model-default conventions.",
+      "tags": [
+        "documentation",
+        "agent-instructions",
+        "llm",
+        "factory",
+        "ai-providers"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:packages/llm/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/llm/README.md",
+      "summary": "Short Nx-generated README for the llm library with build and unit test commands.",
+      "tags": ["documentation", "readme", "llm", "nx"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/llm/package.json",
+      "target": "file:packages/llm/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/llm/project.json",
+      "target": "file:packages/llm/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/llm/tsconfig.json",
+      "target": "config:packages/llm/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/llm/tsconfig.lib.json",
+      "target": "file:packages/llm/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/llm/project.json",
+      "target": "config:packages/llm/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/llm/project.json",
+      "target": "config:packages/llm/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/llm/CLAUDE.md",
+      "target": "file:packages/llm/src/factories/createLLMService.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/llm/CLAUDE.md",
+      "target": "file:packages/llm/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/llm/README.md",
+      "target": "file:packages/llm/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/llm/package.json",
+      "target": "config:packages/logger/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/llm/package.json",
+      "target": "config:packages/node-utils/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

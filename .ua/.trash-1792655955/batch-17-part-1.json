@@ -1,0 +1,1437 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "type": "file",
+      "name": "PlaybookLocalRepository.ts",
+      "filePath": "apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "summary": "Persists locally staged playbook changes (adds/removes of standards, commands, skills) in a per-repository YAML file so the CLI playbook workflow can stage and later submit them.",
+      "tags": ["repository", "persistence", "playbook", "yaml", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts:PlaybookLocalRepository",
+      "type": "class",
+      "name": "PlaybookLocalRepository",
+      "filePath": "apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "lineRange": [13, 106],
+      "summary": "Class storing staged playbook changes in YAML keyed by normalized repo root, with add/remove/get/clear operations.",
+      "tags": ["repository", "persistence", "playbook", "yaml"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts",
+      "type": "file",
+      "name": "RepositoryTrackingGateway.ts",
+      "filePath": "apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts",
+      "summary": "HTTP gateway implementing IRepositoryTrackingGateway: gets, sets, updates branch and removes the tracked git repository for the authenticated organization via the Packmind API.",
+      "tags": ["gateway", "api-client", "git-tracking", "adapter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts:RepositoryTrackingGateway",
+      "type": "class",
+      "name": "RepositoryTrackingGateway",
+      "filePath": "apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts",
+      "lineRange": [11, 54],
+      "summary": "Gateway class calling tracked-repository API endpoints for the current organization.",
+      "tags": ["gateway", "api-client", "git-tracking", "adapter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/repositories/SkillsGateway.ts",
+      "type": "file",
+      "name": "SkillsGateway.ts",
+      "filePath": "apps/cli/src/infra/repositories/SkillsGateway.ts",
+      "summary": "HTTP gateway implementing ISkillsGateway to upload skills, fetch default skills and list skills by space through the Packmind API.",
+      "tags": ["gateway", "api-client", "skills", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/infra/repositories/SkillsGateway.ts:SkillsGateway",
+      "type": "class",
+      "name": "SkillsGateway",
+      "filePath": "apps/cli/src/infra/repositories/SkillsGateway.ts",
+      "lineRange": [10, 56],
+      "summary": "Gateway class for skill upload, default skills retrieval and listing by space.",
+      "tags": ["gateway", "api-client", "skills", "adapter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/repositories/SpacesGateway.ts",
+      "type": "file",
+      "name": "SpacesGateway.ts",
+      "filePath": "apps/cli/src/infra/repositories/SpacesGateway.ts",
+      "summary": "HTTP gateway implementing ISpacesGateway that resolves a space by slug for the authenticated organization.",
+      "tags": ["gateway", "api-client", "spaces", "adapter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/infra/repositories/SpacesGateway.ts:SpacesGateway",
+      "type": "class",
+      "name": "SpacesGateway",
+      "filePath": "apps/cli/src/infra/repositories/SpacesGateway.ts",
+      "lineRange": [5, 31],
+      "summary": "Gateway class fetching a space by slug from the API.",
+      "tags": ["gateway", "api-client", "spaces", "adapter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/repositories/StandardsGateway.ts",
+      "type": "file",
+      "name": "StandardsGateway.ts",
+      "filePath": "apps/cli/src/infra/repositories/StandardsGateway.ts",
+      "summary": "HTTP gateway implementing IStandardsGateway to create standards in a space, read/add rules and examples, and list standards by space.",
+      "tags": ["gateway", "api-client", "standards", "adapter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/infra/repositories/StandardsGateway.ts:StandardsGateway",
+      "type": "class",
+      "name": "StandardsGateway",
+      "filePath": "apps/cli/src/infra/repositories/StandardsGateway.ts",
+      "lineRange": [11, 62],
+      "summary": "Gateway class for creating standards and managing their rules and examples.",
+      "tags": ["gateway", "api-client", "standards", "adapter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/agentHomeDirectory.ts",
+      "type": "file",
+      "name": "agentHomeDirectory.ts",
+      "filePath": "apps/cli/src/infra/utils/agentHomeDirectory.ts",
+      "summary": "Detects whether a project directory is an AI agent home directory (e.g. ~/.claude) and returns the path prefix to strip for home-level installs.",
+      "tags": ["utility", "filesystem", "agent-home", "install"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/agentHomeDirectory.ts:isAgentHomeDirectory",
+      "type": "function",
+      "name": "isAgentHomeDirectory",
+      "filePath": "apps/cli/src/infra/utils/agentHomeDirectory.ts",
+      "lineRange": [27, 41],
+      "summary": "Returns which agent (if any) owns the given directory as its home config dir, resolving symlinks.",
+      "tags": ["utility", "filesystem", "agent-home"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/agentHomeDirectory.ts:getAgentHomeDirPrefix",
+      "type": "function",
+      "name": "getAgentHomeDirPrefix",
+      "filePath": "apps/cli/src/infra/utils/agentHomeDirectory.ts",
+      "lineRange": [43, 46],
+      "summary": "Returns the path prefix to strip for the given home agent.",
+      "tags": ["utility", "filesystem", "agent-home"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/binaryDetection.ts",
+      "type": "file",
+      "name": "binaryDetection.ts",
+      "filePath": "apps/cli/src/infra/utils/binaryDetection.ts",
+      "summary": "Detects binary files by known extension list and by null-byte inspection of file buffers, used when reading skill directories.",
+      "tags": ["utility", "binary-detection", "filesystem", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryExtension",
+      "type": "function",
+      "name": "isBinaryExtension",
+      "filePath": "apps/cli/src/infra/utils/binaryDetection.ts",
+      "lineRange": [68, 71],
+      "summary": "Checks a file path against a list of known binary extensions.",
+      "tags": ["utility", "binary-detection", "filesystem"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryBuffer",
+      "type": "function",
+      "name": "isBinaryBuffer",
+      "filePath": "apps/cli/src/infra/utils/binaryDetection.ts",
+      "lineRange": [77, 79],
+      "summary": "Detects null bytes in a buffer sample to flag binary content.",
+      "tags": ["utility", "binary-detection", "filesystem"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryFile",
+      "type": "function",
+      "name": "isBinaryFile",
+      "filePath": "apps/cli/src/infra/utils/binaryDetection.ts",
+      "lineRange": [86, 88],
+      "summary": "Combines extension and buffer checks to classify a file as binary.",
+      "tags": ["utility", "binary-detection", "filesystem"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "file",
+      "name": "consoleLogger.ts",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "summary": "Central chalk-based console output helpers for the CLI: prefixed log/warn/info/error/success printers plus text formatters for slugs, paths, headers and commands; error output is recorded to avoid duplicate error logs.",
+      "tags": ["utility", "logging", "console-output", "formatting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:logConsole",
+      "type": "function",
+      "name": "logConsole",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [7, 9],
+      "summary": "Prints a plain message to the console with the CLI prefix.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:logWarningConsole",
+      "type": "function",
+      "name": "logWarningConsole",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [19, 21],
+      "summary": "Prints a warning message to the console with the CLI prefix.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "function",
+      "name": "logInfoConsole",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [27, 29],
+      "summary": "Prints a info message to the console with the CLI prefix.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "function",
+      "name": "logErrorConsole",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [35, 38],
+      "summary": "Prints a error message to the console with the CLI prefix.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "function",
+      "name": "logSuccessConsole",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [44, 46],
+      "summary": "Prints a success message to the console with the CLI prefix.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatSlug",
+      "type": "function",
+      "name": "formatSlug",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [55, 57],
+      "summary": "Chalk formatter for slug text.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatLabel",
+      "type": "function",
+      "name": "formatLabel",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [62, 64],
+      "summary": "Chalk formatter for label text.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatError",
+      "type": "function",
+      "name": "formatError",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [69, 71],
+      "summary": "Chalk formatter for error text.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatWarning",
+      "type": "function",
+      "name": "formatWarning",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [76, 78],
+      "summary": "Chalk formatter for warning text.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatBold",
+      "type": "function",
+      "name": "formatBold",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [83, 85],
+      "summary": "Chalk formatter for bold text.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatFilePath",
+      "type": "function",
+      "name": "formatFilePath",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [90, 92],
+      "summary": "Chalk formatter for filepath text.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatHeader",
+      "type": "function",
+      "name": "formatHeader",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [97, 99],
+      "summary": "Chalk formatter for header text.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatCommand",
+      "type": "function",
+      "name": "formatCommand",
+      "filePath": "apps/cli/src/infra/utils/consoleLogger.ts",
+      "lineRange": [104, 106],
+      "summary": "Chalk formatter for command text.",
+      "tags": ["utility", "logging", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/credentials/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/cli/src/infra/utils/credentials/index.ts",
+      "summary": "Barrel re-exporting credential providers (env and file), the CredentialsService, API key loading and decoding helpers.",
+      "tags": ["barrel", "entry-point", "credentials", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/credentialsLoader.ts",
+      "type": "file",
+      "name": "credentialsLoader.ts",
+      "filePath": "apps/cli/src/infra/utils/credentialsLoader.ts",
+      "summary": "Deprecated backward-compatibility shim re-exporting loadApiKey from the credentials module.",
+      "tags": ["barrel", "deprecated", "credentials", "backward-compatibility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "type": "file",
+      "name": "deployedFilesUtils.ts",
+      "filePath": "apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "summary": "Helpers bridging the packmind lock file and the deployment API: converts lock entries to artifact versions, resolves render agents, fetches deployed file contents and remaps them for agent home-directory installs.",
+      "tags": ["utility", "deployment", "lock-file", "install"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:lockFileToArtifactVersionEntries",
+      "type": "function",
+      "name": "lockFileToArtifactVersionEntries",
+      "filePath": "apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "lineRange": [22, 32],
+      "summary": "Maps packmind lock file entries to artifact version entries for the deployment API.",
+      "tags": ["utility", "deployment", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:resolveDeployedRenderAgents",
+      "type": "function",
+      "name": "resolveDeployedRenderAgents",
+      "filePath": "apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "lineRange": [50, 60],
+      "summary": "Determines which render agents to request from lock file and config.",
+      "tags": ["utility", "deployment", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:fetchDeployedFiles",
+      "type": "function",
+      "name": "fetchDeployedFiles",
+      "filePath": "apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "lineRange": [72, 90],
+      "summary": "Fetches currently deployed file contents for the lock file artifacts, remapping for home installs.",
+      "tags": ["utility", "deployment", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:remapDeployedFilesForHomeInstall",
+      "type": "function",
+      "name": "remapDeployedFilesForHomeInstall",
+      "filePath": "apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "lineRange": [92, 118],
+      "summary": "Rewrites deployed file paths and strips standard link footers when installing into an agent home dir.",
+      "tags": ["utility", "deployment", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/diffFormatter.ts",
+      "type": "file",
+      "name": "diffFormatter.ts",
+      "filePath": "apps/cli/src/infra/utils/diffFormatter.ts",
+      "summary": "Formats a colored line-based unified diff between two content strings for CLI display.",
+      "tags": ["utility", "diff", "formatting", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/diffFormatter.ts:formatContentDiff",
+      "type": "function",
+      "name": "formatContentDiff",
+      "filePath": "apps/cli/src/infra/utils/diffFormatter.ts",
+      "lineRange": [9, 35],
+      "summary": "Produces a colored diff string between old and new content.",
+      "tags": ["utility", "diff", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/editorMessage.ts",
+      "type": "file",
+      "name": "editorMessage.ts",
+      "filePath": "apps/cli/src/infra/utils/editorMessage.ts",
+      "summary": "Opens the user's resolved text editor on a temp file to capture a multi-line message (e.g. change-proposal descriptions).",
+      "tags": ["utility", "editor", "interactive", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/editorMessage.ts:openEditorForMessage",
+      "type": "function",
+      "name": "openEditorForMessage",
+      "filePath": "apps/cli/src/infra/utils/editorMessage.ts",
+      "lineRange": [13, 42],
+      "summary": "Spawns the resolved editor on a temp file and returns the edited message.",
+      "tags": ["utility", "editor", "interactive"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "type": "file",
+      "name": "errorDiagnostics.ts",
+      "filePath": "apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "summary": "Builds detailed diagnostics for errors (cause chains, network link descriptions, request context), wraps them into diagnostic errors and reports them once to the error log.",
+      "tags": ["utility", "error-handling", "diagnostics", "logging"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:describeLink",
+      "type": "function",
+      "name": "describeLink",
+      "filePath": "apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "lineRange": [36, 52],
+      "summary": "Describes a single error in the cause chain including network error codes.",
+      "tags": ["utility", "error-handling", "diagnostics"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:causeChain",
+      "type": "function",
+      "name": "causeChain",
+      "filePath": "apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "lineRange": [54, 67],
+      "summary": "Walks error.cause links into a list of descriptions.",
+      "tags": ["utility", "error-handling", "diagnostics"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:buildErrorDiagnostics",
+      "type": "function",
+      "name": "buildErrorDiagnostics",
+      "filePath": "apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "lineRange": [86, 113],
+      "summary": "Builds a multi-line diagnostic report from an error and optional request context.",
+      "tags": ["utility", "error-handling", "diagnostics"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:createDiagnosticError",
+      "type": "function",
+      "name": "createDiagnosticError",
+      "filePath": "apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "lineRange": [124, 138],
+      "summary": "Creates a user-facing Error while logging full diagnostics to the error log.",
+      "tags": ["utility", "error-handling", "diagnostics"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:reportError",
+      "type": "function",
+      "name": "reportError",
+      "filePath": "apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "lineRange": [145, 155],
+      "summary": "Logs an error with diagnostics to the error log once, marking it as reported.",
+      "tags": ["utility", "error-handling", "diagnostics"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "type": "file",
+      "name": "errorLog.ts",
+      "filePath": "apps/cli/src/infra/utils/errorLog.ts",
+      "summary": "Manages the CLI error log file: rotation, deduplicated appends with invoked command and version metadata, and tracking of errors already reported to the user.",
+      "tags": [
+        "utility",
+        "error-handling",
+        "logging",
+        "filesystem",
+        "deduplication"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorLog.ts:getErrorLogPath",
+      "type": "function",
+      "name": "getErrorLogPath",
+      "filePath": "apps/cli/src/infra/utils/errorLog.ts",
+      "lineRange": [16, 18],
+      "summary": "Returns the path to the CLI error log file.",
+      "tags": ["utility", "error-handling", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorLog.ts:invokedCommand",
+      "type": "function",
+      "name": "invokedCommand",
+      "filePath": "apps/cli/src/infra/utils/errorLog.ts",
+      "lineRange": [28, 39],
+      "summary": "Reconstructs the invoked CLI command line for log entries.",
+      "tags": ["utility", "error-handling", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorLog.ts:resetErrorLogDeduplication",
+      "type": "function",
+      "name": "resetErrorLogDeduplication",
+      "filePath": "apps/cli/src/infra/utils/errorLog.ts",
+      "lineRange": [69, 72],
+      "summary": "Resets in-memory deduplication state (used by tests).",
+      "tags": ["utility", "error-handling", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorLog.ts:isRestatementOf",
+      "type": "function",
+      "name": "isRestatementOf",
+      "filePath": "apps/cli/src/infra/utils/errorLog.ts",
+      "lineRange": [85, 99],
+      "summary": "Checks whether a message merely restates an already-logged error.",
+      "tags": ["utility", "error-handling", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorLog.ts:appendErrorLog",
+      "type": "function",
+      "name": "appendErrorLog",
+      "filePath": "apps/cli/src/infra/utils/errorLog.ts",
+      "lineRange": [124, 159],
+      "summary": "Appends a timestamped, deduplicated entry with diagnostics to the error log, rotating if oversized.",
+      "tags": ["utility", "error-handling", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorLog.ts:isReported",
+      "type": "function",
+      "name": "isReported",
+      "filePath": "apps/cli/src/infra/utils/errorLog.ts",
+      "lineRange": [171, 177],
+      "summary": "Checks whether an error object was already reported.",
+      "tags": ["utility", "error-handling", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorLog.ts:markReported",
+      "type": "function",
+      "name": "markReported",
+      "filePath": "apps/cli/src/infra/utils/errorLog.ts",
+      "lineRange": [179, 195],
+      "summary": "Marks an error (and primitives via message) as reported.",
+      "tags": ["utility", "error-handling", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorLog.ts:reportingSite",
+      "type": "function",
+      "name": "reportingSite",
+      "filePath": "apps/cli/src/infra/utils/errorLog.ts",
+      "lineRange": [205, 223],
+      "summary": "Derives the caller site from a stack trace for recorded messages.",
+      "tags": ["utility", "error-handling", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorLog.ts:recordReportedMessage",
+      "type": "function",
+      "name": "recordReportedMessage",
+      "filePath": "apps/cli/src/infra/utils/errorLog.ts",
+      "lineRange": [225, 234],
+      "summary": "Records a message printed to the user so duplicate log entries are suppressed.",
+      "tags": ["utility", "error-handling", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/errorReporting.ts",
+      "type": "file",
+      "name": "errorReporting.ts",
+      "filePath": "apps/cli/src/infra/utils/errorReporting.ts",
+      "summary": "Higher-order wrapper that decorates handler functions so any thrown error (sync or async) is reported to the diagnostics log before rethrowing.",
+      "tags": ["utility", "error-handling", "decorator", "middleware"],
+      "complexity": "simple",
+      "languageNotes": "Handles both sync throws and rejected promises by inspecting the handler return value for a thenable."
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/errorReporting.ts:withErrorReporting",
+      "type": "function",
+      "name": "withErrorReporting",
+      "filePath": "apps/cli/src/infra/utils/errorReporting.ts",
+      "lineRange": [15, 48],
+      "summary": "Wraps a handler so thrown or rejected errors are reported before propagating.",
+      "tags": ["utility", "error-handling", "decorator"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "target": "class:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts:PlaybookLocalRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "target": "class:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts:PlaybookLocalRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/IRepositoryTrackingGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts",
+      "target": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts",
+      "target": "class:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts:RepositoryTrackingGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts",
+      "target": "class:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts:RepositoryTrackingGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/SkillsGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/ISkillsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/SkillsGateway.ts",
+      "target": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/SkillsGateway.ts",
+      "target": "class:apps/cli/src/infra/repositories/SkillsGateway.ts:SkillsGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/SkillsGateway.ts",
+      "target": "class:apps/cli/src/infra/repositories/SkillsGateway.ts:SkillsGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/SpacesGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/ISpacesGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/SpacesGateway.ts",
+      "target": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/SpacesGateway.ts",
+      "target": "class:apps/cli/src/infra/repositories/SpacesGateway.ts:SpacesGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/SpacesGateway.ts",
+      "target": "class:apps/cli/src/infra/repositories/SpacesGateway.ts:SpacesGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/StandardsGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/IStandardsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/StandardsGateway.ts",
+      "target": "file:apps/cli/src/infra/http/PackmindHttpClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/StandardsGateway.ts",
+      "target": "class:apps/cli/src/infra/repositories/StandardsGateway.ts:StandardsGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/repositories/StandardsGateway.ts",
+      "target": "class:apps/cli/src/infra/repositories/StandardsGateway.ts:StandardsGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/agentHomeDirectory.ts",
+      "target": "function:apps/cli/src/infra/utils/agentHomeDirectory.ts:isAgentHomeDirectory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/agentHomeDirectory.ts",
+      "target": "function:apps/cli/src/infra/utils/agentHomeDirectory.ts:isAgentHomeDirectory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/agentHomeDirectory.ts",
+      "target": "function:apps/cli/src/infra/utils/agentHomeDirectory.ts:getAgentHomeDirPrefix",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/agentHomeDirectory.ts",
+      "target": "function:apps/cli/src/infra/utils/agentHomeDirectory.ts:getAgentHomeDirPrefix",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/binaryDetection.ts",
+      "target": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryExtension",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/binaryDetection.ts",
+      "target": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryExtension",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/binaryDetection.ts",
+      "target": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryBuffer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/binaryDetection.ts",
+      "target": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryBuffer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/binaryDetection.ts",
+      "target": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/binaryDetection.ts",
+      "target": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logConsole",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logConsole",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logWarningConsole",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logWarningConsole",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatSlug",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatSlug",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatLabel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatWarning",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatWarning",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatBold",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatBold",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatFilePath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatFilePath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatHeader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "target": "file:apps/cli/src/domain/repositories/PackmindLockFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "target": "file:apps/cli/src/infra/utils/agentHomeDirectory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "target": "file:apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:lockFileToArtifactVersionEntries",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:lockFileToArtifactVersionEntries",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:resolveDeployedRenderAgents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:resolveDeployedRenderAgents",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:fetchDeployedFiles",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:fetchDeployedFiles",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "target": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:remapDeployedFilesForHomeInstall",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/diffFormatter.ts",
+      "target": "function:apps/cli/src/infra/utils/diffFormatter.ts:formatContentDiff",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/diffFormatter.ts",
+      "target": "function:apps/cli/src/infra/utils/diffFormatter.ts:formatContentDiff",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/editorMessage.ts",
+      "target": "file:apps/cli/src/infra/utils/resolveEditor.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/editorMessage.ts",
+      "target": "function:apps/cli/src/infra/utils/editorMessage.ts:openEditorForMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/editorMessage.ts",
+      "target": "function:apps/cli/src/infra/utils/editorMessage.ts:openEditorForMessage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "target": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:describeLink",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:causeChain",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:buildErrorDiagnostics",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:buildErrorDiagnostics",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:createDiagnosticError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:createDiagnosticError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:reportError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:reportError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "file:apps/cli/package.json",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:getErrorLogPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:getErrorLogPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:invokedCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:resetErrorLogDeduplication",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:resetErrorLogDeduplication",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:isRestatementOf",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:appendErrorLog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:appendErrorLog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:isReported",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:isReported",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:markReported",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:markReported",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:reportingSite",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:recordReportedMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorLog.ts",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:recordReportedMessage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorReporting.ts",
+      "target": "file:apps/cli/src/infra/utils/errorDiagnostics.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorReporting.ts",
+      "target": "function:apps/cli/src/infra/utils/errorReporting.ts:withErrorReporting",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/errorReporting.ts",
+      "target": "function:apps/cli/src/infra/utils/errorReporting.ts:withErrorReporting",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:remapDeployedFilesForHomeInstall",
+      "target": "function:apps/cli/src/infra/utils/agentHomeDirectory.ts:isAgentHomeDirectory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:remapDeployedFilesForHomeInstall",
+      "target": "function:apps/cli/src/infra/utils/agentHomeDirectory.ts:getAgentHomeDirPrefix",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:remapDeployedFilesForHomeInstall",
+      "target": "function:apps/cli/src/infra/utils/stripFullStandardLinkFooter.ts:stripFullStandardLinkFooter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/editorMessage.ts:openEditorForMessage",
+      "target": "function:apps/cli/src/infra/utils/resolveEditor.ts:resolveEditor",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/errorReporting.ts:withErrorReporting",
+      "target": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:reportError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:reportError",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:appendErrorLog",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:reportError",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:isReported",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:reportError",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:markReported",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/errorDiagnostics.ts:createDiagnosticError",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:appendErrorLog",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "target": "function:apps/cli/src/infra/utils/errorLog.ts:recordReportedMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts:PlaybookLocalRepository",
+      "target": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts:RepositoryTrackingGateway",
+      "target": "file:apps/cli/src/domain/repositories/IRepositoryTrackingGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/SkillsGateway.ts:SkillsGateway",
+      "target": "file:apps/cli/src/domain/repositories/ISkillsGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/SpacesGateway.ts:SpacesGateway",
+      "target": "file:apps/cli/src/domain/repositories/ISpacesGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/StandardsGateway.ts:StandardsGateway",
+      "target": "file:apps/cli/src/domain/repositories/IStandardsGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts:RepositoryTrackingGateway",
+      "target": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/SkillsGateway.ts:SkillsGateway",
+      "target": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/SpacesGateway.ts:SpacesGateway",
+      "target": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/StandardsGateway.ts:StandardsGateway",
+      "target": "class:apps/cli/src/infra/http/PackmindHttpClient.ts:PackmindHttpClient",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

@@ -1,0 +1,1124 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "file",
+      "name": "GitProviderQueries.ts",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "summary": "TanStack Query hooks for git providers: auth checks, provider CRUD and GitHub App install/callback/manifest/status/revoke mutations with cache invalidation.",
+      "tags": ["hook", "react-query", "git-provider", "github-app", "api"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useCheckProviderAuthQuery",
+      "type": "function",
+      "name": "useCheckProviderAuthQuery",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [23, 47],
+      "summary": "Query checking whether a git provider's authentication is valid.",
+      "tags": ["hook", "react-query", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGitProvidersQuery",
+      "type": "function",
+      "name": "useGetGitProvidersQuery",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [50, 65],
+      "summary": "Query listing the organization's git providers.",
+      "tags": ["hook", "react-query", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGitProviderByIdQuery",
+      "type": "function",
+      "name": "useGetGitProviderByIdQuery",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [67, 80],
+      "summary": "Query fetching one git provider by id.",
+      "tags": ["hook", "react-query", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useCreateGitProviderMutation",
+      "type": "function",
+      "name": "useCreateGitProviderMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [83, 103],
+      "summary": "Mutation creating a git provider and invalidating caches.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useUpdateGitProviderMutation",
+      "type": "function",
+      "name": "useUpdateGitProviderMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [105, 134],
+      "summary": "Mutation updating a git provider and invalidating caches.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useDeleteGitProviderMutation",
+      "type": "function",
+      "name": "useDeleteGitProviderMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [136, 162],
+      "summary": "Mutation deleting a git provider and invalidating related caches.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGithubAppInstallUrlMutation",
+      "type": "function",
+      "name": "useGithubAppInstallUrlMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [164, 190],
+      "summary": "Mutation fetching the GitHub App install URL and redirecting.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppCallbackMutation",
+      "type": "function",
+      "name": "useSubmitGithubAppCallbackMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [192, 218],
+      "summary": "Mutation submitting the GitHub App installation callback.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppManifestCallbackMutation",
+      "type": "function",
+      "name": "useSubmitGithubAppManifestCallbackMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [220, 242],
+      "summary": "Mutation submitting the GitHub App manifest callback.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGithubAppStatusQuery",
+      "type": "function",
+      "name": "useGetGithubAppStatusQuery",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [244, 264],
+      "summary": "Query fetching GitHub App configuration status.",
+      "tags": ["hook", "react-query", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGithubAppManifestMutation",
+      "type": "function",
+      "name": "useGetGithubAppManifestMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [266, 292],
+      "summary": "Mutation fetching the GitHub App manifest for creation.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useRevokeGithubAppMutation",
+      "type": "function",
+      "name": "useRevokeGithubAppMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "lineRange": [294, 317],
+      "summary": "Mutation revoking the GitHub App and invalidating caches.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "type": "file",
+      "name": "GitRepoQueries.ts",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "summary": "TanStack Query hooks for git repositories: listing, available repos/targets, adding/removing, tracked branch management and directory existence checks.",
+      "tags": ["hook", "react-query", "repository", "branches", "api"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetGitReposQuery",
+      "type": "function",
+      "name": "useGetGitReposQuery",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [31, 44],
+      "summary": "Query listing tracked git repositories.",
+      "tags": ["hook", "react-query", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetRepositoriesByProviderQuery",
+      "type": "function",
+      "name": "useGetRepositoriesByProviderQuery",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [46, 64],
+      "summary": "Query listing repositories of a provider.",
+      "tags": ["hook", "react-query", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckTrackedBranchExistsQuery",
+      "type": "function",
+      "name": "useCheckTrackedBranchExistsQuery",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [75, 105],
+      "summary": "Query checking a tracked branch still exists.",
+      "tags": ["hook", "react-query", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetAvailableRepositoriesQuery",
+      "type": "function",
+      "name": "useGetAvailableRepositoriesQuery",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [107, 146],
+      "summary": "Query listing remote repositories available to add.",
+      "tags": ["hook", "react-query", "git"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useAddRepositoryMutation",
+      "type": "function",
+      "name": "useAddRepositoryMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [149, 185],
+      "summary": "Mutation adding a repository to a provider.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useRemoveRepositoryMutation",
+      "type": "function",
+      "name": "useRemoveRepositoryMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [186, 222],
+      "summary": "Mutation removing a repository from a provider.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckProviderBranchExistsMutation",
+      "type": "function",
+      "name": "useCheckProviderBranchExistsMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [228, 253],
+      "summary": "Mutation checking a branch exists on the provider.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:searchProviderBranchesOptions",
+      "type": "function",
+      "name": "searchProviderBranchesOptions",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [262, 292],
+      "summary": "Builds query options for searching provider branches.",
+      "tags": ["utility", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useSearchProviderBranchesQuery",
+      "type": "function",
+      "name": "useSearchProviderBranchesQuery",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [294, 304],
+      "summary": "Query searching branches on a provider repository.",
+      "tags": ["hook", "react-query", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useSetTrackedRepositoryMutation",
+      "type": "function",
+      "name": "useSetTrackedRepositoryMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [306, 334],
+      "summary": "Mutation setting the tracked repository.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useUpdateTrackedBranchMutation",
+      "type": "function",
+      "name": "useUpdateTrackedBranchMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [336, 364],
+      "summary": "Mutation updating a repository's tracked branch.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetAvailableTargetsQuery",
+      "type": "function",
+      "name": "useGetAvailableTargetsQuery",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [367, 391],
+      "summary": "Query listing remote directories available as targets.",
+      "tags": ["hook", "react-query", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckDirectoryExistenceMutation",
+      "type": "function",
+      "name": "useCheckDirectoryExistenceMutation",
+      "filePath": "apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "lineRange": [394, 423],
+      "summary": "Mutation checking a directory exists in a repository.",
+      "tags": ["hook", "mutation", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/git/api/queries/index.ts",
+      "summary": "Barrel re-exporting the git repository and provider query hooks.",
+      "tags": ["barrel", "entry-point", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/git/api/queryKeys.ts",
+      "summary": "Query key constants for git-related TanStack Query caches, scoped under the organization query keys.",
+      "tags": ["constants", "react-query", "cache-keys", "git"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "type": "file",
+      "name": "AddConnectionDrawer.tsx",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "summary": "Drawer form for adding a git connection: pick a vendor, URL and display name, then authenticate via GitHub App or personal access token.",
+      "tags": ["component", "form", "git-provider", "drawer", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:AddConnectionDrawer",
+      "type": "function",
+      "name": "AddConnectionDrawer",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "lineRange": [59, 336],
+      "summary": "Drawer managing the add-connection form state and submission for GitHub App or PAT authentication.",
+      "tags": ["component", "git"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:VendorSection",
+      "type": "function",
+      "name": "VendorSection",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "lineRange": [343, 375],
+      "summary": "Section picking the git vendor.",
+      "tags": ["component", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:UrlSection",
+      "type": "function",
+      "name": "UrlSection",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "lineRange": [385, 420],
+      "summary": "Section entering the provider URL.",
+      "tags": ["component", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:DisplayNameSection",
+      "type": "function",
+      "name": "DisplayNameSection",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "lineRange": [428, 455],
+      "summary": "Section entering the connection display name.",
+      "tags": ["component", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:PatDisclosure",
+      "type": "function",
+      "name": "PatDisclosure",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "lineRange": [465, 524],
+      "summary": "Disclosure explaining and collecting a personal access token.",
+      "tags": ["component", "git"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:SectionLabel",
+      "type": "function",
+      "name": "SectionLabel",
+      "filePath": "apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "lineRange": [530, 542],
+      "summary": "Label for a drawer form section.",
+      "tags": ["component", "git"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useCheckProviderAuthQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useCheckProviderAuthQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGitProvidersQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGitProvidersQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGitProviderByIdQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGitProviderByIdQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useCreateGitProviderMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useCreateGitProviderMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useUpdateGitProviderMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useUpdateGitProviderMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useDeleteGitProviderMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useDeleteGitProviderMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGithubAppInstallUrlMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGithubAppInstallUrlMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppCallbackMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppCallbackMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppManifestCallbackMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppManifestCallbackMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGithubAppStatusQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGithubAppStatusQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGithubAppManifestMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGithubAppManifestMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useRevokeGithubAppMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useRevokeGithubAppMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "file:apps/frontend/src/domain/git/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "file:apps/frontend/src/domain/git/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "file:apps/frontend/src/shared/utils/navigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useCheckProviderAuthQuery",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGitProvidersQuery",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGitProviderByIdQuery",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useCreateGitProviderMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useUpdateGitProviderMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useDeleteGitProviderMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGithubAppInstallUrlMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppCallbackMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppCallbackMutation",
+      "target": "function:apps/frontend/src/shared/utils/navigation.ts:redirectTo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppManifestCallbackMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useSubmitGithubAppManifestCallbackMutation",
+      "target": "function:apps/frontend/src/shared/utils/navigation.ts:redirectTo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGithubAppStatusQuery",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGithubAppStatusQuery",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useGetGithubAppManifestMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts:useRevokeGithubAppMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetGitReposQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetGitReposQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetRepositoriesByProviderQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetRepositoriesByProviderQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckTrackedBranchExistsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckTrackedBranchExistsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetAvailableRepositoriesQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetAvailableRepositoriesQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useAddRepositoryMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useAddRepositoryMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useRemoveRepositoryMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useRemoveRepositoryMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckProviderBranchExistsMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckProviderBranchExistsMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:searchProviderBranchesOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:searchProviderBranchesOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useSearchProviderBranchesQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useSearchProviderBranchesQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useSetTrackedRepositoryMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useSetTrackedRepositoryMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useUpdateTrackedBranchMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useUpdateTrackedBranchMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetAvailableTargetsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetAvailableTargetsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckDirectoryExistenceMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckDirectoryExistenceMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "file:apps/frontend/src/domain/git/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "file:apps/frontend/src/domain/git/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetGitReposQuery",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetRepositoriesByProviderQuery",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckTrackedBranchExistsQuery",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetAvailableRepositoriesQuery",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useAddRepositoryMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useRemoveRepositoryMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckProviderBranchExistsMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useSearchProviderBranchesQuery",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useSearchProviderBranchesQuery",
+      "target": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:searchProviderBranchesOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useSetTrackedRepositoryMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useUpdateTrackedBranchMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useGetAvailableTargetsQuery",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts:useCheckDirectoryExistenceMutation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/index.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:AddConnectionDrawer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:AddConnectionDrawer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:VendorSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:UrlSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:DisplayNameSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:PatDisclosure",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:SectionLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/AddConnection/GitHubAppAuthBlock.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/AddConnection/PatAuthBlock.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/types/GitProviderTypes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/git/utils/errorUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:AddConnectionDrawer",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/git/components/AddConnection/AddConnectionDrawer.tsx:AddConnectionDrawer",
+      "target": "function:apps/frontend/src/domain/git/utils/errorUtils.ts:extractErrorMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

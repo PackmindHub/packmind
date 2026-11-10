@@ -1,0 +1,413 @@
+{
+  "nodes": [
+    {
+      "id": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/file.ts",
+      "type": "file",
+      "name": "file.ts",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/file.ts",
+      "summary": "Empty placeholder module parsed by ESLint RuleTester for the throw-kind-carrying-error rule; each test case supplies its own code.",
+      "tags": ["test", "fixture", "eslint"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:eslint-rules/rules/fixtures/throw-kind-carrying-error/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "eslint-rules/rules/fixtures/throw-kind-carrying-error/tsconfig.json",
+      "summary": "Minimal strict TypeScript config (ES2022, CommonJS, noEmit) giving type information to the throw-kind-carrying-error ESLint rule tests.",
+      "tags": ["configuration", "typescript", "test", "eslint"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:jest.env-setup.ts",
+      "type": "file",
+      "name": "jest.env-setup.ts",
+      "filePath": "jest.env-setup.ts",
+      "summary": "Jest environment setup that silences Packmind logging before modules load, preventing Winston logger memory leaks in tests.",
+      "tags": ["test", "config", "setup", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:jest.preset.js",
+      "type": "file",
+      "name": "jest.preset.js",
+      "filePath": "jest.preset.js",
+      "summary": "Canonical monorepo Jest preset extending the Nx preset with a 30s test timeout, passWithNoTests, and an optional PACKMIND_JEST_MAX_WORKERS worker cap.",
+      "tags": ["test", "config", "build-system", "jest"],
+      "complexity": "simple",
+      "languageNotes": "Spreads a conditional object literal so maxWorkers is only set when the env var exists, letting per-project configs override it."
+    },
+    {
+      "id": "file:jest.preset.ts",
+      "type": "file",
+      "name": "jest.preset.ts",
+      "filePath": "jest.preset.ts",
+      "summary": "Thin CommonJS re-export of jest.preset.js so jest.config.ts files referencing the .ts preset get the same configuration.",
+      "tags": ["test", "config", "barrel", "jest"],
+      "complexity": "simple",
+      "languageNotes": "Despite its .ts extension it must be plain CJS, because Jest require()s presets without transpiling."
+    },
+    {
+      "id": "file:jest.setup.ts",
+      "type": "file",
+      "name": "jest.setup.ts",
+      "filePath": "jest.setup.ts",
+      "summary": "Global Jest setup that raises the timeout for DB tests, triggers GC after each file when exposed, and clears timers and mocks after each test.",
+      "tags": ["test", "setup", "jest", "config"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/accounts/.swcrc",
+      "type": "config",
+      "name": ".swcrc",
+      "filePath": "packages/accounts/.swcrc",
+      "summary": "SWC compiler config for the @packmind/accounts package: TypeScript parser without decorators, ES2022 target, CommonJS modules, source maps, and preserved class names.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/accounts/src/application/useCases/index.ts",
+      "summary": "Barrel re-exporting the accounts use cases: sign-up/sign-in, invitations, password reset, API keys, CLI login codes, and organization/user queries.",
+      "tags": ["barrel", "use-case", "accounts", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/entities/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/accounts/src/domain/entities/index.ts",
+      "summary": "Barrel re-exporting accounts domain entities and ID/token factories for API keys, CLI login codes, invitations, and password reset tokens.",
+      "tags": ["barrel", "data-model", "accounts", "domain"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/OrganizationAdminRequiredError.ts",
+      "type": "file",
+      "name": "OrganizationAdminRequiredError.ts",
+      "filePath": "packages/accounts/src/domain/errors/OrganizationAdminRequiredError.ts",
+      "summary": "Re-exports the shared OrganizationAdminRequiredError from @packmind/node-utils so it is reachable through the accounts error barrel.",
+      "tags": ["error-handling", "barrel", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/UserNotFoundError.ts",
+      "type": "file",
+      "name": "UserNotFoundError.ts",
+      "filePath": "packages/accounts/src/domain/errors/UserNotFoundError.ts",
+      "summary": "Re-exports the shared UserNotFoundError from @packmind/node-utils so it is reachable through the accounts error barrel.",
+      "tags": ["error-handling", "barrel", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/UserNotInOrganizationError.ts",
+      "type": "file",
+      "name": "UserNotInOrganizationError.ts",
+      "filePath": "packages/accounts/src/domain/errors/UserNotInOrganizationError.ts",
+      "summary": "Re-exports the shared UserNotInOrganizationError from @packmind/node-utils so it is reachable through the accounts error barrel.",
+      "tags": ["error-handling", "barrel", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/accounts/src/index.ts",
+      "summary": "Public entry point of the accounts package, exporting AccountsHexa, its adapter, services, repositories and interfaces, entities, errors, schemas, and API key utilities.",
+      "tags": ["entry-point", "barrel", "accounts", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/assets/.swcrc",
+      "type": "config",
+      "name": ".swcrc",
+      "filePath": "packages/assets/.swcrc",
+      "summary": "SWC compiler config for the @packmind/assets package: TypeScript parser without decorators, ES2022 target, CommonJS modules, source maps, and preserved class names.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/assets/global.d.ts",
+      "type": "file",
+      "name": "global.d.ts",
+      "filePath": "packages/assets/global.d.ts",
+      "summary": "Ambient module declarations letting TypeScript import .css, .svg, and .png files in the assets package.",
+      "tags": ["type-definition", "assets", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/assets/src/icons/ContinueIcon.tsx:ContinueIcon",
+      "type": "function",
+      "name": "ContinueIcon",
+      "filePath": "packages/assets/src/icons/ContinueIcon.tsx",
+      "lineRange": [4, 15],
+      "summary": "React component rendering the Continue coding-agent logo as an inline SVG.",
+      "tags": ["component", "icon", "react", "svg"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/assets/src/icons/ContinueIcon.tsx",
+      "type": "file",
+      "name": "ContinueIcon.tsx",
+      "filePath": "packages/assets/src/icons/ContinueIcon.tsx",
+      "summary": "React SVG icon component for the Continue coding agent.",
+      "tags": ["component", "icon", "react", "assets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/assets/src/icons/CursorIcon.tsx:CursorIcon",
+      "type": "function",
+      "name": "CursorIcon",
+      "filePath": "packages/assets/src/icons/CursorIcon.tsx",
+      "lineRange": [4, 16],
+      "summary": "React component rendering the Cursor coding-agent logo as an inline SVG.",
+      "tags": ["component", "icon", "react", "svg"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/assets/src/icons/CursorIcon.tsx",
+      "type": "file",
+      "name": "CursorIcon.tsx",
+      "filePath": "packages/assets/src/icons/CursorIcon.tsx",
+      "summary": "React SVG icon component for the Cursor coding agent.",
+      "tags": ["component", "icon", "react", "assets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/assets/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/assets/src/index.ts",
+      "summary": "Entry point of the shared assets package: loads global font and color stylesheets and exports Packmind logos, marketing illustrations, provider logos, and the Milkdown theme.",
+      "tags": ["entry-point", "barrel", "assets", "styles"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/assets/src/milkdown.theme.ts",
+      "type": "file",
+      "name": "milkdown.theme.ts",
+      "filePath": "packages/assets/src/milkdown.theme.ts",
+      "summary": "Side-effect module loading the Milkdown Crepe base styles and Packmind custom Milkdown theme CSS for the markdown editor.",
+      "tags": ["styles", "theme", "editor", "assets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/coding-agent/.swcrc",
+      "type": "config",
+      "name": ".swcrc",
+      "filePath": "packages/coding-agent/.swcrc",
+      "summary": "SWC compiler config for the @packmind/coding-agent package: TypeScript parser with legacy decorators and decorator metadata, ES2022 target, CommonJS modules, source maps, and preserved class names.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/application/useCases/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/coding-agent/src/application/useCases/index.ts",
+      "summary": "Barrel re-exporting the coding-agent use cases for rendering artifacts and previewing artifact rendering.",
+      "tags": ["barrel", "use-case", "coding-agent", "rendering"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/domain/errors/CodingAgentError.ts",
+      "type": "file",
+      "name": "CodingAgentError.ts",
+      "filePath": "packages/coding-agent/src/domain/errors/CodingAgentError.ts",
+      "summary": "Defines CodingAgentError, the base domain error of the coding-agent package carrying kind, reason, and context, plus its reason and context types.",
+      "tags": ["error-handling", "domain", "coding-agent", "type-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/domain/errors/CodingAgentError.ts:CodingAgentError",
+      "type": "class",
+      "name": "CodingAgentError",
+      "filePath": "packages/coding-agent/src/domain/errors/CodingAgentError.ts",
+      "lineRange": [15, 32],
+      "summary": "Base coding-agent domain error implementing DomainError: kind drives the HTTP response, reason is the literal clients branch on, context carries log identifiers.",
+      "tags": ["error-handling", "domain", "base-class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/domain/errors/UnknownCodingAgentError.ts",
+      "type": "file",
+      "name": "UnknownCodingAgentError.ts",
+      "filePath": "packages/coding-agent/src/domain/errors/UnknownCodingAgentError.ts",
+      "summary": "Defines UnknownCodingAgentError, raised when a requested coding agent is not supported.",
+      "tags": ["error-handling", "domain", "coding-agent", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/domain/errors/UnknownCodingAgentError.ts:UnknownCodingAgentError",
+      "type": "class",
+      "name": "UnknownCodingAgentError",
+      "filePath": "packages/coding-agent/src/domain/errors/UnknownCodingAgentError.ts",
+      "lineRange": [9, 19],
+      "summary": "Invalid-input error raised when a coding agent named in customer data (packmind.json, URL params) is unknown.",
+      "tags": ["error-handling", "validation", "coding-agent"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/coding-agent/src/index.ts",
+      "summary": "Public entry point of the coding-agent package, exporting agent configuration, errors, the deployer registry and services, use cases, and every agent deployer (Claude, Cursor, Copilot, Junie, Continue, OpenCode, Codex, Kiro, plugins).",
+      "tags": ["entry-point", "barrel", "coding-agent", "deployment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/commands/.swcrc",
+      "type": "config",
+      "name": ".swcrc",
+      "filePath": "packages/commands/.swcrc",
+      "summary": "SWC compiler config for the @packmind/commands package: TypeScript parser without decorators, ES2022 target, CommonJS modules, source maps, and preserved class names.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:eslint-rules/rules/fixtures/throw-kind-carrying-error/tsconfig.json",
+      "target": "file:eslint-rules/rules/fixtures/throw-kind-carrying-error/file.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:jest.preset.ts",
+      "target": "file:jest.preset.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "config:packages/accounts/.swcrc",
+      "target": "file:packages/accounts/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/assets/src/icons/ContinueIcon.tsx",
+      "target": "function:packages/assets/src/icons/ContinueIcon.tsx:ContinueIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/assets/src/icons/ContinueIcon.tsx",
+      "target": "function:packages/assets/src/icons/ContinueIcon.tsx:ContinueIcon",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/assets/src/icons/CursorIcon.tsx",
+      "target": "function:packages/assets/src/icons/CursorIcon.tsx:CursorIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/assets/src/icons/CursorIcon.tsx",
+      "target": "function:packages/assets/src/icons/CursorIcon.tsx:CursorIcon",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/assets/src/index.ts",
+      "target": "file:packages/assets/src/styles/colors.css",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/assets/src/index.ts",
+      "target": "file:packages/assets/src/styles/font.css",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/assets/src/index.ts",
+      "target": "file:packages/assets/src/milkdown.theme.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/assets/src/milkdown.theme.ts",
+      "target": "file:packages/assets/src/styles/milkdown.theme.css",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "config:packages/assets/.swcrc",
+      "target": "file:packages/assets/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/CodingAgentError.ts",
+      "target": "class:packages/coding-agent/src/domain/errors/CodingAgentError.ts:CodingAgentError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/CodingAgentError.ts",
+      "target": "class:packages/coding-agent/src/domain/errors/CodingAgentError.ts:CodingAgentError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/UnknownCodingAgentError.ts",
+      "target": "class:packages/coding-agent/src/domain/errors/UnknownCodingAgentError.ts:UnknownCodingAgentError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/UnknownCodingAgentError.ts",
+      "target": "class:packages/coding-agent/src/domain/errors/UnknownCodingAgentError.ts:UnknownCodingAgentError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/UnknownCodingAgentError.ts",
+      "target": "file:packages/coding-agent/src/domain/errors/CodingAgentError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/coding-agent/src/domain/errors/UnknownCodingAgentError.ts:UnknownCodingAgentError",
+      "target": "class:packages/coding-agent/src/domain/errors/CodingAgentError.ts:CodingAgentError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "config:packages/coding-agent/.swcrc",
+      "target": "file:packages/coding-agent/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/commands/.swcrc",
+      "target": "file:packages/commands/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

@@ -1,0 +1,749 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/providers/AuthProvider.tsx",
+      "type": "file",
+      "name": "AuthProvider.tsx",
+      "filePath": "apps/frontend/src/providers/AuthProvider.tsx",
+      "summary": "React context provider exposing the AuthService singleton to the component tree, with a useAuthService accessor hook.",
+      "tags": ["provider", "context", "auth", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/providers/AuthProvider.tsx:AuthProvider",
+      "type": "function",
+      "name": "AuthProvider",
+      "filePath": "apps/frontend/src/providers/AuthProvider.tsx",
+      "lineRange": [21, 36],
+      "summary": "Context provider supplying the AuthService instance.",
+      "tags": ["provider", "context", "auth"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/providers/AuthProvider.tsx:useAuthService",
+      "type": "function",
+      "name": "useAuthService",
+      "filePath": "apps/frontend/src/providers/AuthProvider.tsx",
+      "lineRange": [43, 49],
+      "summary": "Hook reading the AuthService from context, throwing outside the provider.",
+      "tags": ["hook", "context", "auth"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/services/auth/AuthService.ts",
+      "type": "file",
+      "name": "AuthService.ts",
+      "filePath": "apps/frontend/src/services/auth/AuthService.ts",
+      "summary": "Singleton frontend auth service that loads the current user and organizations and validates/switches organization context based on the URL slug.",
+      "tags": ["service", "singleton", "auth", "organization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/frontend/src/services/auth/AuthService.ts:AuthService",
+      "type": "class",
+      "name": "AuthService",
+      "filePath": "apps/frontend/src/services/auth/AuthService.ts",
+      "lineRange": [27, 157],
+      "summary": "Singleton managing current user retrieval, organization listing, initialization and org switching based on the URL slug.",
+      "tags": ["service", "singleton", "auth"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/ItemsListing.tsx",
+      "type": "file",
+      "name": "ItemsListing.tsx",
+      "filePath": "apps/frontend/src/shared/components/ItemsListing.tsx",
+      "summary": "Generic reusable listing component with search filtering, empty states and item rendering for artifact lists.",
+      "tags": ["component", "list", "shared", "search"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/ItemsListing.tsx:ItemsListing",
+      "type": "function",
+      "name": "ItemsListing",
+      "filePath": "apps/frontend/src/shared/components/ItemsListing.tsx",
+      "lineRange": [47, 199],
+      "summary": "Generic searchable list component for items.",
+      "tags": ["component", "list", "search"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "type": "file",
+      "name": "PendingChangeProposals.tsx",
+      "filePath": "apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "summary": "Shared helpers and components warning editors about pending change proposals, including a count helper and a confirm-save dialog.",
+      "tags": ["component", "change-proposals", "dialog", "shared"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:countPendingChangeProposals",
+      "type": "function",
+      "name": "countPendingChangeProposals",
+      "filePath": "apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "lineRange": [7, 14],
+      "summary": "Counts pending change proposals for an artifact.",
+      "tags": ["utility", "change-proposals", "counter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:PendingChangeProposalsWarning",
+      "type": "function",
+      "name": "PendingChangeProposalsWarning",
+      "filePath": "apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "lineRange": [29, 46],
+      "summary": "Warning banner shown when pending change proposals exist.",
+      "tags": ["component", "warning", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:ConfirmSaveWithPendingProposalsDialog",
+      "type": "function",
+      "name": "ConfirmSaveWithPendingProposalsDialog",
+      "filePath": "apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "lineRange": [57, 75],
+      "summary": "Confirmation dialog before saving with pending change proposals.",
+      "tags": ["component", "dialog", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "file",
+      "name": "MarkdownEditor.tsx",
+      "filePath": "apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "summary": "Shared Markdown editor component wrapping an editor library, plus a provider for its context.",
+      "tags": ["component", "editor", "markdown", "shared"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditor",
+      "type": "function",
+      "name": "MarkdownEditor",
+      "filePath": "apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "lineRange": [26, 74],
+      "summary": "Markdown editor component with configurable value and change handling.",
+      "tags": ["component", "editor", "markdown"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditorProvider",
+      "type": "function",
+      "name": "MarkdownEditorProvider",
+      "filePath": "apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "lineRange": [76, 80],
+      "summary": "Provider wrapping children with the markdown editor context.",
+      "tags": ["provider", "editor", "markdown"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/creation/artifactCreationRoutes.ts",
+      "type": "file",
+      "name": "artifactCreationRoutes.ts",
+      "filePath": "apps/frontend/src/shared/creation/artifactCreationRoutes.ts",
+      "summary": "Registry declaring, per artifact type, which creation paths exist (agent, samples, form, file import) and their routes.",
+      "tags": ["registry", "creation", "routing", "configuration"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/creation/buildCreationMethods.ts",
+      "type": "file",
+      "name": "buildCreationMethods.ts",
+      "filePath": "apps/frontend/src/shared/creation/buildCreationMethods.ts",
+      "summary": "Derives the create menu's method-oriented entries from the artifact creation registry, folding form types past a threshold, and formats type label lists.",
+      "tags": ["utility", "creation", "menu", "factory"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/creation/buildCreationMethods.ts:buildCreationMethods",
+      "type": "function",
+      "name": "buildCreationMethods",
+      "filePath": "apps/frontend/src/shared/creation/buildCreationMethods.ts",
+      "lineRange": [46, 71],
+      "summary": "Groups artifact types by creation method from the registry, nulling empty methods and folding forms.",
+      "tags": ["factory", "creation", "menu"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/creation/buildCreationMethods.ts:listTypeLabels",
+      "type": "function",
+      "name": "listTypeLabels",
+      "filePath": "apps/frontend/src/shared/creation/buildCreationMethods.ts",
+      "lineRange": [84, 91],
+      "summary": "Formats a human-readable list of artifact type labels.",
+      "tags": ["utility", "formatting", "labels"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "type": "file",
+      "name": "ensureOrgContext.ts",
+      "filePath": "apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "summary": "Route middleware helper ensuring the authenticated user's organization matches the URL org slug, switching orgs via AuthService or redirecting.",
+      "tags": ["middleware", "auth", "organization", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "type": "function",
+      "name": "ensureOrgContext",
+      "filePath": "apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "lineRange": [26, 49],
+      "summary": "Loads the current user and switches/redirects to align organization with URL slug.",
+      "tags": ["middleware", "auth", "organization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "file",
+      "name": "queryClient.ts",
+      "filePath": "apps/frontend/src/shared/data/queryClient.ts",
+      "summary": "Shared TanStack QueryClient instance configured to retry only transient failures to avoid hung loaders on 4xx responses.",
+      "tags": ["singleton", "data-fetching", "config", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "type": "file",
+      "name": "redirectToContext.ts",
+      "filePath": "apps/frontend/src/shared/data/redirectToContext.ts",
+      "summary": "Route loader helpers that redirect legacy component and package pages into the Context surface depending on the space navigation mode.",
+      "tags": ["routing", "redirect", "loader", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextComponent",
+      "type": "function",
+      "name": "redirectToContextComponent",
+      "filePath": "apps/frontend/src/shared/data/redirectToContext.ts",
+      "lineRange": [42, 87],
+      "summary": "Redirects a component page into the Context surface when navigation mode requires it.",
+      "tags": ["redirect", "loader", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectSkillToContextComponent",
+      "type": "function",
+      "name": "redirectSkillToContextComponent",
+      "filePath": "apps/frontend/src/shared/data/redirectToContext.ts",
+      "lineRange": [97, 123],
+      "summary": "Skill-specific variant resolving the skill by slug before redirecting into Context.",
+      "tags": ["redirect", "loader", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextPackage",
+      "type": "function",
+      "name": "redirectToContextPackage",
+      "filePath": "apps/frontend/src/shared/data/redirectToContext.ts",
+      "lineRange": [162, 188],
+      "summary": "Redirects a package page into the Context package view with the right tab.",
+      "tags": ["redirect", "loader", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/hooks/useArtifactNameValidator.ts",
+      "type": "file",
+      "name": "useArtifactNameValidator.ts",
+      "filePath": "apps/frontend/src/shared/hooks/useArtifactNameValidator.ts",
+      "summary": "Hook validating artifact names (length/format) and returning error messages for forms.",
+      "tags": ["hook", "validation", "shared", "form"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/hooks/useArtifactNameValidator.ts:useArtifactNameValidator",
+      "type": "function",
+      "name": "useArtifactNameValidator",
+      "filePath": "apps/frontend/src/shared/hooks/useArtifactNameValidator.ts",
+      "lineRange": [3, 26],
+      "summary": "Hook returning a validator for artifact names.",
+      "tags": ["hook", "validation", "form"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/hooks/useNavigation.ts",
+      "type": "file",
+      "name": "useNavigation.ts",
+      "filePath": "apps/frontend/src/shared/hooks/useNavigation.ts",
+      "summary": "Hook exposing typed navigation helpers to every org/space-scoped page of the frontend.",
+      "tags": ["hook", "navigation", "routing", "shared"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/hooks/useNavigation.ts:useNavigation",
+      "type": "function",
+      "name": "useNavigation",
+      "filePath": "apps/frontend/src/shared/hooks/useNavigation.ts",
+      "lineRange": [14, 189],
+      "summary": "Provides navigation functions to org- and space-scoped routes.",
+      "tags": ["hook", "navigation", "routing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/utils/flashToast.ts",
+      "type": "file",
+      "name": "flashToast.ts",
+      "filePath": "apps/frontend/src/shared/utils/flashToast.ts",
+      "summary": "Stores a single pending toast to be shown after navigation and consumes it on the next page render.",
+      "tags": ["utility", "toast", "notification", "navigation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/utils/flashToast.ts:setFlashToast",
+      "type": "function",
+      "name": "setFlashToast",
+      "filePath": "apps/frontend/src/shared/utils/flashToast.ts",
+      "lineRange": [11, 13],
+      "summary": "Stores a toast to display after the next navigation.",
+      "tags": ["utility", "toast", "state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/utils/flashToast.ts:consumeFlashToast",
+      "type": "function",
+      "name": "consumeFlashToast",
+      "filePath": "apps/frontend/src/shared/utils/flashToast.ts",
+      "lineRange": [15, 23],
+      "summary": "Displays and clears the pending flash toast.",
+      "tags": ["utility", "toast", "notification"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "file",
+      "name": "routes.ts",
+      "filePath": "apps/frontend/src/shared/utils/routes.ts",
+      "summary": "Central route path builders for org, space and artifact pages used across the frontend.",
+      "tags": ["routing", "utility", "constants", "navigation"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/providers/AuthProvider.tsx",
+      "target": "function:apps/frontend/src/providers/AuthProvider.tsx:AuthProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/providers/AuthProvider.tsx",
+      "target": "function:apps/frontend/src/providers/AuthProvider.tsx:AuthProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/providers/AuthProvider.tsx",
+      "target": "function:apps/frontend/src/providers/AuthProvider.tsx:useAuthService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/providers/AuthProvider.tsx",
+      "target": "function:apps/frontend/src/providers/AuthProvider.tsx:useAuthService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/providers/AuthProvider.tsx",
+      "target": "file:apps/frontend/src/services/auth/AuthService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/auth/AuthService.ts",
+      "target": "class:apps/frontend/src/services/auth/AuthService.ts:AuthService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/auth/AuthService.ts",
+      "target": "class:apps/frontend/src/services/auth/AuthService.ts:AuthService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/auth/AuthService.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IAuthGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/auth/AuthService.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/auth/AuthService.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/ItemsListing.tsx",
+      "target": "function:apps/frontend/src/shared/components/ItemsListing.tsx:ItemsListing",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/ItemsListing.tsx",
+      "target": "function:apps/frontend/src/shared/components/ItemsListing.tsx:ItemsListing",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "target": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:countPendingChangeProposals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "target": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:countPendingChangeProposals",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "target": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:PendingChangeProposalsWarning",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "target": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:PendingChangeProposalsWarning",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "target": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:ConfirmSaveWithPendingProposalsDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "target": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:ConfirmSaveWithPendingProposalsDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditorProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditorProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/creation/artifactCreationRoutes.ts",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/creation/buildCreationMethods.ts",
+      "target": "function:apps/frontend/src/shared/creation/buildCreationMethods.ts:buildCreationMethods",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/creation/buildCreationMethods.ts",
+      "target": "function:apps/frontend/src/shared/creation/buildCreationMethods.ts:buildCreationMethods",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/creation/buildCreationMethods.ts",
+      "target": "function:apps/frontend/src/shared/creation/buildCreationMethods.ts:listTypeLabels",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/creation/buildCreationMethods.ts",
+      "target": "function:apps/frontend/src/shared/creation/buildCreationMethods.ts:listTypeLabels",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/creation/buildCreationMethods.ts",
+      "target": "file:apps/frontend/src/shared/creation/artifactCreationRoutes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "target": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "target": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IAuthGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "target": "file:apps/frontend/src/services/auth/AuthService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "target": "file:apps/frontend/src/shared/data/retryPolicy.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectSkillToContextComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectSkillToContextComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextPackage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useArtifactNameValidator.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useArtifactNameValidator.ts:useArtifactNameValidator",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useArtifactNameValidator.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useArtifactNameValidator.ts:useArtifactNameValidator",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useNavigation.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useNavigation.ts:useNavigation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useNavigation.ts",
+      "target": "function:apps/frontend/src/shared/hooks/useNavigation.ts:useNavigation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useNavigation.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/hooks/useNavigation.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/flashToast.ts",
+      "target": "function:apps/frontend/src/shared/utils/flashToast.ts:setFlashToast",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/flashToast.ts",
+      "target": "function:apps/frontend/src/shared/utils/flashToast.ts:setFlashToast",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/flashToast.ts",
+      "target": "function:apps/frontend/src/shared/utils/flashToast.ts:consumeFlashToast",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/flashToast.ts",
+      "target": "function:apps/frontend/src/shared/utils/flashToast.ts:consumeFlashToast",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/providers/AuthProvider.tsx:AuthProvider",
+      "target": "class:apps/frontend/src/services/auth/AuthService.ts:AuthService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "target": "class:apps/frontend/src/services/auth/AuthService.ts:AuthService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextComponent",
+      "target": "function:apps/frontend/src/shared/data/ensureOrgContext.ts:ensureOrgContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,934 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/domain/entities/LintViolation.ts",
+      "type": "file",
+      "name": "LintViolation.ts",
+      "filePath": "apps/cli/src/domain/entities/LintViolation.ts",
+      "summary": "Defines the LintViolation type: a file path plus its per-line rule/standard violations with optional detection severity.",
+      "tags": ["type-definition", "data-model", "linting", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "type": "file",
+      "name": "PackageSlug.ts",
+      "filePath": "apps/cli/src/domain/entities/PackageSlug.ts",
+      "summary": "Parses and formats CLI package references (`@space/package:version`) into structured slugs with optional version specs, and renders them back for display.",
+      "tags": ["utility", "parsing", "data-model", "packages", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/domain/entities/PackageSlug.ts:isFullParsedPackageSlug",
+      "type": "function",
+      "name": "isFullParsedPackageSlug",
+      "filePath": "apps/cli/src/domain/entities/PackageSlug.ts",
+      "lineRange": [27, 35],
+      "summary": "Type guard checking that a parsed package slug includes both space and package slugs.",
+      "tags": ["type-guard", "utility", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/domain/entities/PackageSlug.ts:parsePackageSlug",
+      "type": "function",
+      "name": "parsePackageSlug",
+      "filePath": "apps/cli/src/domain/entities/PackageSlug.ts",
+      "lineRange": [37, 65],
+      "summary": "Parses a package reference into optional space slug, package slug and validated version spec, throwing on invalid syntax or versions.",
+      "tags": ["parsing", "validation", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageSlug",
+      "type": "function",
+      "name": "displayableParsedPackageSlug",
+      "filePath": "apps/cli/src/domain/entities/PackageSlug.ts",
+      "lineRange": [68, 75],
+      "summary": "Formats a parsed package slug as `@space/package` or bare package name, without version.",
+      "tags": ["formatting", "utility", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageRef",
+      "type": "function",
+      "name": "displayableParsedPackageRef",
+      "filePath": "apps/cli/src/domain/entities/PackageSlug.ts",
+      "lineRange": [78, 85],
+      "summary": "Formats a parsed package slug with its version spec appended, as the user would type it.",
+      "tags": ["formatting", "utility", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/errors/ArtefactAlreadyInPackageError.ts",
+      "type": "file",
+      "name": "ArtefactAlreadyInPackageError.ts",
+      "filePath": "apps/cli/src/domain/errors/ArtefactAlreadyInPackageError.ts",
+      "summary": "Domain error raised by AddToPackageUseCase when artefacts already belong to another package, carrying the conflicting packages so the handler can suggest `packages move`.",
+      "tags": ["error-handling", "domain-error", "packages", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/domain/errors/ArtefactAlreadyInPackageError.ts:ArtefactAlreadyInPackageError",
+      "type": "class",
+      "name": "ArtefactAlreadyInPackageError",
+      "filePath": "apps/cli/src/domain/errors/ArtefactAlreadyInPackageError.ts",
+      "lineRange": [16, 33],
+      "summary": "Error carrying item type, conflicting artefacts and target package slug when an artefact already belongs to another package.",
+      "tags": ["error-handling", "domain-error", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "type": "file",
+      "name": "CommunityEditionError.ts",
+      "filePath": "apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "summary": "Domain error and null-safe type guard signalling that a requested API feature is unavailable in Packmind Community Edition.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "type-guard",
+        "edition",
+        "cli"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/domain/errors/CommunityEditionError.ts:isCommunityEditionError",
+      "type": "function",
+      "name": "isCommunityEditionError",
+      "filePath": "apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "lineRange": [18, 28],
+      "summary": "Null-safe type guard detecting CommunityEditionError instances via a marker property.",
+      "tags": ["type-guard", "error-handling", "edition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/domain/errors/CommunityEditionError.ts:CommunityEditionError",
+      "type": "class",
+      "name": "CommunityEditionError",
+      "filePath": "apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "lineRange": [7, 16],
+      "summary": "Error class flagged with isCommunityEditionError for features unavailable in Community Edition.",
+      "tags": ["error-handling", "domain-error", "edition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/errors/ItemNotFoundError.ts",
+      "type": "file",
+      "name": "ItemNotFoundError.ts",
+      "filePath": "apps/cli/src/domain/errors/ItemNotFoundError.ts",
+      "summary": "Domain error thrown when a package, standard, command or skill slug cannot be found, optionally scoped to a space.",
+      "tags": ["error-handling", "domain-error", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/domain/errors/ItemNotFoundError.ts:ItemNotFoundError",
+      "type": "class",
+      "name": "ItemNotFoundError",
+      "filePath": "apps/cli/src/domain/errors/ItemNotFoundError.ts",
+      "lineRange": [5, 17],
+      "summary": "Error carrying item type, slug and optional space slug for a missing item.",
+      "tags": ["error-handling", "domain-error", "lookup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/errors/NotLoggedInError.ts",
+      "type": "file",
+      "name": "NotLoggedInError.ts",
+      "filePath": "apps/cli/src/domain/errors/NotLoggedInError.ts",
+      "summary": "Domain error thrown when the CLI has no credentials, instructing the user to log in or set PACKMIND_API_KEY.",
+      "tags": ["error-handling", "domain-error", "authentication", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/domain/errors/NotLoggedInError.ts:NotLoggedInError",
+      "type": "class",
+      "name": "NotLoggedInError",
+      "filePath": "apps/cli/src/domain/errors/NotLoggedInError.ts",
+      "lineRange": [5, 12],
+      "summary": "Error with a fixed message guiding the user to log in or set an API key.",
+      "tags": ["error-handling", "domain-error", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/errors/PackmindConfigInvalidError.ts",
+      "type": "file",
+      "name": "PackmindConfigInvalidError.ts",
+      "filePath": "apps/cli/src/domain/errors/PackmindConfigInvalidError.ts",
+      "summary": "Domain error thrown when a packmind.json file exists but contains unparseable JSON.",
+      "tags": ["error-handling", "domain-error", "configuration", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/domain/errors/PackmindConfigInvalidError.ts:PackmindConfigInvalidError",
+      "type": "class",
+      "name": "PackmindConfigInvalidError",
+      "filePath": "apps/cli/src/domain/errors/PackmindConfigInvalidError.ts",
+      "lineRange": [5, 12],
+      "summary": "Error carrying the directory whose packmind.json failed to parse.",
+      "tags": ["error-handling", "domain-error", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/errors/PackmindConfigNotFoundError.ts",
+      "type": "file",
+      "name": "PackmindConfigNotFoundError.ts",
+      "filePath": "apps/cli/src/domain/errors/PackmindConfigNotFoundError.ts",
+      "summary": "Domain error thrown when a command requires a packmind.json in a directory that has none.",
+      "tags": ["error-handling", "domain-error", "configuration", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/domain/errors/PackmindConfigNotFoundError.ts:PackmindConfigNotFoundError",
+      "type": "class",
+      "name": "PackmindConfigNotFoundError",
+      "filePath": "apps/cli/src/domain/errors/PackmindConfigNotFoundError.ts",
+      "lineRange": [5, 10],
+      "summary": "Error carrying the directory missing a packmind.json.",
+      "tags": ["error-handling", "domain-error", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts",
+      "type": "file",
+      "name": "SkillsInitBootstrapError.ts",
+      "filePath": "apps/cli/src/domain/errors/SkillsInitBootstrapError.ts",
+      "summary": "Domain error and type guard for `skills init` failing to determine the organization's coding agents, pointing the user to the interactive init command.",
+      "tags": ["error-handling", "domain-error", "type-guard", "skills", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts:isSkillsInitBootstrapError",
+      "type": "function",
+      "name": "isSkillsInitBootstrapError",
+      "filePath": "apps/cli/src/domain/errors/SkillsInitBootstrapError.ts",
+      "lineRange": [25, 29],
+      "summary": "Type guard detecting SkillsInitBootstrapError via its marker property.",
+      "tags": ["type-guard", "error-handling", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts:SkillsInitBootstrapError",
+      "type": "class",
+      "name": "SkillsInitBootstrapError",
+      "filePath": "apps/cli/src/domain/errors/SkillsInitBootstrapError.ts",
+      "lineRange": [14, 23],
+      "summary": "Error class raised when skills init cannot determine the organization's coding agents.",
+      "tags": ["error-handling", "domain-error", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IChangeProposalGateway.ts",
+      "type": "file",
+      "name": "IChangeProposalGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/IChangeProposalGateway.ts",
+      "summary": "Port interface for the change-proposal API: batch creation, batch application of playbook changes, and proposal checks.",
+      "tags": ["type-definition", "port", "gateway", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/ICommandsGateway.ts",
+      "type": "file",
+      "name": "ICommandsGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/ICommandsGateway.ts",
+      "summary": "Port interface for the commands API, exposing command capture and listing by space.",
+      "tags": ["type-definition", "port", "gateway", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IConfigFileRepository.ts",
+      "type": "file",
+      "name": "IConfigFileRepository.ts",
+      "filePath": "apps/cli/src/domain/repositories/IConfigFileRepository.ts",
+      "summary": "Port interface for reading, writing and discovering packmind.json files, including hierarchical config merging, descendant discovery and version-preserving package upserts.",
+      "tags": ["type-definition", "port", "repository", "configuration", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IDeploymentGateway.ts",
+      "type": "file",
+      "name": "IDeploymentGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/IDeploymentGateway.ts",
+      "summary": "Port interface for the deployment API: pulling/installing content, notifying distributions, rendering plugins and managing render-mode configuration.",
+      "tags": ["type-definition", "port", "gateway", "deployment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/ILinterGateway.ts",
+      "type": "file",
+      "name": "ILinterGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/ILinterGateway.ts",
+      "summary": "Port interface for the linter API, fetching draft/active detection programs and tracking linter executions.",
+      "tags": ["type-definition", "port", "gateway", "linting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "type": "file",
+      "name": "ILockFileRepository.ts",
+      "filePath": "apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "summary": "Port interface for reading and writing the packmind-lock.json file.",
+      "tags": ["type-definition", "port", "repository", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/ILogger.ts",
+      "type": "file",
+      "name": "ILogger.ts",
+      "filePath": "apps/cli/src/domain/repositories/ILogger.ts",
+      "summary": "Port interface for logging lint violations, implemented by human-readable and IDE-oriented loggers.",
+      "tags": ["type-definition", "port", "logging", "linting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IOrganizationGateway.ts",
+      "type": "file",
+      "name": "IOrganizationGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/IOrganizationGateway.ts",
+      "summary": "Port interface for fetching the current organization and the user's role within it.",
+      "tags": ["type-definition", "port", "gateway", "organization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IOutput.ts",
+      "type": "file",
+      "name": "IOutput.ts",
+      "filePath": "apps/cli/src/domain/repositories/IOutput.ts",
+      "summary": "Port interface for CLI user output: success/info/warning/error notifications, loaders, and artefact display/listing with help hints.",
+      "tags": ["type-definition", "port", "output", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IPackagesGateway.ts",
+      "type": "file",
+      "name": "IPackagesGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/IPackagesGateway.ts",
+      "summary": "Port interface for the packages API: listing, summaries, creation, and adding/moving/removing artefacts.",
+      "tags": ["type-definition", "port", "gateway", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "file",
+      "name": "IPackmindGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "summary": "Aggregate port interface composing all API sub-gateways (standards, skills, packages, deployment, linter, etc.) and re-exporting standard types for backward compatibility.",
+      "tags": ["type-definition", "port", "gateway", "facade", "barrel"],
+      "complexity": "simple",
+      "languageNotes": "Uses the Gateway<UseCase> generic type to derive each API method signature directly from shared use-case contracts."
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IPackmindRepositories.ts",
+      "type": "file",
+      "name": "IPackmindRepositories.ts",
+      "filePath": "apps/cli/src/domain/repositories/IPackmindRepositories.ts",
+      "summary": "Aggregate interface bundling the CLI's repositories and gateways (Packmind gateway, config file, lock file, output) for dependency injection.",
+      "tags": ["type-definition", "port", "dependency-injection", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "file",
+      "name": "IPlaybookLocalRepository.ts",
+      "filePath": "apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "summary": "Defines the local playbook staging model (PlaybookChangeEntry, PlaybookYaml) and the port for adding, removing and listing staged playbook changes.",
+      "tags": [
+        "type-definition",
+        "port",
+        "repository",
+        "playbook",
+        "data-model"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IRepositoryTrackingGateway.ts",
+      "type": "file",
+      "name": "IRepositoryTrackingGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/IRepositoryTrackingGateway.ts",
+      "summary": "Port interface for repository tracking: getting, setting, updating branch and removing a tracked git repository.",
+      "tags": ["type-definition", "port", "gateway", "repository-tracking"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/ISkillsGateway.ts",
+      "type": "file",
+      "name": "ISkillsGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/ISkillsGateway.ts",
+      "summary": "Port interface for the skills API: uploading skills, fetching default skills and listing by space.",
+      "tags": ["type-definition", "port", "gateway", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/ISpacesGateway.ts",
+      "type": "file",
+      "name": "ISpacesGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/ISpacesGateway.ts",
+      "summary": "Port interface for spaces: listing user spaces, resolving a space by slug and exposing API context.",
+      "tags": ["type-definition", "port", "gateway", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IStandardsGateway.ts",
+      "type": "file",
+      "name": "IStandardsGateway.ts",
+      "filePath": "apps/cli/src/domain/repositories/IStandardsGateway.ts",
+      "summary": "Port interface and DTO types for the standards API: creating standards with rules, fetching rules, adding rule examples and listing by space.",
+      "tags": ["type-definition", "port", "gateway", "standards", "data-model"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/IVersionCacheProvider.ts",
+      "type": "file",
+      "name": "IVersionCacheProvider.ts",
+      "filePath": "apps/cli/src/domain/repositories/IVersionCacheProvider.ts",
+      "summary": "Port interface for caching the latest known CLI version with its check timestamp.",
+      "tags": ["type-definition", "port", "cache", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/repositories/PackmindLockFile.ts",
+      "type": "file",
+      "name": "PackmindLockFile.ts",
+      "filePath": "apps/cli/src/domain/repositories/PackmindLockFile.ts",
+      "summary": "Re-exports the PackmindLockFile, entry and file types from the shared types package for CLI domain use.",
+      "tags": ["type-definition", "barrel", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/services/IDiffViolationFilterService.ts",
+      "type": "file",
+      "name": "IDiffViolationFilterService.ts",
+      "filePath": "apps/cli/src/domain/services/IDiffViolationFilterService.ts",
+      "summary": "Port interface for filtering lint violations down to modified files or modified lines in diff mode.",
+      "tags": ["type-definition", "port", "service", "linting", "diff"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/services/IGitService.ts",
+      "type": "file",
+      "name": "IGitService.ts",
+      "filePath": "apps/cli/src/domain/services/IGitService.ts",
+      "summary": "Port interface and result types for git operations: repository root discovery, branch detection (incl. detached HEAD), remotes, and modified/untracked files and lines.",
+      "tags": ["type-definition", "port", "service", "git"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/domain/services/IListFiles.ts",
+      "type": "file",
+      "name": "IListFiles.ts",
+      "filePath": "apps/cli/src/domain/services/IListFiles.ts",
+      "summary": "Port interface for listing files by extension with excludes and reading file content.",
+      "tags": ["type-definition", "port", "service", "filesystem"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/domain/services/IPackmindServices.ts",
+      "type": "file",
+      "name": "IPackmindServices.ts",
+      "filePath": "apps/cli/src/domain/services/IPackmindServices.ts",
+      "summary": "Aggregate interface bundling CLI domain services (file listing, git, linter execution, diff filtering, spaces) for dependency injection.",
+      "tags": ["type-definition", "port", "dependency-injection", "service"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:isFullParsedPackageSlug",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:isFullParsedPackageSlug",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:parsePackageSlug",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:parsePackageSlug",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageSlug",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageSlug",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageRef",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageRef",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/ArtefactAlreadyInPackageError.ts",
+      "target": "class:apps/cli/src/domain/errors/ArtefactAlreadyInPackageError.ts:ArtefactAlreadyInPackageError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/ArtefactAlreadyInPackageError.ts",
+      "target": "class:apps/cli/src/domain/errors/ArtefactAlreadyInPackageError.ts:ArtefactAlreadyInPackageError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/ArtefactAlreadyInPackageError.ts",
+      "target": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "target": "function:apps/cli/src/domain/errors/CommunityEditionError.ts:isCommunityEditionError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "target": "function:apps/cli/src/domain/errors/CommunityEditionError.ts:isCommunityEditionError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "target": "class:apps/cli/src/domain/errors/CommunityEditionError.ts:CommunityEditionError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "target": "class:apps/cli/src/domain/errors/CommunityEditionError.ts:CommunityEditionError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/ItemNotFoundError.ts",
+      "target": "class:apps/cli/src/domain/errors/ItemNotFoundError.ts:ItemNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/ItemNotFoundError.ts",
+      "target": "class:apps/cli/src/domain/errors/ItemNotFoundError.ts:ItemNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/NotLoggedInError.ts",
+      "target": "class:apps/cli/src/domain/errors/NotLoggedInError.ts:NotLoggedInError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/NotLoggedInError.ts",
+      "target": "class:apps/cli/src/domain/errors/NotLoggedInError.ts:NotLoggedInError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/PackmindConfigInvalidError.ts",
+      "target": "class:apps/cli/src/domain/errors/PackmindConfigInvalidError.ts:PackmindConfigInvalidError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/PackmindConfigInvalidError.ts",
+      "target": "class:apps/cli/src/domain/errors/PackmindConfigInvalidError.ts:PackmindConfigInvalidError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/PackmindConfigNotFoundError.ts",
+      "target": "class:apps/cli/src/domain/errors/PackmindConfigNotFoundError.ts:PackmindConfigNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/PackmindConfigNotFoundError.ts",
+      "target": "class:apps/cli/src/domain/errors/PackmindConfigNotFoundError.ts:PackmindConfigNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts",
+      "target": "function:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts:isSkillsInitBootstrapError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts",
+      "target": "function:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts:isSkillsInitBootstrapError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts",
+      "target": "class:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts:SkillsInitBootstrapError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts",
+      "target": "class:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts:SkillsInitBootstrapError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "target": "file:apps/cli/src/domain/repositories/PackmindLockFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/ILogger.ts",
+      "target": "file:apps/cli/src/domain/entities/LintViolation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/IChangeProposalGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/ICommandsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/IDeploymentGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/ILinterGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/IOrganizationGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackagesGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/IRepositoryTrackingGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/ISkillsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/ISpacesGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "target": "file:apps/cli/src/domain/repositories/IStandardsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindRepositories.ts",
+      "target": "file:apps/cli/src/domain/repositories/IConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindRepositories.ts",
+      "target": "file:apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindRepositories.ts",
+      "target": "file:apps/cli/src/domain/repositories/IOutput.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/repositories/IPackmindRepositories.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/services/IDiffViolationFilterService.ts",
+      "target": "file:apps/cli/src/domain/entities/DiffMode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/services/IDiffViolationFilterService.ts",
+      "target": "file:apps/cli/src/domain/entities/LintViolation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/services/IGitService.ts",
+      "target": "file:apps/cli/src/domain/entities/DiffMode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/services/IPackmindServices.ts",
+      "target": "file:apps/cli/src/domain/services/IDiffViolationFilterService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/services/IPackmindServices.ts",
+      "target": "file:apps/cli/src/domain/services/IGitService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/services/IPackmindServices.ts",
+      "target": "file:apps/cli/src/domain/services/IListFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/domain/services/IPackmindServices.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageSlug",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:isFullParsedPackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageRef",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/ChangeProposalGateway.ts:ChangeProposalGateway",
+      "target": "file:apps/cli/src/domain/repositories/IChangeProposalGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/CommandsGateway.ts:CommandsGateway",
+      "target": "file:apps/cli/src/domain/repositories/ICommandsGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/DeploymentGateway.ts:DeploymentGateway",
+      "target": "file:apps/cli/src/domain/repositories/IDeploymentGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/LinterGateway.ts:LinterGateway",
+      "target": "file:apps/cli/src/domain/repositories/ILinterGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/OrganizationGateway.ts:OrganizationGateway",
+      "target": "file:apps/cli/src/domain/repositories/IOrganizationGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/PackagesGateway.ts:PackagesGateway",
+      "target": "file:apps/cli/src/domain/repositories/IPackagesGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/RepositoryTrackingGateway.ts:RepositoryTrackingGateway",
+      "target": "file:apps/cli/src/domain/repositories/IRepositoryTrackingGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/SkillsGateway.ts:SkillsGateway",
+      "target": "file:apps/cli/src/domain/repositories/ISkillsGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/SpacesGateway.ts:SpacesGateway",
+      "target": "file:apps/cli/src/domain/repositories/ISpacesGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/StandardsGateway.ts:StandardsGateway",
+      "target": "file:apps/cli/src/domain/repositories/IStandardsGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/PackmindGateway.ts:PackmindGateway",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/HumanReadableLogger.ts:HumanReadableLogger",
+      "target": "file:apps/cli/src/domain/repositories/ILogger.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/IDELintLogger.ts:IDELintLogger",
+      "target": "file:apps/cli/src/domain/repositories/ILogger.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/repositories/CliOutput.ts:CliOutput",
+      "target": "file:apps/cli/src/domain/repositories/IOutput.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/utils/versionCache/FileVersionCacheProvider.ts:FileVersionCacheProvider",
+      "target": "file:apps/cli/src/domain/repositories/IVersionCacheProvider.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/application/services/DiffViolationFilterService.ts:DiffViolationFilterService",
+      "target": "file:apps/cli/src/domain/services/IDiffViolationFilterService.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/application/services/GitService.ts:GitService",
+      "target": "file:apps/cli/src/domain/services/IGitService.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/application/services/ListFiles.ts:ListFiles",
+      "target": "file:apps/cli/src/domain/services/IListFiles.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

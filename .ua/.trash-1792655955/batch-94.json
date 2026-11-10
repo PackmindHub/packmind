@@ -1,0 +1,66 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/assets/src/styles/colors.css",
+      "type": "file",
+      "name": "colors.css",
+      "filePath": "packages/assets/src/styles/colors.css",
+      "summary": "Defines the Packmind design palette as CSS custom properties on :root (neutral beige, brand blue, brand orange and other scales) used as color tokens across the UI.",
+      "tags": [
+        "design-tokens",
+        "css-variables",
+        "theming",
+        "color-palette",
+        "styles"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/assets/src/styles/font.css",
+      "type": "file",
+      "name": "font.css",
+      "filePath": "packages/assets/src/styles/font.css",
+      "summary": "Declares @font-face rules for the Borna brand typeface in multiple weights and styles, loading woff2/woff files from the package fonts directory.",
+      "tags": ["typography", "font-face", "styles", "branding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/assets/src/styles/milkdown.theme.css",
+      "type": "file",
+      "name": "milkdown.theme.css",
+      "filePath": "packages/assets/src/styles/milkdown.theme.css",
+      "summary": "Dark Crepe theme for the Milkdown markdown editor, overriding --crepe-* color and font variables and mapping the primary color to Packmind blue tokens.",
+      "tags": [
+        "theming",
+        "markdown-editor",
+        "milkdown",
+        "css-variables",
+        "styles"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/assets/src/styles/milkdown.theme.css",
+      "target": "file:packages/assets/src/milkdown.theme.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/assets/src/index.ts",
+      "target": "file:packages/assets/src/styles/colors.css",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/assets/src/index.ts",
+      "target": "file:packages/assets/src/styles/font.css",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

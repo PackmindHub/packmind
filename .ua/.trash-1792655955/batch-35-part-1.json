@@ -1,0 +1,1041 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/accounts/src/AccountsHexa.ts",
+      "type": "file",
+      "name": "AccountsHexa.ts",
+      "filePath": "packages/accounts/src/AccountsHexa.ts",
+      "summary": "Hexagon entry point for the accounts domain: wires repositories, enhanced services and the AccountsAdapter, and exposes the IAccountsPort to other hexas.",
+      "tags": [
+        "entry-point",
+        "hexagonal-architecture",
+        "dependency-injection",
+        "accounts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/AccountsHexa.ts:AccountsHexa",
+      "type": "class",
+      "name": "AccountsHexa",
+      "filePath": "packages/accounts/src/AccountsHexa.ts",
+      "lineRange": [34, 108],
+      "summary": "Accounts hexagon wiring repositories and services, exposing the accounts port adapter.",
+      "tags": [
+        "entry-point",
+        "hexagonal-architecture",
+        "dependency-injection",
+        "accounts"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "type": "file",
+      "name": "AccountsAdapter.ts",
+      "filePath": "packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "summary": "Adapter implementing IAccountsPort that instantiates every accounts use case and delegates sign-up, sign-in, invitations, organizations, API keys, password reset and CLI login operations to them.",
+      "tags": [
+        "adapter",
+        "facade",
+        "hexagonal-architecture",
+        "accounts",
+        "port"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/accounts/src/application/adapter/AccountsAdapter.ts:AccountsAdapter",
+      "type": "class",
+      "name": "AccountsAdapter",
+      "filePath": "packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "lineRange": [131, 553],
+      "summary": "Port adapter that builds all accounts use cases and delegates each IAccountsPort method to the matching use case.",
+      "tags": ["adapter", "facade", "hexagonal-architecture", "accounts"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "type": "file",
+      "name": "ApiKeyService.ts",
+      "filePath": "packages/accounts/src/application/services/ApiKeyService.ts",
+      "summary": "Generates, validates and decodes JWT-based API keys that embed user, organization and host information, including expiration lookup.",
+      "tags": ["service", "authentication", "jwt", "api-key", "security"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/accounts/src/application/services/ApiKeyService.ts:ApiKeyService",
+      "type": "class",
+      "name": "ApiKeyService",
+      "filePath": "packages/accounts/src/application/services/ApiKeyService.ts",
+      "lineRange": [74, 254],
+      "summary": "Service that issues and verifies JWT API keys and extracts the user context from them.",
+      "tags": ["service", "authentication", "jwt", "api-key"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/accounts/src/application/services/ApiKeyService.ts:isValidJwtPayload",
+      "type": "function",
+      "name": "isValidJwtPayload",
+      "filePath": "packages/accounts/src/application/services/ApiKeyService.ts",
+      "lineRange": [24, 63],
+      "summary": "Type guard verifying that a decoded JWT payload has the expected user, organization and host fields.",
+      "tags": ["utility", "validation", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "type": "file",
+      "name": "EnhancedAccountsServices.ts",
+      "filePath": "packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "summary": "Service locator aggregating all accounts application services (users, organizations, invitations, API keys, rate limiting, password reset, metadata) built from the accounts repositories.",
+      "tags": ["service", "factory", "dependency-injection", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/services/EnhancedAccountsServices.ts:EnhancedAccountsServices",
+      "type": "class",
+      "name": "EnhancedAccountsServices",
+      "filePath": "packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "lineRange": [16, 109],
+      "summary": "Aggregates and exposes the accounts application services built from shared repositories.",
+      "tags": ["service", "factory", "dependency-injection", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/services/InvitationService.ts",
+      "type": "file",
+      "name": "InvitationService.ts",
+      "filePath": "packages/accounts/src/application/services/InvitationService.ts",
+      "summary": "Manages user invitations: creates tokens, finds and deletes invitations, and composes and sends invitation emails with masked tokens and expiration formatting.",
+      "tags": ["service", "invitation", "email", "accounts"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/accounts/src/application/services/InvitationService.ts:InvitationService",
+      "type": "class",
+      "name": "InvitationService",
+      "filePath": "packages/accounts/src/application/services/InvitationService.ts",
+      "lineRange": [41, 274],
+      "summary": "Creates and persists invitations and sends invitation emails to invited users.",
+      "tags": ["service", "invitation", "email", "accounts"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/accounts/src/application/services/LoginRateLimiterService.ts",
+      "type": "file",
+      "name": "LoginRateLimiterService.ts",
+      "filePath": "packages/accounts/src/application/services/LoginRateLimiterService.ts",
+      "summary": "Cache-backed login rate limiter that counts failed sign-in attempts per email and bans further attempts for a configurable duration.",
+      "tags": [
+        "service",
+        "security",
+        "rate-limiting",
+        "cache",
+        "authentication"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/services/LoginRateLimiterService.ts:LoginRateLimiterService",
+      "type": "class",
+      "name": "LoginRateLimiterService",
+      "filePath": "packages/accounts/src/application/services/LoginRateLimiterService.ts",
+      "lineRange": [11, 188],
+      "summary": "Tracks failed login attempts in cache and enforces temporary bans.",
+      "tags": ["service", "security", "rate-limiting", "cache"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "type": "file",
+      "name": "MembershipResolutionService.ts",
+      "filePath": "packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "summary": "Resolves the organizations a user belongs to from their memberships and provides a helper to pick the primary organization id.",
+      "tags": ["service", "membership", "organization", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/services/MembershipResolutionService.ts:MembershipResolutionService",
+      "type": "class",
+      "name": "MembershipResolutionService",
+      "filePath": "packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "lineRange": [27, 64],
+      "summary": "Resolves user organization memberships into organization entities.",
+      "tags": ["service", "membership", "organization", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/accounts/src/application/services/MembershipResolutionService.ts:getPrimaryOrganizationId",
+      "type": "function",
+      "name": "getPrimaryOrganizationId",
+      "filePath": "packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "lineRange": [19, 25],
+      "summary": "Returns the id of the user's primary organization from their memberships, or undefined when none exist.",
+      "tags": ["utility", "validation", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "file",
+      "name": "OrganizationService.ts",
+      "filePath": "packages/accounts/src/application/services/OrganizationService.ts",
+      "summary": "CRUD-style service for organizations: creation with slug generation, lookup by id, name or slug, and renaming.",
+      "tags": ["service", "organization", "data-access", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/services/OrganizationService.ts:OrganizationService",
+      "type": "class",
+      "name": "OrganizationService",
+      "filePath": "packages/accounts/src/application/services/OrganizationService.ts",
+      "lineRange": [14, 99],
+      "summary": "Creates, looks up and renames organizations through the organization repository.",
+      "tags": ["service", "organization", "data-access", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "type": "file",
+      "name": "PasswordResetTokenService.ts",
+      "filePath": "packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "summary": "Creates, finds and deletes password reset tokens and sends reset or social-login reminder emails with reset URLs.",
+      "tags": ["service", "password-reset", "email", "security"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/accounts/src/application/services/PasswordResetTokenService.ts:PasswordResetTokenService",
+      "type": "class",
+      "name": "PasswordResetTokenService",
+      "filePath": "packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "lineRange": [38, 264],
+      "summary": "Manages password reset tokens and sends reset and social-login reminder emails.",
+      "tags": ["service", "password-reset", "email", "security"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/accounts/src/application/services/UserMetadataService.ts",
+      "type": "file",
+      "name": "UserMetadataService.ts",
+      "filePath": "packages/accounts/src/application/services/UserMetadataService.ts",
+      "summary": "Small service that fetches or lazily creates user metadata and records social login providers linked to a user.",
+      "tags": ["service", "user-metadata", "social-login", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/services/UserMetadataService.ts:UserMetadataService",
+      "type": "class",
+      "name": "UserMetadataService",
+      "filePath": "packages/accounts/src/application/services/UserMetadataService.ts",
+      "lineRange": [13, 64],
+      "summary": "Gets or creates user metadata and tracks social providers.",
+      "tags": ["service", "user-metadata", "social-login", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "file",
+      "name": "UserService.ts",
+      "filePath": "packages/accounts/src/application/services/UserService.ts",
+      "summary": "Core user service handling creation (active, inactive, social), membership management, password hashing and validation, role changes and publishing user context change events.",
+      "tags": [
+        "service",
+        "user-management",
+        "authentication",
+        "domain-events",
+        "accounts"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "class",
+      "name": "UserService",
+      "filePath": "packages/accounts/src/application/services/UserService.ts",
+      "lineRange": [32, 352],
+      "summary": "Manages users, memberships, password hashing and role changes, emitting user context events.",
+      "tags": ["service", "user-management", "authentication", "domain-events"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts",
+      "type": "file",
+      "name": "RequestPasswordResetUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts",
+      "summary": "Use case that issues a password reset token and email for a known user, or a social-login reminder, without revealing whether the email exists.",
+      "tags": ["use-case", "password-reset", "security", "email"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts:RequestPasswordResetUseCase",
+      "type": "class",
+      "name": "RequestPasswordResetUseCase",
+      "filePath": "packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts",
+      "lineRange": [18, 142],
+      "summary": "Handles password reset requests by sending a reset or social-login reminder email.",
+      "tags": ["use-case", "password-reset", "security", "email"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "type": "file",
+      "name": "ResetPasswordUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "summary": "Use case that validates a reset token, updates the user's password hash, deletes the token and signs the user in.",
+      "tags": ["use-case", "password-reset", "security", "authentication"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts:ResetPasswordUseCase",
+      "type": "class",
+      "name": "ResetPasswordUseCase",
+      "filePath": "packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "lineRange": [18, 102],
+      "summary": "Resets a user's password from a valid reset token.",
+      "tags": ["use-case", "password-reset", "security", "authentication"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts",
+      "type": "file",
+      "name": "ValidatePasswordResetTokenUseCase.ts",
+      "filePath": "packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts",
+      "summary": "Use case checking whether a password reset token exists and is unexpired, returning the associated email.",
+      "tags": ["use-case", "password-reset", "validation", "security"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts:ValidatePasswordResetTokenUseCase",
+      "type": "class",
+      "name": "ValidatePasswordResetTokenUseCase",
+      "filePath": "packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts",
+      "lineRange": [13, 112],
+      "summary": "Validates a password reset token's existence and expiration.",
+      "tags": ["use-case", "password-reset", "validation", "security"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/accounts/src/AccountsHexa.ts",
+      "target": "class:packages/accounts/src/AccountsHexa.ts:AccountsHexa",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/AccountsHexa.ts",
+      "target": "class:packages/accounts/src/AccountsHexa.ts:AccountsHexa",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/AccountsHexa.ts",
+      "target": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/AccountsHexa.ts",
+      "target": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/AccountsHexa.ts",
+      "target": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/AccountsHexa.ts",
+      "target": "file:packages/accounts/src/infra/repositories/AccountsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "class:packages/accounts/src/application/adapter/AccountsAdapter.ts:AccountsAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "class:packages/accounts/src/application/adapter/AccountsAdapter.ts:AccountsAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/activateUserAccount/ActivateUserAccountUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/changeUserRole/ChangeUserRoleUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/checkEmailAvailability/CheckEmailAvailabilityUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/createCliLoginCode/CreateCliLoginCodeUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/createInvitations/CreateInvitationsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/createOrganization/CreateOrganizationUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/exchangeCliLoginCode/ExchangeCliLoginCodeUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/generateApiKey/GenerateApiKeyUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/generateUserToken/GenerateUserTokenUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/getCurrentApiKey/GetCurrentApiKeyUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/getOrganizationById/GetOrganizationByIdUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/getOrganizationByName/GetOrganizationByNameUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/getOrganizationBySlug/GetOrganizationBySlugUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/getUserById/GetUserByIdUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/listOrganizationUserStatuses/ListOrganizationUserStatusesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/listOrganizationUsers/ListOrganizationUsersUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/listUserOrganizations/ListUserOrganizationsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/removeUserFromOrganization/RemoveUserFromOrganizationUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/renameOrganization/RenameOrganizationUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/signInSocialUser/SignInSocialUserUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/signInUser/SignInUserUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/signUpWithOrganization/SignUpWithOrganizationUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/updateUserDisplayName/UpdateUserDisplayNameUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/validateInvitationToken/ValidateInvitationTokenUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/application/useCases/validatePasswordUseCase/ValidatePasswordUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/adapter/AccountsAdapter.ts",
+      "target": "file:packages/accounts/src/domain/useCases/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "target": "class:packages/accounts/src/application/services/ApiKeyService.ts:ApiKeyService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "target": "class:packages/accounts/src/application/services/ApiKeyService.ts:ApiKeyService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "target": "function:packages/accounts/src/application/services/ApiKeyService.ts:isValidJwtPayload",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "target": "file:packages/accounts/src/domain/entities/ApiKey.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "target": "file:packages/accounts/src/domain/utils/api-key.utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "class:packages/accounts/src/application/services/EnhancedAccountsServices.ts:EnhancedAccountsServices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "class:packages/accounts/src/application/services/EnhancedAccountsServices.ts:EnhancedAccountsServices",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "file:packages/accounts/src/application/services/ApiKeyService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "file:packages/accounts/src/application/services/InvitationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "file:packages/accounts/src/application/services/LoginRateLimiterService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "file:packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "file:packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "file:packages/accounts/src/application/services/UserMetadataService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/EnhancedAccountsServices.ts",
+      "target": "file:packages/accounts/src/domain/repositories/ICliLoginCodeRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/InvitationService.ts",
+      "target": "class:packages/accounts/src/application/services/InvitationService.ts:InvitationService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/InvitationService.ts",
+      "target": "class:packages/accounts/src/application/services/InvitationService.ts:InvitationService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/InvitationService.ts",
+      "target": "file:packages/accounts/src/domain/entities/Invitation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/InvitationService.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IInvitationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/LoginRateLimiterService.ts",
+      "target": "class:packages/accounts/src/application/services/LoginRateLimiterService.ts:LoginRateLimiterService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/LoginRateLimiterService.ts",
+      "target": "class:packages/accounts/src/application/services/LoginRateLimiterService.ts:LoginRateLimiterService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/LoginRateLimiterService.ts",
+      "target": "file:packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "target": "class:packages/accounts/src/application/services/MembershipResolutionService.ts:MembershipResolutionService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "target": "class:packages/accounts/src/application/services/MembershipResolutionService.ts:MembershipResolutionService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "target": "function:packages/accounts/src/application/services/MembershipResolutionService.ts:getPrimaryOrganizationId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "target": "function:packages/accounts/src/application/services/MembershipResolutionService.ts:getPrimaryOrganizationId",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "target": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/MembershipResolutionService.ts",
+      "target": "file:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "target": "class:packages/accounts/src/application/services/OrganizationService.ts:OrganizationService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "target": "class:packages/accounts/src/application/services/OrganizationService.ts:OrganizationService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/OrganizationService.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IOrganizationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "target": "class:packages/accounts/src/application/services/PasswordResetTokenService.ts:PasswordResetTokenService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "target": "class:packages/accounts/src/application/services/PasswordResetTokenService.ts:PasswordResetTokenService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "target": "file:packages/accounts/src/domain/entities/PasswordResetToken.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IPasswordResetTokenRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/UserMetadataService.ts",
+      "target": "class:packages/accounts/src/application/services/UserMetadataService.ts:UserMetadataService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/UserMetadataService.ts",
+      "target": "class:packages/accounts/src/application/services/UserMetadataService.ts:UserMetadataService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/UserMetadataService.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserMetadataRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/UserService.ts",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/UserService.ts",
+      "target": "class:packages/accounts/src/application/services/UserService.ts:UserService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/UserService.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/UserService.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserOrganizationMembershipRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/services/UserService.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts:RequestPasswordResetUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts:RequestPasswordResetUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserMetadataService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/RequestPasswordResetUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts:ResetPasswordUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts:ResetPasswordUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/LoginRateLimiterService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "target": "file:packages/accounts/src/domain/entities/PasswordResetToken.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ResetPasswordUseCase.ts",
+      "target": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts:ValidatePasswordResetTokenUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts",
+      "target": "class:packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts:ValidatePasswordResetTokenUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/PasswordResetTokenService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts",
+      "target": "file:packages/accounts/src/application/services/UserService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/application/useCases/ValidatePasswordResetTokenUseCase.ts",
+      "target": "file:packages/accounts/src/domain/entities/PasswordResetToken.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

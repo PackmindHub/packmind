@@ -1,0 +1,984 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/spaces/src/SpacesHexa.ts",
+      "type": "file",
+      "name": "SpacesHexa.ts",
+      "filePath": "packages/spaces/src/SpacesHexa.ts",
+      "summary": "Hexagon entry point for the spaces domain: wires SpacesRepositories, SpacesServices and SpacesAdapter, and exposes the ISpacesPort adapter to other hexas.",
+      "tags": [
+        "entry-point",
+        "hexagonal-architecture",
+        "dependency-injection",
+        "spaces"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/spaces/src/SpacesHexa.ts:SpacesHexa",
+      "type": "class",
+      "name": "SpacesHexa",
+      "filePath": "packages/spaces/src/SpacesHexa.ts",
+      "lineRange": [24, 94],
+      "summary": "Hexa class extending BaseHexa that builds the spaces repositories, services and adapter and exposes the ISpacesPort.",
+      "tags": [
+        "entry-point",
+        "hexagonal-architecture",
+        "dependency-injection",
+        "spaces"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "type": "file",
+      "name": "SpacesAdapter.ts",
+      "filePath": "packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "summary": "Implements the ISpacesPort contract, exposing space creation, lookup, membership management and member-role use cases to other domains of the monorepo.",
+      "tags": [
+        "adapter",
+        "port-implementation",
+        "spaces",
+        "membership",
+        "service"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "type": "class",
+      "name": "SpacesAdapter",
+      "filePath": "packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "lineRange": [43, 308],
+      "summary": "Adapter implementing ISpacesPort and IBaseAdapter, delegating space and membership operations to services and use cases.",
+      "tags": ["adapter", "port-implementation", "spaces", "membership"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/spaces/src/application/services/SpaceService.ts",
+      "type": "file",
+      "name": "SpaceService.ts",
+      "filePath": "packages/spaces/src/application/services/SpaceService.ts",
+      "summary": "Domain service handling space CRUD: creation with slug generation and conflict detection, default space bootstrap, deterministic color derivation, pagination and soft deletion.",
+      "tags": ["service", "spaces", "slug", "crud"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/spaces/src/application/services/SpaceService.ts:SpaceService",
+      "type": "class",
+      "name": "SpaceService",
+      "filePath": "packages/spaces/src/application/services/SpaceService.ts",
+      "lineRange": [29, 183],
+      "summary": "Service implementing space creation, default-space creation, lookups by id/slug, updates and deletion.",
+      "tags": ["service", "spaces", "slug", "crud"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/spaces/src/application/services/SpacesServices.ts",
+      "type": "file",
+      "name": "SpacesServices.ts",
+      "filePath": "packages/spaces/src/application/services/SpacesServices.ts",
+      "summary": "Service aggregator that instantiates SpaceService and UserSpaceMembershipService from the spaces repositories.",
+      "tags": ["service", "factory", "dependency-injection", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/application/services/SpacesServices.ts:SpacesServices",
+      "type": "class",
+      "name": "SpacesServices",
+      "filePath": "packages/spaces/src/application/services/SpacesServices.ts",
+      "lineRange": [10, 35],
+      "summary": "Holder constructing and exposing SpaceService and UserSpaceMembershipService.",
+      "tags": ["service", "factory", "dependency-injection", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "type": "file",
+      "name": "UserSpaceMembershipService.ts",
+      "filePath": "packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "summary": "Domain service managing user-space memberships: default-space enrollment, roles, pinning, removal and aggregated admin/member counts per space.",
+      "tags": ["service", "membership", "spaces", "roles"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/spaces/src/application/services/UserSpaceMembershipService.ts:UserSpaceMembershipService",
+      "type": "class",
+      "name": "UserSpaceMembershipService",
+      "filePath": "packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "lineRange": [16, 195],
+      "summary": "Service implementing membership operations over the membership and space repositories.",
+      "tags": ["service", "membership", "spaces", "roles"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts",
+      "type": "file",
+      "name": "AddMembersToSpaceUseCase.ts",
+      "filePath": "packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts",
+      "summary": "Space-admin use case that adds a set of users with roles to a space, skipping existing members.",
+      "tags": ["use-case", "membership", "authorization", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts:AddMembersToSpaceUseCase",
+      "type": "class",
+      "name": "AddMembersToSpaceUseCase",
+      "filePath": "packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts",
+      "lineRange": [22, 82],
+      "summary": "Class: Space-admin use case that adds a set of users with roles to a space, skipping existing members.",
+      "tags": ["use-case", "membership", "authorization", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts",
+      "type": "file",
+      "name": "CreateSpaceUseCase.ts",
+      "filePath": "packages/spaces/src/application/usecases/CreateSpaceUseCase.ts",
+      "summary": "Member use case that validates a space name via SpaceName and creates a new space, enrolling the creator as admin.",
+      "tags": ["use-case", "spaces", "validation", "creation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts:CreateSpaceUseCase",
+      "type": "class",
+      "name": "CreateSpaceUseCase",
+      "filePath": "packages/spaces/src/application/usecases/CreateSpaceUseCase.ts",
+      "lineRange": [22, 71],
+      "summary": "Class: Member use case that validates a space name via SpaceName and creates a new space, enrolling the creator as admin.",
+      "tags": ["use-case", "spaces", "validation", "creation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts",
+      "type": "file",
+      "name": "GetDefaultSpaceUseCase.ts",
+      "filePath": "packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts",
+      "summary": "Member use case returning the organization's default space, failing with DefaultSpaceNotFoundError when missing.",
+      "tags": ["use-case", "spaces", "default-space", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts:GetDefaultSpaceUseCase",
+      "type": "class",
+      "name": "GetDefaultSpaceUseCase",
+      "filePath": "packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts",
+      "lineRange": [14, 41],
+      "summary": "Class: Member use case returning the organization's default space, failing with DefaultSpaceNotFoundError when missing.",
+      "tags": ["use-case", "spaces", "default-space", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts",
+      "type": "file",
+      "name": "ListSpaceMembersUseCase.ts",
+      "filePath": "packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts",
+      "summary": "Space-member use case listing the members of a space with their roles.",
+      "tags": ["use-case", "membership", "query", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts:ListSpaceMembersUseCase",
+      "type": "class",
+      "name": "ListSpaceMembersUseCase",
+      "filePath": "packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts",
+      "lineRange": [17, 44],
+      "summary": "Class: Space-member use case listing the members of a space with their roles.",
+      "tags": ["use-case", "membership", "query", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts",
+      "type": "file",
+      "name": "ListUserSpacesUseCase.ts",
+      "filePath": "packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts",
+      "summary": "Use case listing the spaces a user belongs to within an organization.",
+      "tags": ["use-case", "spaces", "query", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts:ListUserSpacesUseCase",
+      "type": "class",
+      "name": "ListUserSpacesUseCase",
+      "filePath": "packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts",
+      "lineRange": [14, 34],
+      "summary": "Class: Use case listing the spaces a user belongs to within an organization.",
+      "tags": ["use-case", "spaces", "query", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts",
+      "type": "file",
+      "name": "RemoveMemberFromSpaceUseCase.ts",
+      "filePath": "packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts",
+      "summary": "Space-admin use case removing a member from a space, forbidding self-removal and removal from the default space.",
+      "tags": ["use-case", "membership", "authorization", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts:RemoveMemberFromSpaceUseCase",
+      "type": "class",
+      "name": "RemoveMemberFromSpaceUseCase",
+      "filePath": "packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts",
+      "lineRange": [23, 78],
+      "summary": "Class: Space-admin use case removing a member from a space, forbidding self-removal and removal from the default space.",
+      "tags": ["use-case", "membership", "authorization", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts",
+      "type": "file",
+      "name": "UpdateMemberRoleUseCase.ts",
+      "filePath": "packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts",
+      "summary": "Space-admin use case changing a member's role in a space, rejecting self-role changes and unknown members.",
+      "tags": ["use-case", "membership", "roles", "authorization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts:UpdateMemberRoleUseCase",
+      "type": "class",
+      "name": "UpdateMemberRoleUseCase",
+      "filePath": "packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts",
+      "lineRange": [23, 82],
+      "summary": "Class: Space-admin use case changing a member's role in a space, rejecting self-role changes and unknown members.",
+      "tags": ["use-case", "membership", "roles", "authorization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/SpaceName.ts",
+      "type": "file",
+      "name": "SpaceName.ts",
+      "filePath": "packages/spaces/src/domain/SpaceName.ts",
+      "summary": "Value object validating and normalizing a space name, throwing InvalidSpaceNameError on invalid input.",
+      "tags": ["value-object", "validation", "data-model", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/SpaceName.ts:SpaceName",
+      "type": "class",
+      "name": "SpaceName",
+      "filePath": "packages/spaces/src/domain/SpaceName.ts",
+      "lineRange": [3, 23],
+      "summary": "Value object enforcing space name rules.",
+      "tags": ["value-object", "validation", "data-model", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts",
+      "type": "file",
+      "name": "CannotRemoveFromDefaultSpaceError.ts",
+      "filePath": "packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts",
+      "summary": "Domain error raised when attempting to remove a member from the organization's default space.",
+      "tags": ["error", "domain-error", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts:CannotRemoveFromDefaultSpaceError",
+      "type": "class",
+      "name": "CannotRemoveFromDefaultSpaceError",
+      "filePath": "packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts",
+      "lineRange": [8, 18],
+      "summary": "Error class: Domain error raised when attempting to remove a member from the organization's default space.",
+      "tags": ["error", "domain-error", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/errors/CannotRemoveSelfError.ts",
+      "type": "file",
+      "name": "CannotRemoveSelfError.ts",
+      "filePath": "packages/spaces/src/domain/errors/CannotRemoveSelfError.ts",
+      "summary": "Domain error raised when a space admin tries to remove themselves from a space.",
+      "tags": ["error", "domain-error", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/errors/CannotRemoveSelfError.ts:CannotRemoveSelfError",
+      "type": "class",
+      "name": "CannotRemoveSelfError",
+      "filePath": "packages/spaces/src/domain/errors/CannotRemoveSelfError.ts",
+      "lineRange": [8, 18],
+      "summary": "Error class: Domain error raised when a space admin tries to remove themselves from a space.",
+      "tags": ["error", "domain-error", "membership"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts",
+      "type": "file",
+      "name": "CannotUpdateOwnRoleError.ts",
+      "filePath": "packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts",
+      "summary": "Domain error raised when a user attempts to change their own role in a space.",
+      "tags": ["error", "domain-error", "roles"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts:CannotUpdateOwnRoleError",
+      "type": "class",
+      "name": "CannotUpdateOwnRoleError",
+      "filePath": "packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts",
+      "lineRange": [8, 18],
+      "summary": "Error class: Domain error raised when a user attempts to change their own role in a space.",
+      "tags": ["error", "domain-error", "roles"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/spaces/src/SpacesHexa.ts",
+      "target": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/SpacesHexa.ts",
+      "target": "file:packages/spaces/src/application/services/SpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/SpacesHexa.ts",
+      "target": "file:packages/spaces/src/application/services/SpacesServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/SpacesHexa.ts",
+      "target": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/SpacesHexa.ts",
+      "target": "file:packages/spaces/src/infra/repositories/SpacesRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/SpacesHexa.ts",
+      "target": "class:packages/spaces/src/SpacesHexa.ts:SpacesHexa",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/SpacesHexa.ts",
+      "target": "class:packages/spaces/src/SpacesHexa.ts:SpacesHexa",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "target": "file:packages/spaces/src/SpacesHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "target": "file:packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "target": "file:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "target": "file:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "target": "file:packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "target": "file:packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "target": "file:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "target": "file:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "target": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/adapters/SpacesAdapter.ts",
+      "target": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/SpaceService.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpaceNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/SpaceService.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpaceSlugConflictError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/SpaceService.ts",
+      "target": "file:packages/spaces/src/domain/repositories/ISpaceRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/SpaceService.ts",
+      "target": "class:packages/spaces/src/application/services/SpaceService.ts:SpaceService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/SpaceService.ts",
+      "target": "class:packages/spaces/src/application/services/SpaceService.ts:SpaceService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/SpacesServices.ts",
+      "target": "file:packages/spaces/src/application/services/SpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/SpacesServices.ts",
+      "target": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/SpacesServices.ts",
+      "target": "file:packages/spaces/src/domain/repositories/ISpacesRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/SpacesServices.ts",
+      "target": "class:packages/spaces/src/application/services/SpacesServices.ts:SpacesServices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/SpacesServices.ts",
+      "target": "class:packages/spaces/src/application/services/SpacesServices.ts:SpacesServices",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "target": "file:packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "target": "file:packages/spaces/src/domain/repositories/ISpaceRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "target": "file:packages/spaces/src/domain/repositories/IUserSpaceMembershipRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "target": "class:packages/spaces/src/application/services/UserSpaceMembershipService.ts:UserSpaceMembershipService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "target": "class:packages/spaces/src/application/services/UserSpaceMembershipService.ts:UserSpaceMembershipService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts",
+      "target": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts:AddMembersToSpaceUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts:AddMembersToSpaceUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts",
+      "target": "file:packages/spaces/src/application/services/SpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts",
+      "target": "file:packages/spaces/src/domain/SpaceName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts:CreateSpaceUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts:CreateSpaceUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts",
+      "target": "file:packages/spaces/src/application/services/SpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts",
+      "target": "file:packages/spaces/src/domain/errors/DefaultSpaceNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts:GetDefaultSpaceUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts:GetDefaultSpaceUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts",
+      "target": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts:ListSpaceMembersUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts:ListSpaceMembersUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts",
+      "target": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts:ListUserSpacesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts:ListUserSpacesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts",
+      "target": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts",
+      "target": "file:packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts",
+      "target": "file:packages/spaces/src/domain/errors/CannotRemoveSelfError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts:RemoveMemberFromSpaceUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts:RemoveMemberFromSpaceUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts",
+      "target": "file:packages/spaces/src/application/services/UserSpaceMembershipService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts",
+      "target": "file:packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts",
+      "target": "file:packages/spaces/src/domain/errors/MemberNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts:UpdateMemberRoleUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts",
+      "target": "class:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts:UpdateMemberRoleUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/SpaceName.ts",
+      "target": "file:packages/spaces/src/domain/errors/InvalidSpaceNameError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/domain/SpaceName.ts",
+      "target": "class:packages/spaces/src/domain/SpaceName.ts:SpaceName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/SpaceName.ts",
+      "target": "class:packages/spaces/src/domain/SpaceName.ts:SpaceName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpacesError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts",
+      "target": "class:packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts:CannotRemoveFromDefaultSpaceError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts",
+      "target": "class:packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts:CannotRemoveFromDefaultSpaceError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/CannotRemoveSelfError.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpacesError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/CannotRemoveSelfError.ts",
+      "target": "class:packages/spaces/src/domain/errors/CannotRemoveSelfError.ts:CannotRemoveSelfError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/CannotRemoveSelfError.ts",
+      "target": "class:packages/spaces/src/domain/errors/CannotRemoveSelfError.ts:CannotRemoveSelfError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts",
+      "target": "file:packages/spaces/src/domain/errors/SpacesError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts",
+      "target": "class:packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts:CannotUpdateOwnRoleError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts",
+      "target": "class:packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts:CannotUpdateOwnRoleError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/domain/errors/CannotRemoveFromDefaultSpaceError.ts:CannotRemoveFromDefaultSpaceError",
+      "target": "class:packages/spaces/src/domain/errors/SpacesError.ts:SpacesError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/spaces/src/domain/errors/CannotUpdateOwnRoleError.ts:CannotUpdateOwnRoleError",
+      "target": "class:packages/spaces/src/domain/errors/SpacesError.ts:SpacesError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/spaces/src/domain/errors/CannotRemoveSelfError.ts:CannotRemoveSelfError",
+      "target": "class:packages/spaces/src/domain/errors/SpacesError.ts:SpacesError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/spaces/src/SpacesHexa.ts:SpacesHexa",
+      "target": "class:packages/spaces/src/infra/repositories/SpacesRepositories.ts:SpacesRepositories",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/SpacesHexa.ts:SpacesHexa",
+      "target": "class:packages/spaces/src/application/services/SpacesServices.ts:SpacesServices",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/SpacesHexa.ts:SpacesHexa",
+      "target": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/services/SpacesServices.ts:SpacesServices",
+      "target": "class:packages/spaces/src/application/services/SpaceService.ts:SpaceService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/services/SpacesServices.ts:SpacesServices",
+      "target": "class:packages/spaces/src/application/services/UserSpaceMembershipService.ts:UserSpaceMembershipService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "target": "class:packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts:AddMembersToSpaceUseCase",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "target": "class:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts:CreateSpaceUseCase",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "target": "class:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts:GetDefaultSpaceUseCase",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "target": "class:packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts:ListSpaceMembersUseCase",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "target": "class:packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts:ListUserSpacesUseCase",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "target": "class:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts:RemoveMemberFromSpaceUseCase",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/adapters/SpacesAdapter.ts:SpacesAdapter",
+      "target": "class:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts:UpdateMemberRoleUseCase",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts:CreateSpaceUseCase",
+      "target": "class:packages/spaces/src/domain/SpaceName.ts:SpaceName",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/usecases/CreateSpaceUseCase.ts:CreateSpaceUseCase",
+      "target": "class:packages/spaces/src/application/services/SpaceService.ts:SpaceService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/usecases/GetDefaultSpaceUseCase.ts:GetDefaultSpaceUseCase",
+      "target": "class:packages/spaces/src/application/services/SpaceService.ts:SpaceService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/usecases/AddMembersToSpaceUseCase.ts:AddMembersToSpaceUseCase",
+      "target": "class:packages/spaces/src/application/services/UserSpaceMembershipService.ts:UserSpaceMembershipService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/usecases/ListSpaceMembersUseCase.ts:ListSpaceMembersUseCase",
+      "target": "class:packages/spaces/src/application/services/UserSpaceMembershipService.ts:UserSpaceMembershipService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/usecases/ListUserSpacesUseCase.ts:ListUserSpacesUseCase",
+      "target": "class:packages/spaces/src/application/services/UserSpaceMembershipService.ts:UserSpaceMembershipService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/usecases/RemoveMemberFromSpaceUseCase.ts:RemoveMemberFromSpaceUseCase",
+      "target": "class:packages/spaces/src/application/services/UserSpaceMembershipService.ts:UserSpaceMembershipService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/spaces/src/application/usecases/UpdateMemberRoleUseCase.ts:UpdateMemberRoleUseCase",
+      "target": "class:packages/spaces/src/application/services/UserSpaceMembershipService.ts:UserSpaceMembershipService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,1204 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "summary": "Route module for a single standard's detail page; its clientLoader prefetches the user, space, standard and rules into the TanStack Query cache before rendering StandardDetails.",
+      "tags": ["route", "data-loader", "component", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "lineRange": [21, 63],
+      "summary": "Route loader that resolves the space and prefetches the standard and its rules into the query cache, redirecting when missing.",
+      "tags": ["data-loader", "route", "routing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx:StandardDetailRouteModule",
+      "type": "function",
+      "name": "StandardDetailRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "lineRange": [65, 99],
+      "summary": "Route component rendering StandardDetails for the loaded standard with breadcrumbs.",
+      "tags": ["component", "react", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx",
+      "summary": "Index route for the space's standards listing, rendering the StandardsList with a create button gated by user context.",
+      "tags": ["route", "component", "standards", "listing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx:OrgStandardsIndex",
+      "type": "function",
+      "name": "OrgStandardsIndex",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx",
+      "lineRange": [8, 43],
+      "summary": "Page component listing standards of the current space with a create button.",
+      "tags": ["component", "react", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.create.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.create.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.create.tsx",
+      "summary": "Thin route module that renders the CreateStandard form for authoring a new standard in the current space.",
+      "tags": ["route", "component", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.create.tsx:CreateStandardRouteModule",
+      "type": "function",
+      "name": "CreateStandardRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.create.tsx",
+      "lineRange": [5, 16],
+      "summary": "Route component rendering the CreateStandard form.",
+      "tags": ["component", "react", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "summary": "Space-protected layout route whose clientLoader validates the space slug belongs to the organization and that the user is a member, redirecting with flash toasts otherwise.",
+      "tags": ["route", "data-loader", "authorization", "spaces", "layout"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "lineRange": [19, 23],
+      "summary": "Entry loader that fetches the current user and delegates space validation to clientLoaderWithMe.",
+      "tags": ["data-loader", "route", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:clientLoaderWithMe",
+      "type": "function",
+      "name": "clientLoaderWithMe",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "lineRange": [25, 126],
+      "summary": "Validates the space slug exists in the organization and the user is a member, redirecting with flash toasts and prefetching standards.",
+      "tags": ["data-loader", "route", "routing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:SpaceProtectedLayout",
+      "type": "function",
+      "name": "SpaceProtectedLayout",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "lineRange": [128, 139],
+      "summary": "Layout component rendering the child outlet for space-scoped routes.",
+      "tags": ["component", "react", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "summary": "Authenticated organization layout route: middleware ensures org context before child loaders, and the layout renders the sidebar navigation, handles auth errors, initializes Crisp, and persists sidebar collapse state.",
+      "tags": [
+        "route",
+        "layout",
+        "middleware",
+        "authentication",
+        "entry-point"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "React Router v7 clientMiddleware runs before child clientLoaders, guaranteeing org context in the TanStack Query cache."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.tsx:AuthenticatedLayout",
+      "type": "function",
+      "name": "AuthenticatedLayout",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "lineRange": [27, 115],
+      "summary": "Authenticated layout rendering sidebar navigation and skeleton states, handling auth errors, Crisp setup and sidebar collapse persistence.",
+      "tags": ["component", "react", "routing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/gateways/IAuthGateway.ts",
+      "type": "file",
+      "name": "IAuthGateway.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/gateways/IAuthGateway.ts",
+      "summary": "Type-only port defining the frontend authentication gateway contract (sign-out, getMe, invitation/password-reset validation, organization selection, CLI login codes, social providers, profile update) and its response types.",
+      "tags": ["type-definition", "gateway", "authentication", "port"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "type": "file",
+      "name": "AccountsQueries.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "summary": "TanStack Query hooks for account and organization operations: listing user organizations, creating/renaming organizations, inviting, excluding and changing roles of users, and updating the profile, with cache invalidation.",
+      "tags": ["hook", "react-query", "accounts", "mutation", "organizations"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:getUserOrganizationsQueryOptions",
+      "type": "function",
+      "name": "getUserOrganizationsQueryOptions",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "lineRange": [20, 23],
+      "summary": "Builds query options for fetching the user's organizations.",
+      "tags": ["query-options", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useGetUserOrganizationsQuery",
+      "type": "function",
+      "name": "useGetUserOrganizationsQuery",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "lineRange": [25, 27],
+      "summary": "Hook fetching the organizations the user belongs to.",
+      "tags": ["hook", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useCreateOrganizationMutation",
+      "type": "function",
+      "name": "useCreateOrganizationMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "lineRange": [29, 51],
+      "summary": "Mutation creating an organization and invalidating related caches.",
+      "tags": ["hook", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useInviteUsersMutation",
+      "type": "function",
+      "name": "useInviteUsersMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "lineRange": [53, 82],
+      "summary": "Mutation inviting users by email and refreshing the org users list.",
+      "tags": ["hook", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useChangeUserRoleMutation",
+      "type": "function",
+      "name": "useChangeUserRoleMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "lineRange": [84, 110],
+      "summary": "Mutation changing a user's organization role.",
+      "tags": ["hook", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useExcludeUserMutation",
+      "type": "function",
+      "name": "useExcludeUserMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "lineRange": [112, 134],
+      "summary": "Mutation excluding a user from the organization.",
+      "tags": ["hook", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useRenameOrganizationMutation",
+      "type": "function",
+      "name": "useRenameOrganizationMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "lineRange": [136, 163],
+      "summary": "Mutation renaming the organization and invalidating org, me and spaces caches.",
+      "tags": ["hook", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useUpdateProfileMutation",
+      "type": "function",
+      "name": "useUpdateProfileMutation",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "lineRange": [167, 181],
+      "summary": "Mutation updating the current user's profile and refreshing the me query.",
+      "tags": ["hook", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "file",
+      "name": "UserQueries.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "summary": "TanStack Query options and hooks for fetching the current user (me), the users of the organization, and user statuses.",
+      "tags": ["hook", "react-query", "accounts", "users"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "function",
+      "name": "getMeQueryOptions",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "lineRange": [10, 17],
+      "summary": "Query options for fetching the current authenticated user.",
+      "tags": ["query-options", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "type": "function",
+      "name": "useGetMeQuery",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "lineRange": [19, 21],
+      "summary": "Hook fetching the current authenticated user.",
+      "tags": ["hook", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetUsersInMyOrganizationQuery",
+      "type": "function",
+      "name": "useGetUsersInMyOrganizationQuery",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "lineRange": [23, 39],
+      "summary": "Hook listing users of the current organization.",
+      "tags": ["hook", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetUserStatusesQuery",
+      "type": "function",
+      "name": "useGetUserStatusesQuery",
+      "filePath": "apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "lineRange": [41, 55],
+      "summary": "Hook fetching activation/invitation statuses of organization users.",
+      "tags": ["hook", "react-query", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/accounts/api/queryKeys.ts",
+      "summary": "Centralized TanStack Query key constants for the accounts domain (me, org users, statuses, organizations, API key, invitation/password-reset validation, social providers).",
+      "tags": ["config", "query-keys", "accounts", "constants"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx",
+      "type": "file",
+      "name": "ChangeUserRoleDialog.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx",
+      "summary": "Dialog component letting an admin change a member's organization role through the change-user-role mutation.",
+      "tags": ["component", "dialog", "user-management", "roles"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx:ChangeUserRoleDialog",
+      "type": "function",
+      "name": "ChangeUserRoleDialog",
+      "filePath": "apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx",
+      "lineRange": [28, 167],
+      "summary": "Dialog for selecting and saving a new role for a member.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx",
+      "type": "file",
+      "name": "DeployWithCliModal.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx",
+      "summary": "Modal guiding users through distributing packages via the Packmind CLI, with tabbed local environment setup steps and space/package context.",
+      "tags": ["component", "modal", "cli", "deployment", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx:DeployWithCliModal",
+      "type": "function",
+      "name": "DeployWithCliModal",
+      "filePath": "apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx",
+      "lineRange": [24, 110],
+      "summary": "Modal walking through CLI setup and distribution steps.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx",
+      "type": "file",
+      "name": "ExcludeUserDialog.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx",
+      "summary": "Confirmation dialog for removing (excluding) a user from the organization using the exclude-user mutation.",
+      "tags": ["component", "dialog", "user-management", "confirmation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx:ExcludeUserDialog",
+      "type": "function",
+      "name": "ExcludeUserDialog",
+      "filePath": "apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx",
+      "lineRange": [22, 107],
+      "summary": "Confirmation dialog that excludes a user from the organization.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx",
+      "type": "file",
+      "name": "InviteUsersDialog.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx",
+      "summary": "Dialog for inviting new users to the organization by email with role selection, reporting per-email invitation outcomes.",
+      "tags": ["component", "dialog", "invitation", "user-management", "form"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx:InviteUsersDialog",
+      "type": "function",
+      "name": "InviteUsersDialog",
+      "filePath": "apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx",
+      "lineRange": [31, 209],
+      "summary": "Dialog collecting emails and role to invite users, showing results.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/OrganizationHomePage.tsx",
+      "type": "file",
+      "name": "OrganizationHomePage.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/OrganizationHomePage.tsx",
+      "summary": "Organization home page composing the dashboard KPI panel and the outdated targets section.",
+      "tags": ["component", "page", "dashboard"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/OrganizationHomePage.tsx:OrganizationHomePage",
+      "type": "function",
+      "name": "OrganizationHomePage",
+      "filePath": "apps/frontend/src/domain/accounts/components/OrganizationHomePage.tsx",
+      "lineRange": [6, 17],
+      "summary": "Org dashboard page with KPIs and outdated targets.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/ProfilePage.tsx",
+      "type": "file",
+      "name": "ProfilePage.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/ProfilePage.tsx",
+      "summary": "User profile page composing the profile section and the space navigation mode preference section.",
+      "tags": ["component", "page", "profile"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/ProfilePage.tsx:ProfilePage",
+      "type": "function",
+      "name": "ProfilePage",
+      "filePath": "apps/frontend/src/domain/accounts/components/ProfilePage.tsx",
+      "lineRange": [6, 18],
+      "summary": "Profile page composing profile and nav-mode settings.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/UserAvatarStack.tsx",
+      "type": "file",
+      "name": "UserAvatarStack.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/UserAvatarStack.tsx",
+      "summary": "Renders an overlapping stack of user avatars with an overflow counter, built from UserAvatarWithInitials.",
+      "tags": ["component", "avatar", "ui", "users"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/UserAvatarStack.tsx:UserAvatarStack",
+      "type": "function",
+      "name": "UserAvatarStack",
+      "filePath": "apps/frontend/src/domain/accounts/components/UserAvatarStack.tsx",
+      "lineRange": [18, 64],
+      "summary": "Renders overlapping avatars with a +N overflow indicator.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx:StandardDetailRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx:StandardDetailRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx:OrgStandardsIndex",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx:OrgStandardsIndex",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.create.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.create.tsx:CreateStandardRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.create.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.create.tsx:CreateStandardRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.create.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:clientLoaderWithMe",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:SpaceProtectedLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:SpaceProtectedLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx",
+      "target": "file:apps/frontend/src/shared/utils/flashToast.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.tsx:AuthenticatedLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.tsx:AuthenticatedLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SkeletonLayout.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.tsx",
+      "target": "file:apps/frontend/src/shared/data/ensureOrgContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:getUserOrganizationsQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:getUserOrganizationsQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useGetUserOrganizationsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useGetUserOrganizationsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useCreateOrganizationMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useCreateOrganizationMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useInviteUsersMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useInviteUsersMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useChangeUserRoleMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useChangeUserRoleMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useExcludeUserMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useExcludeUserMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useRenameOrganizationMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useRenameOrganizationMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useUpdateProfileMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useUpdateProfileMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetUsersInMyOrganizationQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetUsersInMyOrganizationQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetUserStatusesQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetUserStatusesQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx:ChangeUserRoleDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx:ChangeUserRoleDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx:DeployWithCliModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx:DeployWithCliModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/DeployWithCliModal.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx:ExcludeUserDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx:ExcludeUserDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx:InviteUsersDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx:InviteUsersDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationHomePage.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/OrganizationHomePage.tsx:OrganizationHomePage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationHomePage.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/OrganizationHomePage.tsx:OrganizationHomePage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationHomePage.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/dashboard/DashboardKPI.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationHomePage.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/dashboard/OutdatedTargetsSection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ProfilePage.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ProfilePage.tsx:ProfilePage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ProfilePage.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ProfilePage.tsx:ProfilePage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ProfilePage.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/UserProfileSection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ProfilePage.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeSection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserAvatarStack.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserAvatarStack.tsx:UserAvatarStack",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserAvatarStack.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserAvatarStack.tsx:UserAvatarStack",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserAvatarStack.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:clientLoaderWithMe",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceBySlugQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:clientLoaderWithMe",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpacesQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:clientLoaderWithMe",
+      "target": "function:apps/frontend/src/shared/utils/flashToast.ts:setFlashToast",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:clientLoader",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.tsx:clientLoaderWithMe",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.tsx:AuthenticatedLayout",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.tsx:AuthenticatedLayout",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts:useAuthErrorHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/UserAvatarStack.tsx:UserAvatarStack",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx:UserAvatarWithInitials",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx:ChangeUserRoleDialog",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useChangeUserRoleMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx:ExcludeUserDialog",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useExcludeUserMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx:InviteUsersDialog",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useInviteUsersMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

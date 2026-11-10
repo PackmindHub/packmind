@@ -1,0 +1,1158 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-6-run-analyses.ts",
+      "type": "file",
+      "name": "step-6-run-analyses.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-6-run-analyses.ts",
+      "summary": "Prompt fragment for step 6 of the packmind-onboard default skill, listing the codebase analyses to run and the reference file and output focus for each.",
+      "tags": ["prompt-template", "default-skill", "onboarding", "constant"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-7-generate-drafts.ts",
+      "type": "file",
+      "name": "step-7-generate-drafts.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-7-generate-drafts.ts",
+      "summary": "Prompt fragment for step 7 of the packmind-onboard skill, instructing the agent to generate all draft artifact files in one batch following the version-specific draft format.",
+      "tags": ["prompt-template", "default-skill", "onboarding", "constant"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-8-present-summary.ts",
+      "type": "file",
+      "name": "step-8-present-summary.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-8-present-summary.ts",
+      "summary": "Prompt fragment for step 8 of the packmind-onboard skill, defining the analysis-complete summary banner and the user confirmation flow for generated drafts.",
+      "tags": ["prompt-template", "default-skill", "onboarding", "constant"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-9-create-items.ts",
+      "type": "file",
+      "name": "step-9-create-items.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-9-create-items.ts",
+      "summary": "Tiny prompt fragment for step 9 of the packmind-onboard skill that points the agent at the version-routed create-items.md instructions.",
+      "tags": ["prompt-template", "default-skill", "onboarding", "constant"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.ts",
+      "type": "file",
+      "name": "apply-changes.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.ts",
+      "summary": "Version-routed apply-changes instructions of the packmind-update-playbook skill for Packmind CLI 0.21.0, covering CLI prerequisite checks and writing new or updated artifacts.",
+      "tags": [
+        "prompt-template",
+        "default-skill",
+        "versioned",
+        "playbook-update"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.ts",
+      "type": "file",
+      "name": "apply-changes.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.ts",
+      "summary": "Apply-changes instructions for packmind-update-playbook targeting CLI 0.23.0, adding space discovery via `packmind-cli spaces list` before writing and submitting artifacts.",
+      "tags": [
+        "prompt-template",
+        "default-skill",
+        "versioned",
+        "playbook-update"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.35.0/apply-changes.ts",
+      "type": "file",
+      "name": "apply-changes.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.35.0/apply-changes.ts",
+      "summary": "Apply-changes instructions for packmind-update-playbook targeting CLI 0.35.0, using the renamed `packmind` executable for space discovery and artifact submission.",
+      "tags": [
+        "prompt-template",
+        "default-skill",
+        "versioned",
+        "playbook-update"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/agent-skills-specification.ts",
+      "type": "file",
+      "name": "agent-skills-specification.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/agent-skills-specification.ts",
+      "summary": "Embeds the Agent Skills format specification (SKILL.md frontmatter, directory layout, constraints) as a reference document deployed with the packmind-update-playbook skill.",
+      "tags": [
+        "reference-doc",
+        "agent-skills",
+        "specification",
+        "default-skill"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-command-procedure.ts",
+      "type": "file",
+      "name": "create-command-procedure.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-command-procedure.ts",
+      "summary": "Reference procedure telling the agent how to write a new Packmind command file under .packmind/commands/<slug>.md, including slug derivation and file format.",
+      "tags": ["reference-doc", "procedure", "command", "default-skill"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-skill-procedure.ts",
+      "type": "file",
+      "name": "create-skill-procedure.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-skill-procedure.ts",
+      "summary": "Reference procedure for creating a new skill directory in an agent-specific skills folder (.claude/skills, etc.) with a valid SKILL.md.",
+      "tags": ["reference-doc", "procedure", "skill", "default-skill"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-standard-procedure.ts",
+      "type": "file",
+      "name": "create-standard-procedure.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-standard-procedure.ts",
+      "summary": "Reference procedure for writing a new Packmind standard file under .packmind/standards/<slug>.md with slug derivation and rule formatting.",
+      "tags": ["reference-doc", "procedure", "standard", "default-skill"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "file",
+      "name": "skill.md.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "summary": "SkillMD definition of the packmind-update-playbook default skill: frontmatter, supported CLI versions and the main mandatory-workflow prompt for creating or updating standards, commands and skills.",
+      "tags": [
+        "default-skill",
+        "skill-definition",
+        "prompt-template",
+        "playbook-update"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-commands.ts",
+      "type": "file",
+      "name": "analyze-commands.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-commands.ts",
+      "summary": "Prompt builder for the commands domain analysis step of packmind-update-playbook, parameterized with the CLI executable name.",
+      "tags": ["prompt-template", "default-skill", "analysis", "command"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-commands.ts:ANALYZE_COMMANDS",
+      "type": "function",
+      "name": "ANALYZE_COMMANDS",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-commands.ts",
+      "lineRange": [1, 60],
+      "summary": "Template function returning the commands domain analysis prompt for a given CLI executable name.",
+      "tags": ["prompt-template", "builder", "default-skill"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-skills.ts",
+      "type": "file",
+      "name": "analyze-skills.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-skills.ts",
+      "summary": "Prompt builder for the skills domain analysis step of packmind-update-playbook, describing where agent skills live and how to analyze them.",
+      "tags": ["prompt-template", "default-skill", "analysis", "skill"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-skills.ts:ANALYZE_SKILLS",
+      "type": "function",
+      "name": "ANALYZE_SKILLS",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-skills.ts",
+      "lineRange": [1, 78],
+      "summary": "Template function returning the skills domain analysis prompt for a given CLI executable name.",
+      "tags": ["prompt-template", "builder", "default-skill"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-standards.ts",
+      "type": "file",
+      "name": "analyze-standards.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-standards.ts",
+      "summary": "Prompt builder for the standards domain analysis step of packmind-update-playbook, guiding relevance scanning and deep analysis of existing standards.",
+      "tags": ["prompt-template", "default-skill", "analysis", "standard"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-standards.ts:ANALYZE_STANDARDS",
+      "type": "function",
+      "name": "ANALYZE_STANDARDS",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-standards.ts",
+      "lineRange": [1, 79],
+      "summary": "Template function returning the standards domain analysis prompt for a given CLI executable name.",
+      "tags": ["prompt-template", "builder", "default-skill"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericSectionWriter.ts",
+      "type": "file",
+      "name": "GenericSectionWriter.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericSectionWriter.ts",
+      "summary": "Abstract generic writer that generates a section's content and replaces a marked Packmind section inside an existing instruction file.",
+      "tags": ["abstract-class", "section-writer", "utility", "markdown"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericSectionWriter.ts:GenericSectionWriter",
+      "type": "class",
+      "name": "GenericSectionWriter",
+      "filePath": "packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericSectionWriter.ts",
+      "lineRange": [6, 52],
+      "summary": "Abstract base that generates section content and replaces the Packmind-delimited section in a file.",
+      "tags": ["class", "deployer-component", "writer"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "type": "file",
+      "name": "GenericStandardSectionWriter.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "summary": "Concrete section writer that renders the standards section (summaries, rules list, links to full standards) used in single-file agent instruction files.",
+      "tags": ["section-writer", "standards", "rendering", "markdown"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts:GenericStandardSectionWriter",
+      "type": "class",
+      "name": "GenericStandardSectionWriter",
+      "filePath": "packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "lineRange": [8, 107],
+      "summary": "Renders the standards section listing each standard summary and rules with links to full standard files.",
+      "tags": ["class", "deployer-component", "writer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardWriter.ts",
+      "type": "file",
+      "name": "GenericStandardWriter.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardWriter.ts",
+      "summary": "Renders a single standard version to markdown, including its scope and rules list.",
+      "tags": ["standards", "rendering", "markdown", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardWriter.ts:GenericStandardWriter",
+      "type": "class",
+      "name": "GenericStandardWriter",
+      "filePath": "packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardWriter.ts",
+      "lineRange": [3, 41],
+      "summary": "Static writer formatting one standard version with its scope and rules as markdown.",
+      "tags": ["class", "deployer-component", "writer"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "type": "file",
+      "name": "SingleFileDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "summary": "Abstract base deployer for agents that consume a single instruction file (AGENTS.md, guidelines files): writes commands/standards sections into the file, deploys skills, and computes removal and cleanup file updates.",
+      "tags": [
+        "deployer",
+        "abstract-class",
+        "coding-agent",
+        "file-updates",
+        "skills"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts:SingleFileDeployer",
+      "type": "class",
+      "name": "SingleFileDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "lineRange": [27, 490],
+      "summary": "Abstract ICodingAgentDeployer for single-instruction-file agents handling commands, standards, skills, removal and cleanup updates.",
+      "tags": ["class", "deployer-component", "deployer"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "type": "file",
+      "name": "GitlabDuoDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "summary": "GitLab Duo deployer extending SingleFileDeployer to write .gitlab/duo/chat-rules.md and deploy skills plus default skills under .gitlab/duo/skills/.",
+      "tags": ["deployer", "coding-agent", "gitlab-duo", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts:GitlabDuoDeployer",
+      "type": "class",
+      "name": "GitlabDuoDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "lineRange": [21, 145],
+      "summary": "SingleFileDeployer subclass for GitLab Duo chat rules and skills.",
+      "tags": ["class", "deployer-component", "deployer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts",
+      "type": "file",
+      "name": "JunieDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts",
+      "summary": "Minimal JetBrains Junie deployer that configures SingleFileDeployer to target .junie/guidelines.md.",
+      "tags": ["deployer", "coding-agent", "junie", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts:JunieDeployer",
+      "type": "class",
+      "name": "JunieDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts",
+      "lineRange": [6, 12],
+      "summary": "SingleFileDeployer subclass targeting .junie/guidelines.md.",
+      "tags": ["class", "deployer-component", "deployer"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "type": "file",
+      "name": "KiroDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "summary": "Kiro coding-agent deployer that writes per-standard steering files with fileMatchPattern frontmatter under .kiro/steering/, plus commands, skills and default skills under .kiro/skills/.",
+      "tags": ["deployer", "coding-agent", "kiro", "steering-files", "skills"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts:KiroDeployer",
+      "type": "class",
+      "name": "KiroDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "lineRange": [32, 363],
+      "summary": "ICodingAgentDeployer for Kiro producing steering files, commands and skills.",
+      "tags": ["class", "deployer-component", "deployer"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "type": "file",
+      "name": "OpenCodeDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "summary": "OpenCode deployer extending SingleFileDeployer: standards go into AGENTS.md while commands are written to .opencode/commands/ and skills to the OpenCode skills folder.",
+      "tags": ["deployer", "coding-agent", "opencode", "commands", "skills"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts:OpenCodeDeployer",
+      "type": "class",
+      "name": "OpenCodeDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "lineRange": [21, 234],
+      "summary": "SingleFileDeployer subclass for OpenCode with dedicated commands and skills folders.",
+      "tags": ["class", "deployer-component", "deployer"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "type": "file",
+      "name": "PackmindDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "summary": "Deployer for the canonical .packmind/ folder: writes command and standard files, the standards index, skills, and removes legacy commands/recipes index files.",
+      "tags": [
+        "deployer",
+        "packmind-folder",
+        "standards-index",
+        "file-updates",
+        "core"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts:PackmindDeployer",
+      "type": "class",
+      "name": "PackmindDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "lineRange": [20, 468],
+      "summary": "ICodingAgentDeployer writing canonical .packmind/ command, standard and index files.",
+      "tags": ["class", "deployer-component", "deployer"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "file",
+      "name": "FileUtils.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "summary": "Path and string helpers shared by deployers: target-prefixed path computation, single-quote escaping and splitting of comma-separated scope globs.",
+      "tags": ["utility", "paths", "glob", "helper"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:escapeSingleQuotes",
+      "type": "function",
+      "name": "escapeSingleQuotes",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "lineRange": [4, 6],
+      "summary": "Escapes single quotes in a string for safe embedding in quoted YAML/markdown.",
+      "tags": ["utility", "helper", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "function",
+      "name": "getTargetPrefixedPath",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "lineRange": [8, 25],
+      "summary": "Prefixes a file path with the deployment target's path, normalizing slashes for root targets.",
+      "tags": ["utility", "helper", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:splitScopeGlobs",
+      "type": "function",
+      "name": "splitScopeGlobs",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "lineRange": [34, 63],
+      "summary": "Splits a comma-separated scope string into individual glob patterns while respecting brace groups.",
+      "tags": ["utility", "helper", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "type": "file",
+      "name": "SkillMdContentBuilder.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "summary": "Builds SKILL.md file content from a skill version, with variants using plain or YAML-formatted frontmatter for additional properties.",
+      "tags": ["utility", "skill-md", "frontmatter", "rendering"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts:generateSkillMdContent",
+      "type": "function",
+      "name": "generateSkillMdContent",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "lineRange": [7, 64],
+      "summary": "Generates SKILL.md content with frontmatter (name, description, metadata) and the skill body.",
+      "tags": ["utility", "helper", "formatting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts:generateSkillMdContentWithYamlFrontmatter",
+      "type": "function",
+      "name": "generateSkillMdContentWithYamlFrontmatter",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "lineRange": [66, 114],
+      "summary": "Generates SKILL.md content serializing additional properties via the YAML frontmatter formatter.",
+      "tags": ["utility", "helper", "formatting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "type": "file",
+      "name": "YamlFrontmatterUtils.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "summary": "Formats additional skill frontmatter properties as YAML, handling scalars, arrays and nested objects with proper quoting.",
+      "tags": ["utility", "yaml", "frontmatter", "serialization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts:formatAdditionalPropertyYaml",
+      "type": "function",
+      "name": "formatAdditionalPropertyYaml",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "lineRange": [3, 50],
+      "summary": "Serializes an additional frontmatter property (scalar, array or object) to YAML lines.",
+      "tags": ["utility", "helper", "formatting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts:formatYamlScalar",
+      "type": "function",
+      "name": "formatYamlScalar",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "lineRange": [52, 63],
+      "summary": "Formats a scalar value as a YAML-safe string, quoting when needed.",
+      "tags": ["utility", "helper", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts:formatEntryValue",
+      "type": "function",
+      "name": "formatEntryValue",
+      "filePath": "packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "lineRange": [69, 80],
+      "summary": "Formats a single nested entry value for YAML output.",
+      "tags": ["utility", "helper", "formatting"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-commands.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-commands.ts:ANALYZE_COMMANDS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-commands.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-commands.ts:ANALYZE_COMMANDS",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-skills.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-skills.ts:ANALYZE_SKILLS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-skills.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-skills.ts:ANALYZE_SKILLS",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-standards.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-standards.ts:ANALYZE_STANDARDS",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-standards.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-standards.ts:ANALYZE_STANDARDS",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericSectionWriter.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericSectionWriter.ts:GenericSectionWriter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericSectionWriter.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericSectionWriter.ts:GenericSectionWriter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts:GenericStandardSectionWriter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts:GenericStandardSectionWriter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericSectionWriter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardWriter.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardWriter.ts:GenericStandardWriter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardWriter.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardWriter.ts:GenericStandardWriter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts:SingleFileDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts:SingleFileDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts:GitlabDuoDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts:GitlabDuoDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts:JunieDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts:JunieDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts:KiroDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts:KiroDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts:OpenCodeDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts:OpenCodeDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts:PackmindDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts:PackmindDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "target": "file:packages/coding-agent/src/application/services/StandardsIndexService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardWriter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:escapeSingleQuotes",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:escapeSingleQuotes",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:splitScopeGlobs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:splitScopeGlobs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts:generateSkillMdContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts:generateSkillMdContent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts:generateSkillMdContentWithYamlFrontmatter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts:generateSkillMdContentWithYamlFrontmatter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts:formatAdditionalPropertyYaml",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts:formatAdditionalPropertyYaml",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts:formatYamlScalar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts:formatEntryValue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts:GenericStandardSectionWriter",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericSectionWriter.ts:GenericSectionWriter",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts:GitlabDuoDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts:SingleFileDeployer",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts:JunieDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts:SingleFileDeployer",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts:OpenCodeDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts:SingleFileDeployer",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts:SingleFileDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts:GenericStandardSectionWriter",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts:PackmindDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardWriter.ts:GenericStandardWriter",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts:PackmindDeployer",
+      "target": "class:packages/coding-agent/src/application/services/StandardsIndexService.ts:StandardsIndexService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts:generateSkillMdContentWithYamlFrontmatter",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts:formatAdditionalPropertyYaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-6-run-analyses.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-7-generate-drafts.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-8-present-summary.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-9-create-items.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.35.0/apply-changes.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/agent-skills-specification.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-command-procedure.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-skill-procedure.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-standard-procedure.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-commands.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-skills.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-standards.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts:UpdatePlaybookDeployer",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

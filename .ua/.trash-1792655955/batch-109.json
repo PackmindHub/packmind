@@ -1,0 +1,103 @@
+{
+  "nodes": [
+    {
+      "id": "config:packages/standards/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/standards/package.json",
+      "summary": "Package manifest for the private @packmind/standards workspace library (coding standards domain logic), a CommonJS package depending on @packmind/git, llm, logger, node-utils, spaces, types, TypeORM, uuid and slug.",
+      "tags": [
+        "configuration",
+        "package-manifest",
+        "dependencies",
+        "workspace"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/standards/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/standards/project.json",
+      "summary": "Nx project definition for the standards library: SWC build from src/index.ts that also ships generated sample JSON assets, a typecheck override covering spec files, and a generate-samples target running samples/generateSamples.ts with the API .env loaded.",
+      "tags": ["configuration", "nx", "build-system", "code-generation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/standards/tsconfig.json",
+      "summary": "Root TypeScript config for the standards package, extending tsconfig.base.effective.json with strict CommonJS options and referencing the lib and spec tsconfigs.",
+      "tags": ["configuration", "typescript", "build-system", "strict-mode"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/standards/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/standards/tsconfig.lib.json",
+      "summary": "Library build TypeScript config for standards: emits declarations, compiles src and samples TypeScript while excluding specs and the generateSamples script.",
+      "tags": ["configuration", "typescript", "build-system", "library"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/standards/package.json",
+      "target": "file:packages/standards/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/standards/project.json",
+      "target": "file:packages/standards/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/standards/tsconfig.json",
+      "target": "file:packages/standards/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/standards/tsconfig.lib.json",
+      "target": "file:packages/standards/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/standards/project.json",
+      "target": "config:packages/standards/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/standards/project.json",
+      "target": "config:packages/standards/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/standards/tsconfig.lib.json",
+      "target": "config:packages/standards/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/standards/project.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

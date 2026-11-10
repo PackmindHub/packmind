@@ -1,0 +1,513 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/sse/hooks/useSSESubscription.ts",
+      "type": "file",
+      "name": "useSSESubscription.ts",
+      "filePath": "apps/frontend/src/domain/sse/hooks/useSSESubscription.ts",
+      "summary": "React hook that manages server-sent event subscriptions for an event type and parameter sets with automatic subscribe/unsubscribe and listener cleanup.",
+      "tags": ["hook", "sse", "real-time", "subscription"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/sse/hooks/useSSESubscription.ts:useSSESubscription",
+      "type": "function",
+      "name": "useSSESubscription",
+      "filePath": "apps/frontend/src/domain/sse/hooks/useSSESubscription.ts",
+      "lineRange": [48, 263],
+      "summary": "Subscribes to SSE events with params, wires listeners and cleans up on unmount or change.",
+      "tags": ["hook", "sse", "real-time"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/providers/ErrorBoundary/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/providers/ErrorBoundary/index.ts",
+      "summary": "Barrel re-exporting the application ErrorBoundary component.",
+      "tags": ["barrel", "error-handling", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/providers/QueryProvider.tsx",
+      "type": "file",
+      "name": "QueryProvider.tsx",
+      "filePath": "apps/frontend/src/providers/QueryProvider.tsx",
+      "summary": "Wraps children in the TanStack QueryClientProvider using the shared query client.",
+      "tags": ["provider", "component", "data-fetching"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/providers/QueryProvider.tsx:QueryProvider",
+      "type": "function",
+      "name": "QueryProvider",
+      "filePath": "apps/frontend/src/providers/QueryProvider.tsx",
+      "lineRange": [9, 13],
+      "summary": "Provides the shared TanStack query client to children.",
+      "tags": ["provider", "component", "data-fetching"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/services/sse/SSEProvider.tsx",
+      "type": "file",
+      "name": "SSEProvider.tsx",
+      "filePath": "apps/frontend/src/services/sse/SSEProvider.tsx",
+      "summary": "React context provider that opens the authenticated EventSource stream, manages subscriptions via the API and dispatches events to registered listeners.",
+      "tags": ["provider", "sse", "real-time", "context"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/services/sse/SSEProvider.tsx:useSSEContext",
+      "type": "function",
+      "name": "useSSEContext",
+      "filePath": "apps/frontend/src/services/sse/SSEProvider.tsx",
+      "lineRange": [30, 36],
+      "summary": "Accesses the SSE context, throwing outside an SSEProvider.",
+      "tags": ["provider", "sse", "real-time"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/services/sse/SSEProvider.tsx:SSEProvider",
+      "type": "function",
+      "name": "SSEProvider",
+      "filePath": "apps/frontend/src/services/sse/SSEProvider.tsx",
+      "lineRange": [47, 237],
+      "summary": "Manages the EventSource connection, subscriptions and listener registry for authenticated users.",
+      "tags": ["provider", "sse", "real-time"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/services/sse/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/services/sse/index.ts",
+      "summary": "Barrel exporting SSEProvider, useSSEContext and shared SSE event types.",
+      "tags": ["barrel", "sse", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "type": "file",
+      "name": "CrispService.ts",
+      "filePath": "apps/frontend/src/services/vendors/CrispService.ts",
+      "summary": "Crisp chat widget integration: initialization, user info, show/hide/open helpers, enabled only on Packmind Cloud with a configured website ID.",
+      "tags": ["service", "vendor-integration", "support-chat", "cloud-only"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/services/vendors/CrispService.ts:isCrispEnabled",
+      "type": "function",
+      "name": "isCrispEnabled",
+      "filePath": "apps/frontend/src/services/vendors/CrispService.ts",
+      "lineRange": [4, 6],
+      "summary": "Checks if Crisp should run (cloud host and configured ID).",
+      "tags": ["service", "vendor-integration", "support-chat"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/services/vendors/CrispService.ts:initCrisp",
+      "type": "function",
+      "name": "initCrisp",
+      "filePath": "apps/frontend/src/services/vendors/CrispService.ts",
+      "lineRange": [8, 31],
+      "summary": "Loads and configures the Crisp chat widget.",
+      "tags": ["service", "vendor-integration", "support-chat"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/services/vendors/CrispService.ts:setCrispUserInfo",
+      "type": "function",
+      "name": "setCrispUserInfo",
+      "filePath": "apps/frontend/src/services/vendors/CrispService.ts",
+      "lineRange": [33, 50],
+      "summary": "Pushes the current user identity to Crisp.",
+      "tags": ["service", "vendor-integration", "support-chat"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/services/vendors/CrispService.ts:showCrispWidget",
+      "type": "function",
+      "name": "showCrispWidget",
+      "filePath": "apps/frontend/src/services/vendors/CrispService.ts",
+      "lineRange": [52, 61],
+      "summary": "Shows the Crisp chat widget.",
+      "tags": ["service", "vendor-integration", "support-chat"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/services/vendors/CrispService.ts:hideCrispWidget",
+      "type": "function",
+      "name": "hideCrispWidget",
+      "filePath": "apps/frontend/src/services/vendors/CrispService.ts",
+      "lineRange": [63, 72],
+      "summary": "Hides the Crisp chat widget.",
+      "tags": ["service", "vendor-integration", "support-chat"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/services/vendors/CrispService.ts:openCrisp",
+      "type": "function",
+      "name": "openCrisp",
+      "filePath": "apps/frontend/src/services/vendors/CrispService.ts",
+      "lineRange": [74, 85],
+      "summary": "Opens the Crisp chat window.",
+      "tags": ["service", "vendor-integration", "support-chat"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/services/vendors/SentryService.ts",
+      "type": "file",
+      "name": "SentryService.ts",
+      "filePath": "apps/frontend/src/services/vendors/SentryService.ts",
+      "summary": "Initializes Sentry error monitoring on Packmind Cloud only, configuring environment and filtering crawler noise.",
+      "tags": ["service", "monitoring", "vendor-integration", "cloud-only"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/services/vendors/SentryService.ts:initSentry",
+      "type": "function",
+      "name": "initSentry",
+      "filePath": "apps/frontend/src/services/vendors/SentryService.ts",
+      "lineRange": [5, 47],
+      "summary": "Initializes Sentry on Packmind Cloud with environment config and crawler error filtering.",
+      "tags": ["service", "monitoring", "vendor-integration"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/hooks/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/shared/hooks/index.ts",
+      "summary": "Barrel re-exporting shared React hooks (debounced value, modal layer recovery, navigation, warn-before-unload).",
+      "tags": ["barrel", "hook", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/utils/getEnvVar.ts",
+      "type": "file",
+      "name": "getEnvVar.ts",
+      "filePath": "apps/frontend/src/shared/utils/getEnvVar.ts",
+      "summary": "Safely reads a Vite import.meta.env variable with a default fallback.",
+      "tags": ["utility", "configuration", "environment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/utils/getEnvVar.ts:getEnvVar",
+      "type": "function",
+      "name": "getEnvVar",
+      "filePath": "apps/frontend/src/shared/utils/getEnvVar.ts",
+      "lineRange": [1, 7],
+      "summary": "Returns a Vite env variable or default value.",
+      "tags": ["utility", "configuration", "environment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/utils/isPackmindCloud.ts",
+      "type": "file",
+      "name": "isPackmindCloud.ts",
+      "filePath": "apps/frontend/src/shared/utils/isPackmindCloud.ts",
+      "summary": "Determines whether the app runs on the Packmind Cloud hostname, gating cloud-only vendors on self-hosted instances.",
+      "tags": ["utility", "environment", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/utils/isPackmindCloud.ts:isPackmindCloud",
+      "type": "function",
+      "name": "isPackmindCloud",
+      "filePath": "apps/frontend/src/shared/utils/isPackmindCloud.ts",
+      "lineRange": [6, 9],
+      "summary": "Returns true when hostname is the Packmind Cloud host.",
+      "tags": ["utility", "environment", "security"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/sse/hooks/useSSESubscription.ts",
+      "target": "function:apps/frontend/src/domain/sse/hooks/useSSESubscription.ts:useSSESubscription",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/sse/hooks/useSSESubscription.ts",
+      "target": "function:apps/frontend/src/domain/sse/hooks/useSSESubscription.ts:useSSESubscription",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/sse/hooks/useSSESubscription.ts",
+      "target": "file:apps/frontend/src/services/sse/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/providers/QueryProvider.tsx",
+      "target": "function:apps/frontend/src/providers/QueryProvider.tsx:QueryProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/providers/QueryProvider.tsx",
+      "target": "function:apps/frontend/src/providers/QueryProvider.tsx:QueryProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/providers/QueryProvider.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/sse/SSEProvider.tsx",
+      "target": "function:apps/frontend/src/services/sse/SSEProvider.tsx:useSSEContext",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/sse/SSEProvider.tsx",
+      "target": "function:apps/frontend/src/services/sse/SSEProvider.tsx:useSSEContext",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/sse/SSEProvider.tsx",
+      "target": "function:apps/frontend/src/services/sse/SSEProvider.tsx:SSEProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/sse/SSEProvider.tsx",
+      "target": "function:apps/frontend/src/services/sse/SSEProvider.tsx:SSEProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/sse/SSEProvider.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/sse/SSEProvider.tsx",
+      "target": "file:apps/frontend/src/shared/utils/getEnvVar.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:isCrispEnabled",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:isCrispEnabled",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:initCrisp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:initCrisp",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:setCrispUserInfo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:setCrispUserInfo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:showCrispWidget",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:showCrispWidget",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:hideCrispWidget",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:hideCrispWidget",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:openCrisp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/services/vendors/CrispService.ts:openCrisp",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "file:apps/frontend/src/shared/utils/getEnvVar.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/CrispService.ts",
+      "target": "file:apps/frontend/src/shared/utils/isPackmindCloud.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/SentryService.ts",
+      "target": "function:apps/frontend/src/services/vendors/SentryService.ts:initSentry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/SentryService.ts",
+      "target": "function:apps/frontend/src/services/vendors/SentryService.ts:initSentry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/SentryService.ts",
+      "target": "file:apps/frontend/src/shared/utils/getEnvVar.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/vendors/SentryService.ts",
+      "target": "file:apps/frontend/src/shared/utils/isPackmindCloud.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/getEnvVar.ts",
+      "target": "function:apps/frontend/src/shared/utils/getEnvVar.ts:getEnvVar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/getEnvVar.ts",
+      "target": "function:apps/frontend/src/shared/utils/getEnvVar.ts:getEnvVar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/isPackmindCloud.ts",
+      "target": "function:apps/frontend/src/shared/utils/isPackmindCloud.ts:isPackmindCloud",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/utils/isPackmindCloud.ts",
+      "target": "function:apps/frontend/src/shared/utils/isPackmindCloud.ts:isPackmindCloud",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/sse/hooks/useSSESubscription.ts:useSSESubscription",
+      "target": "function:apps/frontend/src/services/sse/SSEProvider.tsx:useSSEContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/services/sse/SSEProvider.tsx:SSEProvider",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/services/sse/SSEProvider.tsx:SSEProvider",
+      "target": "function:apps/frontend/src/shared/utils/getEnvVar.ts:getEnvVar",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/services/vendors/SentryService.ts:initSentry",
+      "target": "function:apps/frontend/src/shared/utils/isPackmindCloud.ts:isPackmindCloud",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/services/vendors/SentryService.ts:initSentry",
+      "target": "function:apps/frontend/src/shared/utils/getEnvVar.ts:getEnvVar",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/services/vendors/CrispService.ts:isCrispEnabled",
+      "target": "function:apps/frontend/src/shared/utils/isPackmindCloud.ts:isPackmindCloud",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/sse/index.ts",
+      "target": "file:apps/frontend/src/services/sse/SSEProvider.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

@@ -1,0 +1,110 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/deployments/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/deployments/README.md",
+      "summary": "Short README for the deployments library, which distributes commands, standards and skills to git repositories and records deployment history, with build and test commands.",
+      "tags": ["documentation", "readme", "nx", "deployment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/deployments/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/deployments/package.json",
+      "summary": "Package manifest for @packmind/deployments, a private CommonJS library depending on accounts, coding-agent, git, commands, skills, spaces, standards and other workspace packages plus TypeORM, BullMQ and archiver for zip packaging.",
+      "tags": [
+        "configuration",
+        "dependencies",
+        "workspace-package",
+        "commonjs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/deployments/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/deployments/project.json",
+      "summary": "Nx project definition for the deployments library (env:node) with an SWC build target and an extended typecheck that also type-checks the spec program and test fixtures.",
+      "tags": ["configuration", "nx", "build-system", "env-node"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/deployments/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/deployments/tsconfig.json",
+      "summary": "Solution-style TypeScript config for the deployments package that extends the effective base config with strict compiler flags and references the lib and spec projects without compiling files itself.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system",
+        "project-references"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/deployments/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/deployments/tsconfig.lib.json",
+      "summary": "TypeScript library build config for the deployments package: compiles src/**/*.ts with declarations into dist/out-tsc, excluding spec and test files.",
+      "tags": ["configuration", "typescript", "build-system", "library"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:packages/deployments/README.md",
+      "target": "file:packages/deployments/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/deployments/package.json",
+      "target": "file:packages/deployments/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/deployments/project.json",
+      "target": "config:packages/deployments/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/deployments/project.json",
+      "target": "file:packages/deployments/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/deployments/project.json",
+      "target": "config:packages/deployments/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/deployments/tsconfig.lib.json",
+      "target": "config:packages/deployments/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/deployments/tsconfig.lib.json",
+      "target": "file:packages/deployments/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

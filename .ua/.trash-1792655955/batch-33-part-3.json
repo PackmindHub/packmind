@@ -1,0 +1,809 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "type": "file",
+      "name": "CopilotDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "summary": "GitHub Copilot deployer rendering standards to .github/instructions with applyTo frontmatter, commands as prompt files and skills, plus default skills and cleanup updates.",
+      "tags": [
+        "deployer",
+        "github-copilot",
+        "rendering",
+        "yaml-frontmatter",
+        "infrastructure"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts:CopilotDeployer",
+      "type": "class",
+      "name": "CopilotDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "lineRange": [31, 609],
+      "summary": "Renders Copilot instructions, prompts and skills.",
+      "tags": ["deployer", "github-copilot", "rendering"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts",
+      "type": "file",
+      "name": "CopilotPluginDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts",
+      "summary": "Deployer producing a GitHub Copilot plugin layout with commands, skills and a plugin manifest; standards are skipped.",
+      "tags": ["deployer", "copilot-plugin", "manifest", "infrastructure"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts:CopilotPluginDeployer",
+      "type": "class",
+      "name": "CopilotPluginDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts",
+      "lineRange": [31, 244],
+      "summary": "Renders a Copilot plugin package with manifest, commands and skills.",
+      "tags": ["deployer", "copilot-plugin", "manifest"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "type": "file",
+      "name": "CursorDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "summary": "Cursor deployer rendering standards as .cursor/rules .mdc files with globs/alwaysApply frontmatter, commands, and skills, including default skills and cleanup.",
+      "tags": [
+        "deployer",
+        "cursor",
+        "rendering",
+        "yaml-frontmatter",
+        "infrastructure"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts:CursorDeployer",
+      "type": "class",
+      "name": "CursorDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "lineRange": [32, 635],
+      "summary": "Renders Cursor .mdc rules, commands and skills.",
+      "tags": ["deployer", "cursor", "rendering"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts",
+      "type": "file",
+      "name": "AbstractDefaultSkillDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts",
+      "summary": "Base class for built-in default skills: resolves CLI exec name, beta/deprecation and CLI version support checks, injects versioned prompts and builds SKILL.md frontmatter.",
+      "tags": ["abstract-class", "skills", "versioning", "base-class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts:AbstractDefaultSkillDeployer",
+      "type": "class",
+      "name": "AbstractDefaultSkillDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts",
+      "lineRange": [38, 147],
+      "summary": "Abstract base for versioned default skill deployers.",
+      "tags": ["abstract-class", "skills", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "type": "file",
+      "name": "DefaultSkillsDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "summary": "Deploys Packmind's built-in default skills (onboard, update-playbook) for a given agent, filtering by CLI version and beta flags and reporting skipped ones.",
+      "tags": ["deployer", "skills", "default-skills", "filtering"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "type": "class",
+      "name": "DefaultSkillsDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "lineRange": [29, 122],
+      "summary": "Selects and runs default skill deployers for an agent.",
+      "tags": ["deployer", "skills", "default-skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts",
+      "type": "file",
+      "name": "IDefaultSkillDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts",
+      "summary": "Interface and options type for default skill deployers producing skill FileUpdates for a target agent.",
+      "tags": ["type-definition", "interface", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts:ISkillDeployer",
+      "type": "class",
+      "name": "ISkillDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts",
+      "lineRange": [14, 30],
+      "summary": "Contract for a default skill deployer returning skill file updates.",
+      "tags": ["interface", "type-definition", "port"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "type": "file",
+      "name": "OnboardDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "summary": "Deploys the packmind-onboard default skill, bundling SKILL.md, readme, references, license and per-CLI-version step files.",
+      "tags": ["deployer", "skills", "onboarding", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts:OnboardDeployer",
+      "type": "class",
+      "name": "OnboardDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "lineRange": [60, 168],
+      "summary": "Deploys the packmind-onboard skill files.",
+      "tags": ["deployer", "skills", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "type": "file",
+      "name": "UpdatePlaybookDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "summary": "Deploys the packmind-update-playbook default skill with its SKILL.md, analysis steps, procedure references, license and versioned apply-changes files.",
+      "tags": ["deployer", "skills", "playbook", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts:UpdatePlaybookDeployer",
+      "type": "class",
+      "name": "UpdatePlaybookDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "lineRange": [26, 118],
+      "summary": "Deploys the packmind-update-playbook skill files.",
+      "tags": ["deployer", "skills", "playbook"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/license.ts",
+      "type": "file",
+      "name": "license.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/license.ts",
+      "summary": "Exports the Apache 2.0 license text bundled into deployed default skills.",
+      "tags": ["constants", "license", "legal"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts:CopilotDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts:CopilotDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts:CopilotPluginDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts:CopilotPluginDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts:CursorDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts:CursorDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts:AbstractDefaultSkillDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts:AbstractDefaultSkillDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts:ISkillDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts:ISkillDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts:OnboardDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts:OnboardDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/license.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/create-items.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/create-package.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/select-package.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/create-items.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/create-package.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/select-package.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/completion-summary.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/create-items.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/create-package.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/list-packages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/select-package.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/readme.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/ci-local-workflow-parity.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/file-template-consistency.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/role-taxonomy-drift.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/test-data-construction.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts:UpdatePlaybookDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts:UpdatePlaybookDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/license.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.21.0/apply-changes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.23.0/apply-changes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/packmind-versions/0.35.0/apply-changes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/agent-skills-specification.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-command-procedure.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-skill-procedure.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/references/create-standard-procedure.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/skill.md.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-commands.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-skills.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-update-playbook/steps/analyze-standards.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts:CopilotDeployer",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts:ICodingAgentDeployer",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts:CursorDeployer",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts:ICodingAgentDeployer",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts:CopilotPluginDeployer",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts:ICodingAgentDeployer",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts:AbstractDefaultSkillDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/IDefaultSkillDeployer.ts:ISkillDeployer",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts:OnboardDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts:AbstractDefaultSkillDeployer",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts:UpdatePlaybookDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts:AbstractDefaultSkillDeployer",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/OnboardDeployer.ts:OnboardDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/UpdatePlaybookDeployer.ts:UpdatePlaybookDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts:CursorDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts:CopilotDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts:CopilotDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts:GenericStandardSectionWriter",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts:CursorDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts:GenericStandardSectionWriter",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts:CopilotPluginDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts:buildPluginManifest",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts:CopilotPluginDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts:generateSkillMdContent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts:CopilotDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts:formatAdditionalPropertyYaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts:CursorDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/YamlFrontmatterUtils.ts:formatAdditionalPropertyYaml",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts:CopilotDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts:CursorDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

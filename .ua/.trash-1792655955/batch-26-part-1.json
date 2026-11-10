@@ -1,0 +1,1020 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/skills/utils/skillNavigation.ts",
+      "type": "file",
+      "name": "skillNavigation.ts",
+      "filePath": "apps/frontend/src/domain/skills/utils/skillNavigation.ts",
+      "summary": "Defines the SkillNavKey union and SKILL_NAV_KEYS constants identifying the files and distributions sections of the skill detail navigation.",
+      "tags": ["constants", "navigation", "skills", "type-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/api/gateways/ISpacesGateway.ts",
+      "type": "file",
+      "name": "ISpacesGateway.ts",
+      "filePath": "apps/frontend/src/domain/spaces/api/gateways/ISpacesGateway.ts",
+      "summary": "Port interface for the frontend spaces gateway, declaring operations to list user spaces, fetch a space by slug, and manage space members and roles.",
+      "tags": ["type-definition", "gateway", "interface", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts",
+      "type": "file",
+      "name": "SpacesGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts",
+      "summary": "HTTP adapter implementing ISpacesGateway on top of PackmindGateway, calling organization-scoped space and space-member API endpoints.",
+      "tags": ["api-client", "gateway", "adapter", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts:SpacesGatewayApi",
+      "type": "class",
+      "name": "SpacesGatewayApi",
+      "filePath": "apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts",
+      "lineRange": [13, 81],
+      "summary": "Gateway class implementing space listing, lookup by slug and member add/remove/role-update calls against the Packmind API.",
+      "tags": ["gateway", "api-client", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/api/gateways/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/spaces/api/gateways/index.ts",
+      "summary": "Barrel for the spaces gateway layer that instantiates the singleton spacesGateway and re-exports the interface and API implementation.",
+      "tags": ["barrel", "singleton", "gateway", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "file",
+      "name": "SpacesQueries.ts",
+      "filePath": "apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "summary": "TanStack Query hooks and query option factories for listing spaces, fetching a space by slug, and listing/adding/removing/updating space members with cache invalidation.",
+      "tags": ["hook", "react-query", "data-fetching", "spaces", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpacesQueryOptions",
+      "type": "function",
+      "name": "getSpacesQueryOptions",
+      "filePath": "apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "lineRange": [12, 24],
+      "summary": "Builds query options to fetch the spaces of the current organization.",
+      "tags": ["query-options", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpacesQuery",
+      "type": "function",
+      "name": "useGetSpacesQuery",
+      "filePath": "apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "lineRange": [26, 31],
+      "summary": "Hook returning the organization spaces query.",
+      "tags": ["hook", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceBySlugQueryOptions",
+      "type": "function",
+      "name": "getSpaceBySlugQueryOptions",
+      "filePath": "apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "lineRange": [33, 46],
+      "summary": "Builds query options fetching a space by its slug within an organization.",
+      "tags": ["query-options", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpaceBySlugQuery",
+      "type": "function",
+      "name": "useGetSpaceBySlugQuery",
+      "filePath": "apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "lineRange": [48, 53],
+      "summary": "Hook fetching a space by slug for the current organization.",
+      "tags": ["hook", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceMembersQueryOptions",
+      "type": "function",
+      "name": "getSpaceMembersQueryOptions",
+      "filePath": "apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "lineRange": [55, 68],
+      "summary": "Builds query options listing members of a given space.",
+      "tags": ["query-options", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpaceMembersQuery",
+      "type": "function",
+      "name": "useGetSpaceMembersQuery",
+      "filePath": "apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "lineRange": [70, 74],
+      "summary": "Hook listing the members of a space.",
+      "tags": ["hook", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useAddMembersToSpaceMutation",
+      "type": "function",
+      "name": "useAddMembersToSpaceMutation",
+      "filePath": "apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "lineRange": [76, 95],
+      "summary": "Mutation hook adding members to a space and invalidating the members cache.",
+      "tags": ["hook", "mutation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useRemoveMemberFromSpaceMutation",
+      "type": "function",
+      "name": "useRemoveMemberFromSpaceMutation",
+      "filePath": "apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "lineRange": [97, 120],
+      "summary": "Mutation hook removing a member from a space and refreshing related caches.",
+      "tags": ["hook", "mutation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useUpdateMemberRoleMutation",
+      "type": "function",
+      "name": "useUpdateMemberRoleMutation",
+      "filePath": "apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "lineRange": [122, 152],
+      "summary": "Mutation hook updating a space member role with cache invalidation.",
+      "tags": ["hook", "mutation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/spaces/api/queryKeys.ts",
+      "summary": "Hierarchical React Query key factory for spaces (list, detail, members) scoped under the organization query scope.",
+      "tags": ["query-keys", "react-query", "cache", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "type": "file",
+      "name": "AddSpaceMembersDialog.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "summary": "Dialog component letting space admins search organization users via a combobox, stage them with roles, and add them to the current space.",
+      "tags": ["component", "dialog", "space-members", "form"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx:UserSearchCombobox",
+      "type": "function",
+      "name": "UserSearchCombobox",
+      "filePath": "apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "lineRange": [35, 92],
+      "summary": "Internal combobox to search organization users not yet in the space.",
+      "tags": ["component", "search", "combobox"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx:AddSpaceMembersDialog",
+      "type": "function",
+      "name": "AddSpaceMembersDialog",
+      "filePath": "apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "lineRange": [101, 293],
+      "summary": "Dialog to select users and roles and submit them as new space members.",
+      "tags": ["component", "dialog"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx",
+      "type": "file",
+      "name": "SpaceAccessSection.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx",
+      "summary": "Space settings section displaying and controlling who can access the current space within the organization.",
+      "tags": ["component", "settings", "access-control", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx:SpaceAccessSection",
+      "type": "function",
+      "name": "SpaceAccessSection",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx",
+      "lineRange": [33, 106],
+      "summary": "Renders the space access configuration section.",
+      "tags": ["component", "settings"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "type": "file",
+      "name": "SpaceDangerZoneSection.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "summary": "Danger-zone settings section with confirmation dialogs to leave or delete a space, warning about distributed packages and redirecting after the action.",
+      "tags": [
+        "component",
+        "settings",
+        "dialog",
+        "destructive-action",
+        "spaces"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:LeaveSpaceConfirmationDialog",
+      "type": "function",
+      "name": "LeaveSpaceConfirmationDialog",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "lineRange": [27, 139],
+      "summary": "Confirmation dialog requiring typed input before leaving a space.",
+      "tags": ["component", "dialog", "confirmation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:DeleteSpaceConfirmationDialog",
+      "type": "function",
+      "name": "DeleteSpaceConfirmationDialog",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "lineRange": [141, 266],
+      "summary": "Confirmation dialog for deleting a space, warning about distributed packages.",
+      "tags": ["component", "dialog", "confirmation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:SpaceDangerZoneSection",
+      "type": "function",
+      "name": "SpaceDangerZoneSection",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "lineRange": [268, 381],
+      "summary": "Settings section wiring leave/delete space mutations and navigation after success.",
+      "tags": ["component", "settings"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "type": "file",
+      "name": "SpaceGeneralSettings.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "summary": "Composes the general space settings tab from identity, access and danger-zone sections.",
+      "tags": ["component", "settings", "composition", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx:SpaceGeneralSettings",
+      "type": "function",
+      "name": "SpaceGeneralSettings",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "lineRange": [10, 29],
+      "summary": "Composes identity, access and danger-zone sections.",
+      "tags": ["component", "composition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/SpaceIdentitySection.tsx",
+      "type": "file",
+      "name": "SpaceIdentitySection.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceIdentitySection.tsx",
+      "summary": "Settings section for editing a space's name and identity details, currently backed by mock space data.",
+      "tags": ["component", "settings", "form", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/SpaceIdentitySection.tsx:SpaceIdentitySection",
+      "type": "function",
+      "name": "SpaceIdentitySection",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceIdentitySection.tsx",
+      "lineRange": [32, 95],
+      "summary": "Form section to edit the space name.",
+      "tags": ["component", "form"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "type": "file",
+      "name": "SpaceMembersList.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "summary": "Space members management view listing members with role changes and removal, and opening the add-members dialog.",
+      "tags": ["component", "space-members", "list", "spaces"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx:SpaceMembersList",
+      "type": "function",
+      "name": "SpaceMembersList",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "lineRange": [26, 163],
+      "summary": "Loads space members and handles role update, removal and adding members.",
+      "tags": ["component", "list"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx",
+      "type": "file",
+      "name": "SpaceMembersTable.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx",
+      "summary": "Presentational table rendering space members with avatars, role selectors and remove actions.",
+      "tags": ["component", "table", "space-members", "presentational"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx:SpaceMembersTable",
+      "type": "function",
+      "name": "SpaceMembersTable",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx",
+      "lineRange": [40, 123],
+      "summary": "Table of space members with role and remove controls.",
+      "tags": ["component", "table"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx",
+      "type": "file",
+      "name": "SpaceSettingsPage.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx",
+      "summary": "Top-level space settings page combining general settings and the members list for the current space.",
+      "tags": ["component", "page", "settings", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx:SpaceSettingsPage",
+      "type": "function",
+      "name": "SpaceSettingsPage",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx",
+      "lineRange": [7, 38],
+      "summary": "Space settings page layout combining general settings and members.",
+      "tags": ["component", "page"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/SpacesManagementPage/SpacesToolbar.tsx",
+      "type": "file",
+      "name": "SpacesToolbar.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpacesManagementPage/SpacesToolbar.tsx",
+      "summary": "Toolbar for the organization spaces management page providing search and space creation controls.",
+      "tags": ["component", "toolbar", "spaces", "management"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/SpacesManagementPage/SpacesToolbar.tsx:SpacesToolbar",
+      "type": "function",
+      "name": "SpacesToolbar",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpacesManagementPage/SpacesToolbar.tsx",
+      "lineRange": [23, 53],
+      "summary": "Toolbar with search input and create-space action.",
+      "tags": ["component", "toolbar"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/SpacesManagementPage/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/spaces/components/SpacesManagementPage/index.ts",
+      "summary": "Barrel re-exporting the SpacesManagementPage component.",
+      "tags": ["barrel", "entry-point", "spaces"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/gateways/ISpacesGateway.ts",
+      "target": "file:apps/frontend/src/domain/spaces/types/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts:SpacesGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts:SpacesGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/gateways/ISpacesGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/spaces/types/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/gateways/ISpacesGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpacesQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpacesQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpacesQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpacesQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceBySlugQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceBySlugQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpaceBySlugQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpaceBySlugQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceMembersQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceMembersQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpaceMembersQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpaceMembersQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useAddMembersToSpaceMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useAddMembersToSpaceMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useRemoveMemberFromSpaceMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useRemoveMemberFromSpaceMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useUpdateMemberRoleMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useUpdateMemberRoleMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "target": "file:apps/frontend/src/domain/spaces/types/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx:UserSearchCombobox",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx:AddSpaceMembersDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx:AddSpaceMembersDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/types/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx:SpaceAccessSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx:SpaceAccessSection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:LeaveSpaceConfirmationDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:DeleteSpaceConfirmationDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:SpaceDangerZoneSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:SpaceDangerZoneSection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/useNavigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx:SpaceGeneralSettings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx:SpaceGeneralSettings",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/SpaceAccessSection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/SpaceIdentitySection.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceIdentitySection.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceIdentitySection.tsx:SpaceIdentitySection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceIdentitySection.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceIdentitySection.tsx:SpaceIdentitySection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx:SpaceMembersList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx:SpaceMembersList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/types/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx:SpaceMembersTable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx:SpaceMembersTable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceMembersTable.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/types/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx:SpaceSettingsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx:SpaceSettingsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/SpaceGeneralSettings.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpaceSettingsPage.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpacesManagementPage/SpacesToolbar.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpacesManagementPage/SpacesToolbar.tsx:SpacesToolbar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/SpacesManagementPage/SpacesToolbar.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpacesManagementPage/SpacesToolbar.tsx:SpacesToolbar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/spaces/api/gateways/SpacesGatewayApi.ts:SpacesGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:SpaceDangerZoneSection",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:SpaceDangerZoneSection",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:LeaveSpaceConfirmationDialog",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:SpaceDangerZoneSection",
+      "target": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:DeleteSpaceConfirmationDialog",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx:AddSpaceMembersDialog",
+      "target": "function:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx:UserSearchCombobox",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/AddSpaceMembersDialog.tsx:AddSpaceMembersDialog",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useAddMembersToSpaceMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx:SpaceMembersList",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpaceMembersQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx:SpaceMembersList",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useRemoveMemberFromSpaceMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx:SpaceMembersList",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useUpdateMemberRoleMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/SpaceMembersList.tsx:SpaceMembersList",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:SpaceDangerZoneSection",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/SpaceDangerZoneSection.tsx:SpaceDangerZoneSection",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,711 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "type": "file",
+      "name": "SpacesManagementQueries.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "summary": "OSS edition stub exposing no-op space update, leave and delete mutation hooks so the shared frontend compiles without the proprietary spaces-management module.",
+      "tags": ["stub", "oss-edition", "hook", "react-query", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts:useUpdateSpaceMutation",
+      "type": "function",
+      "name": "useUpdateSpaceMutation",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "lineRange": [12, 12],
+      "summary": "No-op stub mutation hook for updating a space.",
+      "tags": ["stub", "oss-edition", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts:useLeaveSpaceMutation",
+      "type": "function",
+      "name": "useLeaveSpaceMutation",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "lineRange": [13, 13],
+      "summary": "No-op stub mutation hook for leaving a space.",
+      "tags": ["stub", "oss-edition", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts:useDeleteSpaceMutation",
+      "type": "function",
+      "name": "useDeleteSpaceMutation",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "lineRange": [14, 14],
+      "summary": "No-op stub mutation hook for deleting a space.",
+      "tags": ["stub", "oss-edition", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/BrowseSpaces.tsx",
+      "type": "file",
+      "name": "BrowseSpaces.tsx",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/BrowseSpaces.tsx",
+      "summary": "OSS edition stub for the BrowseSpaces page component; renders nothing in place of the proprietary space browser.",
+      "tags": ["stub", "oss-edition", "component", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/BrowseSpaces.tsx:BrowseSpaces",
+      "type": "function",
+      "name": "BrowseSpaces",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/BrowseSpaces.tsx",
+      "lineRange": [1, 3],
+      "summary": "Stub component returning null in the OSS edition.",
+      "tags": ["stub", "oss-edition", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/CustomSpacesNavBlock.tsx",
+      "type": "file",
+      "name": "CustomSpacesNavBlock.tsx",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/CustomSpacesNavBlock.tsx",
+      "summary": "OSS edition stub for the custom spaces sidebar navigation block, rendering nothing outside the proprietary edition.",
+      "tags": ["stub", "oss-edition", "component", "navigation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/CustomSpacesNavBlock.tsx:CustomSpacesNavBlock",
+      "type": "function",
+      "name": "CustomSpacesNavBlock",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/CustomSpacesNavBlock.tsx",
+      "lineRange": [11, 15],
+      "summary": "Stub nav block component returning null in the OSS edition.",
+      "tags": ["stub", "oss-edition", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/SpacesManagementActions.tsx",
+      "type": "file",
+      "name": "SpacesManagementActions.tsx",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/SpacesManagementActions.tsx",
+      "summary": "OSS edition stub for the space management actions menu, rendering nothing in the open-source build.",
+      "tags": ["stub", "oss-edition", "component", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/SpacesManagementActions.tsx:SpacesManagementActions",
+      "type": "function",
+      "name": "SpacesManagementActions",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/SpacesManagementActions.tsx",
+      "lineRange": [10, 14],
+      "summary": "Stub actions component returning null in the OSS edition.",
+      "tags": ["stub", "oss-edition", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces-management/index.ts",
+      "summary": "Barrel re-exporting the OSS stub spaces-management components (BrowseSpaces, CustomSpacesNavBlock, SpacesManagementActions).",
+      "tags": ["barrel", "stub", "oss-edition", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceOutdatedPlugins.ts",
+      "type": "file",
+      "name": "useSpaceOutdatedPlugins.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceOutdatedPlugins.ts",
+      "summary": "OSS stub of the hook listing marketplace plugins outdated relative to their source package; always returns an empty, ready state since marketplaces are proprietary.",
+      "tags": ["stub", "oss-edition", "hook", "marketplace", "type-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceOutdatedPlugins.ts:useSpaceOutdatedPlugins",
+      "type": "function",
+      "name": "useSpaceOutdatedPlugins",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceOutdatedPlugins.ts",
+      "lineRange": [36, 40],
+      "summary": "Returns a constant empty, ready outdated-plugins state.",
+      "tags": ["stub", "oss-edition", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "type": "file",
+      "name": "CrispService.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "summary": "OSS stub of the Crisp chat vendor service: exports no-op init, user info, show/hide and open functions and reports Crisp as disabled.",
+      "tags": ["stub", "oss-edition", "service", "vendor-integration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:isCrispEnabled",
+      "type": "function",
+      "name": "isCrispEnabled",
+      "filePath": "apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "lineRange": [3, 5],
+      "summary": "Always reports Crisp as disabled in OSS.",
+      "tags": ["stub", "oss-edition", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:initCrisp",
+      "type": "function",
+      "name": "initCrisp",
+      "filePath": "apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "lineRange": [7, 9],
+      "summary": "No-op Crisp initialization.",
+      "tags": ["stub", "oss-edition", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:setCrispUserInfo",
+      "type": "function",
+      "name": "setCrispUserInfo",
+      "filePath": "apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "lineRange": [11, 13],
+      "summary": "No-op setter for Crisp user identity.",
+      "tags": ["stub", "oss-edition", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:showCrispWidget",
+      "type": "function",
+      "name": "showCrispWidget",
+      "filePath": "apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "lineRange": [15, 17],
+      "summary": "No-op show of the Crisp widget.",
+      "tags": ["stub", "oss-edition", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:hideCrispWidget",
+      "type": "function",
+      "name": "hideCrispWidget",
+      "filePath": "apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "lineRange": [19, 21],
+      "summary": "No-op hide of the Crisp widget.",
+      "tags": ["stub", "oss-edition", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:openCrisp",
+      "type": "function",
+      "name": "openCrisp",
+      "filePath": "apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "lineRange": [23, 29],
+      "summary": "No-op opener for the Crisp chat.",
+      "tags": ["stub", "oss-edition", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/git/hooks/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/git/hooks/index.ts",
+      "summary": "Empty barrel placeholder for git domain hooks.",
+      "tags": ["barrel", "placeholder", "git", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/api/queries/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/llm/api/queries/index.ts",
+      "summary": "Barrel re-exporting the LLM configuration React Query hooks from LLMQueries.",
+      "tags": ["barrel", "llm", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/llm/components/LLMConfigurationStatus.tsx",
+      "type": "file",
+      "name": "LLMConfigurationStatus.tsx",
+      "filePath": "apps/frontend/src/domain/llm/components/LLMConfigurationStatus.tsx",
+      "summary": "Displays the LLM provider connection status (loading, connected, failed, not configured) as an alert with provider/model details and a retest button.",
+      "tags": ["component", "llm", "status-display", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/llm/components/LLMConfigurationStatus.tsx:LLMConfigurationStatus",
+      "type": "function",
+      "name": "LLMConfigurationStatus",
+      "filePath": "apps/frontend/src/domain/llm/components/LLMConfigurationStatus.tsx",
+      "lineRange": [26, 109],
+      "summary": "Renders status-specific alerts for LLM connection state with optional retest action.",
+      "tags": ["component", "llm", "status-display"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/api/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/rules/api/index.ts",
+      "summary": "Barrel re-exporting the rules domain API gateways and query hooks.",
+      "tags": ["barrel", "api", "rules"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/rules/index.ts",
+      "summary": "Rules domain entry point re-exporting its API and components.",
+      "tags": ["barrel", "entry-point", "rules"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx",
+      "type": "file",
+      "name": "SetupUseCasesPage.tsx",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx",
+      "summary": "Setup page presenting Packmind use cases as cards with integration icons (GitHub, GitLab, Slack, Jira, ...) and documentation links.",
+      "tags": ["component", "page", "onboarding", "setup"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx:UseCaseCard",
+      "type": "function",
+      "name": "UseCaseCard",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx",
+      "lineRange": [111, 170],
+      "summary": "Card rendering a single use case with icons, description and link.",
+      "tags": ["component", "page", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx:SetupUseCasesPage",
+      "type": "function",
+      "name": "SetupUseCasesPage",
+      "filePath": "apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx",
+      "lineRange": [172, 213],
+      "summary": "Page laying out the grid of use case cards.",
+      "tags": ["component", "page", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/setup/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/setup/components/index.ts",
+      "summary": "Barrel re-exporting the setup pages (auto-update, CLI, skills, use cases).",
+      "tags": ["barrel", "setup", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/api/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/spaces/api/index.ts",
+      "summary": "Barrel re-exporting spaces API gateways, query hooks and query keys.",
+      "tags": ["barrel", "api", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/hooks/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/spaces/hooks/index.ts",
+      "summary": "Barrel re-exporting the useCurrentSpace hook.",
+      "tags": ["barrel", "hook", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/sse/hooks/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/sse/hooks/index.ts",
+      "summary": "Barrel re-exporting the useSSESubscription hook for server-sent event subscriptions.",
+      "tags": ["barrel", "hook", "sse", "realtime"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/api/queries/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/index.ts",
+      "summary": "Barrel re-exporting the standards React Query hooks.",
+      "tags": ["barrel", "standards", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/standards/components/index.ts",
+      "summary": "Barrel re-exporting standards UI components (list, blank state, create button, create form, details, versions list).",
+      "tags": ["barrel", "component", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/standards/index.ts",
+      "summary": "Standards domain entry point re-exporting its API gateways, queries and components.",
+      "tags": ["barrel", "entry-point", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/providers/ErrorBoundary/ErrorBoundary.tsx",
+      "type": "file",
+      "name": "ErrorBoundary.tsx",
+      "filePath": "apps/frontend/src/providers/ErrorBoundary/ErrorBoundary.tsx",
+      "summary": "React error boundary class that captures render errors, reports them to Sentry and shows a branded fallback screen with recovery actions.",
+      "tags": ["component", "error-handling", "monitoring", "provider"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/frontend/src/providers/ErrorBoundary/ErrorBoundary.tsx:ErrorBoundary",
+      "type": "class",
+      "name": "ErrorBoundary",
+      "filePath": "apps/frontend/src/providers/ErrorBoundary/ErrorBoundary.tsx",
+      "lineRange": [50, 245],
+      "summary": "Class component catching render errors, logging to Sentry and rendering a default or custom fallback.",
+      "tags": ["component", "error-handling", "monitoring"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/EnterprisePlanBanner.tsx",
+      "type": "file",
+      "name": "EnterprisePlanBanner.tsx",
+      "filePath": "apps/frontend/src/shared/components/EnterprisePlanBanner.tsx",
+      "summary": "Static banner announcing that playbook update management will soon require an Enterprise plan.",
+      "tags": ["component", "banner", "ui", "licensing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/EnterprisePlanBanner.tsx:EnterprisePlanBanner",
+      "type": "function",
+      "name": "EnterprisePlanBanner",
+      "filePath": "apps/frontend/src/shared/components/EnterprisePlanBanner.tsx",
+      "lineRange": [3, 15],
+      "summary": "Renders the Enterprise plan notice banner.",
+      "tags": ["component", "banner", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/animation/RotatingWord.tsx",
+      "type": "file",
+      "name": "RotatingWord.tsx",
+      "filePath": "apps/frontend/src/shared/components/animation/RotatingWord.tsx",
+      "summary": "Animated component cycling through a list of words on an interval with a transition effect.",
+      "tags": ["component", "animation", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/animation/RotatingWord.tsx:RotatingWord",
+      "type": "function",
+      "name": "RotatingWord",
+      "filePath": "apps/frontend/src/shared/components/animation/RotatingWord.tsx",
+      "lineRange": [9, 39],
+      "summary": "Cycles displayed word with timed animation.",
+      "tags": ["component", "animation", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/editor/DiffMarkdownEditor.tsx",
+      "type": "file",
+      "name": "DiffMarkdownEditor.tsx",
+      "filePath": "apps/frontend/src/shared/components/editor/DiffMarkdownEditor.tsx",
+      "summary": "Read-only Milkdown/Crepe markdown editor that renders a unified diff of change proposals, highlighting changes and adding proposal tooltips via DOM manipulation.",
+      "tags": ["component", "editor", "markdown", "diff", "change-proposals"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/editor/DiffMarkdownEditor.tsx:DiffMarkdownEditor",
+      "type": "function",
+      "name": "DiffMarkdownEditor",
+      "filePath": "apps/frontend/src/shared/components/editor/DiffMarkdownEditor.tsx",
+      "lineRange": [27, 286],
+      "summary": "Builds a unified markdown diff and renders it read-only with highlights and proposal tooltips.",
+      "tags": ["component", "editor", "markdown"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardsList.styles.scss",
+      "type": "file",
+      "name": "StandardsList.styles.scss",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardsList.styles.scss",
+      "summary": "SCSS styles for the standards list: table spacing, selection action panel, hoverable rows and truncated description cells.",
+      "tags": ["styles", "scss", "standards", "ui"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts:useUpdateSpaceMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts:useUpdateSpaceMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts:useLeaveSpaceMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts:useLeaveSpaceMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts:useDeleteSpaceMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/api/queries/SpacesManagementQueries.ts:useDeleteSpaceMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/BrowseSpaces.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/BrowseSpaces.tsx:BrowseSpaces",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/BrowseSpaces.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/BrowseSpaces.tsx:BrowseSpaces",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/CustomSpacesNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/CustomSpacesNavBlock.tsx:CustomSpacesNavBlock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/CustomSpacesNavBlock.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/CustomSpacesNavBlock.tsx:CustomSpacesNavBlock",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/SpacesManagementActions.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/SpacesManagementActions.tsx:SpacesManagementActions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/SpacesManagementActions.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces-management/components/SpacesManagementActions.tsx:SpacesManagementActions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceOutdatedPlugins.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceOutdatedPlugins.ts:useSpaceOutdatedPlugins",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceOutdatedPlugins.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/spaces/components/overview/useSpaceOutdatedPlugins.ts:useSpaceOutdatedPlugins",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:isCrispEnabled",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:isCrispEnabled",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:initCrisp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:initCrisp",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:setCrispUserInfo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:setCrispUserInfo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:showCrispWidget",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:showCrispWidget",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:hideCrispWidget",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:hideCrispWidget",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:openCrisp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/services/vendors/CrispService.ts:openCrisp",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationStatus.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationStatus.tsx:LLMConfigurationStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/llm/components/LLMConfigurationStatus.tsx",
+      "target": "function:apps/frontend/src/domain/llm/components/LLMConfigurationStatus.tsx:LLMConfigurationStatus",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx:UseCaseCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx:SetupUseCasesPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx",
+      "target": "function:apps/frontend/src/domain/setup/components/SetupUseCasesPage.tsx:SetupUseCasesPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/providers/ErrorBoundary/ErrorBoundary.tsx",
+      "target": "class:apps/frontend/src/providers/ErrorBoundary/ErrorBoundary.tsx:ErrorBoundary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/providers/ErrorBoundary/ErrorBoundary.tsx",
+      "target": "class:apps/frontend/src/providers/ErrorBoundary/ErrorBoundary.tsx:ErrorBoundary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/EnterprisePlanBanner.tsx",
+      "target": "function:apps/frontend/src/shared/components/EnterprisePlanBanner.tsx:EnterprisePlanBanner",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/EnterprisePlanBanner.tsx",
+      "target": "function:apps/frontend/src/shared/components/EnterprisePlanBanner.tsx:EnterprisePlanBanner",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/animation/RotatingWord.tsx",
+      "target": "function:apps/frontend/src/shared/components/animation/RotatingWord.tsx:RotatingWord",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/animation/RotatingWord.tsx",
+      "target": "function:apps/frontend/src/shared/components/animation/RotatingWord.tsx:RotatingWord",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/editor/DiffMarkdownEditor.tsx",
+      "target": "function:apps/frontend/src/shared/components/editor/DiffMarkdownEditor.tsx:DiffMarkdownEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/editor/DiffMarkdownEditor.tsx",
+      "target": "function:apps/frontend/src/shared/components/editor/DiffMarkdownEditor.tsx:DiffMarkdownEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.styles.scss",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

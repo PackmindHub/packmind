@@ -1,0 +1,438 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/git/src/infra/repositories/http/githubRateLimit.ts",
+      "type": "file",
+      "name": "githubRateLimit.ts",
+      "filePath": "packages/git/src/infra/repositories/http/githubRateLimit.ts",
+      "summary": "Detects GitHub primary and secondary rate-limit responses from errors and headers and computes the retry-after delay.",
+      "tags": ["rate-limiting", "github", "http", "error-handling"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/git/src/infra/repositories/http/githubRateLimit.ts:detectGithubRateLimit",
+      "type": "function",
+      "name": "detectGithubRateLimit",
+      "filePath": "packages/git/src/infra/repositories/http/githubRateLimit.ts",
+      "lineRange": [40, 70],
+      "summary": "Inspects a GitHub error response to detect primary or secondary rate limiting and returns the retry delay.",
+      "tags": ["rate-limiting", "github", "http"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/infra/repositories/http/githubRateLimit.ts:retryAfterSeconds",
+      "type": "function",
+      "name": "retryAfterSeconds",
+      "filePath": "packages/git/src/infra/repositories/http/githubRateLimit.ts",
+      "lineRange": [72, 87],
+      "summary": "Computes seconds to wait from GitHub retry-after or rate-limit reset headers.",
+      "tags": ["rate-limiting", "http"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "type": "file",
+      "name": "gitlabRateLimit.ts",
+      "filePath": "packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "summary": "Detects GitLab 429 rate-limit responses, computes retry-after delays and builds domain rate-limited errors.",
+      "tags": ["rate-limiting", "gitlab", "http", "error-handling"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/git/src/infra/repositories/http/gitlabRateLimit.ts:detectGitlabRateLimit",
+      "type": "function",
+      "name": "detectGitlabRateLimit",
+      "filePath": "packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "lineRange": [47, 62],
+      "summary": "Detects a GitLab 429 response and returns rate-limit details.",
+      "tags": ["rate-limiting", "gitlab", "http"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/infra/repositories/http/gitlabRateLimit.ts:gitlabRateLimitedError",
+      "type": "function",
+      "name": "gitlabRateLimitedError",
+      "filePath": "packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "lineRange": [77, 87],
+      "summary": "Builds a domain rate-limited error from a GitLab response.",
+      "tags": ["rate-limiting", "error-handling", "gitlab"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/infra/repositories/http/gitlabRateLimit.ts:retryAfterSeconds",
+      "type": "function",
+      "name": "retryAfterSeconds",
+      "filePath": "packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "lineRange": [89, 101],
+      "summary": "Computes seconds to wait from GitLab retry-after or ratelimit-reset headers.",
+      "tags": ["rate-limiting", "http"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/infra/repositories/http/providerHttpAgent.ts",
+      "type": "file",
+      "name": "providerHttpAgent.ts",
+      "filePath": "packages/git/src/infra/repositories/http/providerHttpAgent.ts",
+      "summary": "Shared module-level keep-alive HTTPS agent capping concurrent sockets to git providers.",
+      "tags": ["http", "connection-pooling", "singleton"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/infra/repositories/http/responseHeaders.ts",
+      "type": "file",
+      "name": "responseHeaders.ts",
+      "filePath": "packages/git/src/infra/repositories/http/responseHeaders.ts",
+      "summary": "Helper reading a numeric value from heterogeneous HTTP response header shapes.",
+      "tags": ["utility", "http", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/infra/repositories/http/responseHeaders.ts:headerAsNumber",
+      "type": "function",
+      "name": "headerAsNumber",
+      "filePath": "packages/git/src/infra/repositories/http/responseHeaders.ts",
+      "lineRange": [11, 36],
+      "summary": "Reads a header as a number across axios/fetch-style header shapes.",
+      "tags": ["http", "parsing", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/infra/repositories/http/withTransientRetry.ts",
+      "type": "file",
+      "name": "withTransientRetry.ts",
+      "filePath": "packages/git/src/infra/repositories/http/withTransientRetry.ts",
+      "summary": "Retry wrapper for git provider calls that retries transient network/timeouts with backoff and defines the provider request timeout.",
+      "tags": ["utility", "retry", "http", "resilience"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/infra/repositories/http/withTransientRetry.ts:isTransientProviderError",
+      "type": "function",
+      "name": "isTransientProviderError",
+      "filePath": "packages/git/src/infra/repositories/http/withTransientRetry.ts",
+      "lineRange": [16, 23],
+      "summary": "Classifies network and timeout errors as transient and retryable.",
+      "tags": ["retry", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/infra/repositories/http/withTransientRetry.ts:withTransientRetry",
+      "type": "function",
+      "name": "withTransientRetry",
+      "filePath": "packages/git/src/infra/repositories/http/withTransientRetry.ts",
+      "lineRange": [33, 56],
+      "summary": "Executes a provider call retrying transient failures with backoff.",
+      "tags": ["retry", "resilience", "http"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/infra/schemas/GitCommitSchema.ts",
+      "type": "file",
+      "name": "GitCommitSchema.ts",
+      "filePath": "packages/git/src/infra/schemas/GitCommitSchema.ts",
+      "summary": "TypeORM EntitySchema mapping GitCommit entities (sha, message, author, url) to the git_commits table.",
+      "tags": ["data-model", "typeorm", "schema-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/infra/schemas/GitProviderSchema.ts",
+      "type": "file",
+      "name": "GitProviderSchema.ts",
+      "filePath": "packages/git/src/infra/schemas/GitProviderSchema.ts",
+      "summary": "TypeORM EntitySchema for GitProvider entities with source, encrypted token, auth method, organization relation and soft delete.",
+      "tags": ["data-model", "typeorm", "schema-definition"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/infra/schemas/GitRepoSchema.ts",
+      "type": "file",
+      "name": "GitRepoSchema.ts",
+      "filePath": "packages/git/src/infra/schemas/GitRepoSchema.ts",
+      "summary": "TypeORM EntitySchema for GitRepo entities (owner, repo, branch, tracking state) linked to their git provider.",
+      "tags": ["data-model", "typeorm", "schema-definition"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/infra/schemas/OrganizationGitHubAppSchema.ts",
+      "type": "file",
+      "name": "OrganizationGitHubAppSchema.ts",
+      "filePath": "packages/git/src/infra/schemas/OrganizationGitHubAppSchema.ts",
+      "summary": "TypeORM EntitySchema for organization GitHub App registrations storing app id, slug, client credentials, private key, webhook secret and revocation.",
+      "tags": ["data-model", "typeorm", "schema-definition", "github-app"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/infra/schemas/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/git/src/infra/schemas/index.ts",
+      "summary": "Barrel re-exporting the git package TypeORM schemas and the gitSchemas array used to register them.",
+      "tags": ["barrel", "entry-point", "typeorm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/test/gitCommitFactory.ts",
+      "type": "file",
+      "name": "gitCommitFactory.ts",
+      "filePath": "packages/git/test/gitCommitFactory.ts",
+      "summary": "Test factory producing GitCommit fixtures with default values and overrides.",
+      "tags": ["test", "factory", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/test/gitCommitFactory.ts:gitCommitFactory",
+      "type": "function",
+      "name": "gitCommitFactory",
+      "filePath": "packages/git/test/gitCommitFactory.ts",
+      "lineRange": [5, 16],
+      "summary": "Creates a GitCommit test fixture with overridable fields.",
+      "tags": ["test", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/test/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/git/test/index.ts",
+      "summary": "Barrel for git package test helpers exposing the commit factory and a createGitCommit helper.",
+      "tags": ["test", "barrel", "fixture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/test/index.ts:createGitCommit",
+      "type": "function",
+      "name": "createGitCommit",
+      "filePath": "packages/git/test/index.ts",
+      "lineRange": [13, 19],
+      "summary": "Convenience helper producing a GitCommit fixture.",
+      "tags": ["test", "factory"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/git/src/infra/repositories/http/githubRateLimit.ts",
+      "target": "function:packages/git/src/infra/repositories/http/githubRateLimit.ts:detectGithubRateLimit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/githubRateLimit.ts",
+      "target": "function:packages/git/src/infra/repositories/http/githubRateLimit.ts:detectGithubRateLimit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/githubRateLimit.ts",
+      "target": "function:packages/git/src/infra/repositories/http/githubRateLimit.ts:retryAfterSeconds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/githubRateLimit.ts",
+      "target": "file:packages/git/src/infra/repositories/http/responseHeaders.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/githubRateLimit.ts",
+      "target": "file:packages/git/src/infra/repositories/http/withTransientRetry.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "target": "function:packages/git/src/infra/repositories/http/gitlabRateLimit.ts:detectGitlabRateLimit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "target": "function:packages/git/src/infra/repositories/http/gitlabRateLimit.ts:detectGitlabRateLimit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "target": "function:packages/git/src/infra/repositories/http/gitlabRateLimit.ts:gitlabRateLimitedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "target": "function:packages/git/src/infra/repositories/http/gitlabRateLimit.ts:gitlabRateLimitedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "target": "function:packages/git/src/infra/repositories/http/gitlabRateLimit.ts:retryAfterSeconds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "target": "file:packages/git/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/gitlabRateLimit.ts",
+      "target": "file:packages/git/src/infra/repositories/http/responseHeaders.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/responseHeaders.ts",
+      "target": "function:packages/git/src/infra/repositories/http/responseHeaders.ts:headerAsNumber",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/responseHeaders.ts",
+      "target": "function:packages/git/src/infra/repositories/http/responseHeaders.ts:headerAsNumber",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/withTransientRetry.ts",
+      "target": "function:packages/git/src/infra/repositories/http/withTransientRetry.ts:isTransientProviderError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/withTransientRetry.ts",
+      "target": "function:packages/git/src/infra/repositories/http/withTransientRetry.ts:isTransientProviderError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/withTransientRetry.ts",
+      "target": "function:packages/git/src/infra/repositories/http/withTransientRetry.ts:withTransientRetry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/infra/repositories/http/withTransientRetry.ts",
+      "target": "function:packages/git/src/infra/repositories/http/withTransientRetry.ts:withTransientRetry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/infra/schemas/index.ts",
+      "target": "file:packages/git/src/infra/schemas/GitCommitSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/schemas/index.ts",
+      "target": "file:packages/git/src/infra/schemas/GitProviderSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/schemas/index.ts",
+      "target": "file:packages/git/src/infra/schemas/GitRepoSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/infra/schemas/index.ts",
+      "target": "file:packages/git/src/infra/schemas/OrganizationGitHubAppSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/test/gitCommitFactory.ts",
+      "target": "function:packages/git/test/gitCommitFactory.ts:gitCommitFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/test/gitCommitFactory.ts",
+      "target": "function:packages/git/test/gitCommitFactory.ts:gitCommitFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/test/index.ts",
+      "target": "function:packages/git/test/index.ts:createGitCommit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/test/index.ts",
+      "target": "function:packages/git/test/index.ts:createGitCommit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/test/index.ts",
+      "target": "file:packages/git/src/infra/schemas/GitCommitSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/test/index.ts",
+      "target": "file:packages/git/test/gitCommitFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:packages/git/src/infra/repositories/http/githubRateLimit.ts:detectGithubRateLimit",
+      "target": "function:packages/git/src/infra/repositories/http/responseHeaders.ts:headerAsNumber",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/git/src/infra/repositories/http/gitlabRateLimit.ts:detectGitlabRateLimit",
+      "target": "function:packages/git/src/infra/repositories/http/responseHeaders.ts:headerAsNumber",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/git/src/infra/repositories/http/githubRateLimit.ts:detectGithubRateLimit",
+      "target": "function:packages/git/src/infra/repositories/http/withTransientRetry.ts:isTransientProviderError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/git/test/index.ts:createGitCommit",
+      "target": "function:packages/git/test/gitCommitFactory.ts:gitCommitFactory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/playbook-change-applier/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "packages/playbook-change-applier/CLAUDE.md",
+      "summary": "Agent guidance for the playbook-change-applier package, explaining how ApplyPlaybookUseCase selects a per-type applier (standard, command, skill), the pure applyChangeProposals step, and a checklist of the six switches to update when adding an artifact type.",
+      "tags": [
+        "documentation",
+        "architecture",
+        "change-proposals",
+        "agent-instructions",
+        "extension-guide"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/playbook-change-applier/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/playbook-change-applier/package.json",
+      "summary": "Package manifest for the private @packmind/playbook-change-applier workspace library (applies accepted change proposals to playbook artifacts), a CommonJS package depending on @packmind/types, logger, node-utils, skills, uuid, yaml and TypeORM.",
+      "tags": [
+        "configuration",
+        "package-manifest",
+        "dependencies",
+        "workspace"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/playbook-change-applier/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/playbook-change-applier/project.json",
+      "summary": "Nx project definition for the playbook-change-applier library: env:node tag, SWC build to dist/packages/playbook-change-applier from src/index.ts, and a typecheck override that also checks tsconfig.spec.json.",
+      "tags": ["configuration", "nx", "build-system", "typecheck"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/playbook-change-applier/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/playbook-change-applier/tsconfig.json",
+      "summary": "Root TypeScript config for the playbook-change-applier package, extending tsconfig.base.effective.json with strict CommonJS options and referencing the lib and spec tsconfigs.",
+      "tags": ["configuration", "typescript", "build-system", "strict-mode"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/playbook-change-applier/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/playbook-change-applier/tsconfig.lib.json",
+      "summary": "Library build TypeScript config for playbook-change-applier: emits declarations to dist/out-tsc and compiles src/**/*.ts while excluding spec and test files.",
+      "tags": ["configuration", "typescript", "build-system", "library"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/playbook-change-applier/package.json",
+      "target": "file:packages/playbook-change-applier/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/playbook-change-applier/project.json",
+      "target": "file:packages/playbook-change-applier/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/playbook-change-applier/tsconfig.json",
+      "target": "file:packages/playbook-change-applier/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/playbook-change-applier/tsconfig.lib.json",
+      "target": "file:packages/playbook-change-applier/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/playbook-change-applier/project.json",
+      "target": "config:packages/playbook-change-applier/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/playbook-change-applier/project.json",
+      "target": "config:packages/playbook-change-applier/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/playbook-change-applier/tsconfig.lib.json",
+      "target": "config:packages/playbook-change-applier/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/playbook-change-applier/CLAUDE.md",
+      "target": "file:packages/playbook-change-applier/src/ApplyPlaybookUseCase.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/playbook-change-applier/CLAUDE.md",
+      "target": "file:packages/playbook-change-applier/src/appliers/IChangesProposalApplier.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/playbook-change-applier/CLAUDE.md",
+      "target": "file:packages/playbook-change-applier/src/appliers/StandardChangesApplier.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/playbook-change-applier/CLAUDE.md",
+      "target": "file:packages/playbook-change-applier/src/appliers/CommandChangesApplier.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/playbook-change-applier/CLAUDE.md",
+      "target": "file:packages/playbook-change-applier/src/appliers/SkillChangesApplier.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/playbook-change-applier/CLAUDE.md",
+      "target": "document:packages/commands/CLAUDE.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/playbook-change-applier/CLAUDE.md",
+      "target": "document:packages/editions/CLAUDE.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/playbook-change-applier/CLAUDE.md",
+      "target": "document:packages/CLAUDE.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

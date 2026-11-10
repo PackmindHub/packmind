@@ -1,0 +1,1293 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "type": "file",
+      "name": "OverviewNeedsAttention.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "summary": "Space overview panel highlighting packages whose distributions have drifted and linking to their detail pages.",
+      "tags": ["component", "overview", "drift", "dashboard"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx:buildDriftHeading",
+      "type": "function",
+      "name": "buildDriftHeading",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "lineRange": [12, 23],
+      "summary": "Builds the heading text describing how many packages have drifted.",
+      "tags": ["utility", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx:OverviewNeedsAttention",
+      "type": "function",
+      "name": "OverviewNeedsAttention",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "lineRange": [25, 89],
+      "summary": "Renders drifted packages needing attention on the space overview.",
+      "tags": ["component", "overview"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx:DriftedPackageRow",
+      "type": "function",
+      "name": "DriftedPackageRow",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "lineRange": [91, 155],
+      "summary": "Row showing a drifted package and a link to its detail.",
+      "tags": ["component", "row"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx",
+      "type": "file",
+      "name": "OverviewSectionLabel.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx",
+      "summary": "Small styled label component used as a section header in the space overview page.",
+      "tags": ["component", "presentational", "overview", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx:OverviewSectionLabel",
+      "type": "function",
+      "name": "OverviewSectionLabel",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx",
+      "lineRange": [4, 19],
+      "summary": "Styled section label for overview panels.",
+      "tags": ["component", "presentational"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "type": "file",
+      "name": "OverviewSnapshot.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "summary": "Space overview snapshot listing counts of standards, commands, skills, packages and distributions with skeleton loading and route links.",
+      "tags": ["component", "overview", "dashboard", "metrics"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx:OverviewSnapshot",
+      "type": "function",
+      "name": "OverviewSnapshot",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "lineRange": [32, 108],
+      "summary": "Renders space artifact and distribution counts as snapshot rows.",
+      "tags": ["component", "overview"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx:SnapshotRow",
+      "type": "function",
+      "name": "SnapshotRow",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "lineRange": [110, 185],
+      "summary": "Single snapshot row with label, value and link.",
+      "tags": ["component", "row"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx:SnapshotRowSkeleton",
+      "type": "function",
+      "name": "SnapshotRowSkeleton",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "lineRange": [187, 201],
+      "summary": "Loading skeleton placeholder for a snapshot row.",
+      "tags": ["component", "loading"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx:SnapshotRowValue",
+      "type": "function",
+      "name": "SnapshotRowValue",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "lineRange": [203, 255],
+      "summary": "Renders the value portion of a snapshot row with loading handling.",
+      "tags": ["component", "presentational"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "type": "file",
+      "name": "SpaceOverviewPage.tsx",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "summary": "Space overview page assembling the snapshot, needs-attention panel and deployments overview for the current space.",
+      "tags": ["component", "page", "overview", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx:SpaceOverviewPage",
+      "type": "function",
+      "name": "SpaceOverviewPage",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "lineRange": [10, 38],
+      "summary": "Overview page composing snapshot, needs-attention and deployments overview.",
+      "tags": ["component", "page"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts",
+      "type": "file",
+      "name": "useDriftedPackages.ts",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts",
+      "summary": "Hook computing the list of drifted packages in the current space from active distributed packages using the package drift overview selector.",
+      "tags": ["hook", "drift", "deployments", "selector"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts:useDriftedPackages",
+      "type": "function",
+      "name": "useDriftedPackages",
+      "filePath": "apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts",
+      "lineRange": [23, 50],
+      "summary": "Hook deriving drifted packages for the current space.",
+      "tags": ["hook", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "file",
+      "name": "useCurrentSpace.ts",
+      "filePath": "apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "summary": "Hook resolving the current space from the spaceSlug route param via useGetSpaceBySlugQuery and exposing id, slug, name and readiness flags.",
+      "tags": ["hook", "routing", "context", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "function",
+      "name": "useCurrentSpace",
+      "filePath": "apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "lineRange": [4, 29],
+      "summary": "Hook resolving the current space from route params.",
+      "tags": ["hook", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/types/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/spaces/types/index.ts",
+      "summary": "Frontend space type definitions: re-exports Space types from @packmind/types and defines space member roles, entries, DTOs and API response shapes.",
+      "tags": ["type-definition", "data-model", "spaces", "dto"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/sse/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/sse/index.ts",
+      "summary": "Barrel exposing the useSSESubscription hook for server-sent events subscriptions.",
+      "tags": ["barrel", "entry-point", "sse", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/api/gateways/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/standards/api/gateways/index.ts",
+      "summary": "Barrel instantiating the singleton standardsGateway and re-exporting the standards gateway interface and API implementation.",
+      "tags": ["barrel", "singleton", "gateway", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "file",
+      "name": "StandardsQueries.ts",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "summary": "TanStack Query hooks for standards: listing by space, fetching by id, versions and rules, plus create, update, delete, batch-delete and create-from-samples mutations with cross-domain cache invalidation.",
+      "tags": ["hook", "react-query", "data-fetching", "mutation", "standards"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getStandardsBySpaceQueryOptions",
+      "type": "function",
+      "name": "getStandardsBySpaceQueryOptions",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [32, 50],
+      "summary": "Builds query options listing standards for a space.",
+      "tags": ["query-options", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardsQuery",
+      "type": "function",
+      "name": "useGetStandardsQuery",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [52, 57],
+      "summary": "Hook listing standards of the current space.",
+      "tags": ["hook", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getStandardByIdOptions",
+      "type": "function",
+      "name": "getStandardByIdOptions",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [59, 68],
+      "summary": "Builds query options to fetch a standard by id.",
+      "tags": ["query-options", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardByIdQuery",
+      "type": "function",
+      "name": "useGetStandardByIdQuery",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [70, 92],
+      "summary": "Hook fetching a standard by id in the current space.",
+      "tags": ["hook", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useCreateStandardMutation",
+      "type": "function",
+      "name": "useCreateStandardMutation",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [96, 137],
+      "summary": "Mutation hook creating a standard and invalidating standards caches.",
+      "tags": ["hook", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useUpdateStandardMutation",
+      "type": "function",
+      "name": "useUpdateStandardMutation",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [141, 209],
+      "summary": "Mutation hook updating a standard and invalidating standard, version, rule and deployment caches.",
+      "tags": ["hook", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardVersionsQuery",
+      "type": "function",
+      "name": "useGetStandardVersionsQuery",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [211, 229],
+      "summary": "Hook fetching the version history of a standard.",
+      "tags": ["hook", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getRulesByStandardIdOptions",
+      "type": "function",
+      "name": "getRulesByStandardIdOptions",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [231, 245],
+      "summary": "Builds query options fetching rules for a standard.",
+      "tags": ["query-options", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetRulesByStandardIdQuery",
+      "type": "function",
+      "name": "useGetRulesByStandardIdQuery",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [247, 273],
+      "summary": "Hook fetching rules of a standard.",
+      "tags": ["hook", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useDeleteStandardMutation",
+      "type": "function",
+      "name": "useDeleteStandardMutation",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [277, 358],
+      "summary": "Mutation hook deleting a standard and cleaning related caches including deployments.",
+      "tags": ["hook", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useCreateStandardsFromSamplesMutation",
+      "type": "function",
+      "name": "useCreateStandardsFromSamplesMutation",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [362, 395],
+      "summary": "Mutation hook creating standards from predefined samples.",
+      "tags": ["hook", "mutation", "onboarding"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useDeleteStandardsBatchMutation",
+      "type": "function",
+      "name": "useDeleteStandardsBatchMutation",
+      "filePath": "apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "lineRange": [399, 452],
+      "summary": "Mutation hook deleting several standards at once with cache invalidation.",
+      "tags": ["hook", "mutation", "batch"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "summary": "React Query key factory for standards (by space, by id, versions, rules) built on organization and spaces query scopes.",
+      "tags": ["query-keys", "react-query", "cache", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queryKeys.ts:getStandardsBySpaceKey",
+      "type": "function",
+      "name": "getStandardsBySpaceKey",
+      "filePath": "apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "lineRange": [15, 22],
+      "summary": "Builds the query key for standards in a space.",
+      "tags": ["query-keys", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/api/queryKeys.ts:getStandardByIdKey",
+      "type": "function",
+      "name": "getStandardByIdKey",
+      "filePath": "apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "lineRange": [24, 35],
+      "summary": "Builds the query key for a single standard.",
+      "tags": ["query-keys", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "type": "file",
+      "name": "CreateStandard.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "summary": "Create-standard page component rendering the standard form and optionally attaching the new standard to a package before navigating.",
+      "tags": ["component", "page", "form", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/CreateStandard.tsx:CreateStandard",
+      "type": "function",
+      "name": "CreateStandard",
+      "filePath": "apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "lineRange": [10, 58],
+      "summary": "Page component creating a standard and optionally attaching it to a package.",
+      "tags": ["component", "page"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/RuleSummaryStatus.tsx",
+      "type": "file",
+      "name": "RuleSummaryStatus.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/RuleSummaryStatus.tsx",
+      "summary": "Displays a rule's summary status (examples, detection program state) with badges and tooltips.",
+      "tags": ["component", "status", "rules", "presentational"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/RuleSummaryStatus.tsx:RuleSummaryStatus",
+      "type": "function",
+      "name": "RuleSummaryStatus",
+      "filePath": "apps/frontend/src/domain/standards/components/RuleSummaryStatus.tsx",
+      "lineRange": [14, 109],
+      "summary": "Renders rule status badges and tooltips.",
+      "tags": ["component", "status"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/RuleSummaryTable.tsx",
+      "type": "file",
+      "name": "RuleSummaryTable.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/RuleSummaryTable.tsx",
+      "summary": "Table listing a standard's rules with their summary status and links to the rule detail routes.",
+      "tags": ["component", "table", "rules", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/RuleSummaryTable.tsx:RuleSummaryTable",
+      "type": "function",
+      "name": "RuleSummaryTable",
+      "filePath": "apps/frontend/src/domain/standards/components/RuleSummaryTable.tsx",
+      "lineRange": [21, 121],
+      "summary": "Table of rules with status and links.",
+      "tags": ["component", "table"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "type": "file",
+      "name": "StandardDetails.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "summary": "Standard detail view orchestrating tabs for summary, rules, versions and distributions, rule selection via URL, change proposals and standard deletion.",
+      "tags": ["component", "page", "standards", "detail-view"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardDetails.tsx:StandardDetails",
+      "type": "function",
+      "name": "StandardDetails",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "lineRange": [59, 351],
+      "summary": "Main standard detail component managing tabs, rule selection and deletion.",
+      "tags": ["component", "page"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx",
+      "type": "file",
+      "name": "StandardDetailsActions.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx",
+      "summary": "Action button groups for the standard detail header: summary actions (edit, delete, deploy) and rule-level actions.",
+      "tags": ["component", "actions", "standards", "toolbar"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx:SummaryActions",
+      "type": "function",
+      "name": "SummaryActions",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx",
+      "lineRange": [22, 84],
+      "summary": "Action buttons for the standard summary header.",
+      "tags": ["component", "actions"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx:RuleActions",
+      "type": "function",
+      "name": "RuleActions",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx",
+      "lineRange": [90, 96],
+      "summary": "Action buttons for a selected rule.",
+      "tags": ["component", "actions"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx:buildDriftHeading",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx:OverviewNeedsAttention",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx:OverviewNeedsAttention",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx:DriftedPackageRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx:OverviewSectionLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx:OverviewSectionLabel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx:OverviewSnapshot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx:OverviewSnapshot",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx:SnapshotRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx:SnapshotRowSkeleton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx:SnapshotRowValue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx:SpaceOverviewPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx:SpaceOverviewPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/DeploymentsOverviewRedesign.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSectionLabel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts:useDriftedPackages",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts:useDriftedPackages",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getStandardsBySpaceQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getStandardsBySpaceQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getStandardByIdOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getStandardByIdOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardByIdQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardByIdQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useCreateStandardMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useCreateStandardMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useUpdateStandardMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useUpdateStandardMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardVersionsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardVersionsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getRulesByStandardIdOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getRulesByStandardIdOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetRulesByStandardIdQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetRulesByStandardIdQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useDeleteStandardMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useDeleteStandardMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useCreateStandardsFromSamplesMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useCreateStandardsFromSamplesMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useDeleteStandardsBatchMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useDeleteStandardsBatchMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "file:apps/frontend/src/domain/standards/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "target": "file:apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queryKeys.ts:getStandardsBySpaceKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queryKeys.ts:getStandardsBySpaceKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queryKeys.ts:getStandardByIdKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/standards/api/queryKeys.ts:getStandardByIdKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/CreateStandard.tsx:CreateStandard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/CreateStandard.tsx:CreateStandard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/CreateStandard.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/useNavigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/RuleSummaryStatus.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/RuleSummaryStatus.tsx:RuleSummaryStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/RuleSummaryStatus.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/RuleSummaryStatus.tsx:RuleSummaryStatus",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/RuleSummaryTable.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/RuleSummaryTable.tsx:RuleSummaryTable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/RuleSummaryTable.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/RuleSummaryTable.tsx:RuleSummaryTable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/RuleSummaryTable.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/RuleSummaryStatus.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/RuleSummaryTable.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardDetails.tsx:StandardDetails",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardDetails.tsx:StandardDetails",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardRulesFrame.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/domain/standards/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx:SummaryActions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx:SummaryActions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx:RuleActions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx:RuleActions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsActions.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpaceBySlugQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts:useDriftedPackages",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx:OverviewNeedsAttention",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts:useDriftedPackages",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx:OverviewNeedsAttention",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/OverviewNeedsAttention.tsx:buildDriftHeading",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/overview/OverviewSnapshot.tsx:OverviewSnapshot",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/overview/SpaceOverviewPage.tsx:SpaceOverviewPage",
+      "target": "function:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts:useDriftedPackages",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardDetails.tsx:StandardDetails",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardDetails.tsx:StandardDetails",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardVersionsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardDetails.tsx:StandardDetails",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetRulesByStandardIdQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardDetails.tsx:StandardDetails",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useDeleteStandardMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardByIdQuery",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getStandardsBySpaceQueryOptions",
+      "target": "function:apps/frontend/src/domain/standards/api/queryKeys.ts:getStandardsBySpaceKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:getStandardByIdOptions",
+      "target": "function:apps/frontend/src/domain/standards/api/queryKeys.ts:getStandardByIdKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/spaces/components/overview/useDriftedPackages.ts:useDriftedPackages",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListActiveDistributedPackagesBySpaceQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardDetails.tsx:StandardDetails",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

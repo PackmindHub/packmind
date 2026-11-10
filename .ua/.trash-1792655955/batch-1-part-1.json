@@ -1,0 +1,582 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.distribution-rendering._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.settings.distribution-rendering._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.distribution-rendering._index.tsx",
+      "summary": "Route module for the organization settings 'Distribution rendering' page, wrapping the RenderingSettings form that picks which agents/formats artifacts are rendered for.",
+      "tags": ["route", "page", "settings", "rendering"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.distribution-rendering._index.tsx:SettingsDistributionRenderingRouteModule",
+      "type": "function",
+      "name": "SettingsDistributionRenderingRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.distribution-rendering._index.tsx",
+      "lineRange": [4, 15],
+      "summary": "Renders the distribution rendering settings page around RenderingSettings.",
+      "tags": ["route", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.git._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.settings.git._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.git._index.tsx",
+      "summary": "Route module for the organization 'Git connections' settings page, rendering GitProvidersPage for the current organization.",
+      "tags": ["route", "page", "settings", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.git._index.tsx:SettingsGitRouteModule",
+      "type": "function",
+      "name": "SettingsGitRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.git._index.tsx",
+      "lineRange": [5, 21],
+      "summary": "Renders the Git connections settings page for the current organization.",
+      "tags": ["route", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.llm._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.settings.llm._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.llm._index.tsx",
+      "summary": "Route module for the organization 'AI Provider' settings page, rendering the LLM configuration page for the current organization.",
+      "tags": ["route", "page", "settings", "llm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.llm._index.tsx:SettingsLLMRouteModule",
+      "type": "function",
+      "name": "SettingsLLMRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.llm._index.tsx",
+      "lineRange": [5, 17],
+      "summary": "Renders the AI provider settings page for the current organization.",
+      "tags": ["route", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.settings.targets._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx",
+      "summary": "Route module for the organization 'Targets' settings page: loads targets, git repos and providers, groups targets by repository and renders a RepositoryTargetCard per repository with provider-auth awareness.",
+      "tags": ["route", "page", "settings", "distribution-targets"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx:TargetsRouteModule",
+      "type": "function",
+      "name": "TargetsRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx",
+      "lineRange": [19, 131],
+      "summary": "Fetches targets, repos and providers, groups targets by repository and renders repository target cards or an error state.",
+      "tags": ["route", "component", "data-fetching"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.users._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.settings.users._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.users._index.tsx",
+      "summary": "Route module for the organization 'Users' settings page, rendering UsersPage for the current organization.",
+      "tags": ["route", "page", "settings", "users"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.users._index.tsx:SettingsUsersRouteModule",
+      "type": "function",
+      "name": "SettingsUsersRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.settings.users._index.tsx",
+      "lineRange": [5, 17],
+      "summary": "Renders the users settings page for the current organization.",
+      "tags": ["route", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/UsersPage.tsx",
+      "type": "file",
+      "name": "UsersPage.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/UsersPage.tsx",
+      "summary": "Thin page component that renders the organization's UsersList for a given organization id.",
+      "tags": ["component", "accounts", "users", "page"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/UsersPage.tsx:UsersPage",
+      "type": "function",
+      "name": "UsersPage",
+      "filePath": "apps/frontend/src/domain/accounts/components/UsersPage.tsx",
+      "lineRange": [9, 11],
+      "summary": "Renders the users list for an organization.",
+      "tags": ["component", "page"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/accounts/hooks/index.ts",
+      "summary": "Barrel for account hooks, re-exporting useIsAuthenticated, useAuthContext and the AuthContext types.",
+      "tags": ["barrel", "entry-point", "hook", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts",
+      "type": "file",
+      "name": "packageReleaseRefusal.ts",
+      "filePath": "apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts",
+      "summary": "Parses a package-release refusal (error code and the server's current X.Y.Z version) out of a caught API error, returning null for any other failure so callers fall back to generic handling.",
+      "tags": ["error-handling", "validation", "api-client", "package-release"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts:readPackageReleaseRefusal",
+      "type": "function",
+      "name": "readPackageReleaseRefusal",
+      "filePath": "apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts",
+      "lineRange": [32, 66],
+      "summary": "Extracts a typed release refusal (code and parsed X.Y.Z version) from an unknown error, or null.",
+      "tags": ["error-handling", "parser"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/DeploymentsPage/DeploymentsPage.tsx",
+      "type": "file",
+      "name": "DeploymentsPage.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentsPage/DeploymentsPage.tsx",
+      "summary": "Deployments page component that simply renders the redesigned deployments overview content.",
+      "tags": ["component", "page", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/DeploymentsPage/DeploymentsPage.tsx:DeploymentsPage",
+      "type": "function",
+      "name": "DeploymentsPage",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentsPage/DeploymentsPage.tsx",
+      "lineRange": [4, 6],
+      "summary": "Renders the redesigned deployments overview content.",
+      "tags": ["component", "page"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageDistributionList/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageDistributionList/index.ts",
+      "summary": "Barrel re-exporting everything from the PackageDistributionList component module.",
+      "tags": ["barrel", "entry-point", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "type": "file",
+      "name": "RenderingSettings.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "summary": "Render-mode configuration UI: a context-backed component that loads and saves which agent formats (Claude, Cursor, Copilot, AGENTS.md...) artifacts are rendered to, with body, CTA and default layout slots plus a reusable formats grid.",
+      "tags": [
+        "component",
+        "settings",
+        "rendering",
+        "compound-component",
+        "react-query"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:useRenderingSettings",
+      "type": "function",
+      "name": "useRenderingSettings",
+      "filePath": "apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "lineRange": [86, 94],
+      "summary": "Reads the RenderingSettings context, throwing when used outside the provider.",
+      "tags": ["hook", "context"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:RenderingSettingsComponent",
+      "type": "function",
+      "name": "RenderingSettingsComponent",
+      "filePath": "apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "lineRange": [100, 215],
+      "summary": "Provider component that loads render-mode config, tracks selected formats and saves/reset them via mutation.",
+      "tags": ["component", "provider", "form-state"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:RenderingSettingsBody",
+      "type": "function",
+      "name": "RenderingSettingsBody",
+      "filePath": "apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "lineRange": [217, 244],
+      "summary": "Renders the format selection grid bound to the rendering settings context.",
+      "tags": ["component", "slot"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:RenderingSettingsCta",
+      "type": "function",
+      "name": "RenderingSettingsCta",
+      "filePath": "apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "lineRange": [246, 269],
+      "summary": "Renders reset/save buttons for rendering settings.",
+      "tags": ["component", "cta"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:RenderingFormatsGrid",
+      "type": "function",
+      "name": "RenderingFormatsGrid",
+      "filePath": "apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "lineRange": [280, 307],
+      "summary": "Checkbox grid of available agent rendering formats.",
+      "tags": ["component", "ui", "selection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx",
+      "type": "file",
+      "name": "RepositoryTargetCard.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx",
+      "summary": "Card summarizing a repository's distribution targets as badges, warning when the tracked branch was deleted and opening the TargetManagementDialog to edit or select targets.",
+      "tags": ["component", "distribution-targets", "git", "repository"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx:RepositoryTargetCard",
+      "type": "function",
+      "name": "RepositoryTargetCard",
+      "filePath": "apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx",
+      "lineRange": [29, 173],
+      "summary": "Card for one repository listing its targets with a deleted-branch warning and target management dialog.",
+      "tags": ["component", "distribution-targets"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.distribution-rendering._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.distribution-rendering._index.tsx:SettingsDistributionRenderingRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.distribution-rendering._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.distribution-rendering._index.tsx:SettingsDistributionRenderingRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.distribution-rendering._index.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.git._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.git._index.tsx:SettingsGitRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.git._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.git._index.tsx:SettingsGitRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.git._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.git._index.tsx",
+      "target": "file:apps/frontend/src/domain/git/components/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.llm._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.llm._index.tsx:SettingsLLMRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.llm._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.llm._index.tsx:SettingsLLMRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.llm._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.llm._index.tsx",
+      "target": "file:apps/frontend/src/domain/llm/components/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx:TargetsRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx:TargetsRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.targets._index.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.users._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.users._index.tsx:SettingsUsersRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.users._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.settings.users._index.tsx:SettingsUsersRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.users._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/UsersPage.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.settings.users._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersPage.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UsersPage.tsx:UsersPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersPage.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UsersPage.tsx:UsersPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersPage.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts:readPackageReleaseRefusal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts:readPackageReleaseRefusal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsPage/DeploymentsPage.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentsPage/DeploymentsPage.tsx:DeploymentsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsPage/DeploymentsPage.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentsPage/DeploymentsPage.tsx:DeploymentsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsPage/DeploymentsPage.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/DeploymentsOverviewRedesign.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:useRenderingSettings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:useRenderingSettings",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:RenderingSettingsComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:RenderingSettingsBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:RenderingSettingsCta",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:RenderingFormatsGrid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx:RenderingFormatsGrid",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx:RepositoryTargetCard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx:RepositoryTargetCard",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/TargetBadge/TargetBadge.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetCard/RepositoryTargetCard.tsx",
+      "target": "file:apps/frontend/src/shared/components/DeletedBranchBadge.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/errors/packageReleaseRefusal.ts:readPackageReleaseRefusal",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

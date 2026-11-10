@@ -1,0 +1,1048 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackagesPopover/index.ts",
+      "summary": "Barrel exposing the packages popover and its move/remove confirmation dialogs.",
+      "tags": ["barrel", "entry-point", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RelativeDate.tsx",
+      "type": "file",
+      "name": "RelativeDate.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RelativeDate.tsx",
+      "summary": "Renders a relative date (\"3 days ago\") with the absolute timestamp in a tooltip.",
+      "tags": ["component", "react", "date", "formatting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RelativeDate.tsx:RelativeDate",
+      "type": "function",
+      "name": "RelativeDate",
+      "filePath": "apps/frontend/src/domain/deployments/components/RelativeDate.tsx",
+      "lineRange": [38, 60],
+      "summary": "Renders a relative date with an absolute-date tooltip.",
+      "tags": ["component", "date"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "type": "file",
+      "name": "RemovePackageFromTargets.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "summary": "Compound component providing context for removing a package from distribution targets, wiring active distributions and the removal mutation to body and CTA slots.",
+      "tags": [
+        "component",
+        "react",
+        "context",
+        "compound-component",
+        "deployment"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx:useRemovePackageFromTargetsContext",
+      "type": "function",
+      "name": "useRemovePackageFromTargetsContext",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "lineRange": [38, 46],
+      "summary": "Hook accessing the remove-package-from-targets context, throwing outside its provider.",
+      "tags": ["hook", "context"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx:RemovePackageFromTargetsComponent",
+      "type": "function",
+      "name": "RemovePackageFromTargetsComponent",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "lineRange": [55, 127],
+      "summary": "Provider component wiring active distributions and the removal mutation into context.",
+      "tags": ["component", "context"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "type": "file",
+      "name": "RemovePackageFromTargetsBody.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "summary": "Body of the remove-package-from-targets flow listing removable distributions grouped by repository for selection.",
+      "tags": ["component", "react", "deployment", "selection"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx:removableDistributions",
+      "type": "function",
+      "name": "removableDistributions",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "lineRange": [40, 64],
+      "summary": "Filters active distributions down to those that can be removed.",
+      "tags": ["utility", "filtering"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx:RemovePackageFromTargetsBodyImpl",
+      "type": "function",
+      "name": "RemovePackageFromTargetsBodyImpl",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "lineRange": [66, 189],
+      "summary": "Renders the selectable list of removable targets.",
+      "tags": ["component", "selection"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx",
+      "type": "file",
+      "name": "RemovePackageFromTargetsButton.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx",
+      "summary": "Button opening the remove-package-from-targets dialog, disabled when the package has no active distributions.",
+      "tags": ["component", "react", "button", "deployment"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx:RemovePackageFromTargetsButton",
+      "type": "function",
+      "name": "RemovePackageFromTargetsButton",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx",
+      "lineRange": [15, 64],
+      "summary": "Button opening the removal dialog.",
+      "tags": ["component", "button"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx",
+      "type": "file",
+      "name": "RemovePackageFromTargetsCTA.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx",
+      "summary": "Call-to-action that triggers the removal of a package from selected targets using the shared context.",
+      "tags": ["component", "react", "cta", "deployment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx:RemovePackageFromTargetsCTAImpl",
+      "type": "function",
+      "name": "RemovePackageFromTargetsCTAImpl",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx",
+      "lineRange": [6, 52],
+      "summary": "Submit button for removing the package from selected targets.",
+      "tags": ["component", "cta"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx",
+      "type": "file",
+      "name": "RemovePackageFromTargetsDialog.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx",
+      "summary": "Dialog hosting the remove-package-from-targets compound component, showing success and error notifications.",
+      "tags": ["component", "react", "dialog", "deployment"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx:RemovePackageFromTargetsDialog",
+      "type": "function",
+      "name": "RemovePackageFromTargetsDialog",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx",
+      "lineRange": [39, 116],
+      "summary": "Dialog wrapper for the removal flow with notifications.",
+      "tags": ["component", "dialog"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/index.ts",
+      "summary": "Barrel exporting the remove-package-from-targets component, context hook, button and dialog.",
+      "tags": ["barrel", "entry-point", "deployment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetTable/RepositoryTargetTable.tsx",
+      "type": "file",
+      "name": "RepositoryTargetTable.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RepositoryTargetTable/RepositoryTargetTable.tsx",
+      "summary": "Table listing repository targets and the artifacts deployed to each, reusing the package artifacts table.",
+      "tags": ["component", "react", "table", "deployment"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RepositoryTargetTable/RepositoryTargetTable.tsx:RepositoryTargetTable",
+      "type": "function",
+      "name": "RepositoryTargetTable",
+      "filePath": "apps/frontend/src/domain/deployments/components/RepositoryTargetTable/RepositoryTargetTable.tsx",
+      "lineRange": [17, 66],
+      "summary": "Table of repository targets and their deployed artifacts.",
+      "tags": ["component", "table"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "type": "file",
+      "name": "RunDistributionBody.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "summary": "Body of the run-distribution flow letting users pick targets and run a distribution, or copy CLI commands when no git provider is set up.",
+      "tags": ["component", "react", "distribution", "deployment"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx:RunDistributionBodyImpl",
+      "type": "function",
+      "name": "RunDistributionBodyImpl",
+      "filePath": "apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "lineRange": [29, 273],
+      "summary": "Target selection and run UI for distributions.",
+      "tags": ["component", "distribution"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/SelectionBar.tsx",
+      "type": "file",
+      "name": "SelectionBar.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/SelectionBar.tsx",
+      "summary": "Floating selection bar showing how many items are picked, with primary actions and a menu of secondary/destructive actions with disabled reasons.",
+      "tags": ["component", "react", "selection", "bulk-actions"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/SelectionBar.tsx:SelectionBar",
+      "type": "function",
+      "name": "SelectionBar",
+      "filePath": "apps/frontend/src/domain/deployments/components/SelectionBar.tsx",
+      "lineRange": [95, 263],
+      "summary": "Renders selection count, actions and overflow menu.",
+      "tags": ["component", "bulk-actions"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "type": "file",
+      "name": "SkillDistributionsList.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "summary": "Lists the distribution history of a skill, marking live packages and targets.",
+      "tags": ["component", "react", "distribution-history", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx:SkillDistributionsList",
+      "type": "function",
+      "name": "SkillDistributionsList",
+      "filePath": "apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "lineRange": [15, 59],
+      "summary": "Renders skill distribution history.",
+      "tags": ["component", "history"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "type": "file",
+      "name": "SpaceContentSubscription.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "summary": "Headless component subscribing to space content SSE events and debouncing bursts into React Query cache invalidations for packages, standards and spaces.",
+      "tags": [
+        "sse",
+        "react-query",
+        "subscription",
+        "cache-invalidation",
+        "component"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx:SpaceContentSubscription",
+      "type": "function",
+      "name": "SpaceContentSubscription",
+      "filePath": "apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "lineRange": [59, 178],
+      "summary": "Subscribes to space content events and invalidates queries with burst debouncing.",
+      "tags": ["sse", "subscription"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx",
+      "type": "file",
+      "name": "StandardDeploymentsList.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx",
+      "summary": "Lists the deployment history of a standard using the shared DeploymentsHistory view.",
+      "tags": ["component", "react", "distribution-history", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx:DeploymentsHistory",
+      "type": "function",
+      "name": "DeploymentsHistory",
+      "filePath": "apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx",
+      "lineRange": [11, 48],
+      "summary": "Renders a standard's deployment history.",
+      "tags": ["component", "history"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "type": "file",
+      "name": "StandardDistributionsList.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "summary": "Lists the distribution history of a standard, marking live packages and targets.",
+      "tags": ["component", "react", "distribution-history", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx:StandardDistributionsList",
+      "type": "function",
+      "name": "StandardDistributionsList",
+      "filePath": "apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "lineRange": [15, 57],
+      "summary": "Renders standard distribution history.",
+      "tags": ["component", "history"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "type": "file",
+      "name": "AddComponentsDrawer.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "summary": "Drawer for adding existing components (standards, commands, skills) to a package or creating new ones, defaulting to unpackaged components and submitting the whole selection in one mutation.",
+      "tags": ["component", "react", "drawer", "packages", "mutation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:AddComponentsDrawer",
+      "type": "function",
+      "name": "AddComponentsDrawer",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "lineRange": [95, 715],
+      "summary": "Drawer to pick and add components to a package in a single mutation.",
+      "tags": ["component", "drawer"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:CandidateGroup",
+      "type": "function",
+      "name": "CandidateGroup",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "lineRange": [730, 832],
+      "summary": "Group of candidate components of one type with select-all.",
+      "tags": ["component", "list"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:CandidateRow",
+      "type": "function",
+      "name": "CandidateRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "lineRange": [843, 940],
+      "summary": "Selectable row for a candidate component showing its current packages.",
+      "tags": ["component", "row"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:CurrentPackages",
+      "type": "function",
+      "name": "CurrentPackages",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "lineRange": [955, 985],
+      "summary": "Shows the packages that already carry a component.",
+      "tags": ["component", "presentational"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:NothingToAdd",
+      "type": "function",
+      "name": "NothingToAdd",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "lineRange": [1003, 1019],
+      "summary": "Empty state when no components can be added.",
+      "tags": ["component", "blank-state"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RelativeDate.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RelativeDate.tsx:RelativeDate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RelativeDate.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RelativeDate.tsx:RelativeDate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RelativeDate.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx:useRemovePackageFromTargetsContext",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx:useRemovePackageFromTargetsContext",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx:RemovePackageFromTargetsComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx:removableDistributions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx:RemovePackageFromTargetsBodyImpl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx:RemovePackageFromTargetsBodyImpl",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx:RemovePackageFromTargetsButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx:RemovePackageFromTargetsButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useActiveDistributions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx:RemovePackageFromTargetsCTAImpl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx:RemovePackageFromTargetsCTAImpl",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx:RemovePackageFromTargetsDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx:RemovePackageFromTargetsDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetTable/RepositoryTargetTable.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RepositoryTargetTable/RepositoryTargetTable.tsx:RepositoryTargetTable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetTable/RepositoryTargetTable.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RepositoryTargetTable/RepositoryTargetTable.tsx:RepositoryTargetTable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RepositoryTargetTable/RepositoryTargetTable.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageArtifactsTable/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx:RunDistributionBodyImpl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx:RunDistributionBodyImpl",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/CopiableTextField.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SelectionBar.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/SelectionBar.tsx:SelectionBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SelectionBar.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/SelectionBar.tsx:SelectionBar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx:SkillDistributionsList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx:SkillDistributionsList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx:SpaceContentSubscription",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx:SpaceContentSubscription",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "target": "file:apps/frontend/src/domain/sse/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/SpaceContentSubscription.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx:DeploymentsHistory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx:DeploymentsHistory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDeployments/StandardDeploymentsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx:StandardDistributionsList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx:StandardDistributionsList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:AddComponentsDrawer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:AddComponentsDrawer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:CandidateGroup",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:CandidateRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:CurrentPackages",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx:NothingToAdd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextChip.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildAddableComponents.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildMoveTargets.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/AddComponentsDrawer.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsBody.tsx:RemovePackageFromTargetsBodyImpl",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx:useRemovePackageFromTargetsContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsCTA.tsx:RemovePackageFromTargetsCTAImpl",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx:useRemovePackageFromTargetsContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx:RemovePackageFromTargetsButton",
+      "target": "function:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx:RemovePackageFromTargetsDialog",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/PackagesPopover.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/MoveArtifactsToPackageConfirm.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/RemoveArtifactFromPackageConfirm.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargets.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsButton.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/RemovePackageFromTargets/RemovePackageFromTargetsDialog.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

@@ -1,0 +1,428 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/api/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "apps/api/eslint.config.mjs",
+      "summary": "Minimal ESLint flat config for the NestJS API app that simply re-exports the root workspace configuration.",
+      "tags": ["configuration", "linting", "eslint", "api"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "apps/cli/eslint.config.mjs",
+      "summary": "ESLint flat config for the CLI app extending the root config and banning console.log in TypeScript files in favor of consoleLogger utilities.",
+      "tags": ["configuration", "linting", "eslint", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "apps/frontend/eslint.config.mjs",
+      "summary": "ESLint flat config for the React frontend: extends root and Nx React presets, and forbids factory-less vi.mock/vi.doMock calls in specs because the Vitest suite runs with isolate:false.",
+      "tags": ["configuration", "linting", "eslint", "react", "test"],
+      "complexity": "simple",
+      "languageNotes": "Uses an ESLint AST selector in no-restricted-syntax to enforce a testing convention specific to Vitest isolate:false mode."
+    },
+    {
+      "id": "file:eslint-rules/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "eslint-rules/eslint.config.mjs",
+      "summary": "ESLint config for the local eslint-rules project, extending the root config and allowing require() since rules are authored as CommonJS.",
+      "tags": ["configuration", "linting", "eslint"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:eslint-rules/index.js",
+      "type": "file",
+      "name": "index.js",
+      "filePath": "eslint-rules/index.js",
+      "summary": "Local ESLint plugin entry point that registers the Packmind workspace rules (use-case-filename, usecase-casing, throw-kind-carrying-error) for consumption by the root config.",
+      "tags": ["entry-point", "barrel", "eslint-plugin", "linting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:eslint-rules/rules/throw-kind-carrying-error.js",
+      "type": "file",
+      "name": "throw-kind-carrying-error.js",
+      "filePath": "eslint-rules/rules/throw-kind-carrying-error.js",
+      "summary": "Type-aware ESLint rule requiring every thrown value in domain/application layers to carry a known `kind` and string `reason` recognized by DomainExceptionFilter, so the API does not answer 500.",
+      "tags": [
+        "eslint-rule",
+        "validation",
+        "error-handling",
+        "type-aware",
+        "linting"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Uses the TypeScript compiler API via typescript-eslint parserServices to inspect union, intersection, and base types of thrown expressions."
+    },
+    {
+      "id": "file:eslint-rules/rules/use-case-filename.js",
+      "type": "file",
+      "name": "use-case-filename.js",
+      "filePath": "eslint-rules/rules/use-case-filename.js",
+      "summary": "ESLint rule enforcing structural use-case naming under application/useCases: flags the legacy dotted .usecase filename suffix and exported classes missing the UseCase suffix.",
+      "tags": [
+        "eslint-rule",
+        "naming-convention",
+        "hexagonal-architecture",
+        "linting"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:eslint-rules/rules/usecase-casing.js",
+      "type": "file",
+      "name": "usecase-casing.js",
+      "filePath": "eslint-rules/rules/usecase-casing.js",
+      "summary": "Repo-wide ESLint rule flagging the mis-cased \"Usecase\" in filenames and identifiers and suggesting the \"UseCase\" spelling.",
+      "tags": ["eslint-rule", "naming-convention", "linting", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "eslint.config.mjs",
+      "summary": "Root ESLint flat config for the Nx monorepo: combines Nx/typescript-eslint presets, registers the local packmind plugin with use-case naming and type-aware throw rules scoped to domain/application layers, and enforces Nx module boundary constraints for source and test files.",
+      "tags": [
+        "configuration",
+        "linting",
+        "eslint",
+        "build-system",
+        "module-boundaries"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Computes rule file globs dynamically from process.cwd() so the same config works whether ESLint runs from the repo root or a project directory."
+    },
+    {
+      "id": "file:packages/accounts/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/accounts/eslint.config.mjs",
+      "summary": "ESLint flat config for the accounts package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/coding-agent/eslint.config.mjs",
+      "summary": "ESLint flat config for the coding-agent package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself, and additionally ignoring the semver dependency.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/commands/eslint.config.mjs",
+      "summary": "ESLint flat config for the commands package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/deployments/eslint.config.mjs",
+      "summary": "ESLint flat config for the deployments package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/feature-flags/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/feature-flags/eslint.config.mjs",
+      "summary": "ESLint flat config for the feature-flags package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/git/eslint.config.mjs",
+      "summary": "ESLint flat config for the git package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/llm/eslint.config.mjs",
+      "summary": "ESLint flat config for the llm package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/logger/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/logger/eslint.config.mjs",
+      "summary": "ESLint flat config for the logger package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/node-utils/eslint.config.mjs",
+      "summary": "ESLint flat config for the node-utils package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself, and additionally ignoring the pg-mem dependency.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/playbook-change-applier/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/playbook-change-applier/eslint.config.mjs",
+      "summary": "ESLint flat config for the playbook-change-applier package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/skills/eslint.config.mjs",
+      "summary": "ESLint flat config for the skills package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/spaces/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/spaces/eslint.config.mjs",
+      "summary": "ESLint flat config for the spaces package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/standards/eslint.config.mjs",
+      "summary": "ESLint flat config for the standards package: extends the root workspace config and enables @nx/dependency-checks on JSON files (parsed with jsonc-eslint-parser), ignoring the eslint config file itself.",
+      "tags": ["configuration", "linting", "eslint", "dependency-checks"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/eslint.config.mjs",
+      "type": "file",
+      "name": "eslint.config.mjs",
+      "filePath": "packages/linter-ast/eslint.config.mjs",
+      "summary": "ESLint flat config for the linter-ast package that extends the root workspace config with empty per-extension override blocks.",
+      "tags": ["configuration", "linting", "eslint"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:eslint-rules/rules/throw-kind-carrying-error.js:extendsError",
+      "type": "function",
+      "name": "extendsError",
+      "filePath": "eslint-rules/rules/throw-kind-carrying-error.js",
+      "lineRange": [38, 51],
+      "summary": "Recursively walks intersection and base types via the TypeScript checker to determine whether a type ultimately extends Error.",
+      "tags": ["type-analysis", "utility", "recursion"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:eslint-rules/rules/throw-kind-carrying-error.js:carriesKnownKind",
+      "type": "function",
+      "name": "carriesKnownKind",
+      "filePath": "eslint-rules/rules/throw-kind-carrying-error.js",
+      "lineRange": [53, 69],
+      "summary": "Checks that a type has a required literal `kind` from the domain or error-only families and a string `reason`, and that error-only kinds extend Error.",
+      "tags": ["type-analysis", "validation", "error-handling"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/api/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:eslint-rules/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:eslint-rules/index.js",
+      "target": "file:eslint-rules/rules/throw-kind-carrying-error.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:eslint-rules/index.js",
+      "target": "file:eslint-rules/rules/use-case-filename.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:eslint-rules/index.js",
+      "target": "file:eslint-rules/rules/usecase-casing.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:eslint.config.mjs",
+      "target": "file:eslint-rules/index.js",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/feature-flags/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/llm/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/logger/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/playbook-change-applier/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/spaces/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/eslint.config.mjs",
+      "target": "file:eslint.config.mjs",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:eslint-rules/rules/throw-kind-carrying-error.js",
+      "target": "function:eslint-rules/rules/throw-kind-carrying-error.js:extendsError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:eslint-rules/rules/throw-kind-carrying-error.js",
+      "target": "function:eslint-rules/rules/throw-kind-carrying-error.js:carriesKnownKind",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "function:eslint-rules/rules/throw-kind-carrying-error.js:carriesKnownKind",
+      "target": "function:eslint-rules/rules/throw-kind-carrying-error.js:extendsError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

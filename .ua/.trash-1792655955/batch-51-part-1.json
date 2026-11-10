@@ -1,0 +1,746 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/linter-ast/src/application/ConsoleLogRemovalService.ts",
+      "type": "file",
+      "name": "ConsoleLogRemovalService.ts",
+      "filePath": "packages/linter-ast/src/application/ConsoleLogRemovalService.ts",
+      "summary": "Application service that strips console.* call statements from JavaScript source by walking the tree-sitter AST and removing whole lines while preserving blank-line structure.",
+      "tags": ["service", "ast", "code-transformation", "javascript"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/application/ConsoleLogRemovalService.ts:ConsoleLogRemovalService",
+      "type": "class",
+      "name": "ConsoleLogRemovalService",
+      "filePath": "packages/linter-ast/src/application/ConsoleLogRemovalService.ts",
+      "lineRange": [5, 95],
+      "summary": "Removes console method-call expression statements from JavaScript code using raw tree-sitter byte offsets; throws LinterAstInternalError for non-JavaScript input or parse failures.",
+      "tags": ["service", "code-transformation", "ast-traversal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/application/LinterAstAdapter.ts",
+      "type": "file",
+      "name": "LinterAstAdapter.ts",
+      "filePath": "packages/linter-ast/src/application/LinterAstAdapter.ts",
+      "summary": "Adapter implementing the ILinterAstPort hexagonal port: maps ProgrammingLanguage values to parser keys, parses source into ASTNode trees via ParserRegistry, and delegates console-statement removal.",
+      "tags": ["adapter", "hexagonal-port", "entry-point", "ast", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/application/LinterAstAdapter.ts:LinterAstAdapter",
+      "type": "class",
+      "name": "LinterAstAdapter",
+      "filePath": "packages/linter-ast/src/application/LinterAstAdapter.ts",
+      "lineRange": [7, 90],
+      "summary": "Implements ILinterAstPort, exposing parseSourceCode, isLanguageSupported, getAvailableLanguages and removeConsoleStatements over the parser registry.",
+      "tags": ["adapter", "hexagonal-port", "parser"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "file",
+      "name": "BaseParser.ts",
+      "filePath": "packages/linter-ast/src/core/BaseParser.ts",
+      "summary": "Abstract base class for all tree-sitter language parsers, providing WASM file discovery across npm, Bun-executable and monorepo layouts plus a default node-to-JSON AST conversion.",
+      "tags": ["base-class", "parser", "tree-sitter", "wasm", "ast"],
+      "complexity": "moderate",
+      "languageNotes": "Uses abstract methods plus static protected helpers so subclasses share WASM path resolution without instance state."
+    },
+    {
+      "id": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "class",
+      "name": "BaseParser",
+      "filePath": "packages/linter-ast/src/core/BaseParser.ts",
+      "lineRange": [5, 97],
+      "summary": "Abstract parser contract (initialize, parse, parseRaw, getLanguage) with static helpers that locate tree-sitter runtime and grammar WASM files and convert nodes to ASTNode.",
+      "tags": ["base-class", "abstract", "wasm-loading"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/core/LinterAstInternalError.ts",
+      "type": "file",
+      "name": "LinterAstInternalError.ts",
+      "filePath": "packages/linter-ast/src/core/LinterAstInternalError.ts",
+      "summary": "Defines LinterAstInternalError, the PackmindInternalError subclass for linter-ast invariant violations, along with its typed reason codes and context.",
+      "tags": ["error-handling", "type-definition", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/linter-ast/src/core/LinterAstInternalError.ts:LinterAstInternalError",
+      "type": "class",
+      "name": "LinterAstInternalError",
+      "filePath": "packages/linter-ast/src/core/LinterAstInternalError.ts",
+      "lineRange": [16, 26],
+      "summary": "PackmindInternalError subclass carrying a typed linter-ast reason code and language context.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "file",
+      "name": "ParserError.ts",
+      "filePath": "packages/linter-ast/src/core/ParserError.ts",
+      "summary": "Declares parser-specific errors: ParserNotAvailableError for unsupported languages and ParserInitializationError for WASM loading or parse failures.",
+      "tags": ["error-handling", "parser", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/linter-ast/src/core/ParserError.ts:ParserNotAvailableError",
+      "type": "class",
+      "name": "ParserNotAvailableError",
+      "filePath": "packages/linter-ast/src/core/ParserError.ts",
+      "lineRange": [3, 15],
+      "summary": "Raised when no parser exists for a requested language; extends LinterAstInternalError with reason parser_not_available.",
+      "tags": ["error-handling", "parser"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/linter-ast/src/core/ParserError.ts:ParserInitializationError",
+      "type": "class",
+      "name": "ParserInitializationError",
+      "filePath": "packages/linter-ast/src/core/ParserError.ts",
+      "lineRange": [17, 25],
+      "summary": "Error raised when a tree-sitter parser fails to load its WASM grammar or to parse source code, keeping the original cause.",
+      "tags": ["error-handling", "parser", "initialization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "type": "file",
+      "name": "ParserRegistry.ts",
+      "filePath": "packages/linter-ast/src/core/ParserRegistry.ts",
+      "summary": "Registry that maps language keys to the 16 tree-sitter parser classes, lazily instantiating, initializing and caching parser instances on demand.",
+      "tags": ["registry", "factory", "parser", "cache"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/core/ParserRegistry.ts:ParserRegistry",
+      "type": "class",
+      "name": "ParserRegistry",
+      "filePath": "packages/linter-ast/src/core/ParserRegistry.ts",
+      "lineRange": [20, 57],
+      "summary": "Holds language-to-parser-class mapping and returns cached, initialized parser instances via getParser.",
+      "tags": ["registry", "factory", "lazy-initialization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "file",
+      "name": "ast.types.ts",
+      "filePath": "packages/linter-ast/src/core/types/ast.types.ts",
+      "summary": "Type definition of the ASTNode interface (type, text, line, children) used as the normalized AST output of every parser.",
+      "tags": ["type-definition", "ast", "data-model"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/CPPParser.ts",
+      "type": "file",
+      "name": "CPPParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/CPPParser.ts",
+      "summary": "Tree-sitter based C++ parser extending BaseParser: loads the tree-sitter-cpp WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "cpp", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/CPPParser.ts:CPPParser",
+      "type": "class",
+      "name": "CPPParser",
+      "filePath": "packages/linter-ast/src/parsers/CPPParser.ts",
+      "lineRange": [7, 103],
+      "summary": "C++ language parser that initializes web-tree-sitter with the cpp grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/CSSParser.ts",
+      "type": "file",
+      "name": "CSSParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/CSSParser.ts",
+      "summary": "Tree-sitter based CSS parser extending BaseParser: loads the tree-sitter-css WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "css", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/CSSParser.ts:CSSParser",
+      "type": "class",
+      "name": "CSSParser",
+      "filePath": "packages/linter-ast/src/parsers/CSSParser.ts",
+      "lineRange": [7, 101],
+      "summary": "CSS language parser that initializes web-tree-sitter with the css grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/CSharpParser.ts",
+      "type": "file",
+      "name": "CSharpParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/CSharpParser.ts",
+      "summary": "Tree-sitter based C# parser extending BaseParser: loads the tree-sitter-c_sharp WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "csharp", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/CSharpParser.ts:CSharpParser",
+      "type": "class",
+      "name": "CSharpParser",
+      "filePath": "packages/linter-ast/src/parsers/CSharpParser.ts",
+      "lineRange": [8, 108],
+      "summary": "C# language parser that initializes web-tree-sitter with the c_sharp grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/GoParser.ts",
+      "type": "file",
+      "name": "GoParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/GoParser.ts",
+      "summary": "Tree-sitter based Go parser extending BaseParser: loads the tree-sitter-go WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "go", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/GoParser.ts:GoParser",
+      "type": "class",
+      "name": "GoParser",
+      "filePath": "packages/linter-ast/src/parsers/GoParser.ts",
+      "lineRange": [8, 99],
+      "summary": "Go language parser that initializes web-tree-sitter with the go grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/HTMLParser.ts",
+      "type": "file",
+      "name": "HTMLParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/HTMLParser.ts",
+      "summary": "Tree-sitter based HTML parser extending BaseParser: loads the tree-sitter-html WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "html", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/HTMLParser.ts:HTMLParser",
+      "type": "class",
+      "name": "HTMLParser",
+      "filePath": "packages/linter-ast/src/parsers/HTMLParser.ts",
+      "lineRange": [8, 105],
+      "summary": "HTML language parser that initializes web-tree-sitter with the html grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/linter-ast/src/application/ConsoleLogRemovalService.ts",
+      "target": "file:packages/linter-ast/src/core/LinterAstInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/application/ConsoleLogRemovalService.ts",
+      "target": "file:packages/linter-ast/src/parsers/JavaScriptParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/application/ConsoleLogRemovalService.ts",
+      "target": "class:packages/linter-ast/src/application/ConsoleLogRemovalService.ts:ConsoleLogRemovalService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/application/ConsoleLogRemovalService.ts",
+      "target": "class:packages/linter-ast/src/application/ConsoleLogRemovalService.ts:ConsoleLogRemovalService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/linter-ast/src/application/LinterAstAdapter.ts",
+      "target": "file:packages/linter-ast/src/application/ConsoleLogRemovalService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/application/LinterAstAdapter.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/application/LinterAstAdapter.ts",
+      "target": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/application/LinterAstAdapter.ts",
+      "target": "class:packages/linter-ast/src/application/LinterAstAdapter.ts:LinterAstAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/application/LinterAstAdapter.ts",
+      "target": "class:packages/linter-ast/src/application/LinterAstAdapter.ts:LinterAstAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/LinterAstInternalError.ts",
+      "target": "class:packages/linter-ast/src/core/LinterAstInternalError.ts:LinterAstInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/LinterAstInternalError.ts",
+      "target": "class:packages/linter-ast/src/core/LinterAstInternalError.ts:LinterAstInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserError.ts",
+      "target": "file:packages/linter-ast/src/core/LinterAstInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserError.ts",
+      "target": "class:packages/linter-ast/src/core/ParserError.ts:ParserNotAvailableError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserError.ts",
+      "target": "class:packages/linter-ast/src/core/ParserError.ts:ParserNotAvailableError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserError.ts",
+      "target": "class:packages/linter-ast/src/core/ParserError.ts:ParserInitializationError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserError.ts",
+      "target": "class:packages/linter-ast/src/core/ParserError.ts:ParserInitializationError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/CPPParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/CSSParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/CSharpParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/GoParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/HTMLParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/JSONParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/JavaParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/JavaScriptParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/KotlinParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/PHPParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/PythonParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/RubyParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/SCSSParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/SwiftParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/TypeScriptParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "file:packages/linter-ast/src/parsers/YAMLParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "class:packages/linter-ast/src/core/ParserRegistry.ts:ParserRegistry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "target": "class:packages/linter-ast/src/core/ParserRegistry.ts:ParserRegistry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CPPParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CPPParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CPPParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CPPParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/CPPParser.ts:CPPParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CPPParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/CPPParser.ts:CPPParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/CPPParser.ts:CPPParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CSSParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CSSParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CSSParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CSSParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/CSSParser.ts:CSSParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CSSParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/CSSParser.ts:CSSParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/CSSParser.ts:CSSParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CSharpParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CSharpParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CSharpParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CSharpParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/CSharpParser.ts:CSharpParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/CSharpParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/CSharpParser.ts:CSharpParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/CSharpParser.ts:CSharpParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/GoParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/GoParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/GoParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/GoParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/GoParser.ts:GoParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/GoParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/GoParser.ts:GoParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/GoParser.ts:GoParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/HTMLParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/HTMLParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/HTMLParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/HTMLParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/HTMLParser.ts:HTMLParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/HTMLParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/HTMLParser.ts:HTMLParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/HTMLParser.ts:HTMLParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/linter-ast/src/core/ParserError.ts:ParserNotAvailableError",
+      "target": "class:packages/linter-ast/src/core/LinterAstInternalError.ts:LinterAstInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/linter-ast/src/application/LinterAstAdapter.ts:LinterAstAdapter",
+      "target": "class:packages/linter-ast/src/core/ParserRegistry.ts:ParserRegistry",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/linter-ast/src/application/LinterAstAdapter.ts:LinterAstAdapter",
+      "target": "class:packages/linter-ast/src/application/ConsoleLogRemovalService.ts:ConsoleLogRemovalService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/linter-ast/src/application/ConsoleLogRemovalService.ts:ConsoleLogRemovalService",
+      "target": "class:packages/linter-ast/src/parsers/JavaScriptParser.ts:JavaScriptParser",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

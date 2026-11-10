@@ -1,0 +1,941 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "type": "file",
+      "name": "spaces.module.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "summary": "NestJS module aggregating the organization-scoped space feature modules (standards, commands, skills, packages, members) and wiring the spaces controller and service.",
+      "tags": ["nestjs-module", "spaces", "composition", "api"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/spaces.module.ts:OrganizationsSpacesModule",
+      "type": "class",
+      "name": "OrganizationsSpacesModule",
+      "filePath": "apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "lineRange": [54, 54],
+      "summary": "NestJS module class declaring the imports, controllers and providers for this feature area.",
+      "tags": ["nestjs-module", "composition", "decorator"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts",
+      "type": "file",
+      "name": "rules.controller.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts",
+      "summary": "NestJS controller exposing REST endpoints to list rules of a standard and to create, read, update and delete rule examples within an organization space.",
+      "tags": ["api-handler", "controller", "standards", "rules", "rest"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts:OrganizationsSpacesStandardsRulesController",
+      "type": "class",
+      "name": "OrganizationsSpacesStandardsRulesController",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts",
+      "lineRange": [52, 401],
+      "summary": "Controller for rules and rule examples of a standard within an organization space.",
+      "tags": ["controller", "rules", "api-handler"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts",
+      "type": "file",
+      "name": "rules.module.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts",
+      "summary": "NestJS module registering the standard rules controller, service and organization access guard.",
+      "tags": ["nestjs-module", "rules", "standards", "api"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts:OrganizationsSpacesStandardsRulesModule",
+      "type": "class",
+      "name": "OrganizationsSpacesStandardsRulesModule",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts",
+      "lineRange": [33, 33],
+      "summary": "NestJS module class declaring the imports, controllers and providers for this feature area.",
+      "tags": ["nestjs-module", "composition", "decorator"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts",
+      "type": "file",
+      "name": "rules.service.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts",
+      "summary": "Application service delegating rule and rule-example operations to the Standards hexa adapter.",
+      "tags": ["service", "rules", "standards", "adapter-facade"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts:RulesService",
+      "type": "class",
+      "name": "RulesService",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts",
+      "lineRange": [19, 66],
+      "summary": "Facade over Standards hexa operations for rules and rule examples.",
+      "tags": ["service", "rules", "facade"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/standards/standards.controller.ts",
+      "type": "file",
+      "name": "standards.controller.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/standards.controller.ts",
+      "summary": "NestJS controller exposing space-scoped standard endpoints: listing, creation, sample generation, update, versions, and single or batch deletion.",
+      "tags": ["api-handler", "controller", "standards", "rest", "crud"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/standards/standards.controller.ts:OrganizationsSpacesStandardsController",
+      "type": "class",
+      "name": "OrganizationsSpacesStandardsController",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/standards.controller.ts",
+      "lineRange": [48, 489],
+      "summary": "Controller handling standard CRUD, samples, versions and batch deletion in a space.",
+      "tags": ["controller", "standards", "api-handler"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "type": "file",
+      "name": "standards.module.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "summary": "NestJS module wiring the standards controller and service and importing the nested rules module.",
+      "tags": ["nestjs-module", "standards", "api", "composition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/standards/standards.module.ts:OrganizationsSpacesStandardsModule",
+      "type": "class",
+      "name": "OrganizationsSpacesStandardsModule",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "lineRange": [38, 38],
+      "summary": "NestJS module class declaring the imports, controllers and providers for this feature area.",
+      "tags": ["nestjs-module", "composition", "decorator"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/standards/standards.service.ts",
+      "type": "file",
+      "name": "standards.service.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/standards.service.ts",
+      "summary": "Application service wrapping the Standards hexa use cases for space-scoped standard CRUD, versions and sample creation.",
+      "tags": ["service", "standards", "adapter-facade", "use-case"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/standards/standards.service.ts:StandardsService",
+      "type": "class",
+      "name": "StandardsService",
+      "filePath": "apps/api/src/app/organizations/spaces/standards/standards.service.ts",
+      "lineRange": [34, 183],
+      "summary": "Facade over Standards hexa use cases for space-scoped standards.",
+      "tags": ["service", "standards", "facade"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/users/users.controller.ts",
+      "type": "file",
+      "name": "users.controller.ts",
+      "filePath": "apps/api/src/app/organizations/users/users.controller.ts",
+      "summary": "NestJS controller for organization user management: listing users and statuses, changing roles, inviting users and removing members.",
+      "tags": ["api-handler", "controller", "users", "organizations", "rest"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/users/users.controller.ts:UsersController",
+      "type": "class",
+      "name": "UsersController",
+      "filePath": "apps/api/src/app/organizations/users/users.controller.ts",
+      "lineRange": [36, 216],
+      "summary": "Controller for organization user listing, role changes, invitations and removal.",
+      "tags": ["controller", "users", "api-handler"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/users/users.module.ts",
+      "type": "file",
+      "name": "users.module.ts",
+      "filePath": "apps/api/src/app/organizations/users/users.module.ts",
+      "summary": "NestJS module registering the organization users controller and service.",
+      "tags": ["nestjs-module", "users", "organizations"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/users/users.module.ts:OrganizationsUsersModule",
+      "type": "class",
+      "name": "OrganizationsUsersModule",
+      "filePath": "apps/api/src/app/organizations/users/users.module.ts",
+      "lineRange": [17, 17],
+      "summary": "NestJS module class declaring the imports, controllers and providers for this feature area.",
+      "tags": ["nestjs-module", "composition", "decorator"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/users/users.service.ts",
+      "type": "file",
+      "name": "users.service.ts",
+      "filePath": "apps/api/src/app/organizations/users/users.service.ts",
+      "summary": "Application service delegating organization user queries, role changes, invitations and removals to the Accounts hexa.",
+      "tags": ["service", "users", "accounts", "adapter-facade"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/users/users.service.ts:UsersService",
+      "type": "class",
+      "name": "UsersService",
+      "filePath": "apps/api/src/app/organizations/users/users.service.ts",
+      "lineRange": [18, 53],
+      "summary": "Facade over Accounts hexa user management use cases.",
+      "tags": ["service", "users", "facade"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/shared/ApiKeyServiceProvider.ts",
+      "type": "file",
+      "name": "ApiKeyServiceProvider.ts",
+      "filePath": "apps/api/src/app/shared/ApiKeyServiceProvider.ts",
+      "summary": "Provides an ApiKeyService factory backed by a NestJS JwtService adapter for Accounts hexa API-key authentication.",
+      "tags": ["factory", "authentication", "jwt", "adapter", "provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/shared/ApiKeyServiceProvider.ts:JwtServiceAdapter",
+      "type": "class",
+      "name": "JwtServiceAdapter",
+      "filePath": "apps/api/src/app/shared/ApiKeyServiceProvider.ts",
+      "lineRange": [9, 19],
+      "summary": "Adapts NestJS JwtService to the sign/verify interface expected by ApiKeyService.",
+      "tags": ["adapter", "jwt", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/shared/ApiKeyServiceProvider.ts:ApiKeyServiceProvider",
+      "type": "class",
+      "name": "ApiKeyServiceProvider",
+      "filePath": "apps/api/src/app/shared/ApiKeyServiceProvider.ts",
+      "lineRange": [25, 33],
+      "summary": "Factory creating ApiKeyService instances wired to the JWT adapter.",
+      "tags": ["factory", "authentication", "provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "file",
+      "name": "HexaInjection.ts",
+      "filePath": "apps/api/src/app/shared/HexaInjection.ts",
+      "summary": "Defines parameter-decorator shortcuts that inject hexa adapter instances (accounts, deployments, commands, git, spaces, marketplaces, playbook change applier) via their DI tokens.",
+      "tags": [
+        "dependency-injection",
+        "decorator",
+        "utility",
+        "hexagonal-architecture"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/HexaInjection.ts:InjectAccountsAdapter",
+      "type": "function",
+      "name": "InjectAccountsAdapter",
+      "filePath": "apps/api/src/app/shared/HexaInjection.ts",
+      "lineRange": [24, 24],
+      "summary": "Parameter decorator injecting the Accounts hexa adapter via its registry token.",
+      "tags": ["decorator", "dependency-injection", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/HexaInjection.ts:InjectDeploymentAdapter",
+      "type": "function",
+      "name": "InjectDeploymentAdapter",
+      "filePath": "apps/api/src/app/shared/HexaInjection.ts",
+      "lineRange": [25, 25],
+      "summary": "Parameter decorator injecting the Deployment hexa adapter via its registry token.",
+      "tags": ["decorator", "dependency-injection", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/HexaInjection.ts:InjectCommandsAdapter",
+      "type": "function",
+      "name": "InjectCommandsAdapter",
+      "filePath": "apps/api/src/app/shared/HexaInjection.ts",
+      "lineRange": [26, 26],
+      "summary": "Parameter decorator injecting the Commands hexa adapter via its registry token.",
+      "tags": ["decorator", "dependency-injection", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/HexaInjection.ts:InjectGitAdapter",
+      "type": "function",
+      "name": "InjectGitAdapter",
+      "filePath": "apps/api/src/app/shared/HexaInjection.ts",
+      "lineRange": [27, 27],
+      "summary": "Parameter decorator injecting the Git hexa adapter via its registry token.",
+      "tags": ["decorator", "dependency-injection", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/HexaInjection.ts:InjectSpacesAdapter",
+      "type": "function",
+      "name": "InjectSpacesAdapter",
+      "filePath": "apps/api/src/app/shared/HexaInjection.ts",
+      "lineRange": [28, 28],
+      "summary": "Parameter decorator injecting the Spaces hexa adapter via its registry token.",
+      "tags": ["decorator", "dependency-injection", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/HexaInjection.ts:InjectMarketplacesAdapter",
+      "type": "function",
+      "name": "InjectMarketplacesAdapter",
+      "filePath": "apps/api/src/app/shared/HexaInjection.ts",
+      "lineRange": [29, 30],
+      "summary": "Parameter decorator injecting the Marketplaces hexa adapter via its registry token.",
+      "tags": ["decorator", "dependency-injection", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/HexaInjection.ts:InjectPlaybookChangeApplierAdapter",
+      "type": "function",
+      "name": "InjectPlaybookChangeApplierAdapter",
+      "filePath": "apps/api/src/app/shared/HexaInjection.ts",
+      "lineRange": [31, 32],
+      "summary": "Parameter decorator injecting the PlaybookChangeApplier hexa adapter via its registry token.",
+      "tags": ["decorator", "dependency-injection", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/shared/HexaRegistryModule.ts",
+      "type": "file",
+      "name": "HexaRegistryModule.ts",
+      "filePath": "apps/api/src/app/shared/HexaRegistryModule.ts",
+      "summary": "Global dynamic NestJS module that initializes the Packmind HexaRegistry and exposes every domain hexa and adapter as injectable providers under named tokens.",
+      "tags": [
+        "dependency-injection",
+        "nestjs-module",
+        "hexagonal-architecture",
+        "registry",
+        "factory"
+      ],
+      "complexity": "complex",
+      "languageNotes": "Uses NestJS DynamicModule with useFactory providers and string injection tokens to bridge framework-agnostic hexagonal packages into Nest DI."
+    },
+    {
+      "id": "class:apps/api/src/app/shared/HexaRegistryModule.ts:HexaRegistryModule",
+      "type": "class",
+      "name": "HexaRegistryModule",
+      "filePath": "apps/api/src/app/shared/HexaRegistryModule.ts",
+      "lineRange": [116, 440],
+      "summary": "Global dynamic module whose register() builds providers for every hexa and adapter token and tears the registry down on module destroy.",
+      "tags": ["dependency-injection", "nestjs-module", "registry"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/shared/PackmindApp.ts",
+      "type": "file",
+      "name": "PackmindApp.ts",
+      "filePath": "apps/api/src/app/shared/PackmindApp.ts",
+      "summary": "Declares the list of domain hexas composing the Packmind API and initializes the HexaRegistry with them and any edition plugins.",
+      "tags": [
+        "bootstrap",
+        "hexagonal-architecture",
+        "registry",
+        "configuration"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/PackmindApp.ts:getPackmindAppDefinition",
+      "type": "function",
+      "name": "getPackmindAppDefinition",
+      "filePath": "apps/api/src/app/shared/PackmindApp.ts",
+      "lineRange": [66, 88],
+      "summary": "Builds the ordered list of hexa classes and options that make up the Packmind app.",
+      "tags": ["bootstrap", "registry", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/api/src/app/shared/PackmindApp.ts:initializePackmindApp",
+      "type": "function",
+      "name": "initializePackmindApp",
+      "filePath": "apps/api/src/app/shared/PackmindApp.ts",
+      "lineRange": [99, 127],
+      "summary": "Registers hexas and plugins into a HexaRegistry and initializes it with the data source.",
+      "tags": ["bootstrap", "registry", "initialization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/shared/middleware/CliVersionLoggerMiddleware.ts",
+      "type": "file",
+      "name": "CliVersionLoggerMiddleware.ts",
+      "filePath": "apps/api/src/app/shared/middleware/CliVersionLoggerMiddleware.ts",
+      "summary": "Express/NestJS middleware that logs the Packmind CLI version header carried by incoming requests.",
+      "tags": ["middleware", "logging", "cli", "observability"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/shared/middleware/CliVersionLoggerMiddleware.ts:CliVersionLoggerMiddleware",
+      "type": "class",
+      "name": "CliVersionLoggerMiddleware",
+      "filePath": "apps/api/src/app/shared/middleware/CliVersionLoggerMiddleware.ts",
+      "lineRange": [8, 33],
+      "summary": "Middleware logging the CLI version header of incoming requests.",
+      "tags": ["middleware", "logging", "cli"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/commands/commands.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/members/members.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/packages/packages.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/spaces.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "target": "file:apps/api/src/app/spaces/spaces.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/spaces.module.ts:OrganizationsSpacesModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/spaces.module.ts:OrganizationsSpacesModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts:OrganizationsSpacesStandardsRulesController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts:OrganizationsSpacesStandardsRulesController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts:OrganizationsSpacesStandardsRulesModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts:OrganizationsSpacesStandardsRulesModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts:RulesService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts:RulesService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.controller.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/standards/standards.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/standards.controller.ts:OrganizationsSpacesStandardsController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/standards.controller.ts:OrganizationsSpacesStandardsController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/standards/standards.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/standards/standards.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/standards.module.ts:OrganizationsSpacesStandardsModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/standards.module.ts:OrganizationsSpacesStandardsModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.service.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/standards.service.ts:StandardsService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/standards/standards.service.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/standards.service.ts:StandardsService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.controller.ts",
+      "target": "file:apps/api/src/app/organizations/users/users.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.controller.ts",
+      "target": "class:apps/api/src/app/organizations/users/users.controller.ts:UsersController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.controller.ts",
+      "target": "class:apps/api/src/app/organizations/users/users.controller.ts:UsersController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.module.ts",
+      "target": "file:apps/api/src/app/organizations/users/users.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.module.ts",
+      "target": "file:apps/api/src/app/organizations/users/users.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.module.ts",
+      "target": "class:apps/api/src/app/organizations/users/users.module.ts:OrganizationsUsersModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.module.ts",
+      "target": "class:apps/api/src/app/organizations/users/users.module.ts:OrganizationsUsersModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaRegistryModule.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.service.ts",
+      "target": "class:apps/api/src/app/organizations/users/users.service.ts:UsersService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/users/users.service.ts",
+      "target": "class:apps/api/src/app/organizations/users/users.service.ts:UsersService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/ApiKeyServiceProvider.ts",
+      "target": "class:apps/api/src/app/shared/ApiKeyServiceProvider.ts:JwtServiceAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/ApiKeyServiceProvider.ts",
+      "target": "class:apps/api/src/app/shared/ApiKeyServiceProvider.ts:ApiKeyServiceProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/ApiKeyServiceProvider.ts",
+      "target": "class:apps/api/src/app/shared/ApiKeyServiceProvider.ts:ApiKeyServiceProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "file:apps/api/src/app/shared/HexaRegistryModule.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectAccountsAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectAccountsAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectDeploymentAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectDeploymentAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectCommandsAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectCommandsAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectGitAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectGitAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectSpacesAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectSpacesAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectMarketplacesAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectMarketplacesAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectPlaybookChangeApplierAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectPlaybookChangeApplierAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaRegistryModule.ts",
+      "target": "file:apps/api/src/app/shared/ApiKeyServiceProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaRegistryModule.ts",
+      "target": "file:apps/api/src/app/shared/PackmindApp.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaRegistryModule.ts",
+      "target": "class:apps/api/src/app/shared/HexaRegistryModule.ts:HexaRegistryModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/HexaRegistryModule.ts",
+      "target": "class:apps/api/src/app/shared/HexaRegistryModule.ts:HexaRegistryModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/PackmindApp.ts",
+      "target": "function:apps/api/src/app/shared/PackmindApp.ts:getPackmindAppDefinition",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/PackmindApp.ts",
+      "target": "function:apps/api/src/app/shared/PackmindApp.ts:getPackmindAppDefinition",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/PackmindApp.ts",
+      "target": "function:apps/api/src/app/shared/PackmindApp.ts:initializePackmindApp",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/PackmindApp.ts",
+      "target": "function:apps/api/src/app/shared/PackmindApp.ts:initializePackmindApp",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/shared/middleware/CliVersionLoggerMiddleware.ts",
+      "target": "class:apps/api/src/app/shared/middleware/CliVersionLoggerMiddleware.ts:CliVersionLoggerMiddleware",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/shared/middleware/CliVersionLoggerMiddleware.ts",
+      "target": "class:apps/api/src/app/shared/middleware/CliVersionLoggerMiddleware.ts:CliVersionLoggerMiddleware",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.controller.ts:OrganizationsSpacesStandardsRulesController",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.service.ts:RulesService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/standards/standards.controller.ts:OrganizationsSpacesStandardsController",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/standards.service.ts:StandardsService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/users/users.controller.ts:UsersController",
+      "target": "class:apps/api/src/app/organizations/users/users.service.ts:UsersService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:apps/api/src/app/shared/HexaRegistryModule.ts:HexaRegistryModule",
+      "target": "function:apps/api/src/app/shared/PackmindApp.ts:initializePackmindApp",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/shared/HexaRegistryModule.ts:HexaRegistryModule",
+      "target": "class:apps/api/src/app/shared/ApiKeyServiceProvider.ts:ApiKeyServiceProvider",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/standards/standards.module.ts:OrganizationsSpacesStandardsModule",
+      "target": "class:apps/api/src/app/organizations/spaces/standards/rules/rules.module.ts:OrganizationsSpacesStandardsRulesModule",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

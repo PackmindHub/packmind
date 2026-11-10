@@ -1,0 +1,1379 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/accounts/src/domain/errors/DanglingInvitationError.ts",
+      "type": "file",
+      "name": "DanglingInvitationError.ts",
+      "filePath": "packages/accounts/src/domain/errors/DanglingInvitationError.ts",
+      "summary": "Defines DanglingInvitationError: internal error raised when an invitation references a user that no longer exists, carrying the invitation id as context.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "internal-error",
+        "invitation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/DanglingInvitationError.ts:DanglingInvitationError",
+      "type": "class",
+      "name": "DanglingInvitationError",
+      "filePath": "packages/accounts/src/domain/errors/DanglingInvitationError.ts",
+      "lineRange": [3, 12],
+      "summary": "Internal error raised when an invitation references a user that no longer exists, carrying the invitation id as context.",
+      "tags": ["error-handling", "internal-error", "invitation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/EmailAlreadyExistsError.ts",
+      "type": "file",
+      "name": "EmailAlreadyExistsError.ts",
+      "filePath": "packages/accounts/src/domain/errors/EmailAlreadyExistsError.ts",
+      "summary": "Defines EmailAlreadyExistsError: conflict domain error thrown at sign-up when an account with the given email already exists; logs only a masked email.",
+      "tags": ["error-handling", "accounts", "domain", "conflict", "sign-up"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/EmailAlreadyExistsError.ts:EmailAlreadyExistsError",
+      "type": "class",
+      "name": "EmailAlreadyExistsError",
+      "filePath": "packages/accounts/src/domain/errors/EmailAlreadyExistsError.ts",
+      "lineRange": [4, 14],
+      "summary": "Conflict domain error thrown at sign-up when an account with the given email already exists; logs only a masked email.",
+      "tags": ["error-handling", "conflict", "sign-up", "privacy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/FailedToUpdateUserRoleError.ts",
+      "type": "file",
+      "name": "FailedToUpdateUserRoleError.ts",
+      "filePath": "packages/accounts/src/domain/errors/FailedToUpdateUserRoleError.ts",
+      "summary": "Defines FailedToUpdateUserRoleError: internal error signalling that persisting a user role change failed.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "internal-error",
+        "user-role"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/FailedToUpdateUserRoleError.ts:FailedToUpdateUserRoleError",
+      "type": "class",
+      "name": "FailedToUpdateUserRoleError",
+      "filePath": "packages/accounts/src/domain/errors/FailedToUpdateUserRoleError.ts",
+      "lineRange": [3, 8],
+      "summary": "Internal error signalling that persisting a user role change failed.",
+      "tags": ["error-handling", "internal-error", "user-role"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/InvalidAuthenticationTypeError.ts",
+      "type": "file",
+      "name": "InvalidAuthenticationTypeError.ts",
+      "filePath": "packages/accounts/src/domain/errors/InvalidAuthenticationTypeError.ts",
+      "summary": "Defines InvalidAuthenticationTypeError: invalid-input domain error raised when an unsupported authentication type is supplied.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "validation",
+        "authentication"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/InvalidAuthenticationTypeError.ts:InvalidAuthenticationTypeError",
+      "type": "class",
+      "name": "InvalidAuthenticationTypeError",
+      "filePath": "packages/accounts/src/domain/errors/InvalidAuthenticationTypeError.ts",
+      "lineRange": [3, 13],
+      "summary": "Invalid-input domain error raised when an unsupported authentication type is supplied.",
+      "tags": ["error-handling", "validation", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/InvalidDisplayNameError.ts",
+      "type": "file",
+      "name": "InvalidDisplayNameError.ts",
+      "filePath": "packages/accounts/src/domain/errors/InvalidDisplayNameError.ts",
+      "summary": "Defines InvalidDisplayNameError: invalid-input domain error for user display names, exposing MAX_DISPLAY_NAME_LENGTH and factory helpers such as tooLong().",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "validation",
+        "user-profile"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/InvalidDisplayNameError.ts:InvalidDisplayNameError",
+      "type": "class",
+      "name": "InvalidDisplayNameError",
+      "filePath": "packages/accounts/src/domain/errors/InvalidDisplayNameError.ts",
+      "lineRange": [5, 21],
+      "summary": "Invalid-input domain error for user display names, exposing MAX_DISPLAY_NAME_LENGTH and factory helpers such as tooLong().",
+      "tags": ["error-handling", "validation", "user-profile", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts",
+      "type": "file",
+      "name": "InvalidEmailOrPasswordError.ts",
+      "filePath": "packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts",
+      "summary": "Defines InvalidEmailOrPasswordError: unauthenticated domain error returned on failed credential sign-in, used by the sign-in use cases with a generic message to avoid account enumeration.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "authentication",
+        "sign-in"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts:InvalidEmailOrPasswordError",
+      "type": "class",
+      "name": "InvalidEmailOrPasswordError",
+      "filePath": "packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts",
+      "lineRange": [7, 17],
+      "summary": "Unauthenticated domain error returned on failed credential sign-in, used by the sign-in use cases with a generic message to avoid account enumeration.",
+      "tags": ["error-handling", "authentication", "sign-in", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/InvalidInvitationEmailError.ts",
+      "type": "file",
+      "name": "InvalidInvitationEmailError.ts",
+      "filePath": "packages/accounts/src/domain/errors/InvalidInvitationEmailError.ts",
+      "summary": "Defines InvalidInvitationEmailError: invalid-input domain error raised when an invitation targets a malformed email address, masking the email in its context.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "validation",
+        "invitation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/InvalidInvitationEmailError.ts:InvalidInvitationEmailError",
+      "type": "class",
+      "name": "InvalidInvitationEmailError",
+      "filePath": "packages/accounts/src/domain/errors/InvalidInvitationEmailError.ts",
+      "lineRange": [4, 14],
+      "summary": "Invalid-input domain error raised when an invitation targets a malformed email address, masking the email in its context.",
+      "tags": ["error-handling", "validation", "invitation", "privacy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/InvalidOrganizationNameError.ts",
+      "type": "file",
+      "name": "InvalidOrganizationNameError.ts",
+      "filePath": "packages/accounts/src/domain/errors/InvalidOrganizationNameError.ts",
+      "summary": "Defines InvalidOrganizationNameError: invalid-input domain error raised when an organization name fails validation.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "validation",
+        "organization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/InvalidOrganizationNameError.ts:InvalidOrganizationNameError",
+      "type": "class",
+      "name": "InvalidOrganizationNameError",
+      "filePath": "packages/accounts/src/domain/errors/InvalidOrganizationNameError.ts",
+      "lineRange": [3, 13],
+      "summary": "Invalid-input domain error raised when an organization name fails validation.",
+      "tags": ["error-handling", "validation", "organization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/InvalidPasswordError.ts",
+      "type": "file",
+      "name": "InvalidPasswordError.ts",
+      "filePath": "packages/accounts/src/domain/errors/InvalidPasswordError.ts",
+      "summary": "Defines InvalidPasswordError: invalid-input domain error describing password policy violations (required, too short, too weak) via static factory methods.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "validation",
+        "password"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/InvalidPasswordError.ts:InvalidPasswordError",
+      "type": "class",
+      "name": "InvalidPasswordError",
+      "filePath": "packages/accounts/src/domain/errors/InvalidPasswordError.ts",
+      "lineRange": [3, 29],
+      "summary": "Invalid-input domain error describing password policy violations (required, too short, too weak) via static factory methods.",
+      "tags": [
+        "error-handling",
+        "validation",
+        "password",
+        "factory",
+        "security"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/InvitationBatchEmptyError.ts",
+      "type": "file",
+      "name": "InvitationBatchEmptyError.ts",
+      "filePath": "packages/accounts/src/domain/errors/InvitationBatchEmptyError.ts",
+      "summary": "Defines InvitationBatchEmptyError: invalid-input domain error thrown when an invitation request contains no email addresses.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "validation",
+        "invitation"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/InvitationBatchEmptyError.ts:InvitationBatchEmptyError",
+      "type": "class",
+      "name": "InvitationBatchEmptyError",
+      "filePath": "packages/accounts/src/domain/errors/InvitationBatchEmptyError.ts",
+      "lineRange": [3, 13],
+      "summary": "Invalid-input domain error thrown when an invitation request contains no email addresses.",
+      "tags": ["error-handling", "validation", "invitation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/InvitationExpiredError.ts",
+      "type": "file",
+      "name": "InvitationExpiredError.ts",
+      "filePath": "packages/accounts/src/domain/errors/InvitationExpiredError.ts",
+      "summary": "Defines InvitationExpiredError: not-found domain error thrown when an invitation token has expired.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "invitation",
+        "expiration"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/InvitationExpiredError.ts:InvitationExpiredError",
+      "type": "class",
+      "name": "InvitationExpiredError",
+      "filePath": "packages/accounts/src/domain/errors/InvitationExpiredError.ts",
+      "lineRange": [3, 8],
+      "summary": "Not-found domain error thrown when an invitation token has expired.",
+      "tags": ["error-handling", "invitation", "expiration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/InvitationNotFoundError.ts",
+      "type": "file",
+      "name": "InvitationNotFoundError.ts",
+      "filePath": "packages/accounts/src/domain/errors/InvitationNotFoundError.ts",
+      "summary": "Defines InvitationNotFoundError: not-found domain error thrown when an invitation token is unknown or invalid.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "invitation",
+        "not-found"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/InvitationNotFoundError.ts:InvitationNotFoundError",
+      "type": "class",
+      "name": "InvitationNotFoundError",
+      "filePath": "packages/accounts/src/domain/errors/InvitationNotFoundError.ts",
+      "lineRange": [3, 13],
+      "summary": "Not-found domain error thrown when an invitation token is unknown or invalid.",
+      "tags": ["error-handling", "invitation", "not-found"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/MissingEmailError.ts",
+      "type": "file",
+      "name": "MissingEmailError.ts",
+      "filePath": "packages/accounts/src/domain/errors/MissingEmailError.ts",
+      "summary": "Defines MissingEmailError: invalid-input domain error raised by sign-in when no email is supplied.",
+      "tags": ["error-handling", "accounts", "domain", "validation", "sign-in"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/MissingEmailError.ts:MissingEmailError",
+      "type": "class",
+      "name": "MissingEmailError",
+      "filePath": "packages/accounts/src/domain/errors/MissingEmailError.ts",
+      "lineRange": [3, 13],
+      "summary": "Invalid-input domain error raised by sign-in when no email is supplied.",
+      "tags": ["error-handling", "validation", "sign-in"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/OrganizationNameConflictError.ts",
+      "type": "file",
+      "name": "OrganizationNameConflictError.ts",
+      "filePath": "packages/accounts/src/domain/errors/OrganizationNameConflictError.ts",
+      "summary": "Defines OrganizationSlugConflictError: conflict domain error raised when a new or renamed organization would collide with an existing slug (file name kept as OrganizationNameConflictError).",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "conflict",
+        "organization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/OrganizationNameConflictError.ts:OrganizationSlugConflictError",
+      "type": "class",
+      "name": "OrganizationSlugConflictError",
+      "filePath": "packages/accounts/src/domain/errors/OrganizationNameConflictError.ts",
+      "lineRange": [3, 13],
+      "summary": "Conflict domain error raised when a new or renamed organization would collide with an existing slug (file name kept as OrganizationNameConflictError).",
+      "tags": ["error-handling", "conflict", "organization", "slug"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts",
+      "type": "file",
+      "name": "OrganizationNotFoundError.ts",
+      "filePath": "packages/accounts/src/domain/errors/OrganizationNotFoundError.ts",
+      "summary": "Defines OrganizationNotFoundError: internal error raised when an organization referenced by id cannot be found, used by membership resolution and sign-in flows.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "internal-error",
+        "organization"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts:OrganizationNotFoundError",
+      "type": "class",
+      "name": "OrganizationNotFoundError",
+      "filePath": "packages/accounts/src/domain/errors/OrganizationNotFoundError.ts",
+      "lineRange": [3, 12],
+      "summary": "Internal error raised when an organization referenced by id cannot be found, used by membership resolution and sign-in flows.",
+      "tags": ["error-handling", "internal-error", "organization", "not-found"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/PasswordAndHashRequiredError.ts",
+      "type": "file",
+      "name": "PasswordAndHashRequiredError.ts",
+      "filePath": "packages/accounts/src/domain/errors/PasswordAndHashRequiredError.ts",
+      "summary": "Defines PasswordAndHashRequiredError: internal invariant error raised when password validation is invoked without both the password and its stored hash.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "internal-error",
+        "password"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/PasswordAndHashRequiredError.ts:PasswordAndHashRequiredError",
+      "type": "class",
+      "name": "PasswordAndHashRequiredError",
+      "filePath": "packages/accounts/src/domain/errors/PasswordAndHashRequiredError.ts",
+      "lineRange": [3, 12],
+      "summary": "Internal invariant error raised when password validation is invoked without both the password and its stored hash.",
+      "tags": ["error-handling", "internal-error", "password"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/PasswordResetTokenExpiredError.ts",
+      "type": "file",
+      "name": "PasswordResetTokenExpiredError.ts",
+      "filePath": "packages/accounts/src/domain/errors/PasswordResetTokenExpiredError.ts",
+      "summary": "Defines PasswordResetTokenExpiredError: not-found domain error for an expired password reset token, deliberately sharing the generic invalid-token code.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "password-reset",
+        "expiration"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/PasswordResetTokenExpiredError.ts:PasswordResetTokenExpiredError",
+      "type": "class",
+      "name": "PasswordResetTokenExpiredError",
+      "filePath": "packages/accounts/src/domain/errors/PasswordResetTokenExpiredError.ts",
+      "lineRange": [3, 13],
+      "summary": "Not-found domain error for an expired password reset token, deliberately sharing the generic invalid-token code.",
+      "tags": ["error-handling", "password-reset", "expiration", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/PasswordResetTokenNotFoundError.ts",
+      "type": "file",
+      "name": "PasswordResetTokenNotFoundError.ts",
+      "filePath": "packages/accounts/src/domain/errors/PasswordResetTokenNotFoundError.ts",
+      "summary": "Defines PasswordResetTokenNotFoundError: not-found domain error for an unknown password reset token, sharing the same generic code and message as the expired variant.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "password-reset",
+        "not-found"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/PasswordResetTokenNotFoundError.ts:PasswordResetTokenNotFoundError",
+      "type": "class",
+      "name": "PasswordResetTokenNotFoundError",
+      "filePath": "packages/accounts/src/domain/errors/PasswordResetTokenNotFoundError.ts",
+      "lineRange": [3, 13],
+      "summary": "Not-found domain error for an unknown password reset token, sharing the same generic code and message as the expired variant.",
+      "tags": ["error-handling", "password-reset", "not-found", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/TokenEncryptionFailedError.ts",
+      "type": "file",
+      "name": "TokenEncryptionFailedError.ts",
+      "filePath": "packages/accounts/src/domain/errors/TokenEncryptionFailedError.ts",
+      "summary": "Defines TokenEncryptionFailedError: internal error raised when encrypting or decrypting a stored token (CLI login code, invitation, password reset) fails; defines EncryptedTokenType and TokenEncryptionOperation types and keeps the crypto error as cause.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "internal-error",
+        "encryption"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/TokenEncryptionFailedError.ts:TokenEncryptionFailedError",
+      "type": "class",
+      "name": "TokenEncryptionFailedError",
+      "filePath": "packages/accounts/src/domain/errors/TokenEncryptionFailedError.ts",
+      "lineRange": [13, 27],
+      "summary": "Internal error raised when encrypting or decrypting a stored token (CLI login code, invitation, password reset) fails; defines EncryptedTokenType and TokenEncryptionOperation types and keeps the crypto error as cause.",
+      "tags": [
+        "error-handling",
+        "internal-error",
+        "encryption",
+        "security",
+        "type-definition"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts",
+      "type": "file",
+      "name": "TooManyLoginAttemptsError.ts",
+      "filePath": "packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts",
+      "summary": "Defines TooManyLoginAttemptsError: rate-limited domain error thrown by the login rate limiter, computing retryAfterSeconds from the ban expiry while keeping the email out of the context.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "rate-limiting",
+        "authentication"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts:TooManyLoginAttemptsError",
+      "type": "class",
+      "name": "TooManyLoginAttemptsError",
+      "filePath": "packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts",
+      "lineRange": [8, 27],
+      "summary": "Rate-limited domain error thrown by the login rate limiter, computing retryAfterSeconds from the ban expiry while keeping the email out of the context.",
+      "tags": ["error-handling", "rate-limiting", "authentication", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/UserCannotChangeOwnRoleError.ts",
+      "type": "file",
+      "name": "UserCannotChangeOwnRoleError.ts",
+      "filePath": "packages/accounts/src/domain/errors/UserCannotChangeOwnRoleError.ts",
+      "summary": "Defines UserCannotChangeOwnRoleError: invalid-input domain error preventing a user from changing their own organization role.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "validation",
+        "user-role"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/UserCannotChangeOwnRoleError.ts:UserCannotChangeOwnRoleError",
+      "type": "class",
+      "name": "UserCannotChangeOwnRoleError",
+      "filePath": "packages/accounts/src/domain/errors/UserCannotChangeOwnRoleError.ts",
+      "lineRange": [3, 13],
+      "summary": "Invalid-input domain error preventing a user from changing their own organization role.",
+      "tags": ["error-handling", "validation", "user-role", "authorization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/UserCannotExcludeSelfError.ts",
+      "type": "file",
+      "name": "UserCannotExcludeSelfError.ts",
+      "filePath": "packages/accounts/src/domain/errors/UserCannotExcludeSelfError.ts",
+      "summary": "Defines UserCannotExcludeSelfError: invalid-input domain error preventing a user from removing themselves from an organization.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "validation",
+        "membership"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/UserCannotExcludeSelfError.ts:UserCannotExcludeSelfError",
+      "type": "class",
+      "name": "UserCannotExcludeSelfError",
+      "filePath": "packages/accounts/src/domain/errors/UserCannotExcludeSelfError.ts",
+      "lineRange": [3, 13],
+      "summary": "Invalid-input domain error preventing a user from removing themselves from an organization.",
+      "tags": ["error-handling", "validation", "membership", "authorization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/UserCreationFieldsRequiredError.ts",
+      "type": "file",
+      "name": "UserCreationFieldsRequiredError.ts",
+      "filePath": "packages/accounts/src/domain/errors/UserCreationFieldsRequiredError.ts",
+      "summary": "Defines UserCreationFieldsRequiredError: invalid-input domain error raised when sign-up lacks email, password or organization id.",
+      "tags": ["error-handling", "accounts", "domain", "validation", "sign-up"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/UserCreationFieldsRequiredError.ts:UserCreationFieldsRequiredError",
+      "type": "class",
+      "name": "UserCreationFieldsRequiredError",
+      "filePath": "packages/accounts/src/domain/errors/UserCreationFieldsRequiredError.ts",
+      "lineRange": [9, 19],
+      "summary": "Invalid-input domain error raised when sign-up lacks email, password or organization id.",
+      "tags": ["error-handling", "validation", "sign-up"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/UserIdRequiredError.ts",
+      "type": "file",
+      "name": "UserIdRequiredError.ts",
+      "filePath": "packages/accounts/src/domain/errors/UserIdRequiredError.ts",
+      "summary": "Defines UserIdRequiredError: internal invariant error raised when an operation is called without a user id.",
+      "tags": [
+        "error-handling",
+        "accounts",
+        "domain",
+        "internal-error",
+        "user"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/accounts/src/domain/errors/UserIdRequiredError.ts:UserIdRequiredError",
+      "type": "class",
+      "name": "UserIdRequiredError",
+      "filePath": "packages/accounts/src/domain/errors/UserIdRequiredError.ts",
+      "lineRange": [3, 8],
+      "summary": "Internal invariant error raised when an operation is called without a user id.",
+      "tags": ["error-handling", "internal-error", "user"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/errors/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/accounts/src/domain/errors/index.ts",
+      "summary": "Barrel module re-exporting every accounts domain error class (public AccountsError and internal AccountsInternalError hierarchies) plus related constants and token-encryption types for use by services, use cases and repositories.",
+      "tags": ["barrel", "entry-point", "error-handling", "accounts"],
+      "complexity": "simple",
+      "languageNotes": "Uses `export type` re-exports for type-only symbols so they are erased under isolatedModules."
+    },
+    {
+      "id": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "type": "file",
+      "name": "IAccountsRepositories.ts",
+      "filePath": "packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "summary": "Aggregate repository port interface for the accounts hexagon, exposing getters for user, organization, invitation, membership, password-reset, CLI login code and user metadata repositories.",
+      "tags": [
+        "type-definition",
+        "repository",
+        "port",
+        "hexagonal-architecture",
+        "accounts"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/repositories/ICliLoginCodeRepository.ts",
+      "type": "file",
+      "name": "ICliLoginCodeRepository.ts",
+      "filePath": "packages/accounts/src/domain/repositories/ICliLoginCodeRepository.ts",
+      "summary": "Repository port for CLI login codes: lookup by code or id, save, delete, and purge of expired codes returning the number removed.",
+      "tags": ["type-definition", "repository", "port", "cli-authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/accounts/src/domain/repositories/IInvitationRepository.ts",
+      "type": "file",
+      "name": "IInvitationRepository.ts",
+      "filePath": "packages/accounts/src/domain/repositories/IInvitationRepository.ts",
+      "summary": "Repository port for organization invitations: bulk add, lookup by deterministically encrypted token, id or user id(s), latest-per-user retrieval, save and delete.",
+      "tags": ["type-definition", "repository", "port", "invitation"],
+      "complexity": "simple",
+      "languageNotes": "Documents that token lookup relies on deterministic encryption of the plaintext token."
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/accounts/src/domain/errors/DanglingInvitationError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/DanglingInvitationError.ts",
+      "target": "class:packages/accounts/src/domain/errors/DanglingInvitationError.ts:DanglingInvitationError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/DanglingInvitationError.ts",
+      "target": "class:packages/accounts/src/domain/errors/DanglingInvitationError.ts:DanglingInvitationError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/DanglingInvitationError.ts:DanglingInvitationError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/EmailAlreadyExistsError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/EmailAlreadyExistsError.ts",
+      "target": "class:packages/accounts/src/domain/errors/EmailAlreadyExistsError.ts:EmailAlreadyExistsError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/EmailAlreadyExistsError.ts",
+      "target": "class:packages/accounts/src/domain/errors/EmailAlreadyExistsError.ts:EmailAlreadyExistsError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/EmailAlreadyExistsError.ts:EmailAlreadyExistsError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/FailedToUpdateUserRoleError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/FailedToUpdateUserRoleError.ts",
+      "target": "class:packages/accounts/src/domain/errors/FailedToUpdateUserRoleError.ts:FailedToUpdateUserRoleError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/FailedToUpdateUserRoleError.ts",
+      "target": "class:packages/accounts/src/domain/errors/FailedToUpdateUserRoleError.ts:FailedToUpdateUserRoleError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/FailedToUpdateUserRoleError.ts:FailedToUpdateUserRoleError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidAuthenticationTypeError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidAuthenticationTypeError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidAuthenticationTypeError.ts:InvalidAuthenticationTypeError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidAuthenticationTypeError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidAuthenticationTypeError.ts:InvalidAuthenticationTypeError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/InvalidAuthenticationTypeError.ts:InvalidAuthenticationTypeError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidDisplayNameError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidDisplayNameError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidDisplayNameError.ts:InvalidDisplayNameError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidDisplayNameError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidDisplayNameError.ts:InvalidDisplayNameError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/InvalidDisplayNameError.ts:InvalidDisplayNameError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts:InvalidEmailOrPasswordError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts:InvalidEmailOrPasswordError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/InvalidEmailOrPasswordError.ts:InvalidEmailOrPasswordError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidInvitationEmailError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidInvitationEmailError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidInvitationEmailError.ts:InvalidInvitationEmailError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidInvitationEmailError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidInvitationEmailError.ts:InvalidInvitationEmailError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/InvalidInvitationEmailError.ts:InvalidInvitationEmailError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidOrganizationNameError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidOrganizationNameError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidOrganizationNameError.ts:InvalidOrganizationNameError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidOrganizationNameError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidOrganizationNameError.ts:InvalidOrganizationNameError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/InvalidOrganizationNameError.ts:InvalidOrganizationNameError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidPasswordError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidPasswordError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidPasswordError.ts:InvalidPasswordError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvalidPasswordError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvalidPasswordError.ts:InvalidPasswordError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/InvalidPasswordError.ts:InvalidPasswordError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvitationBatchEmptyError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvitationBatchEmptyError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvitationBatchEmptyError.ts:InvitationBatchEmptyError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvitationBatchEmptyError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvitationBatchEmptyError.ts:InvitationBatchEmptyError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/InvitationBatchEmptyError.ts:InvitationBatchEmptyError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvitationExpiredError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvitationExpiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvitationExpiredError.ts:InvitationExpiredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvitationExpiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvitationExpiredError.ts:InvitationExpiredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/InvitationExpiredError.ts:InvitationExpiredError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvitationNotFoundError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvitationNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvitationNotFoundError.ts:InvitationNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/InvitationNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/InvitationNotFoundError.ts:InvitationNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/InvitationNotFoundError.ts:InvitationNotFoundError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/MissingEmailError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/MissingEmailError.ts",
+      "target": "class:packages/accounts/src/domain/errors/MissingEmailError.ts:MissingEmailError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/MissingEmailError.ts",
+      "target": "class:packages/accounts/src/domain/errors/MissingEmailError.ts:MissingEmailError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/MissingEmailError.ts:MissingEmailError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/OrganizationNameConflictError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/OrganizationNameConflictError.ts",
+      "target": "class:packages/accounts/src/domain/errors/OrganizationNameConflictError.ts:OrganizationSlugConflictError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/OrganizationNameConflictError.ts",
+      "target": "class:packages/accounts/src/domain/errors/OrganizationNameConflictError.ts:OrganizationSlugConflictError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/OrganizationNameConflictError.ts:OrganizationSlugConflictError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts:OrganizationNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts:OrganizationNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/OrganizationNotFoundError.ts:OrganizationNotFoundError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/PasswordAndHashRequiredError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/PasswordAndHashRequiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/PasswordAndHashRequiredError.ts:PasswordAndHashRequiredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/PasswordAndHashRequiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/PasswordAndHashRequiredError.ts:PasswordAndHashRequiredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/PasswordAndHashRequiredError.ts:PasswordAndHashRequiredError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/PasswordResetTokenExpiredError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/PasswordResetTokenExpiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/PasswordResetTokenExpiredError.ts:PasswordResetTokenExpiredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/PasswordResetTokenExpiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/PasswordResetTokenExpiredError.ts:PasswordResetTokenExpiredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/PasswordResetTokenExpiredError.ts:PasswordResetTokenExpiredError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/PasswordResetTokenNotFoundError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/PasswordResetTokenNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/PasswordResetTokenNotFoundError.ts:PasswordResetTokenNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/PasswordResetTokenNotFoundError.ts",
+      "target": "class:packages/accounts/src/domain/errors/PasswordResetTokenNotFoundError.ts:PasswordResetTokenNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/PasswordResetTokenNotFoundError.ts:PasswordResetTokenNotFoundError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/TokenEncryptionFailedError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/TokenEncryptionFailedError.ts",
+      "target": "class:packages/accounts/src/domain/errors/TokenEncryptionFailedError.ts:TokenEncryptionFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/TokenEncryptionFailedError.ts",
+      "target": "class:packages/accounts/src/domain/errors/TokenEncryptionFailedError.ts:TokenEncryptionFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/TokenEncryptionFailedError.ts:TokenEncryptionFailedError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts",
+      "target": "class:packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts:TooManyLoginAttemptsError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts",
+      "target": "class:packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts:TooManyLoginAttemptsError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/TooManyLoginAttemptsError.ts:TooManyLoginAttemptsError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserCannotChangeOwnRoleError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserCannotChangeOwnRoleError.ts",
+      "target": "class:packages/accounts/src/domain/errors/UserCannotChangeOwnRoleError.ts:UserCannotChangeOwnRoleError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserCannotChangeOwnRoleError.ts",
+      "target": "class:packages/accounts/src/domain/errors/UserCannotChangeOwnRoleError.ts:UserCannotChangeOwnRoleError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/UserCannotChangeOwnRoleError.ts:UserCannotChangeOwnRoleError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserCannotExcludeSelfError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserCannotExcludeSelfError.ts",
+      "target": "class:packages/accounts/src/domain/errors/UserCannotExcludeSelfError.ts:UserCannotExcludeSelfError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserCannotExcludeSelfError.ts",
+      "target": "class:packages/accounts/src/domain/errors/UserCannotExcludeSelfError.ts:UserCannotExcludeSelfError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/UserCannotExcludeSelfError.ts:UserCannotExcludeSelfError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserCreationFieldsRequiredError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserCreationFieldsRequiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/UserCreationFieldsRequiredError.ts:UserCreationFieldsRequiredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserCreationFieldsRequiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/UserCreationFieldsRequiredError.ts:UserCreationFieldsRequiredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/UserCreationFieldsRequiredError.ts:UserCreationFieldsRequiredError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsError.ts:AccountsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserIdRequiredError.ts",
+      "target": "file:packages/accounts/src/domain/errors/AccountsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserIdRequiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/UserIdRequiredError.ts:UserIdRequiredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/accounts/src/domain/errors/UserIdRequiredError.ts",
+      "target": "class:packages/accounts/src/domain/errors/UserIdRequiredError.ts:UserIdRequiredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/accounts/src/domain/errors/UserIdRequiredError.ts:UserIdRequiredError",
+      "target": "class:packages/accounts/src/domain/errors/AccountsInternalError.ts:AccountsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/ICliLoginCodeRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IInvitationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IOrganizationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IPasswordResetTokenRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserMetadataRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserOrganizationMembershipRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/repositories/IAccountsRepositories.ts",
+      "target": "file:packages/accounts/src/domain/repositories/IUserRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/repositories/ICliLoginCodeRepository.ts",
+      "target": "file:packages/accounts/src/domain/entities/CliLoginCode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/accounts/src/domain/repositories/IInvitationRepository.ts",
+      "target": "file:packages/accounts/src/domain/entities/Invitation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

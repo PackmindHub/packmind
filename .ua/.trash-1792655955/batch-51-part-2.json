@@ -1,0 +1,677 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/linter-ast/src/parsers/JSONParser.ts",
+      "type": "file",
+      "name": "JSONParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/JSONParser.ts",
+      "summary": "Tree-sitter based JSON parser extending BaseParser: loads the tree-sitter-json WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "json", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/JSONParser.ts:JSONParser",
+      "type": "class",
+      "name": "JSONParser",
+      "filePath": "packages/linter-ast/src/parsers/JSONParser.ts",
+      "lineRange": [8, 105],
+      "summary": "JSON language parser that initializes web-tree-sitter with the json grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/JavaParser.ts",
+      "type": "file",
+      "name": "JavaParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/JavaParser.ts",
+      "summary": "Tree-sitter based Java parser extending BaseParser: loads the tree-sitter-java WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "java", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/JavaParser.ts:JavaParser",
+      "type": "class",
+      "name": "JavaParser",
+      "filePath": "packages/linter-ast/src/parsers/JavaParser.ts",
+      "lineRange": [7, 104],
+      "summary": "Java language parser that initializes web-tree-sitter with the java grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/JavaScriptParser.ts",
+      "type": "file",
+      "name": "JavaScriptParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/JavaScriptParser.ts",
+      "summary": "Tree-sitter based JavaScript parser extending BaseParser: loads the tree-sitter-javascript WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "javascript", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/JavaScriptParser.ts:JavaScriptParser",
+      "type": "class",
+      "name": "JavaScriptParser",
+      "filePath": "packages/linter-ast/src/parsers/JavaScriptParser.ts",
+      "lineRange": [8, 111],
+      "summary": "JavaScript language parser that initializes web-tree-sitter with the javascript grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/KotlinParser.ts",
+      "type": "file",
+      "name": "KotlinParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/KotlinParser.ts",
+      "summary": "Tree-sitter based Kotlin parser extending BaseParser: loads the tree-sitter-kotlin WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "kotlin", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/KotlinParser.ts:KotlinParser",
+      "type": "class",
+      "name": "KotlinParser",
+      "filePath": "packages/linter-ast/src/parsers/KotlinParser.ts",
+      "lineRange": [8, 105],
+      "summary": "Kotlin language parser that initializes web-tree-sitter with the kotlin grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/PHPParser.ts",
+      "type": "file",
+      "name": "PHPParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/PHPParser.ts",
+      "summary": "Tree-sitter based PHP parser extending BaseParser: loads the tree-sitter-php_only/php WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "php", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/PHPParser.ts:PHPParser",
+      "type": "class",
+      "name": "PHPParser",
+      "filePath": "packages/linter-ast/src/parsers/PHPParser.ts",
+      "lineRange": [8, 104],
+      "summary": "PHP language parser that initializes web-tree-sitter with the php_only/php grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/PythonParser.ts",
+      "type": "file",
+      "name": "PythonParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/PythonParser.ts",
+      "summary": "Tree-sitter based Python parser extending BaseParser: loads the tree-sitter-python WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "python", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/PythonParser.ts:PythonParser",
+      "type": "class",
+      "name": "PythonParser",
+      "filePath": "packages/linter-ast/src/parsers/PythonParser.ts",
+      "lineRange": [8, 105],
+      "summary": "Python language parser that initializes web-tree-sitter with the python grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/RubyParser.ts",
+      "type": "file",
+      "name": "RubyParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/RubyParser.ts",
+      "summary": "Tree-sitter based Ruby parser extending BaseParser: loads the tree-sitter-ruby WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "ruby", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/RubyParser.ts:RubyParser",
+      "type": "class",
+      "name": "RubyParser",
+      "filePath": "packages/linter-ast/src/parsers/RubyParser.ts",
+      "lineRange": [8, 105],
+      "summary": "Ruby language parser that initializes web-tree-sitter with the ruby grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/SCSSParser.ts",
+      "type": "file",
+      "name": "SCSSParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/SCSSParser.ts",
+      "summary": "Tree-sitter based SCSS parser extending BaseParser: loads the tree-sitter-scss WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "scss", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/SCSSParser.ts:SCSSParser",
+      "type": "class",
+      "name": "SCSSParser",
+      "filePath": "packages/linter-ast/src/parsers/SCSSParser.ts",
+      "lineRange": [8, 108],
+      "summary": "SCSS language parser that initializes web-tree-sitter with the scss grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/SwiftParser.ts",
+      "type": "file",
+      "name": "SwiftParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/SwiftParser.ts",
+      "summary": "Tree-sitter based Swift parser extending BaseParser: loads the tree-sitter-swift WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "swift", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/SwiftParser.ts:SwiftParser",
+      "type": "class",
+      "name": "SwiftParser",
+      "filePath": "packages/linter-ast/src/parsers/SwiftParser.ts",
+      "lineRange": [8, 108],
+      "summary": "Swift language parser that initializes web-tree-sitter with the swift grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/TypeScriptParser.ts",
+      "type": "file",
+      "name": "TypeScriptParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/TypeScriptParser.ts",
+      "summary": "Tree-sitter based TypeScript parser extending BaseParser: loads the tree-sitter-typescript WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "typescript", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/TypeScriptParser.ts:TypeScriptParser",
+      "type": "class",
+      "name": "TypeScriptParser",
+      "filePath": "packages/linter-ast/src/parsers/TypeScriptParser.ts",
+      "lineRange": [8, 111],
+      "summary": "TypeScript language parser that initializes web-tree-sitter with the typescript grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/linter-ast/src/parsers/YAMLParser.ts",
+      "type": "file",
+      "name": "YAMLParser.ts",
+      "filePath": "packages/linter-ast/src/parsers/YAMLParser.ts",
+      "summary": "Tree-sitter based YAML parser extending BaseParser: loads the tree-sitter-yaml WASM grammar, parses source into a raw tree or a normalized ASTNode with 1-based line numbers.",
+      "tags": ["parser", "tree-sitter", "yaml", "wasm", "ast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/linter-ast/src/parsers/YAMLParser.ts:YAMLParser",
+      "type": "class",
+      "name": "YAMLParser",
+      "filePath": "packages/linter-ast/src/parsers/YAMLParser.ts",
+      "lineRange": [8, 105],
+      "summary": "YAML language parser that initializes web-tree-sitter with the yaml grammar and implements parse, parseRaw and an overridden nodeToJson.",
+      "tags": ["parser", "tree-sitter", "language-support"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/linter-ast/src/parsers/JSONParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JSONParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JSONParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JSONParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/JSONParser.ts:JSONParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JSONParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/JSONParser.ts:JSONParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/JSONParser.ts:JSONParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JavaParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JavaParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JavaParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JavaParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/JavaParser.ts:JavaParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JavaParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/JavaParser.ts:JavaParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/JavaParser.ts:JavaParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JavaScriptParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JavaScriptParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JavaScriptParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JavaScriptParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/JavaScriptParser.ts:JavaScriptParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/JavaScriptParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/JavaScriptParser.ts:JavaScriptParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/JavaScriptParser.ts:JavaScriptParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/KotlinParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/KotlinParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/KotlinParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/KotlinParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/KotlinParser.ts:KotlinParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/KotlinParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/KotlinParser.ts:KotlinParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/KotlinParser.ts:KotlinParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/PHPParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/PHPParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/PHPParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/PHPParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/PHPParser.ts:PHPParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/PHPParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/PHPParser.ts:PHPParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/PHPParser.ts:PHPParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/PythonParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/PythonParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/PythonParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/PythonParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/PythonParser.ts:PythonParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/PythonParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/PythonParser.ts:PythonParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/PythonParser.ts:PythonParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/RubyParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/RubyParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/RubyParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/RubyParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/RubyParser.ts:RubyParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/RubyParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/RubyParser.ts:RubyParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/RubyParser.ts:RubyParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/SCSSParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/SCSSParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/SCSSParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/SCSSParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/SCSSParser.ts:SCSSParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/SCSSParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/SCSSParser.ts:SCSSParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/SCSSParser.ts:SCSSParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/SwiftParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/SwiftParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/SwiftParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/SwiftParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/SwiftParser.ts:SwiftParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/SwiftParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/SwiftParser.ts:SwiftParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/SwiftParser.ts:SwiftParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/TypeScriptParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/TypeScriptParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/TypeScriptParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/TypeScriptParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/TypeScriptParser.ts:TypeScriptParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/TypeScriptParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/TypeScriptParser.ts:TypeScriptParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/TypeScriptParser.ts:TypeScriptParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/YAMLParser.ts",
+      "target": "file:packages/linter-ast/src/core/BaseParser.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/YAMLParser.ts",
+      "target": "file:packages/linter-ast/src/core/ParserError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/YAMLParser.ts",
+      "target": "file:packages/linter-ast/src/core/types/ast.types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/YAMLParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/YAMLParser.ts:YAMLParser",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-ast/src/parsers/YAMLParser.ts",
+      "target": "class:packages/linter-ast/src/parsers/YAMLParser.ts:YAMLParser",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/linter-ast/src/parsers/YAMLParser.ts:YAMLParser",
+      "target": "class:packages/linter-ast/src/core/BaseParser.ts:BaseParser",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

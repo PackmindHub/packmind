@@ -1,0 +1,117 @@
+{
+  "nodes": [
+    {
+      "id": "config:packages/logger/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/logger/package.json",
+      "summary": "Package manifest for the private CommonJS workspace library @packmind/logger, declaring winston as its only runtime dependency.",
+      "tags": [
+        "configuration",
+        "package-manifest",
+        "dependencies",
+        "nx-library"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/logger/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/logger/project.json",
+      "summary": "Nx project definition for logger: node-tagged library built with @nx/js:swc, emitting markdown docs as assets.",
+      "tags": ["configuration", "build-system", "nx", "swc"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/logger/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/logger/tsconfig.json",
+      "summary": "Root TypeScript project config for logger, extending tsconfig.base.json with strict CommonJS settings and importHelpers, referencing lib/spec tsconfigs.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system",
+        "project-references"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/logger/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/logger/tsconfig.lib.json",
+      "summary": "TypeScript library build config for logger that compiles src/**/*.ts with declarations while excluding specs and jest config.",
+      "tags": ["configuration", "typescript", "build-system", "library-build"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:packages/logger/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/logger/README.md",
+      "summary": "README for the logger library describing PackmindLogger (a winston-based structured logger) and the maskEmail redaction helper, plus build/test commands.",
+      "tags": ["documentation", "readme", "logging", "winston"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/logger/package.json",
+      "target": "file:packages/logger/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/logger/project.json",
+      "target": "file:packages/logger/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/logger/tsconfig.json",
+      "target": "config:packages/logger/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/logger/tsconfig.lib.json",
+      "target": "file:packages/logger/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/logger/project.json",
+      "target": "config:packages/logger/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/logger/project.json",
+      "target": "config:packages/logger/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:packages/logger/README.md",
+      "target": "file:packages/logger/src/PackmindLogger.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/logger/README.md",
+      "target": "file:packages/logger/src/maskEmail.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

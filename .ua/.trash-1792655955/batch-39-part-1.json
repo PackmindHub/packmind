@@ -1,0 +1,1049 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/standards/samples/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/standards/samples/index.ts",
+      "summary": "Loads generated standard sample JSON files from disk (configurable via STANDARD_SAMPLES_PATH) and exposes helpers to list, check, and read sample standards.",
+      "tags": ["utility", "samples", "file-system", "loader"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/standards/samples/index.ts:getAllSampleIds",
+      "type": "function",
+      "name": "getAllSampleIds",
+      "filePath": "packages/standards/samples/index.ts",
+      "lineRange": [33, 38],
+      "summary": "Returns the ids of all registered standard samples from the shared standardSamples catalog.",
+      "tags": ["utility", "samples", "loader"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/standards/samples/index.ts:getStandardSample",
+      "type": "function",
+      "name": "getStandardSample",
+      "filePath": "packages/standards/samples/index.ts",
+      "lineRange": [40, 53],
+      "summary": "Reads and parses the generated JSON content for a given standard sample id, returning null when absent.",
+      "tags": ["utility", "samples", "loader"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/standards/samples/index.ts:sampleExists",
+      "type": "function",
+      "name": "sampleExists",
+      "filePath": "packages/standards/samples/index.ts",
+      "lineRange": [55, 59],
+      "summary": "Checks whether the generated JSON file for a standard sample exists on disk.",
+      "tags": ["utility", "samples", "loader"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/StandardsHexa.ts",
+      "type": "file",
+      "name": "StandardsHexa.ts",
+      "filePath": "packages/standards/src/StandardsHexa.ts",
+      "summary": "Hexagon entry point for the standards domain: wires repositories, services and the StandardsAdapter, and exposes the adapter via the BaseHexa lifecycle.",
+      "tags": ["entry-point", "hexagonal-architecture", "factory", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/StandardsHexa.ts:StandardsHexa",
+      "type": "class",
+      "name": "StandardsHexa",
+      "filePath": "packages/standards/src/StandardsHexa.ts",
+      "lineRange": [30, 133],
+      "summary": "Bootstraps the standards hexagon by constructing repositories, services and the adapter, and manages initialize/destroy lifecycle and port registration.",
+      "tags": ["entry-point", "hexagonal-architecture", "factory", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "type": "file",
+      "name": "StandardsAdapter.ts",
+      "filePath": "packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "summary": "Primary adapter implementing IStandardsPort, instantiating every standards use case and delegating port calls for standards, versions, rules and rule examples.",
+      "tags": ["api-handler", "adapter", "hexagonal-architecture", "facade"],
+      "complexity": "complex",
+      "languageNotes": "TypeScript class implementing both IBaseAdapter<IStandardsPort> and IStandardsPort, a two-phase (construct then initialize) port-wiring pattern."
+    },
+    {
+      "id": "class:packages/standards/src/application/adapter/StandardsAdapter.ts:StandardsAdapter",
+      "type": "class",
+      "name": "StandardsAdapter",
+      "filePath": "packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "lineRange": [79, 540],
+      "summary": "Implements IStandardsPort by resolving external ports during initialization and dispatching ~35 operations to standards use cases and services.",
+      "tags": ["api-handler", "adapter", "hexagonal-architecture", "facade"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "file",
+      "name": "StandardService.ts",
+      "filePath": "packages/standards/src/application/services/StandardService.ts",
+      "summary": "Application service encapsulating CRUD on standards: creation, listing by space, slug lookup, updates, soft/hard deletion, duplication to another space and move marking.",
+      "tags": ["service", "crud", "standards", "repository-access"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "class",
+      "name": "StandardService",
+      "filePath": "packages/standards/src/application/services/StandardService.ts",
+      "lineRange": [49, 348],
+      "summary": "Orchestrates standard repository operations including slug resolution, space-scoped listing, duplication and hard deletion of standards and their versions.",
+      "tags": ["service", "crud", "standards", "repository-access"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "file",
+      "name": "StandardVersionService.ts",
+      "filePath": "packages/standards/src/application/services/StandardVersionService.ts",
+      "summary": "Application service managing standard versions and their rules/examples: version creation, linter artefact copying, version retrieval and markdown generation.",
+      "tags": ["service", "versioning", "standards", "rules"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "class",
+      "name": "StandardVersionService",
+      "filePath": "packages/standards/src/application/services/StandardVersionService.ts",
+      "lineRange": [39, 437],
+      "summary": "Creates and queries standard versions, copies rules and examples, syncs linter artefacts and renders standard markdown.",
+      "tags": ["service", "versioning", "standards", "rules"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/standards/src/application/services/StandardsServices.ts",
+      "type": "file",
+      "name": "StandardsServices.ts",
+      "filePath": "packages/standards/src/application/services/StandardsServices.ts",
+      "summary": "Aggregates the StandardService and StandardVersionService built from the standards repositories, with an optional linter adapter injection.",
+      "tags": ["service", "factory", "dependency-injection", "aggregator"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/standards/src/application/services/StandardsServices.ts:StandardsServices",
+      "type": "class",
+      "name": "StandardsServices",
+      "filePath": "packages/standards/src/application/services/StandardsServices.ts",
+      "lineRange": [7, 46],
+      "summary": "Service registry constructing and exposing the standard and standard-version services, allowing late linter adapter injection.",
+      "tags": ["service", "factory", "dependency-injection", "aggregator"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "type": "file",
+      "name": "AddRuleToStandardUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "summary": "Use case that adds a rule to an existing standard by slug, creating a new standard version, copying examples and validating detection programs.",
+      "tags": ["use-case", "rules", "versioning", "validation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts:AddRuleToStandardUseCase",
+      "type": "class",
+      "name": "AddRuleToStandardUseCase",
+      "filePath": "packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "lineRange": [38, 239],
+      "summary": "Space-member use case creating a new standard version with an added rule, processing examples and validating linter detection programs.",
+      "tags": ["use-case", "application-layer", "rules", "versioning"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "type": "file",
+      "name": "CreateRuleExampleUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "summary": "Use case creating a code example for a rule after verifying the rule belongs to the caller's space, then triggering linter detection assessment for its language.",
+      "tags": ["use-case", "rule-examples", "validation", "linter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts:CreateRuleExampleUseCase",
+      "type": "class",
+      "name": "CreateRuleExampleUseCase",
+      "filePath": "packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "lineRange": [33, 151],
+      "summary": "Validates rule space ownership and example input, persists the example and requests detection re-assessment for its language.",
+      "tags": ["use-case", "application-layer", "rule-examples", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts",
+      "type": "file",
+      "name": "CreateStandardUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts",
+      "summary": "Use case creating a new standard with its initial version and rules within a space, emitting rule-added domain events.",
+      "tags": ["use-case", "standards", "creation", "domain-events"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts:CreateStandardUseCase",
+      "type": "class",
+      "name": "CreateStandardUseCase",
+      "filePath": "packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts",
+      "lineRange": [34, 229],
+      "summary": "Creates a standard and its first version with rules, then emits RuleAdded events for each rule.",
+      "tags": ["use-case", "application-layer", "standards", "creation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts",
+      "type": "file",
+      "name": "CreateStandardSamplesUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts",
+      "summary": "Use case that seeds a space with pre-built standard samples by reading generated sample files and creating standards from them.",
+      "tags": ["use-case", "samples", "onboarding", "seeding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts:CreateStandardSamplesUseCase",
+      "type": "class",
+      "name": "CreateStandardSamplesUseCase",
+      "filePath": "packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts",
+      "lineRange": [33, 181],
+      "summary": "Iterates requested sample ids, loads their content from disk and creates a standard per sample, reporting per-sample errors.",
+      "tags": ["use-case", "application-layer", "samples", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts",
+      "type": "file",
+      "name": "CreateStandardWithExamplesUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts",
+      "summary": "Use case creating a standard whose rules carry code examples, persisting examples, assessing rule detections and validating linter programs per language.",
+      "tags": ["use-case", "standards", "rule-examples", "linter"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts:CreateStandardWithExamplesUseCase",
+      "type": "class",
+      "name": "CreateStandardWithExamplesUseCase",
+      "filePath": "packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts",
+      "lineRange": [38, 453],
+      "summary": "Creates a standard with rules and examples, then assesses detections and validates linter detection programs per rule and language.",
+      "tags": ["use-case", "application-layer", "standards", "rule-examples"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts",
+      "type": "file",
+      "name": "DeleteRuleExampleUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts",
+      "summary": "Use case deleting a rule example after checking space ownership, then re-assessing rule detection for the affected language.",
+      "tags": ["use-case", "rule-examples", "deletion", "linter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts:DeleteRuleExampleUseCase",
+      "type": "class",
+      "name": "DeleteRuleExampleUseCase",
+      "filePath": "packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts",
+      "lineRange": [27, 133],
+      "summary": "Removes a rule example scoped to the member's space and triggers detection re-assessment.",
+      "tags": ["use-case", "application-layer", "rule-examples", "deletion"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts",
+      "type": "file",
+      "name": "DeleteStandardUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts",
+      "summary": "Use case soft-deleting a standard within a space and emitting a deletion event, raising StandardNotFoundError when absent.",
+      "tags": ["use-case", "standards", "deletion", "domain-events"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts:DeleteStandardUseCase",
+      "type": "class",
+      "name": "DeleteStandardUseCase",
+      "filePath": "packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts",
+      "lineRange": [22, 74],
+      "summary": "Deletes a single standard after existence check and publishes a deletion event.",
+      "tags": ["use-case", "application-layer", "standards", "deletion"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts",
+      "type": "file",
+      "name": "DeleteStandardsBatchUseCase.ts",
+      "filePath": "packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts",
+      "summary": "Use case deleting multiple standards in one request for a space member, emitting deletion events per standard.",
+      "tags": ["use-case", "standards", "deletion", "batch"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts:DeleteStandardsBatchUseCase",
+      "type": "class",
+      "name": "DeleteStandardsBatchUseCase",
+      "filePath": "packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts",
+      "lineRange": [21, 79],
+      "summary": "Deletes a batch of standards and emits corresponding deletion events.",
+      "tags": ["use-case", "application-layer", "standards", "deletion"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/standards/samples/index.ts",
+      "target": "function:packages/standards/samples/index.ts:getAllSampleIds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/samples/index.ts",
+      "target": "function:packages/standards/samples/index.ts:getAllSampleIds",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/samples/index.ts",
+      "target": "function:packages/standards/samples/index.ts:getStandardSample",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/samples/index.ts",
+      "target": "function:packages/standards/samples/index.ts:getStandardSample",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/samples/index.ts",
+      "target": "function:packages/standards/samples/index.ts:sampleExists",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/samples/index.ts",
+      "target": "function:packages/standards/samples/index.ts:sampleExists",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/StandardsHexa.ts",
+      "target": "class:packages/standards/src/StandardsHexa.ts:StandardsHexa",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/StandardsHexa.ts",
+      "target": "class:packages/standards/src/StandardsHexa.ts:StandardsHexa",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/StandardsHexa.ts",
+      "target": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/StandardsHexa.ts",
+      "target": "file:packages/standards/src/application/services/StandardsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/StandardsHexa.ts",
+      "target": "file:packages/standards/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/StandardsHexa.ts",
+      "target": "file:packages/standards/src/infra/repositories/StandardsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "class:packages/standards/src/application/adapter/StandardsAdapter.ts:StandardsAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "class:packages/standards/src/application/adapter/StandardsAdapter.ts:StandardsAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/services/StandardsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/findStandardBySlug/FindStandardBySlugUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/getLatestStandardVersion/GetLatestStandardVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/getRuleExamples/GetRuleExamplesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/getRulesByStandardId/GetRulesByStandardIdUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/getStandardById/GetStandardByIdUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/getStandardVersion/GetStandardVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/getStandardVersionById/GetStandardVersionByIdUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/listStandardVersions/ListStandardVersionsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/listStandardsBySpace/ListStandardsBySpaceUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/updateRuleExample/UpdateRuleExampleUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/application/useCases/updateStandard/UpdateStandardUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "target": "file:packages/standards/src/domain/useCases/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardService.ts",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardService.ts",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardService.ts",
+      "target": "file:packages/standards/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardService.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardService.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardService.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardService.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardsServices.ts",
+      "target": "class:packages/standards/src/application/services/StandardsServices.ts:StandardsServices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardsServices.ts",
+      "target": "class:packages/standards/src/application/services/StandardsServices.ts:StandardsServices",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardsServices.ts",
+      "target": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardsServices.ts",
+      "target": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/services/StandardsServices.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts:AddRuleToStandardUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts:AddRuleToStandardUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardSlugNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardVersionMissingError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts:CreateRuleExampleUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts:CreateRuleExampleUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/RuleExampleInvalidError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/RuleNotInSpaceError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createRuleExample/CreateRuleExampleUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts:CreateStandardUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts:CreateStandardUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts:CreateStandardSamplesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts:CreateStandardSamplesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts:CreateStandardWithExamplesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts:CreateStandardWithExamplesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleExampleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IRuleRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts:DeleteRuleExampleUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts:DeleteRuleExampleUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/RuleExampleNotFoundInSpaceError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteRuleExample/DeleteRuleExampleUseCase.ts",
+      "target": "file:packages/standards/src/domain/repositories/IStandardsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts:DeleteStandardUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts:DeleteStandardUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts",
+      "target": "file:packages/standards/src/domain/errors/StandardNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts:DeleteStandardsBatchUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts",
+      "target": "class:packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts:DeleteStandardsBatchUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts",
+      "target": "file:packages/standards/src/application/services/StandardService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts:CreateStandardSamplesUseCase",
+      "target": "function:packages/standards/samples/index.ts:getStandardSample",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/createStandardSamples/CreateStandardSamplesUseCase.ts:CreateStandardSamplesUseCase",
+      "target": "function:packages/standards/samples/index.ts:sampleExists",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts:AddRuleToStandardUseCase",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/addRuleToStandard/AddRuleToStandardUseCase.ts:AddRuleToStandardUseCase",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts:CreateStandardUseCase",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts:CreateStandardUseCase",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts:CreateStandardWithExamplesUseCase",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/createStandardWithExamples/CreateStandardWithExamplesUseCase.ts:CreateStandardWithExamplesUseCase",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/deleteStandard/DeleteStandardUseCase.ts:DeleteStandardUseCase",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/useCases/deleteStandardsBatch/DeleteStandardsBatchUseCase.ts:DeleteStandardsBatchUseCase",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/standards/src/application/services/StandardsServices.ts:StandardsServices",
+      "target": "class:packages/standards/src/application/services/StandardService.ts:StandardService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/standards/src/application/services/StandardsServices.ts:StandardsServices",
+      "target": "class:packages/standards/src/application/services/StandardVersionService.ts:StandardVersionService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/standards/src/StandardsHexa.ts:StandardsHexa",
+      "target": "class:packages/standards/src/application/adapter/StandardsAdapter.ts:StandardsAdapter",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/standards/src/StandardsHexa.ts:StandardsHexa",
+      "target": "class:packages/standards/src/infra/repositories/StandardsRepositories.ts:StandardsRepositories",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

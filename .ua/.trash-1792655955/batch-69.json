@@ -1,0 +1,143 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/CommandCentricView/CommandCentricView.tsx",
+      "type": "file",
+      "name": "CommandCentricView.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/CommandCentricView/CommandCentricView.tsx",
+      "summary": "Deployment overview view grouping command deployment status per command, showing target/repository distribution with outdated and undeployed filters and search.",
+      "tags": ["component", "react", "deployments", "commands", "filtering"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/CommandCentricView/CommandCentricView.tsx:CommandCentricView",
+      "type": "function",
+      "name": "CommandCentricView",
+      "filePath": "apps/frontend/src/domain/deployments/components/CommandCentricView/CommandCentricView.tsx",
+      "lineRange": [30, 299],
+      "summary": "Filters command deployment statuses by search and outdated/undeployed flags and renders per-target deployment entries with status badges.",
+      "tags": ["component", "react", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx",
+      "type": "file",
+      "name": "DeploymentItem.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx",
+      "summary": "Small layout components for rendering a deployment row and a labelled deployment entry in deployment overviews.",
+      "tags": ["component", "react", "deployments", "layout"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx:DeploymentItem",
+      "type": "function",
+      "name": "DeploymentItem",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx",
+      "lineRange": [9, 21],
+      "summary": "Container row for a deployment item.",
+      "tags": ["component", "layout"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx:DeploymentEntry",
+      "type": "function",
+      "name": "DeploymentEntry",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx",
+      "lineRange": [28, 40],
+      "summary": "Labelled entry rendering a deployment detail with children.",
+      "tags": ["component", "layout"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/StandardCentricView/StandardCentricView.tsx",
+      "type": "file",
+      "name": "StandardCentricView.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/StandardCentricView/StandardCentricView.tsx",
+      "summary": "Deployment overview view grouping standard deployment status per standard, showing target/repository distribution with outdated and undeployed filters and search.",
+      "tags": ["component", "react", "deployments", "standards", "filtering"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/StandardCentricView/StandardCentricView.tsx:StandardCentricView",
+      "type": "function",
+      "name": "StandardCentricView",
+      "filePath": "apps/frontend/src/domain/deployments/components/StandardCentricView/StandardCentricView.tsx",
+      "lineRange": [30, 307],
+      "summary": "Filters standard deployment statuses and renders per-target deployment entries with up-to-date/outdated badges.",
+      "tags": ["component", "react", "deployments"],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandCentricView/CommandCentricView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/CommandCentricView/CommandCentricView.tsx:CommandCentricView",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandCentricView/CommandCentricView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/CommandCentricView/CommandCentricView.tsx:CommandCentricView",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx:DeploymentItem",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx:DeploymentItem",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx:DeploymentEntry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx:DeploymentEntry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardCentricView/StandardCentricView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/StandardCentricView/StandardCentricView.tsx:StandardCentricView",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardCentricView/StandardCentricView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/StandardCentricView/StandardCentricView.tsx:StandardCentricView",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandCentricView/CommandCentricView.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardCentricView/StandardCentricView.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentItem/DeploymentItem.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

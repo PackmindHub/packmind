@@ -1,0 +1,935 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "type": "file",
+      "name": "ContextRuleDetail.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "summary": "Detail pane for a standard's rule in the deployments context view, combining rule detection state, a language rail, and the example manager with draft persistence across tabs.",
+      "tags": ["component", "react", "rule-detail", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx:ContextRuleDetail",
+      "type": "function",
+      "name": "ContextRuleDetail",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "lineRange": [55, 337],
+      "summary": "Renders the context-view rule detail with detection languages, language rail, and examples manager.",
+      "tags": ["component", "react", "rule-detail"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "type": "file",
+      "name": "RuleDetectionLanguages.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "summary": "Renders the per-language linter detection line for a rule, including a severity control for active detection programs and a compact detection mark.",
+      "tags": ["component", "react", "linter-detection", "severity"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx:RuleDetectionLanguages",
+      "type": "function",
+      "name": "RuleDetectionLanguages",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "lineRange": [43, 75],
+      "summary": "Lists the languages a rule's detection program reports in, with their states.",
+      "tags": ["component", "linter-detection", "languages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx:RuleSeverityControl",
+      "type": "function",
+      "name": "RuleSeverityControl",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "lineRange": [117, 223],
+      "summary": "Control for changing the violation severity of an active detection program for a language.",
+      "tags": ["component", "severity", "form"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx:RuleDetectionMark",
+      "type": "function",
+      "name": "RuleDetectionMark",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "lineRange": [264, 274],
+      "summary": "Small visual mark indicating a rule's overall detection state.",
+      "tags": ["component", "indicator", "linter-detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "type": "file",
+      "name": "ruleDetection.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "summary": "Pure helpers that derive a rule's detection state (active, in-progress, inactive) and per-language severity from proprietary detection status summaries, plus labels and open-state logic.",
+      "tags": [
+        "utility",
+        "domain-logic",
+        "linter-detection",
+        "type-definition"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:ruleDetectionsById",
+      "type": "function",
+      "name": "ruleDetectionsById",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "lineRange": [82, 123],
+      "summary": "Indexes detection status summaries into per-rule detection languages and states.",
+      "tags": ["utility", "mapping", "linter-detection"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:languageState",
+      "type": "function",
+      "name": "languageState",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "lineRange": [126, 136],
+      "summary": "Maps a per-language detection status to an active/in-progress/inactive state.",
+      "tags": ["utility", "mapping", "linter-detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:byStateThenName",
+      "type": "function",
+      "name": "byStateThenName",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "lineRange": [144, 153],
+      "summary": "Comparator ordering detection languages by state then display name.",
+      "tags": ["utility", "sorting", "comparator"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:detectionState",
+      "type": "function",
+      "name": "detectionState",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "lineRange": [155, 164],
+      "summary": "Reduces a rule's language states into one overall detection state.",
+      "tags": ["utility", "domain-logic", "linter-detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:ruleDetectionLabel",
+      "type": "function",
+      "name": "ruleDetectionLabel",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "lineRange": [178, 206],
+      "summary": "Builds the human-readable label describing a rule's detection state.",
+      "tags": ["utility", "formatting", "linter-detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:ruleDetectionOpens",
+      "type": "function",
+      "name": "ruleDetectionOpens",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "lineRange": [222, 237],
+      "summary": "Decides whether the detection section should open by default.",
+      "tags": ["utility", "ui-logic", "linter-detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/api/queries/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/rules/api/queries/index.ts",
+      "summary": "Barrel re-exporting the rules React Query hooks from RulesQueries.",
+      "tags": ["barrel", "entry-point", "api-queries"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "type": "file",
+      "name": "RuleDetails.tsx",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "summary": "Rule detail view in the rules domain showing a rule with its language rail and examples manager, preserving unsaved example drafts.",
+      "tags": ["component", "react", "rule-detail", "examples"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/components/RuleDetails.tsx:RuleDetails",
+      "type": "function",
+      "name": "RuleDetails",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "lineRange": [39, 285],
+      "summary": "Rule detail view composing language rail, examples manager, and draft provider.",
+      "tags": ["component", "react", "rule-detail"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.stories.tsx",
+      "type": "file",
+      "name": "RuleExampleItem.stories.tsx",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.stories.tsx",
+      "summary": "Storybook stories for RuleExampleItem covering default, TypeScript, and read-only (no actions) variants.",
+      "tags": ["storybook", "stories", "component", "test"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "type": "file",
+      "name": "RuleExampleItem.tsx",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "summary": "Card for viewing and editing a single rule example's positive and negative code snippets, with validation, language correction, and save/delete via rule queries backed by the draft store.",
+      "tags": ["component", "react", "editor", "examples", "validation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx:validate",
+      "type": "function",
+      "name": "validate",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "lineRange": [59, 78],
+      "summary": "Validates a rule example draft before saving.",
+      "tags": ["validation", "utility", "examples"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx:RuleExampleItem",
+      "type": "function",
+      "name": "RuleExampleItem",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "lineRange": [100, 455],
+      "summary": "Editable card for a single rule example with save, delete, and language correction.",
+      "tags": ["component", "react", "editor"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleExampleItem/index.ts",
+      "summary": "Barrel re-exporting the RuleExampleItem component.",
+      "tags": ["barrel", "entry-point", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "type": "file",
+      "name": "RuleExamplesManager.tsx",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "summary": "Lists, adds, and manages a rule's examples for the selected language, combining saved examples with unsaved drafts and a language picker.",
+      "tags": ["component", "react", "examples", "state-management"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx:RuleExamplesManager",
+      "type": "function",
+      "name": "RuleExamplesManager",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "lineRange": [32, 195],
+      "summary": "Manages the list of saved and draft examples for a rule's selected language.",
+      "tags": ["component", "react", "examples"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleExamplesManager/index.ts",
+      "summary": "Barrel re-exporting the RuleExamplesManager module.",
+      "tags": ["barrel", "entry-point", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/components/RuleLanguagePicker.tsx",
+      "type": "file",
+      "name": "RuleLanguagePicker.tsx",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleLanguagePicker.tsx",
+      "summary": "Picker component for choosing a programming language when adding a rule example.",
+      "tags": ["component", "react", "language-picker", "form"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/components/RuleLanguagePicker.tsx:RuleLanguagePicker",
+      "type": "function",
+      "name": "RuleLanguagePicker",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleLanguagePicker.tsx",
+      "lineRange": [34, 116],
+      "summary": "Language selection control used when adding a rule example.",
+      "tags": ["component", "react", "form"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx",
+      "type": "file",
+      "name": "RuleLanguageRail.tsx",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx",
+      "summary": "Horizontal rail of a rule's documented languages with saved-example counts, unsaved markers, and an affordance to add a new language.",
+      "tags": ["component", "react", "navigation", "languages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx:RuleLanguageRail",
+      "type": "function",
+      "name": "RuleLanguageRail",
+      "filePath": "apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx",
+      "lineRange": [33, 191],
+      "summary": "Rail of rule languages with example counts and unsaved-draft markers.",
+      "tags": ["component", "react", "navigation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "type": "file",
+      "name": "useRuleExampleDrafts.tsx",
+      "filePath": "apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "summary": "React context store that keeps unsaved rule example drafts keyed by example id so edits survive language switches and tab unmounts.",
+      "tags": ["hook", "context", "state-management", "drafts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:useRuleExampleDraftsStore",
+      "type": "function",
+      "name": "useRuleExampleDraftsStore",
+      "filePath": "apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "lineRange": [67, 126],
+      "summary": "Creates the in-memory store of rule example drafts with open, patch, move, and discard operations.",
+      "tags": ["hook", "state-management", "drafts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:hasContent",
+      "type": "function",
+      "name": "hasContent",
+      "filePath": "apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "lineRange": [128, 132],
+      "summary": "Checks whether a draft has any typed positive or negative code.",
+      "tags": ["utility", "predicate", "drafts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:RuleExampleDraftsProvider",
+      "type": "function",
+      "name": "RuleExampleDraftsProvider",
+      "filePath": "apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "lineRange": [134, 143],
+      "summary": "Context provider exposing the rule example drafts store.",
+      "tags": ["context", "provider", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:useRuleExampleDrafts",
+      "type": "function",
+      "name": "useRuleExampleDrafts",
+      "filePath": "apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "lineRange": [145, 155],
+      "summary": "Hook reading the rule example drafts store from context.",
+      "tags": ["hook", "context", "drafts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/rules/standardExampleLanguages.ts",
+      "type": "file",
+      "name": "standardExampleLanguages.ts",
+      "filePath": "apps/frontend/src/domain/rules/standardExampleLanguages.ts",
+      "summary": "Derives the languages used by a standard's other rules, ordered by usage count, to pick a sensible default language for a rule without examples.",
+      "tags": ["utility", "domain-logic", "languages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/rules/standardExampleLanguages.ts:standardExampleLanguages",
+      "type": "function",
+      "name": "standardExampleLanguages",
+      "filePath": "apps/frontend/src/domain/rules/standardExampleLanguages.ts",
+      "lineRange": [31, 67],
+      "summary": "Counts languages across a standard's rules and returns them most-used first.",
+      "tags": ["utility", "domain-logic", "languages"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx:ContextRuleDetail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx:ContextRuleDetail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "file:apps/frontend/src/domain/rules/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "file:apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "file:apps/frontend/src/domain/rules/standardExampleLanguages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx:RuleDetectionLanguages",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx:RuleDetectionLanguages",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx:RuleSeverityControl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx:RuleDetectionMark",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx:RuleDetectionMark",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:ruleDetectionsById",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:ruleDetectionsById",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:languageState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:languageState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:byStateThenName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:detectionState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:ruleDetectionLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:ruleDetectionLabel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:ruleDetectionOpens",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:ruleDetectionOpens",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleDetails.tsx:RuleDetails",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleDetails.tsx:RuleDetails",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "target": "file:apps/frontend/src/domain/rules/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "target": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "target": "file:apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "target": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "target": "file:apps/frontend/src/domain/rules/standardExampleLanguages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleDetails.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.stories.tsx",
+      "target": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.stories.tsx",
+      "target": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx:validate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx:RuleExampleItem",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx:RuleExampleItem",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "target": "file:apps/frontend/src/domain/rules/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "target": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx:RuleExamplesManager",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx:RuleExamplesManager",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "target": "file:apps/frontend/src/domain/rules/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "target": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "target": "file:apps/frontend/src/domain/rules/components/RuleLanguagePicker.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "target": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleLanguagePicker.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleLanguagePicker.tsx:RuleLanguagePicker",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleLanguagePicker.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleLanguagePicker.tsx:RuleLanguagePicker",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx:RuleLanguageRail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx:RuleLanguageRail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:useRuleExampleDraftsStore",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:useRuleExampleDraftsStore",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:hasContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:hasContent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:RuleExampleDraftsProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:RuleExampleDraftsProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:useRuleExampleDrafts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:useRuleExampleDrafts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/standardExampleLanguages.ts",
+      "target": "function:apps/frontend/src/domain/rules/standardExampleLanguages.ts:standardExampleLanguages",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/standardExampleLanguages.ts",
+      "target": "function:apps/frontend/src/domain/rules/standardExampleLanguages.ts:standardExampleLanguages",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "target": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.stories.tsx",
+      "type": "tested_by",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx:ContextRuleDetail",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx:RuleLanguageRail",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx:ContextRuleDetail",
+      "target": "function:apps/frontend/src/domain/rules/standardExampleLanguages.ts:standardExampleLanguages",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx:ContextRuleDetail",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts:ruleDetectionsById",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx:ContextRuleDetail",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx:ContextRuleDetail",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/components/RuleDetails.tsx:RuleDetails",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleLanguageRail.tsx:RuleLanguageRail",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/components/RuleDetails.tsx:RuleDetails",
+      "target": "function:apps/frontend/src/domain/rules/standardExampleLanguages.ts:standardExampleLanguages",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/components/RuleDetails.tsx:RuleDetails",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/components/RuleDetails.tsx:RuleDetails",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx:RuleExamplesManager",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleLanguagePicker.tsx:RuleLanguagePicker",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx:RuleExamplesManager",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx:RuleExampleItem",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx:RuleExamplesManager",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:useRuleExampleDrafts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx:RuleExampleItem",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:useRuleExampleDrafts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx:RuleExampleItem",
+      "target": "function:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx:validate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:RuleExampleDraftsProvider",
+      "target": "function:apps/frontend/src/domain/rules/hooks/useRuleExampleDrafts.tsx:useRuleExampleDraftsStore",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/index.ts",
+      "target": "file:apps/frontend/src/domain/rules/components/RuleExampleItem/RuleExampleItem.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/index.ts",
+      "target": "file:apps/frontend/src/domain/rules/components/RuleExamplesManager/RuleExamplesManager.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

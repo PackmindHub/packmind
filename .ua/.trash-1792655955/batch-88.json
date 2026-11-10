@@ -1,0 +1,75 @@
+{
+  "nodes": [
+    {
+      "id": "service:dockerfile/Dockerfile.api",
+      "type": "service",
+      "name": "Dockerfile.api",
+      "filePath": "dockerfile/Dockerfile.api",
+      "summary": "Alpine Node 24 image for the API: installs prod deps with pnpm from the trimmed docker-package.json, copies the webpack bundle, migrations bundle and tree-sitter wasm, and runs migrations before starting main.js on port 3000.",
+      "tags": ["containerization", "infrastructure", "deployment", "api"],
+      "complexity": "moderate",
+      "languageNotes": "Uses digest-pinned base image and >= version floors for apk packages so CVE fixes are kept without breaking on upstream patch releases."
+    },
+    {
+      "id": "service:dockerfile/Dockerfile.frontend",
+      "type": "service",
+      "name": "Dockerfile.frontend",
+      "filePath": "dockerfile/Dockerfile.frontend",
+      "summary": "Slim nginx image serving the built frontend static files as a non-root user, bundling K8s/compose nginx configs and the entrypoint script that selects among them.",
+      "tags": [
+        "containerization",
+        "infrastructure",
+        "deployment",
+        "nginx",
+        "frontend"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:dockerfile/nginx-entrypoint.sh",
+      "type": "file",
+      "name": "nginx-entrypoint.sh",
+      "filePath": "dockerfile/nginx-entrypoint.sh",
+      "summary": "Container entrypoint that picks the nginx config based on NGINX_ENV and INGRESS_ENABLED, envsubst-ing API service host/port for the no-ingress K8s variant before exec-ing nginx.",
+      "tags": ["entry-point", "script", "nginx", "deployment", "configuration"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "service:dockerfile/Dockerfile.api",
+      "target": "file:apps/api/src/main.ts",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "service:dockerfile/Dockerfile.api",
+      "target": "config:apps/api/docker-package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:dockerfile/Dockerfile.frontend",
+      "target": "file:dockerfile/nginx-entrypoint.sh",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:dockerfile/Dockerfile.frontend",
+      "target": "config:apps/frontend/project.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:dockerfile/nginx-entrypoint.sh",
+      "target": "file:dockerfile/nginx.compose.conf",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

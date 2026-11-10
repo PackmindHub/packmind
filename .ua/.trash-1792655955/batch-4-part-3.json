@@ -1,0 +1,783 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "type": "file",
+      "name": "MoveArtefactsToPackageUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "summary": "Space-member use case moving artefacts from their current packages into a target package, with rollback on failure and removal notifications.",
+      "tags": ["use-case", "package", "artefact-management", "transaction"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts:MoveArtefactsToPackageUseCase",
+      "type": "class",
+      "name": "MoveArtefactsToPackageUseCase",
+      "filePath": "packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "lineRange": [59, 350],
+      "summary": "Applies artefact moves between packages (add to target, remove from sources) and reverts on failure.",
+      "tags": ["use-case", "package", "artefact-management", "transaction"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts:heldByPackage",
+      "type": "function",
+      "name": "heldByPackage",
+      "filePath": "packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "lineRange": [353, 365],
+      "summary": "Determines which artefacts of a move request are currently held by a given package.",
+      "tags": ["helper", "utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase.ts",
+      "type": "file",
+      "name": "NotifyArtefactsDistributionUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase.ts",
+      "summary": "Member use case recording a CLI-reported artefacts distribution from a lock file by resolving the git target and delegating to the lock-file distribution recorder.",
+      "tags": ["use-case", "distribution", "cli-support", "lock-file"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase.ts:NotifyArtefactsDistributionUseCase",
+      "type": "class",
+      "name": "NotifyArtefactsDistributionUseCase",
+      "filePath": "packages/deployments/src/application/useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase.ts",
+      "lineRange": [14, 61],
+      "summary": "Finds or creates the target from git info and records the lock file distribution.",
+      "tags": ["use-case", "distribution", "cli-support", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "type": "file",
+      "name": "NotifyDistributionUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "summary": "Member use case recording a CLI-side distribution: resolves target, matches package slugs, captures latest artifact versions and persists distribution plus distributed-package rows.",
+      "tags": ["use-case", "distribution", "cli-support", "persistence"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts:NotifyDistributionUseCase",
+      "type": "class",
+      "name": "NotifyDistributionUseCase",
+      "filePath": "packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "lineRange": [48, 416],
+      "summary": "Resolves matching packages and latest standard/command/skill versions, then saves distribution and distributed package records.",
+      "tags": ["use-case", "distribution", "cli-support", "persistence"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts",
+      "type": "file",
+      "name": "RemoveArtefactsFromPackageUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts",
+      "summary": "Space-member use case removing artefacts from a package and notifying space content listeners.",
+      "tags": ["use-case", "package", "artefact-management"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts:RemoveArtefactsFromPackageUseCase",
+      "type": "class",
+      "name": "RemoveArtefactsFromPackageUseCase",
+      "filePath": "packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts",
+      "lineRange": [25, 189],
+      "summary": "Removes selected artefacts from a package and reloads it, notifying content changes.",
+      "tags": ["use-case", "package", "artefact-management"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "type": "file",
+      "name": "RenderPackageAsPluginUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "summary": "Member use case rendering a Packmind package (live or from a release) as a Claude Code or GitHub Copilot plugin file set, recording a distribution and tracking the render event.",
+      "tags": [
+        "use-case",
+        "rendering",
+        "plugin",
+        "distribution",
+        "event-emission"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts:RenderPackageAsPluginUseCase",
+      "type": "class",
+      "name": "RenderPackageAsPluginUseCase",
+      "filePath": "packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "lineRange": [78, 542],
+      "summary": "Resolves package content (live or release), renders it against a synthetic target into plugin files and records/tracks the render.",
+      "tags": ["use-case", "rendering", "plugin", "distribution"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts",
+      "type": "file",
+      "name": "SyncDistributionsFromLockFilesUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts",
+      "summary": "Member use case scanning a repository's packmind lock files and recording distributions for each discovered target.",
+      "tags": [
+        "use-case",
+        "distribution",
+        "lock-file",
+        "git-integration",
+        "sync"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts:SyncDistributionsFromLockFilesUseCase",
+      "type": "class",
+      "name": "SyncDistributionsFromLockFilesUseCase",
+      "filePath": "packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts",
+      "lineRange": [26, 176],
+      "summary": "Reads lock files from a git repository, resolves targets and records their distributions.",
+      "tags": ["use-case", "distribution", "lock-file", "git-integration"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts",
+      "type": "file",
+      "name": "TrackPluginDeletedUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts",
+      "summary": "Member use case emitting a PluginDeletedEvent when a rendered plugin is removed locally, resolving the package to enrich the event without writing distributions.",
+      "tags": ["use-case", "analytics", "event-emission", "plugin"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts:TrackPluginDeletedUseCase",
+      "type": "class",
+      "name": "TrackPluginDeletedUseCase",
+      "filePath": "packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts",
+      "lineRange": [29, 122],
+      "summary": "Resolves the package by slug and emits a PluginDeletedEvent.",
+      "tags": ["use-case", "analytics", "event-emission", "plugin"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts",
+      "type": "file",
+      "name": "UpdatePackageUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts",
+      "summary": "Space-member use case updating a package's name, description and artefact composition with space ownership checks and content notifications.",
+      "tags": ["use-case", "package", "update", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts:UpdatePackageUseCase",
+      "type": "class",
+      "name": "UpdatePackageUseCase",
+      "filePath": "packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts",
+      "lineRange": [27, 205],
+      "summary": "Applies package metadata and artefact changes after validation.",
+      "tags": ["use-case", "package", "update", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "type": "file",
+      "name": "ArtifactMetadataUtils.ts",
+      "filePath": "packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "summary": "Utility helpers building a path-to-artifact metadata map from rendered artifact versions and enriching file modifications with artifact metadata.",
+      "tags": ["utility", "metadata", "rendering"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts:buildArtifactMetadataMap",
+      "type": "function",
+      "name": "buildArtifactMetadataMap",
+      "filePath": "packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "lineRange": [27, 78],
+      "summary": "Builds a map from rendered file paths to artifact metadata (type, id, name, version).",
+      "tags": ["helper", "utility", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts:enrichFileModificationsWithMetadata",
+      "type": "function",
+      "name": "enrichFileModificationsWithMetadata",
+      "filePath": "packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "lineRange": [80, 95],
+      "summary": "Attaches artifact metadata from the map to matching file modifications.",
+      "tags": ["helper", "utility", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts:flattenArtifactMetadataMap",
+      "type": "function",
+      "name": "flattenArtifactMetadataMap",
+      "filePath": "packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "lineRange": [97, 110],
+      "summary": "Flattens the artifact metadata map into a list form.",
+      "tags": ["helper", "utility", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "type": "file",
+      "name": "DefaultSkillsMetadataEnricher.ts",
+      "filePath": "packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "summary": "Utility enriching rendered default-skill file modifications with artifact metadata by matching file paths to default skill identifiers.",
+      "tags": ["utility", "metadata", "default-skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts:enrichDefaultSkillsFileModifications",
+      "type": "function",
+      "name": "enrichDefaultSkillsFileModifications",
+      "filePath": "packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "lineRange": [17, 34],
+      "summary": "Enriches default skill file modifications with skill artifact metadata.",
+      "tags": ["helper", "utility", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts:enrichFileModification",
+      "type": "function",
+      "name": "enrichFileModification",
+      "filePath": "packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "lineRange": [36, 56],
+      "summary": "Enriches a single file modification when it belongs to a default skill.",
+      "tags": ["helper", "utility", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts:findMatchingSkill",
+      "type": "function",
+      "name": "findMatchingSkill",
+      "filePath": "packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "lineRange": [58, 70],
+      "summary": "Finds the default skill matching a file path.",
+      "tags": ["helper", "utility", "utility"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts:MoveArtefactsToPackageUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts:MoveArtefactsToPackageUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "function:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts:heldByPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/SpaceContentNotifier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/utils/assertArtefactsInSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageReloadFailedError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/moveArtefactsToPackage/MoveArtefactsToPackageUseCase.ts:MoveArtefactsToPackageUseCase",
+      "target": "function:packages/deployments/src/application/utils/assertArtefactsInSpace.ts:assertArtefactsInSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase.ts:NotifyArtefactsDistributionUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase.ts:NotifyArtefactsDistributionUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyArtefactsDistribution/NotifyArtefactsDistributionUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/TargetResolutionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts:NotifyDistributionUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts:NotifyDistributionUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/TargetResolutionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/packageSlugHelpers.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/notifyDistribution/NotifyDistributionUseCase.ts:NotifyDistributionUseCase",
+      "target": "function:packages/deployments/src/application/services/packageSlugHelpers.ts:parsePackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts:RemoveArtefactsFromPackageUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts:RemoveArtefactsFromPackageUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/SpaceContentNotifier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageReloadFailedError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/removeArtefactsFromPackage/RemoveArtefactsFromPackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/SpaceNotAccessibleError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts:RenderPackageAsPluginUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts:RenderPackageAsPluginUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/PackageReleaseService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/PackageService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/TargetResolutionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/packageSlugHelpers.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageReleaseNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackagesNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributedPackageRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/renderPackageAsPlugin/RenderPackageAsPluginUseCase.ts:RenderPackageAsPluginUseCase",
+      "target": "function:packages/deployments/src/application/services/packageSlugHelpers.ts:parsePackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts:SyncDistributionsFromLockFilesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts:SyncDistributionsFromLockFilesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/LockFileDistributionRecorder.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/TargetResolutionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/TargetService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/gitInfoHelpers.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/GitRepositoryNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/syncDistributionsFromLockFiles/SyncDistributionsFromLockFilesUseCase.ts:SyncDistributionsFromLockFilesUseCase",
+      "target": "function:packages/deployments/src/application/services/gitInfoHelpers.ts:normalizeRelativePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts:TrackPluginDeletedUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts:TrackPluginDeletedUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/PackageService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/packageSlugHelpers.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackagesNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/trackPluginDeleted/TrackPluginDeletedUseCase.ts:TrackPluginDeletedUseCase",
+      "target": "function:packages/deployments/src/application/services/packageSlugHelpers.ts:parsePackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts:UpdatePackageUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts:UpdatePackageUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/DeploymentsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/SpaceContentNotifier.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/updatePackage/UpdatePackageUseCase.ts",
+      "target": "file:packages/deployments/src/domain/errors/PackageNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts:buildArtifactMetadataMap",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts:buildArtifactMetadataMap",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts:enrichFileModificationsWithMetadata",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts:enrichFileModificationsWithMetadata",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts:flattenArtifactMetadataMap",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts:flattenArtifactMetadataMap",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "target": "function:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts:enrichDefaultSkillsFileModifications",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "target": "function:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts:enrichDefaultSkillsFileModifications",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "target": "function:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts:enrichFileModification",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "target": "function:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts:findMatchingSkill",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "target": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/DefaultSkillsMetadataEnricher.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillId",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,1008 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillActions.tsx",
+      "type": "file",
+      "name": "SkillActions.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillActions.tsx",
+      "summary": "Action bar for a skill detail page, exposing download popover and navigation actions.",
+      "tags": ["component", "skills", "actions"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillActions.tsx:SkillActions",
+      "type": "function",
+      "name": "SkillActions",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillActions.tsx",
+      "lineRange": [22, 87],
+      "summary": "Renders skill action buttons.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillDetailsNavEntry.tsx",
+      "type": "file",
+      "name": "SkillDetailsNavEntry.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillDetailsNavEntry.tsx",
+      "summary": "Navigation entry component used in the skill details sidebar with active state styling.",
+      "tags": ["component", "skills", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillDetailsNavEntry.tsx:SkillDetailsNavEntry",
+      "type": "function",
+      "name": "SkillDetailsNavEntry",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillDetailsNavEntry.tsx",
+      "lineRange": [17, 77],
+      "summary": "Single nav entry in the skill details sidebar.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx",
+      "type": "file",
+      "name": "SkillDetailsSidebar.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx",
+      "summary": "Sidebar of the skill detail page combining section navigation entries with the skill file tree.",
+      "tags": ["component", "skills", "sidebar", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx:SkillDetailsSidebar",
+      "type": "function",
+      "name": "SkillDetailsSidebar",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx",
+      "lineRange": [31, 123],
+      "summary": "Skill details sidebar with section nav and file tree.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "type": "file",
+      "name": "SkillFileEditor.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "summary": "Markdown editor for a skill file that saves via the update mutation, warns about pending change proposals and handles errors with toasts and analytics.",
+      "tags": ["component", "editor", "skills", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx:SkillFileEditor",
+      "type": "function",
+      "name": "SkillFileEditor",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "lineRange": [39, 217],
+      "summary": "Edits and saves a skill file with pending-proposal confirmation.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx",
+      "type": "file",
+      "name": "SkillFilePreview.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillFilePreview.tsx",
+      "summary": "Previews a skill file with markdown rendering, code highlighting or binary download, and switches to the editor for editable markdown files.",
+      "tags": ["component", "skills", "preview", "file-viewer"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx:SkillFilePreview",
+      "type": "function",
+      "name": "SkillFilePreview",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillFilePreview.tsx",
+      "lineRange": [37, 226],
+      "summary": "Previews or edits a skill file depending on type.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillFileTree.tsx",
+      "type": "file",
+      "name": "SkillFileTree.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillFileTree.tsx",
+      "summary": "Interactive tree view of a skill's files and folders with expand/collapse and selection handling.",
+      "tags": ["component", "tree-view", "skills", "files"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillFileTree.tsx:SkillFileTree",
+      "type": "function",
+      "name": "SkillFileTree",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillFileTree.tsx",
+      "lineRange": [32, 182],
+      "summary": "Renders the skill file tree with folder expansion.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx",
+      "type": "file",
+      "name": "SkillFrontmatterInfo.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx",
+      "summary": "Collapsible display of a skill's SKILL.md frontmatter metadata (license, compatibility, allowed tools, extra fields).",
+      "tags": ["component", "skills", "frontmatter", "metadata"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx:SkillFrontmatterInfo",
+      "type": "function",
+      "name": "SkillFrontmatterInfo",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx",
+      "lineRange": [36, 162],
+      "summary": "Displays collapsible frontmatter metadata of a skill.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx",
+      "type": "file",
+      "name": "SkillVersionHistoryHeader.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx",
+      "summary": "Header for a skill showing packages membership popover and a link opening the version history list.",
+      "tags": ["component", "skills", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx:SkillVersionHistoryHeader",
+      "type": "function",
+      "name": "SkillVersionHistoryHeader",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx",
+      "lineRange": [14, 40],
+      "summary": "Header with packages popover and versions access.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillVersionsList.tsx",
+      "type": "file",
+      "name": "SkillVersionsList.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillVersionsList.tsx",
+      "summary": "Drawer displaying a table of a skill's versions fetched via the versions query.",
+      "tags": ["component", "skills", "versioning", "drawer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillVersionsList.tsx:SkillVersionsList",
+      "type": "function",
+      "name": "SkillVersionsList",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillVersionsList.tsx",
+      "lineRange": [21, 87],
+      "summary": "Drawer table of skill versions.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "type": "file",
+      "name": "SkillsList.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "summary": "Skills listing page component with table, package membership, pending review counts, batch add-to-packages and batch delete actions.",
+      "tags": ["component", "skills", "listing", "batch-actions"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillsList.tsx:SkillsList",
+      "type": "function",
+      "name": "SkillsList",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "lineRange": [42, 361],
+      "summary": "Skills table with selection, batch delete and add-to-packages.",
+      "tags": ["component", "react", "ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/constants/messages.ts",
+      "type": "file",
+      "name": "messages.ts",
+      "filePath": "apps/frontend/src/domain/skills/constants/messages.ts",
+      "summary": "Centralized user-facing success, error and loading messages for skill operations.",
+      "tags": ["constants", "messages", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts",
+      "type": "file",
+      "name": "useCanEditSkillFiles.ts",
+      "filePath": "apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts",
+      "summary": "Hook determining whether the current user may edit a skill's files based on space membership role.",
+      "tags": ["hook", "authorization", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts:useCanEditSkillFiles",
+      "type": "function",
+      "name": "useCanEditSkillFiles",
+      "filePath": "apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts",
+      "lineRange": [25, 44],
+      "summary": "Returns whether the current user can edit skill files.",
+      "tags": ["hook", "react", "state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts",
+      "type": "file",
+      "name": "useSkillSectionNavigation.ts",
+      "filePath": "apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts",
+      "summary": "Hook mapping skill section navigation keys to routes and providing navigation handlers for the skill detail page.",
+      "tags": ["hook", "navigation", "skills", "routing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts:useSkillSectionNavigation",
+      "type": "function",
+      "name": "useSkillSectionNavigation",
+      "filePath": "apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts",
+      "lineRange": [13, 69],
+      "summary": "Provides section navigation handlers for skill details.",
+      "tags": ["hook", "react", "state"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "type": "file",
+      "name": "fileTreeUtils.ts",
+      "filePath": "apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "summary": "Utilities for skill files: language detection by extension, previewability and editability checks, and MIME type resolution.",
+      "tags": ["utility", "files", "skills", "mime"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:getFileLanguage",
+      "type": "function",
+      "name": "getFileLanguage",
+      "filePath": "apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "lineRange": [56, 69],
+      "summary": "Maps a file extension to a syntax highlighting language.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:isPreviewable",
+      "type": "function",
+      "name": "isPreviewable",
+      "filePath": "apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "lineRange": [124, 134],
+      "summary": "Checks whether a skill file can be previewed as text.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:isEditableMarkdownFile",
+      "type": "function",
+      "name": "isEditableMarkdownFile",
+      "filePath": "apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "lineRange": [140, 141],
+      "summary": "Checks whether a file is an editable markdown file.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:getMimeType",
+      "type": "function",
+      "name": "getMimeType",
+      "filePath": "apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "lineRange": [188, 191],
+      "summary": "Resolves a MIME type for a file path.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts",
+      "type": "file",
+      "name": "skillLinkUtils.ts",
+      "filePath": "apps/frontend/src/domain/skills/utils/skillLinkUtils.ts",
+      "summary": "Resolves relative links inside skill markdown to skill file routes and builds a link URI transformer for the markdown viewer.",
+      "tags": ["utility", "links", "skills", "routing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts:resolveRelativeSkillPath",
+      "type": "function",
+      "name": "resolveRelativeSkillPath",
+      "filePath": "apps/frontend/src/domain/skills/utils/skillLinkUtils.ts",
+      "lineRange": [11, 28],
+      "summary": "Resolves a relative link path against the current skill file path.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts:buildSkillLinkTransformer",
+      "type": "function",
+      "name": "buildSkillLinkTransformer",
+      "filePath": "apps/frontend/src/domain/skills/utils/skillLinkUtils.ts",
+      "lineRange": [37, 61],
+      "summary": "Builds a markdown link transformer pointing relative links to skill file routes.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "type": "file",
+      "name": "skillMdUtils.ts",
+      "filePath": "apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "summary": "Builds a virtual SKILL.md file and its content (frontmatter plus prompt) from skill metadata.",
+      "tags": ["utility", "skills", "markdown", "frontmatter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/skillMdUtils.ts:buildVirtualSkillMdFile",
+      "type": "function",
+      "name": "buildVirtualSkillMdFile",
+      "filePath": "apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "lineRange": [26, 35],
+      "summary": "Creates a virtual SKILL.md file object for a skill.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/skillMdUtils.ts:buildSkillMdContent",
+      "type": "function",
+      "name": "buildSkillMdContent",
+      "filePath": "apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "lineRange": [47, 85],
+      "summary": "Serializes skill metadata to SKILL.md content with YAML frontmatter.",
+      "tags": ["utility", "function", "helper"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillActions.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillActions.tsx:SkillActions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillActions.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillActions.tsx:SkillActions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillActions.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillActions.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillDetailsNavEntry.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillDetailsNavEntry.tsx:SkillDetailsNavEntry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillDetailsNavEntry.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillDetailsNavEntry.tsx:SkillDetailsNavEntry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx:SkillDetailsSidebar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx:SkillDetailsSidebar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillDetailsNavEntry.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillFileTree.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/skillNavigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx:SkillFileEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx:SkillFileEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "target": "file:apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx:SkillFilePreview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx:SkillFilePreview",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFileTree.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFileTree.tsx:SkillFileTree",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFileTree.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFileTree.tsx:SkillFileTree",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx:SkillFrontmatterInfo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx:SkillFrontmatterInfo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx:SkillVersionHistoryHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx:SkillVersionHistoryHeader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillVersionsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillVersionsList.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillVersionsList.tsx:SkillVersionsList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillVersionsList.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillVersionsList.tsx:SkillVersionsList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillVersionsList.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsList.tsx:SkillsList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsList.tsx:SkillsList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/MembershipChips/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillsBlankState.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/skills/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/shared/components/ItemsListing.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts",
+      "target": "function:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts:useCanEditSkillFiles",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts",
+      "target": "function:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts:useCanEditSkillFiles",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts",
+      "target": "function:apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts:useSkillSectionNavigation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts",
+      "target": "function:apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts:useSkillSectionNavigation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts",
+      "target": "file:apps/frontend/src/domain/skills/utils/skillNavigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:getFileLanguage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:getFileLanguage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:isPreviewable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:isPreviewable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:isEditableMarkdownFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:isEditableMarkdownFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:getMimeType",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:getMimeType",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts:resolveRelativeSkillPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts:resolveRelativeSkillPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts:buildSkillLinkTransformer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts:buildSkillLinkTransformer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillMdUtils.ts:buildVirtualSkillMdFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillMdUtils.ts:buildVirtualSkillMdFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillMdUtils.ts:buildSkillMdContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillMdUtils.ts:buildSkillMdContent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx:SkillFileEditor",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useUpdateSkillFileMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillVersionsList.tsx:SkillVersionsList",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillVersionsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsList.tsx:SkillsList",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsList.tsx:SkillsList",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useDeleteSkillsBatchMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsList.tsx:SkillsList",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsList.tsx:SkillsList",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsList.tsx:SkillsList",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx:SkillVersionHistoryHeader",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx:SkillVersionHistoryHeader",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts:useCanEditSkillFiles",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts:useCanEditSkillFiles",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpaceMembersQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx:SkillFilePreview",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:getFileLanguage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx:SkillFilePreview",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:isPreviewable",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx:SkillFilePreview",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:isEditableMarkdownFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx:SkillFilePreview",
+      "target": "function:apps/frontend/src/domain/skills/utils/fileTreeUtils.ts:getMimeType",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx:SkillFilePreview",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx:SkillFileEditor",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx:SkillVersionHistoryHeader",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillVersionsList.tsx:SkillVersionsList",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillActions.tsx:SkillActions",
+      "target": "function:apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx:DownloadSkillPopover",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx:SkillDetailsSidebar",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillDetailsNavEntry.tsx:SkillDetailsNavEntry",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx:SkillDetailsSidebar",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFileTree.tsx:SkillFileTree",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

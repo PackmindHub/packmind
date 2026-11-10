@@ -1,0 +1,840 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "type": "file",
+      "name": "RunDistribution.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "summary": "Compound component and context for running a package distribution: selects targets (filtered to providers with tokens), holds per-package versions, checks render-mode config and triggers the deploy mutation; exposes body and CTA slots.",
+      "tags": [
+        "component",
+        "distribution",
+        "compound-component",
+        "context",
+        "react-query"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx:useRunDistribution",
+      "type": "function",
+      "name": "useRunDistribution",
+      "filePath": "apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "lineRange": [54, 59],
+      "summary": "Reads the RunDistribution context, throwing outside the provider.",
+      "tags": ["hook", "context"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx:RunDistributionComponent",
+      "type": "function",
+      "name": "RunDistributionComponent",
+      "filePath": "apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "lineRange": [76, 261],
+      "summary": "Provider computing distributable targets, selected targets/versions and the deploy action for packages.",
+      "tags": ["component", "provider", "distribution"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx:RunDistributionBody",
+      "type": "function",
+      "name": "RunDistributionBody",
+      "filePath": "apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "lineRange": [269, 284],
+      "summary": "Renders the distribution body or rendering settings when configuration is required.",
+      "tags": ["component", "slot"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx",
+      "type": "file",
+      "name": "RunDistributionCTA.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx",
+      "summary": "'Distribute' button bound to the RunDistribution context, hidden while rendering settings must first be configured.",
+      "tags": ["component", "distribution", "cta", "button"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx:RunDistributionCTAImpl",
+      "type": "function",
+      "name": "RunDistributionCTAImpl",
+      "filePath": "apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx",
+      "lineRange": [4, 27],
+      "summary": "Renders the 'Distribute' button wired to the run-distribution context.",
+      "tags": ["component", "cta"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/StandardDeployments/DeployToRepos.tsx",
+      "type": "file",
+      "name": "DeployToRepos.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/StandardDeployments/DeployToRepos.tsx",
+      "summary": "Repository picker dialog for deploying a standard: lists connected git repositories with per-repo and 'deploy all' actions, and an empty state when none are connected.",
+      "tags": ["component", "deployments", "git", "dialog"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/StandardDeployments/DeployToRepos.tsx:DeployToRepos",
+      "type": "function",
+      "name": "DeployToRepos",
+      "filePath": "apps/frontend/src/domain/deployments/components/StandardDeployments/DeployToRepos.tsx",
+      "lineRange": [27, 173],
+      "summary": "Lists git repositories with deploy actions and a deploy-all button.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/TargetBadge/TargetBadge.tsx",
+      "type": "file",
+      "name": "TargetBadge.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/TargetBadge/TargetBadge.tsx",
+      "summary": "Badge displaying a distribution target (branch/path) with optional edit and delete actions and selection styling.",
+      "tags": ["component", "distribution-targets", "badge", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/TargetBadge/TargetBadge.tsx:TargetBadge",
+      "type": "function",
+      "name": "TargetBadge",
+      "filePath": "apps/frontend/src/domain/deployments/components/TargetBadge/TargetBadge.tsx",
+      "lineRange": [18, 121],
+      "summary": "Renders a target badge with edit/delete controls.",
+      "tags": ["component", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx",
+      "type": "file",
+      "name": "TargetForm.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx",
+      "summary": "Add/edit form for a repository distribution target (name, path, branch) backed by add/update target mutations, with change detection and validation.",
+      "tags": ["component", "form", "distribution-targets", "mutation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx:TargetForm",
+      "type": "function",
+      "name": "TargetForm",
+      "filePath": "apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx",
+      "lineRange": [48, 295],
+      "summary": "Form for creating or updating a distribution target with validation and mutations.",
+      "tags": ["component", "form"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "type": "file",
+      "name": "TargetManagementDialog.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "summary": "Dialog managing all targets of a repository across branches: lists sorted targets (root first), adds/edits via TargetForm, deletes with confirmation, and respects provider token availability.",
+      "tags": ["component", "dialog", "distribution-targets", "crud"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx:TargetManagementDialog",
+      "type": "function",
+      "name": "TargetManagementDialog",
+      "filePath": "apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "lineRange": [41, 419],
+      "summary": "Dialog orchestrating listing, adding, editing and deleting repository targets.",
+      "tags": ["component", "dialog", "crud"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "type": "file",
+      "name": "ContextPackageDistribution.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "summary": "A package's Distribution tab in the Context surface: one unified list of repository landings and marketplace publications with filtering, update/release-and-update drawers, lock-file sync and an empty state for never-distributed packages.",
+      "tags": ["component", "distribution", "package", "drift"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx:ContextPackageDistribution",
+      "type": "function",
+      "name": "ContextPackageDistribution",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "lineRange": [73, 381],
+      "summary": "Renders a package's unified destination list with filters, update and release drawers.",
+      "tags": ["component", "distribution"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx:NeverDistributed",
+      "type": "function",
+      "name": "NeverDistributed",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "lineRange": [392, 411],
+      "summary": "Empty state shown when a package has never been distributed.",
+      "tags": ["component", "empty-state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx",
+      "type": "file",
+      "name": "CreatePackageReleaseDrawer.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx",
+      "summary": "Drawer that cuts a new release of a package, delegating version input, validation and refusal handling to usePackageReleaseVersion.",
+      "tags": ["component", "drawer", "package-release", "form"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx:CreatePackageReleaseDrawer",
+      "type": "function",
+      "name": "CreatePackageReleaseDrawer",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx",
+      "lineRange": [26, 130],
+      "summary": "Drawer form that cuts a package release.",
+      "tags": ["component", "drawer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx",
+      "type": "file",
+      "name": "PackageReachStrip.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx",
+      "summary": "One-line summary above a package's components stating how far the package reaches (destinations, worst state, oldest stale report) and linking to the Distribution tab.",
+      "tags": ["component", "distribution", "summary", "package"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx:PackageReachStrip",
+      "type": "function",
+      "name": "PackageReachStrip",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx",
+      "lineRange": [29, 141],
+      "summary": "Renders the one-line reach summary of a package's destinations.",
+      "tags": ["component", "summary"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx",
+      "type": "file",
+      "name": "PackageReleaseVersionField.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx",
+      "summary": "Free-text semantic-version input for a package's next release with suggested patch/minor/major increments and inline verdict messages, never reshaping the typed value.",
+      "tags": ["component", "form-field", "package-release", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx:PackageReleaseVersionField",
+      "type": "function",
+      "name": "PackageReleaseVersionField",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx",
+      "lineRange": [22, 91],
+      "summary": "Version input with increment suggestions and verdict feedback.",
+      "tags": ["component", "form-field"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "type": "file",
+      "name": "ReleaseAndUpdateDrawer.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "summary": "Drawer that cuts a package release and distributes it to the picked destinations in one gesture, combining the version field with the SyncSurface review.",
+      "tags": ["component", "drawer", "package-release", "distribution"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx:ReleaseAndUpdateDrawer",
+      "type": "function",
+      "name": "ReleaseAndUpdateDrawer",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "lineRange": [27, 85],
+      "summary": "Drawer that cuts a release then sends it via the sync surface.",
+      "tags": ["component", "drawer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "type": "file",
+      "name": "SyncSurfaceDrawer.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "summary": "Drawer hosting the distribution review (SyncSurface) over the list it was started from, closing on send and reporting the outcome via a toast.",
+      "tags": ["component", "drawer", "distribution", "toast"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx:SyncSurfaceDrawer",
+      "type": "function",
+      "name": "SyncSurfaceDrawer",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "lineRange": [15, 70],
+      "summary": "Wraps SyncSurface in a drawer and toasts the outcome on completion.",
+      "tags": ["component", "drawer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx:outcomeToast",
+      "type": "function",
+      "name": "outcomeToast",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "lineRange": [75, 113],
+      "summary": "Builds the toast content describing a distribution outcome.",
+      "tags": ["utility", "notification"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx:useRunDistribution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx:useRunDistribution",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx:RunDistributionComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx:RunDistributionBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RenderingSettings/RenderingSettings.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionBody.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx:RunDistributionCTAImpl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx:RunDistributionCTAImpl",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDeployments/DeployToRepos.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/StandardDeployments/DeployToRepos.tsx:DeployToRepos",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDeployments/DeployToRepos.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/StandardDeployments/DeployToRepos.tsx:DeployToRepos",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDeployments/DeployToRepos.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetBadge/TargetBadge.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/TargetBadge/TargetBadge.tsx:TargetBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetBadge/TargetBadge.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/TargetBadge/TargetBadge.tsx:TargetBadge",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx:TargetForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx:TargetForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx:TargetManagementDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx:TargetManagementDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/TargetBadge/TargetBadge.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitRepoQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx:ContextPackageDistribution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx:ContextPackageDistribution",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx:NeverDistributed",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageDistributionList/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryLockFileSync.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/providerAuth.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx",
+      "target": "file:apps/frontend/src/domain/git/api/queries/GitProviderQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx:CreatePackageReleaseDrawer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx:CreatePackageReleaseDrawer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx:PackageReachStrip",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx:PackageReachStrip",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx:PackageReleaseVersionField",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx:PackageReleaseVersionField",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx:ReleaseAndUpdateDrawer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx:ReleaseAndUpdateDrawer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/PackageReleaseVersionField.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx:SyncSurfaceDrawer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx:SyncSurfaceDrawer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx:outcomeToast",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx:outcomeToast",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx:ContextPackageDistribution",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageDestinations.ts:usePackageDestinations",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ContextPackageDistribution.tsx:ContextPackageDistribution",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageSyncScope.ts:buildPackageSyncScope",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/CreatePackageReleaseDrawer.tsx:CreatePackageReleaseDrawer",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts:usePackageReleaseVersion",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ReleaseAndUpdateDrawer.tsx:ReleaseAndUpdateDrawer",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/usePackageReleaseVersion.ts:usePackageReleaseVersion",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx:PackageReachStrip",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:packageDestinationSummary",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx:PackageReachStrip",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:oldestStaleReport",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx:PackageReachStrip",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:reportInstant",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx:PackageReachStrip",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:reportDay",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/PackageReachStrip.tsx:PackageReachStrip",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts:worstState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx:SyncSurfaceDrawer",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/SyncSurfaceDrawer.tsx:outcomeToast",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistributionCTA.tsx:RunDistributionCTAImpl",
+      "target": "function:apps/frontend/src/domain/deployments/components/RunDistribution/RunDistribution.tsx:useRunDistribution",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

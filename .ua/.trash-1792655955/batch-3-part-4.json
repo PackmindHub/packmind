@@ -1,0 +1,154 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/deployments/src/application/services/PackmindConfigService.ts",
+      "type": "file",
+      "name": "PackmindConfigService.ts",
+      "filePath": "packages/deployments/src/application/services/PackmindConfigService.ts",
+      "summary": "Generates and edits packmind.json content, producing file modifications that add or remove package entries for a target.",
+      "tags": ["service", "configuration", "file-generation", "packmind-json"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/services/PackmindConfigService.ts:PackmindConfigService",
+      "type": "class",
+      "name": "PackmindConfigService",
+      "filePath": "packages/deployments/src/application/services/PackmindConfigService.ts",
+      "lineRange": [9, 96],
+      "summary": "Generates packmind.json content and modifications.",
+      "tags": ["class", "service", "configuration", "file-generation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/services/PackmindLockFileService.ts",
+      "type": "file",
+      "name": "PackmindLockFileService.ts",
+      "filePath": "packages/deployments/src/application/services/PackmindLockFileService.ts",
+      "summary": "Builds, merges and prunes packmind-lock.json content from distributed artifact versions and produces the lockfile file modification.",
+      "tags": ["service", "lockfile", "file-generation", "serialization"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/application/services/PackmindLockFileService.ts:PackmindLockFileService",
+      "type": "class",
+      "name": "PackmindLockFileService",
+      "filePath": "packages/deployments/src/application/services/PackmindLockFileService.ts",
+      "lineRange": [33, 279],
+      "summary": "Builds, merges and edits packmind-lock.json.",
+      "tags": ["class", "service", "lockfile", "file-generation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "type": "file",
+      "name": "RenderModeConfigurationService.ts",
+      "filePath": "packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "summary": "Manages per-organization render mode configuration, mapping render modes to coding agents and normalizing create/update requests.",
+      "tags": ["service", "render-mode", "coding-agents", "configuration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/deployments/src/application/services/RenderModeConfigurationService.ts:RenderModeConfigurationService",
+      "type": "class",
+      "name": "RenderModeConfigurationService",
+      "filePath": "packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "lineRange": [21, 258],
+      "summary": "Reads/writes render mode configuration and maps render modes to coding agents.",
+      "tags": ["class", "service", "render-mode", "coding-agents"],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/deployments/src/application/services/PackmindConfigService.ts",
+      "target": "class:packages/deployments/src/application/services/PackmindConfigService.ts:PackmindConfigService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackmindConfigService.ts",
+      "target": "class:packages/deployments/src/application/services/PackmindConfigService.ts:PackmindConfigService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackmindConfigService.ts",
+      "target": "file:packages/deployments/src/application/services/packageSlugHelpers.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackmindLockFileService.ts",
+      "target": "class:packages/deployments/src/application/services/PackmindLockFileService.ts:PackmindLockFileService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackmindLockFileService.ts",
+      "target": "class:packages/deployments/src/application/services/PackmindLockFileService.ts:PackmindLockFileService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/PackmindLockFileService.ts",
+      "target": "file:packages/deployments/src/application/services/packageSlugHelpers.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "target": "class:packages/deployments/src/application/services/RenderModeConfigurationService.ts:RenderModeConfigurationService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "target": "class:packages/deployments/src/application/services/RenderModeConfigurationService.ts:RenderModeConfigurationService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "target": "file:packages/deployments/src/domain/errors/RenderModeConfigurationMissingError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "target": "file:packages/deployments/src/domain/errors/UnsupportedRenderModeError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IRenderModeConfigurationRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/services/PackmindConfigService.ts:PackmindConfigService",
+      "target": "function:packages/deployments/src/application/services/packageSlugHelpers.ts:parsePackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/services/PackmindLockFileService.ts:PackmindLockFileService",
+      "target": "function:packages/deployments/src/application/services/packageSlugHelpers.ts:parsePackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

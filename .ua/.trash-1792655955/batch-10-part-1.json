@@ -1,0 +1,1044 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "type": "file",
+      "name": "MoveToPackageUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "summary": "Use case moving standards, commands or skills from one package to another in the user's space via the Packmind gateway, reporting added IDs and other packages each artefact still belongs to.",
+      "tags": ["use-case", "packages", "cli", "application-layer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/MoveToPackageUseCase.ts:MoveToPackageUseCase",
+      "type": "class",
+      "name": "MoveToPackageUseCase",
+      "filePath": "apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "lineRange": [30, 82],
+      "summary": "Moves artefacts of one item type between packages and reports outcome.",
+      "tags": ["use-case", "packages", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/useCases/MoveToPackageUseCase.ts:leftPackagesByArtefact",
+      "type": "function",
+      "name": "leftPackagesByArtefact",
+      "filePath": "apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "lineRange": [96, 115],
+      "summary": "Maps each moved artefact to the other packages it still belongs to.",
+      "tags": ["helper", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts",
+      "type": "file",
+      "name": "RemoveFromPackageUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts",
+      "summary": "Use case removing artefacts of a given item type from a package and reporting which other packages still contain them.",
+      "tags": ["use-case", "packages", "cli", "application-layer"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts:RemoveFromPackageUseCase",
+      "type": "class",
+      "name": "RemoveFromPackageUseCase",
+      "filePath": "apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts",
+      "lineRange": [19, 82],
+      "summary": "Removes artefacts from a package via the gateway and lists remaining memberships.",
+      "tags": ["use-case", "packages", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/SubmitDiffsUseCase.ts",
+      "type": "file",
+      "name": "SubmitDiffsUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/SubmitDiffsUseCase.ts",
+      "summary": "Use case that validates grouped artefact diffs (commands, skills, standards) and submits them as change proposals to the Packmind API, collecting skipped entries with reasons.",
+      "tags": ["use-case", "change-proposals", "diff", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/SubmitDiffsUseCase.ts:SubmitDiffsUseCase",
+      "type": "class",
+      "name": "SubmitDiffsUseCase",
+      "filePath": "apps/cli/src/application/useCases/SubmitDiffsUseCase.ts",
+      "lineRange": [27, 112],
+      "summary": "Filters supported diffs and submits them as change proposals in batches per space.",
+      "tags": ["use-case", "change-proposals", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "type": "file",
+      "name": "UninstallUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "summary": "Use case removing packages from packmind.json after normalizing slugs, then re-running install to sync rendered files; errors on missing or malformed config.",
+      "tags": ["use-case", "packages", "configuration", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/UninstallUseCase.ts:UninstallUseCase",
+      "type": "class",
+      "name": "UninstallUseCase",
+      "filePath": "apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "lineRange": [12, 75],
+      "summary": "Removes packages from packmind.json and re-syncs installed files.",
+      "tags": ["use-case", "packages", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/UploadSkillUseCase.ts",
+      "type": "file",
+      "name": "UploadSkillUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/UploadSkillUseCase.ts",
+      "summary": "Use case reading a local skill directory and uploading it as a new skill to the user's space through the Packmind gateway.",
+      "tags": ["use-case", "skills", "upload", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/UploadSkillUseCase.ts:UploadSkillUseCase",
+      "type": "class",
+      "name": "UploadSkillUseCase",
+      "filePath": "apps/cli/src/application/useCases/UploadSkillUseCase.ts",
+      "lineRange": [16, 96],
+      "summary": "Reads a skill directory and uploads it to the default space.",
+      "tags": ["use-case", "skills", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/WhoamiUseCase.ts",
+      "type": "file",
+      "name": "WhoamiUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/WhoamiUseCase.ts",
+      "summary": "Use case reporting the authenticated user, host and API key expiry from locally stored CLI credentials.",
+      "tags": ["use-case", "authentication", "credentials", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/WhoamiUseCase.ts:WhoamiUseCase",
+      "type": "class",
+      "name": "WhoamiUseCase",
+      "filePath": "apps/cli/src/application/useCases/WhoamiUseCase.ts",
+      "lineRange": [16, 48],
+      "summary": "Returns identity info decoded from stored credentials, with injectable loader.",
+      "tags": ["use-case", "authentication", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts",
+      "type": "file",
+      "name": "CommandDiffStrategy.ts",
+      "filePath": "apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts",
+      "summary": "Diff strategy comparing a deployed command file with its local copy and producing an updateCommandDescription change when content differs.",
+      "tags": ["strategy", "diff", "commands", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts:CommandDiffStrategy",
+      "type": "class",
+      "name": "CommandDiffStrategy",
+      "filePath": "apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts",
+      "lineRange": [9, 50],
+      "summary": "IDiffStrategy implementation for command artefacts.",
+      "tags": ["strategy", "diff", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/diffStrategies/DiffableFile.ts",
+      "type": "file",
+      "name": "DiffableFile.ts",
+      "filePath": "apps/cli/src/application/useCases/diffStrategies/DiffableFile.ts",
+      "summary": "Type definition extending FileModification with content, artifact type and name for files fed into diff strategies.",
+      "tags": ["type-definition", "diff", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/diffStrategies/IDiffStrategy.ts",
+      "type": "file",
+      "name": "IDiffStrategy.ts",
+      "filePath": "apps/cli/src/application/useCases/diffStrategies/IDiffStrategy.ts",
+      "summary": "Strategy interface (supports/diff/optional diffNewFiles) and DiffContext type implemented by per-artefact diff strategies.",
+      "tags": ["type-definition", "strategy", "diff", "interface"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "type": "file",
+      "name": "SkillDiffStrategy.ts",
+      "filePath": "apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "summary": "Diff strategy for skills: compares SKILL.md frontmatter fields, prompt body, supporting files content and Unix permissions between server and local copies, and detects new or deleted skill files.",
+      "tags": ["strategy", "diff", "skills", "filesystem", "cli"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts:SkillDiffStrategy",
+      "type": "class",
+      "name": "SkillDiffStrategy",
+      "filePath": "apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "lineRange": [23, 534],
+      "summary": "IDiffStrategy implementation producing fine-grained skill change diffs including files and permissions.",
+      "tags": ["strategy", "diff", "skills"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts",
+      "type": "file",
+      "name": "StandardDiffStrategy.ts",
+      "filePath": "apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts",
+      "summary": "Diff strategy for standards: parses server and local standard markdown, then emits name, description, scope and rule add/update/delete changes using rule similarity matching.",
+      "tags": ["strategy", "diff", "standards", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts:StandardDiffStrategy",
+      "type": "class",
+      "name": "StandardDiffStrategy",
+      "filePath": "apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts",
+      "lineRange": [10, 156],
+      "summary": "IDiffStrategy implementation producing standard field and rule diffs.",
+      "tags": ["strategy", "diff", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts",
+      "type": "file",
+      "name": "GetTrackingInfoUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts",
+      "summary": "Use case reading the local git remote and branch and fetching the repository tracking state from the server.",
+      "tags": ["use-case", "repository-tracking", "git", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts:GetTrackingInfoUseCase",
+      "type": "class",
+      "name": "GetTrackingInfoUseCase",
+      "filePath": "apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts",
+      "lineRange": [15, 60],
+      "summary": "Fetches tracking status of the current git repository from the server.",
+      "tags": ["use-case", "repository-tracking", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "type": "file",
+      "name": "TrackRepositoryUseCase.ts",
+      "filePath": "apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "summary": "Use case setting, moving or removing the tracked repository and branch, validating detached HEAD and missing branches and delegating confirmation to a callback; also exports owner/repo URL parsing.",
+      "tags": ["use-case", "repository-tracking", "git", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts:TrackRepositoryUseCase",
+      "type": "class",
+      "name": "TrackRepositoryUseCase",
+      "filePath": "apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "lineRange": [47, 203],
+      "summary": "Sets, updates or removes repository tracking with git validation.",
+      "tags": ["use-case", "repository-tracking", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts:parseOwnerRepo",
+      "type": "function",
+      "name": "parseOwnerRepo",
+      "filePath": "apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "lineRange": [19, 40],
+      "summary": "Extracts owner and repo from a git remote URL (SSH or HTTPS).",
+      "tags": ["parser", "git", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "type": "file",
+      "name": "artifactComparison.ts",
+      "filePath": "apps/cli/src/application/utils/artifactComparison.ts",
+      "summary": "Field-level comparison helpers producing change lists between local and deployed standards, commands and skill definitions.",
+      "tags": ["utility", "diff", "comparison", "change-proposals"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/artifactComparison.ts:compareStandardFields",
+      "type": "function",
+      "name": "compareStandardFields",
+      "filePath": "apps/cli/src/application/utils/artifactComparison.ts",
+      "lineRange": [28, 141],
+      "summary": "Compares name, description, scope and rules of local vs deployed standard content.",
+      "tags": ["comparison", "standards", "diff"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/artifactComparison.ts:compareCommandFields",
+      "type": "function",
+      "name": "compareCommandFields",
+      "filePath": "apps/cli/src/application/utils/artifactComparison.ts",
+      "lineRange": [143, 177],
+      "summary": "Compares local vs deployed command name and content.",
+      "tags": ["comparison", "commands", "diff"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/artifactComparison.ts:compareSkillDefinitionFields",
+      "type": "function",
+      "name": "compareSkillDefinitionFields",
+      "filePath": "apps/cli/src/application/utils/artifactComparison.ts",
+      "lineRange": [179, 286],
+      "summary": "Compares skill frontmatter fields and body between local and deployed versions.",
+      "tags": ["comparison", "skills", "diff"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "type": "file",
+      "name": "findNearestConfigDir.ts",
+      "filePath": "apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "summary": "Walks up the directory tree to find the nearest folder containing packmind.json.",
+      "tags": ["utility", "configuration", "filesystem"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/findNearestConfigDir.ts:findNearestConfigDir",
+      "type": "function",
+      "name": "findNearestConfigDir",
+      "filePath": "apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "lineRange": [10, 26],
+      "summary": "Recursively searches ancestors for packmind.json.",
+      "tags": ["filesystem", "configuration", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/application/utils/handleScope.ts",
+      "type": "file",
+      "name": "handleScope.ts",
+      "filePath": "apps/cli/src/application/utils/handleScope.ts",
+      "summary": "Normalizes a rule scope given as string, comma-separated list or array into a flat array of trimmed patterns.",
+      "tags": ["utility", "scope", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/application/utils/handleScope.ts:handleScope",
+      "type": "function",
+      "name": "handleScope",
+      "filePath": "apps/cli/src/application/utils/handleScope.ts",
+      "lineRange": [1, 19],
+      "summary": "Splits and flattens scope input into a list of patterns.",
+      "tags": ["parsing", "scope", "utility"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/MoveToPackageUseCase.ts:MoveToPackageUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/MoveToPackageUseCase.ts:MoveToPackageUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "target": "function:apps/cli/src/application/useCases/MoveToPackageUseCase.ts:leftPackagesByArtefact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "target": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IMoveToPackageUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts:RemoveFromPackageUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts:RemoveFromPackageUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts",
+      "target": "file:apps/cli/src/application/services/PackageArtefactService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IRemoveFromPackageUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/SubmitDiffsUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/SubmitDiffsUseCase.ts:SubmitDiffsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/SubmitDiffsUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/SubmitDiffsUseCase.ts:SubmitDiffsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/SubmitDiffsUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/SubmitDiffsUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/SubmitDiffsUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/ISubmitDiffsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/UninstallUseCase.ts:UninstallUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/UninstallUseCase.ts:UninstallUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "target": "file:apps/cli/src/application/utils/normalizePackageSlugs.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IInstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IUninstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UninstallUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UploadSkillUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/UploadSkillUseCase.ts:UploadSkillUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UploadSkillUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/UploadSkillUseCase.ts:UploadSkillUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UploadSkillUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UploadSkillUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/ISpaceService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UploadSkillUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IUploadSkillUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/UploadSkillUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/readSkillDirectory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/WhoamiUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/WhoamiUseCase.ts:WhoamiUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/WhoamiUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/WhoamiUseCase.ts:WhoamiUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/WhoamiUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/IWhoamiUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/WhoamiUseCase.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts",
+      "target": "class:apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts:CommandDiffStrategy",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts",
+      "target": "class:apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts:CommandDiffStrategy",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/useCases/diffStrategies/DiffableFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/useCases/diffStrategies/IDiffStrategy.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/CommandDiffStrategy.ts",
+      "target": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/IDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/useCases/diffStrategies/DiffableFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/IDiffStrategy.ts",
+      "target": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "target": "class:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts:SkillDiffStrategy",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "target": "class:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts:SkillDiffStrategy",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/useCases/diffStrategies/DiffableFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/useCases/diffStrategies/IDiffStrategy.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/utils/parseSkillMd.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/utils/stripFrontmatter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "target": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "target": "file:apps/cli/src/infra/utils/binaryDetection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts",
+      "target": "file:apps/cli/src/infra/utils/permissions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts",
+      "target": "class:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts:StandardDiffStrategy",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts",
+      "target": "class:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts:StandardDiffStrategy",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/useCases/diffStrategies/DiffableFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/useCases/diffStrategies/IDiffStrategy.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts",
+      "target": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts",
+      "target": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts:GetTrackingInfoUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts:GetTrackingInfoUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts",
+      "target": "file:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IRepositoryTrackingGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/IGitService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/trackRepository/IGetTrackingInfoUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts:TrackRepositoryUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "target": "class:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts:TrackRepositoryUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "target": "function:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts:parseOwnerRepo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "target": "function:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts:parseOwnerRepo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "target": "file:apps/cli/src/domain/repositories/IRepositoryTrackingGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "target": "file:apps/cli/src/domain/services/IGitService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts",
+      "target": "file:apps/cli/src/domain/useCases/trackRepository/ITrackRepositoryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "target": "function:apps/cli/src/application/utils/artifactComparison.ts:compareStandardFields",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "target": "function:apps/cli/src/application/utils/artifactComparison.ts:compareStandardFields",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "target": "function:apps/cli/src/application/utils/artifactComparison.ts:compareCommandFields",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "target": "function:apps/cli/src/application/utils/artifactComparison.ts:compareCommandFields",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "target": "function:apps/cli/src/application/utils/artifactComparison.ts:compareSkillDefinitionFields",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "target": "function:apps/cli/src/application/utils/artifactComparison.ts:compareSkillDefinitionFields",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "target": "file:apps/cli/src/application/utils/parseCommandFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "target": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "target": "file:apps/cli/src/application/utils/ruleSimilarity.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "target": "function:apps/cli/src/application/utils/findNearestConfigDir.ts:findNearestConfigDir",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "target": "function:apps/cli/src/application/utils/findNearestConfigDir.ts:findNearestConfigDir",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/handleScope.ts",
+      "target": "function:apps/cli/src/application/utils/handleScope.ts:handleScope",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/application/utils/handleScope.ts",
+      "target": "function:apps/cli/src/application/utils/handleScope.ts:handleScope",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/MoveToPackageUseCase.ts:MoveToPackageUseCase",
+      "target": "function:apps/cli/src/application/services/PackageArtefactService.ts:artefactIdsByType",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/MoveToPackageUseCase.ts:MoveToPackageUseCase",
+      "target": "function:apps/cli/src/application/services/PackageArtefactService.ts:fullPackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts:RemoveFromPackageUseCase",
+      "target": "function:apps/cli/src/application/services/PackageArtefactService.ts:artefactIdsByType",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts:RemoveFromPackageUseCase",
+      "target": "function:apps/cli/src/application/services/PackageArtefactService.ts:fullPackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/UninstallUseCase.ts:UninstallUseCase",
+      "target": "function:apps/cli/src/application/utils/normalizePackageSlugs.ts:normalizePackageSlugs",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/UploadSkillUseCase.ts:UploadSkillUseCase",
+      "target": "function:apps/cli/src/infra/utils/readSkillDirectory.ts:readSkillDirectory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/WhoamiUseCase.ts:WhoamiUseCase",
+      "target": "function:apps/cli/src/infra/utils/credentials/index.ts:loadCredentials",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts:StandardDiffStrategy",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMd",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/diffStrategies/StandardDiffStrategy.ts:StandardDiffStrategy",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:matchUpdatedRules",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts:SkillDiffStrategy",
+      "target": "function:apps/cli/src/application/utils/stripFrontmatter.ts:stripFrontmatter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts:SkillDiffStrategy",
+      "target": "function:apps/cli/src/infra/utils/binaryDetection.ts:isBinaryFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/diffStrategies/SkillDiffStrategy.ts:SkillDiffStrategy",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:modeToPermissionStringOrDefault",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/application/useCases/trackRepository/GetTrackingInfoUseCase.ts:GetTrackingInfoUseCase",
+      "target": "function:apps/cli/src/application/useCases/trackRepository/TrackRepositoryUseCase.ts:parseOwnerRepo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/application/utils/artifactComparison.ts:compareStandardFields",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMd",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/application/utils/artifactComparison.ts:compareStandardFields",
+      "target": "function:apps/cli/src/application/utils/ruleSimilarity.ts:matchUpdatedRules",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/application/utils/artifactComparison.ts:compareCommandFields",
+      "target": "function:apps/cli/src/application/utils/parseCommandFile.ts:parseCommandFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

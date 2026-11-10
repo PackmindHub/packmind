@@ -1,0 +1,567 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-javascript.wasm",
+      "type": "file",
+      "name": "tree-sitter-javascript.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-javascript.wasm",
+      "summary": "Compiled tree-sitter grammar for JavaScript, loaded at runtime by linter-ast to parse JavaScript sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "javascript", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-json.wasm",
+      "type": "file",
+      "name": "tree-sitter-json.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-json.wasm",
+      "summary": "Compiled tree-sitter grammar for JSON, loaded at runtime by linter-ast to parse JSON sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "json", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-kotlin.wasm",
+      "type": "file",
+      "name": "tree-sitter-kotlin.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-kotlin.wasm",
+      "summary": "Compiled tree-sitter grammar for Kotlin, loaded at runtime by linter-ast to parse Kotlin sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "kotlin", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-php.wasm",
+      "type": "file",
+      "name": "tree-sitter-php.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-php.wasm",
+      "summary": "Compiled tree-sitter grammar for PHP (with embedded HTML), loaded at runtime by linter-ast to parse PHP (with embedded HTML) sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "php", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-php_only.wasm",
+      "type": "file",
+      "name": "tree-sitter-php_only.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-php_only.wasm",
+      "summary": "Compiled tree-sitter grammar for PHP (pure PHP, no HTML), loaded at runtime by linter-ast to parse PHP (pure PHP, no HTML) sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "php-only", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-python.wasm",
+      "type": "file",
+      "name": "tree-sitter-python.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-python.wasm",
+      "summary": "Compiled tree-sitter grammar for Python, loaded at runtime by linter-ast to parse Python sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "python", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-ruby.wasm",
+      "type": "file",
+      "name": "tree-sitter-ruby.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-ruby.wasm",
+      "summary": "Compiled tree-sitter grammar for Ruby, loaded at runtime by linter-ast to parse Ruby sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "ruby", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-scss.wasm",
+      "type": "file",
+      "name": "tree-sitter-scss.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-scss.wasm",
+      "summary": "Compiled tree-sitter grammar for SCSS, loaded at runtime by linter-ast to parse SCSS sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "scss", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-swift.wasm",
+      "type": "file",
+      "name": "tree-sitter-swift.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-swift.wasm",
+      "summary": "Compiled tree-sitter grammar for Swift, loaded at runtime by linter-ast to parse Swift sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "swift", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-tsx.wasm",
+      "type": "file",
+      "name": "tree-sitter-tsx.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-tsx.wasm",
+      "summary": "Compiled tree-sitter grammar for TSX, loaded at runtime by linter-ast to parse TSX sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "tsx", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-typescript.wasm",
+      "type": "file",
+      "name": "tree-sitter-typescript.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-typescript.wasm",
+      "summary": "Compiled tree-sitter grammar for TypeScript, loaded at runtime by linter-ast to parse TypeScript sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "typescript", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter-yaml.wasm",
+      "type": "file",
+      "name": "tree-sitter-yaml.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter-yaml.wasm",
+      "summary": "Compiled tree-sitter grammar for YAML, loaded at runtime by linter-ast to parse YAML sources into ASTs for linter program execution.",
+      "tags": ["wasm", "tree-sitter", "grammar", "yaml", "binary-asset"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/res/tree-sitter.wasm",
+      "type": "file",
+      "name": "tree-sitter.wasm",
+      "filePath": "packages/linter-ast/res/tree-sitter.wasm",
+      "summary": "Core web-tree-sitter runtime WebAssembly module that must be initialized before any language grammar can be loaded by linter-ast parsers.",
+      "tags": ["wasm", "tree-sitter", "runtime", "binary-asset", "parser"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-ast/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/linter-ast/src/index.ts",
+      "summary": "Public entry point of the linter-ast package, exporting the ParserRegistry, BaseParser, parser errors, ASTNode type, LinterAstAdapter and per-language tree-sitter parsers (TypeScript, JavaScript, C++, Go, Kotlin, CSS, C#, PHP, Python, Ruby, JSON, HTML, Java, Swift, SCSS).",
+      "tags": ["entry-point", "barrel", "parser", "tree-sitter", "ast"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-execution/.swcrc",
+      "type": "file",
+      "name": ".swcrc",
+      "filePath": "packages/linter-execution/.swcrc",
+      "summary": "SWC compiler configuration for the linter-execution package: TypeScript syntax without decorators, ES2022 target, CommonJS modules, preserved class names and source maps.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts",
+      "type": "file",
+      "name": "ExecuteLinterProgramsUseCase.ts",
+      "filePath": "packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts",
+      "summary": "Use case that executes linter detection programs against a source file: filters programs by language, runs raw-source programs directly and AST programs on a tree-sitter AST from LinterAstAdapter, then normalizes their outputs into line-level violations.",
+      "tags": ["use-case", "linter", "ast", "code-execution", "service"],
+      "complexity": "complex",
+      "languageNotes": "Detection programs are stored as source strings and compiled into functions at runtime, so results are validated defensively (isViolationLike, isValidLine) before becoming violations."
+    },
+    {
+      "id": "class:packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts:ExecuteLinterProgramsUseCase",
+      "type": "class",
+      "name": "ExecuteLinterProgramsUseCase",
+      "filePath": "packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts",
+      "lineRange": [16, 292],
+      "summary": "Implements IExecuteLinterProgramsUseCase: compiles and runs raw and AST linter programs per language, logs unsupported languages and parse failures, and maps results into LinterExecutionViolation objects.",
+      "tags": ["use-case", "linter", "ast", "code-execution"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/linter-execution/src/domain/errors/LinterExecutionInternalError.ts",
+      "type": "file",
+      "name": "LinterExecutionInternalError.ts",
+      "filePath": "packages/linter-execution/src/domain/errors/LinterExecutionInternalError.ts",
+      "summary": "Declares LinterExecutionInternalError, a PackmindInternalError for linter execution failures such as program parse errors.",
+      "tags": ["error-handling", "domain", "linter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/linter-execution/src/domain/errors/LinterExecutionInternalError.ts:LinterExecutionInternalError",
+      "type": "class",
+      "name": "LinterExecutionInternalError",
+      "filePath": "packages/linter-execution/src/domain/errors/LinterExecutionInternalError.ts",
+      "lineRange": [7, 17],
+      "summary": "Internal error carrying a typed reason (program_parse_failed) for failures while compiling linter programs.",
+      "tags": ["error-handling", "domain", "linter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/linter-execution/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/linter-execution/src/index.ts",
+      "summary": "Entry point of the linter-execution package exporting ExecuteLinterProgramsUseCase.",
+      "tags": ["entry-point", "barrel", "linter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/.swcrc",
+      "type": "file",
+      "name": ".swcrc",
+      "filePath": "packages/llm/.swcrc",
+      "summary": "SWC compiler configuration for the llm package: TypeScript syntax without decorators, ES2022 target, CommonJS modules, preserved class names and source maps.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/domain/errors/LlmAdapterPortsMissingError.ts",
+      "type": "file",
+      "name": "LlmAdapterPortsMissingError.ts",
+      "filePath": "packages/llm/src/domain/errors/LlmAdapterPortsMissingError.ts",
+      "summary": "Declares LlmAdapterPortsMissingError, a wiring-invariant internal error for an LlmAdapter missing its required ports.",
+      "tags": ["error-handling", "domain", "llm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/llm/src/domain/errors/LlmAdapterPortsMissingError.ts:LlmAdapterPortsMissingError",
+      "type": "class",
+      "name": "LlmAdapterPortsMissingError",
+      "filePath": "packages/llm/src/domain/errors/LlmAdapterPortsMissingError.ts",
+      "lineRange": [8, 17],
+      "summary": "LlmInternalError raised when LlmAdapter is initialized without required ports, listing the missing ones.",
+      "tags": ["error-handling", "llm", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/domain/errors/ModelListingUnsupportedError.ts",
+      "type": "file",
+      "name": "ModelListingUnsupportedError.ts",
+      "filePath": "packages/llm/src/domain/errors/ModelListingUnsupportedError.ts",
+      "summary": "Declares ModelListingUnsupportedError, a caller-facing error for providers that do not support listing models.",
+      "tags": ["error-handling", "domain", "llm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/llm/src/domain/errors/ModelListingUnsupportedError.ts:ModelListingUnsupportedError",
+      "type": "class",
+      "name": "ModelListingUnsupportedError",
+      "filePath": "packages/llm/src/domain/errors/ModelListingUnsupportedError.ts",
+      "lineRange": [8, 13],
+      "summary": "LlmError (invalid_input, HTTP 400) for providers whose deployments cannot be enumerated through their API.",
+      "tags": ["error-handling", "llm", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/domain/errors/PackmindProviderApiKeyMissingError.ts",
+      "type": "file",
+      "name": "PackmindProviderApiKeyMissingError.ts",
+      "filePath": "packages/llm/src/domain/errors/PackmindProviderApiKeyMissingError.ts",
+      "summary": "Declares PackmindProviderApiKeyMissingError, an internal configuration error for the Packmind-managed LLM provider missing an API key.",
+      "tags": ["error-handling", "domain", "llm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/llm/src/domain/errors/PackmindProviderApiKeyMissingError.ts:PackmindProviderApiKeyMissingError",
+      "type": "class",
+      "name": "PackmindProviderApiKeyMissingError",
+      "filePath": "packages/llm/src/domain/errors/PackmindProviderApiKeyMissingError.ts",
+      "lineRange": [9, 18],
+      "summary": "LlmInternalError raised when the API key for the provider selected by PACKMIND_DEFAULT_PROVIDER is missing from configuration.",
+      "tags": ["error-handling", "llm", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/domain/errors/PackmindProviderUnsupportedError.ts",
+      "type": "file",
+      "name": "PackmindProviderUnsupportedError.ts",
+      "filePath": "packages/llm/src/domain/errors/PackmindProviderUnsupportedError.ts",
+      "summary": "Declares PackmindProviderUnsupportedError, a deployment configuration error for an unsupported underlying Packmind provider.",
+      "tags": ["error-handling", "domain", "llm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/llm/src/domain/errors/PackmindProviderUnsupportedError.ts:PackmindProviderUnsupportedError",
+      "type": "class",
+      "name": "PackmindProviderUnsupportedError",
+      "filePath": "packages/llm/src/domain/errors/PackmindProviderUnsupportedError.ts",
+      "lineRange": [9, 14],
+      "summary": "LlmInternalError raised when PACKMIND_DEFAULT_PROVIDER names a provider PackmindService cannot delegate to.",
+      "tags": ["error-handling", "llm", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/domain/errors/UnknownLlmProviderError.ts",
+      "type": "file",
+      "name": "UnknownLlmProviderError.ts",
+      "filePath": "packages/llm/src/domain/errors/UnknownLlmProviderError.ts",
+      "summary": "Declares UnknownLlmProviderError, the exhaustiveness guard error for unknown LLM providers in the service factory.",
+      "tags": ["error-handling", "domain", "llm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/llm/src/domain/errors/UnknownLlmProviderError.ts:UnknownLlmProviderError",
+      "type": "class",
+      "name": "UnknownLlmProviderError",
+      "filePath": "packages/llm/src/domain/errors/UnknownLlmProviderError.ts",
+      "lineRange": [8, 17],
+      "summary": "LlmInternalError used as the exhaustiveness guard in createLLMService when a provider value matches no case.",
+      "tags": ["error-handling", "llm", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/llm/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/llm/src/index.ts",
+      "summary": "Public entry point of the llm package, exporting LlmHexa, LlmAdapter, provider services (OpenAI, Anthropic, Gemini, Azure OpenAI, OpenAI-compatible, Packmind), the createLLMService factory, config types, default models, re-exported AI types from @packmind/types and domain errors.",
+      "tags": [
+        "entry-point",
+        "barrel",
+        "llm",
+        "ai-provider",
+        "hexagonal-architecture"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts",
+      "target": "class:packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts:ExecuteLinterProgramsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts",
+      "target": "class:packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts:ExecuteLinterProgramsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/linter-execution/src/domain/errors/LinterExecutionInternalError.ts",
+      "target": "class:packages/linter-execution/src/domain/errors/LinterExecutionInternalError.ts:LinterExecutionInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/linter-execution/src/domain/errors/LinterExecutionInternalError.ts",
+      "target": "class:packages/linter-execution/src/domain/errors/LinterExecutionInternalError.ts:LinterExecutionInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/domain/errors/LlmAdapterPortsMissingError.ts",
+      "target": "class:packages/llm/src/domain/errors/LlmAdapterPortsMissingError.ts:LlmAdapterPortsMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/domain/errors/LlmAdapterPortsMissingError.ts",
+      "target": "class:packages/llm/src/domain/errors/LlmAdapterPortsMissingError.ts:LlmAdapterPortsMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/domain/errors/ModelListingUnsupportedError.ts",
+      "target": "class:packages/llm/src/domain/errors/ModelListingUnsupportedError.ts:ModelListingUnsupportedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/domain/errors/ModelListingUnsupportedError.ts",
+      "target": "class:packages/llm/src/domain/errors/ModelListingUnsupportedError.ts:ModelListingUnsupportedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/domain/errors/PackmindProviderApiKeyMissingError.ts",
+      "target": "class:packages/llm/src/domain/errors/PackmindProviderApiKeyMissingError.ts:PackmindProviderApiKeyMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/domain/errors/PackmindProviderApiKeyMissingError.ts",
+      "target": "class:packages/llm/src/domain/errors/PackmindProviderApiKeyMissingError.ts:PackmindProviderApiKeyMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/domain/errors/PackmindProviderUnsupportedError.ts",
+      "target": "class:packages/llm/src/domain/errors/PackmindProviderUnsupportedError.ts:PackmindProviderUnsupportedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/domain/errors/PackmindProviderUnsupportedError.ts",
+      "target": "class:packages/llm/src/domain/errors/PackmindProviderUnsupportedError.ts:PackmindProviderUnsupportedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/llm/src/domain/errors/UnknownLlmProviderError.ts",
+      "target": "class:packages/llm/src/domain/errors/UnknownLlmProviderError.ts:UnknownLlmProviderError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/llm/src/domain/errors/UnknownLlmProviderError.ts",
+      "target": "class:packages/llm/src/domain/errors/UnknownLlmProviderError.ts:UnknownLlmProviderError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts",
+      "target": "file:packages/linter-execution/src/domain/errors/LinterExecutionInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts",
+      "target": "file:packages/linter-ast/src/index.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-execution/src/index.ts",
+      "target": "file:packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/llm/src/index.ts",
+      "target": "file:packages/llm/src/domain/errors/LlmAdapterPortsMissingError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/llm/src/index.ts",
+      "target": "file:packages/llm/src/domain/errors/ModelListingUnsupportedError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/llm/src/index.ts",
+      "target": "file:packages/llm/src/domain/errors/PackmindProviderApiKeyMissingError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/llm/src/index.ts",
+      "target": "file:packages/llm/src/domain/errors/PackmindProviderUnsupportedError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/llm/src/index.ts",
+      "target": "file:packages/llm/src/domain/errors/UnknownLlmProviderError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-execution/.swcrc",
+      "target": "file:packages/linter-execution/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/llm/.swcrc",
+      "target": "file:packages/llm/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-javascript.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-json.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-kotlin.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-php.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-php_only.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-python.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-ruby.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-scss.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-swift.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-tsx.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-typescript.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter-yaml.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/linter-ast/src/index.ts",
+      "target": "file:packages/linter-ast/res/tree-sitter.wasm",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

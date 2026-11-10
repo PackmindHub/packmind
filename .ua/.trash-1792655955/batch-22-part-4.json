@@ -1,0 +1,840 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "type": "file",
+      "name": "buildPackageAttention.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "summary": "Computes per-package attention data (drifted repositories, failed pushes, stale marketplace plugins) with tone and accessible description for the rail.",
+      "tags": ["utility", "drift", "pure-function", "package"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts:buildPackageAttention",
+      "type": "function",
+      "name": "buildPackageAttention",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "lineRange": [46, 62],
+      "summary": "Builds the attention summary for one package.",
+      "tags": ["utility", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts:buildPackageAttentionIndex",
+      "type": "function",
+      "name": "buildPackageAttentionIndex",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "lineRange": [71, 96],
+      "summary": "Maps package ids to their attention summaries.",
+      "tags": ["utility", "drift"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts:marketplacesToRepublishByPackage",
+      "type": "function",
+      "name": "marketplacesToRepublishByPackage",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "lineRange": [104, 118],
+      "summary": "Counts distinct marketplaces each package must be republished to.",
+      "tags": ["utility", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts:describe",
+      "type": "function",
+      "name": "describe",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "lineRange": [129, 155],
+      "summary": "Builds the accessible description of a package's attention.",
+      "tags": ["utility", "formatting", "accessibility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "file",
+      "name": "buildPackageContext.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "summary": "Core data model of the Context surface: component types, labels and ordering, entity-to-component mappers and buildPackageContext resolving a package's ids into grouped components.",
+      "tags": ["data-model", "utility", "type-definition", "package"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:componentSelectionKey",
+      "type": "function",
+      "name": "componentSelectionKey",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "lineRange": [60, 64],
+      "summary": "Builds a type-qualified key identifying a picked component.",
+      "tags": ["utility", "selection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:componentSetKind",
+      "type": "function",
+      "name": "componentSetKind",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "lineRange": [136, 149],
+      "summary": "Names a set of picked components by type in a sentence.",
+      "tags": ["utility", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:componentSetSubject",
+      "type": "function",
+      "name": "componentSetSubject",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "lineRange": [160, 166],
+      "summary": "Builds the count-and-noun subject phrase for picked components.",
+      "tags": ["utility", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:standardToComponent",
+      "type": "function",
+      "name": "standardToComponent",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "lineRange": [192, 205],
+      "summary": "Maps a standard to a Context component row.",
+      "tags": ["utility", "mapper", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:commandToComponent",
+      "type": "function",
+      "name": "commandToComponent",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "lineRange": [218, 231],
+      "summary": "Maps a command to a Context component row.",
+      "tags": ["utility", "mapper", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:skillToComponent",
+      "type": "function",
+      "name": "skillToComponent",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "lineRange": [238, 251],
+      "summary": "Maps a skill to a Context component row.",
+      "tags": ["utility", "mapper", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:buildPackageContext",
+      "type": "function",
+      "name": "buildPackageContext",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "lineRange": [264, 294],
+      "summary": "Resolves a package's ids against the catalogue into ordered component groups.",
+      "tags": ["utility", "data-model", "package"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:packageComponentCount",
+      "type": "function",
+      "name": "packageComponentCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "lineRange": [297, 303],
+      "summary": "Counts components a package holds.",
+      "tags": ["utility", "counting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:resolve",
+      "type": "function",
+      "name": "resolve",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "lineRange": [305, 318],
+      "summary": "Resolves ids into components of one type.",
+      "tags": ["utility", "mapper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "type": "file",
+      "name": "buildSpaceInventory.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "summary": "Builds the space inventory of all components grouped by type with their owning packages, plus orphan counting, coverage filtering and owner index.",
+      "tags": ["utility", "pure-function", "inventory"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:buildSpaceInventory",
+      "type": "function",
+      "name": "buildSpaceInventory",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "lineRange": [68, 112],
+      "summary": "Builds type-grouped inventory entries with owning package names.",
+      "tags": ["utility", "inventory"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:countComponentsInNoPackage",
+      "type": "function",
+      "name": "countComponentsInNoPackage",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "lineRange": [123, 134],
+      "summary": "Counts components no package carries.",
+      "tags": ["utility", "counting", "orphan"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:isOrphan",
+      "type": "function",
+      "name": "isOrphan",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "lineRange": [137, 139],
+      "summary": "Whether an inventory entry has no package.",
+      "tags": ["utility", "predicate", "orphan"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:filterInventoryGroups",
+      "type": "function",
+      "name": "filterInventoryGroups",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "lineRange": [157, 169],
+      "summary": "Filters and reorders inventory groups by coverage.",
+      "tags": ["utility", "filter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:byNewestFirst",
+      "type": "function",
+      "name": "byNewestFirst",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "lineRange": [180, 191],
+      "summary": "Comparator ordering entries newest first, undated last.",
+      "tags": ["utility", "sorting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:buildOwnerIndex",
+      "type": "function",
+      "name": "buildOwnerIndex",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "lineRange": [202, 227],
+      "summary": "Maps component ids to names of packages referencing them.",
+      "tags": ["utility", "index"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:entriesFor",
+      "type": "function",
+      "name": "entriesFor",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "lineRange": [234, 244],
+      "summary": "Builds sorted inventory entries for one type.",
+      "tags": ["utility", "inventory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "type": "file",
+      "name": "componentHistory.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "summary": "Pure helpers turning standard/command/skill version payloads into newest-first history rows with commit info, authors and renames.",
+      "tags": ["utility", "pure-function", "history", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:historyEntries",
+      "type": "function",
+      "name": "historyEntries",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "lineRange": [79, 107],
+      "summary": "Turns version payloads into newest-first history rows.",
+      "tags": ["utility", "history"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:historyAuthor",
+      "type": "function",
+      "name": "historyAuthor",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "lineRange": [124, 131],
+      "summary": "Picks the author name for a version.",
+      "tags": ["utility", "history"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:displayNamesById",
+      "type": "function",
+      "name": "displayNamesById",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "lineRange": [138, 142],
+      "summary": "Maps organization member ids to display names.",
+      "tags": ["utility", "index"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:readCommit",
+      "type": "function",
+      "name": "readCommit",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "lineRange": [159, 169],
+      "summary": "Extracts commit info from a version payload.",
+      "tags": ["utility", "parsing", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "type": "file",
+      "name": "componentMaintenance.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "summary": "Pure helpers for component maintenance info: last update date, pending proposal counts per component and review-change labels.",
+      "tags": ["utility", "pure-function", "proposals"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:componentUpdatedAt",
+      "type": "function",
+      "name": "componentUpdatedAt",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "lineRange": [32, 41],
+      "summary": "Reads an entity's last update date or null.",
+      "tags": ["utility", "date"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:pendingProposalCount",
+      "type": "function",
+      "name": "pendingProposalCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "lineRange": [60, 66],
+      "summary": "Counts pending change proposals.",
+      "tags": ["utility", "proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:pendingReviewsByComponent",
+      "type": "function",
+      "name": "pendingReviewsByComponent",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "lineRange": [101, 124],
+      "summary": "Maps component selection keys to pending review counts.",
+      "tags": ["utility", "proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:reviewChangesLabel",
+      "type": "function",
+      "name": "reviewChangesLabel",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "lineRange": [131, 133],
+      "summary": "Formats the pending review count as a sentence.",
+      "tags": ["utility", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/filterPackageGroups.ts",
+      "type": "file",
+      "name": "filterPackageGroups.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/filterPackageGroups.ts",
+      "summary": "Filters a package's component groups by search query and picked type, dropping emptied groups and reporting before/after counts.",
+      "tags": ["utility", "pure-function", "filter", "search"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/filterPackageGroups.ts:filterPackageGroups",
+      "type": "function",
+      "name": "filterPackageGroups",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/filterPackageGroups.ts",
+      "lineRange": [43, 71],
+      "summary": "Filters package groups by query and type with counts.",
+      "tags": ["utility", "filter", "search"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/index.ts",
+      "summary": "Barrel re-exporting the SpaceContextSurface component, buildPackageContext helpers and Context surface types.",
+      "tags": ["barrel", "entry-point", "exports"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/packageActivity.ts",
+      "type": "file",
+      "name": "packageActivity.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/packageActivity.ts",
+      "summary": "Reads a package's creation and last-change dates, returning null change date when it was never modified.",
+      "tags": ["utility", "pure-function", "package"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/packageActivity.ts:packageActivity",
+      "type": "function",
+      "name": "packageActivity",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/packageActivity.ts",
+      "lineRange": [32, 47],
+      "summary": "Reads creation and change dates from a package.",
+      "tags": ["utility", "date"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts:buildPackageAttention",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts:buildPackageAttention",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts:buildPackageAttentionIndex",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts:buildPackageAttentionIndex",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts:marketplacesToRepublishByPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts:describe",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildPackageDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageAttention.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:componentSelectionKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:componentSelectionKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:componentSetKind",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:componentSetKind",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:componentSetSubject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:componentSetSubject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:standardToComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:standardToComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:commandToComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:commandToComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:skillToComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:skillToComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:buildPackageContext",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:buildPackageContext",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:packageComponentCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:packageComponentCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:resolve",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "file:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:buildSpaceInventory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:buildSpaceInventory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:countComponentsInNoPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:countComponentsInNoPackage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:isOrphan",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:isOrphan",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:filterInventoryGroups",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:filterInventoryGroups",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:byNewestFirst",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:buildOwnerIndex",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:buildOwnerIndex",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts:entriesFor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/buildSpaceInventory.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:historyEntries",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:historyEntries",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:historyAuthor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:historyAuthor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:displayNamesById",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:displayNamesById",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:readCommit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:componentUpdatedAt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:componentUpdatedAt",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:pendingProposalCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:pendingProposalCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:pendingReviewsByComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:pendingReviewsByComponent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:reviewChangesLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:reviewChangesLabel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/filterPackageGroups.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/filterPackageGroups.ts:filterPackageGroups",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/filterPackageGroups.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/filterPackageGroups.ts:filterPackageGroups",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/filterPackageGroups.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/packageActivity.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/packageActivity.ts:packageActivity",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/packageActivity.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/packageActivity.ts:packageActivity",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/SpaceContextSurface.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/index.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/SpaceContextSurface.tsx:SpaceContextSurface",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/index.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:buildPackageContext",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/index.ts",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts:packageComponentCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

@@ -1,0 +1,361 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "type": "file",
+      "name": "CredentialsService.ts",
+      "filePath": "apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "summary": "Aggregates CLI credential providers in priority order (env var, then ~/.packmind/credentials.json) and exposes module-level loadApiKey/loadCredentials helpers backed by a default singleton.",
+      "tags": ["service", "credentials", "authentication", "singleton", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts",
+      "type": "file",
+      "name": "EnvCredentialsProvider.ts",
+      "filePath": "apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts",
+      "summary": "Credentials provider that reads and decodes the Packmind API key from the PACKMIND_API_KEY environment variable.",
+      "tags": ["credentials", "adapter", "environment", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "type": "file",
+      "name": "FileCredentialsProvider.ts",
+      "filePath": "apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "summary": "Credentials provider backed by ~/.packmind/credentials.json, plus helpers to resolve that path and persist an API key with restrictive file permissions.",
+      "tags": [
+        "credentials",
+        "adapter",
+        "filesystem",
+        "authentication",
+        "persistence"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/credentials/ICredentialsProvider.ts",
+      "type": "file",
+      "name": "ICredentialsProvider.ts",
+      "filePath": "apps/cli/src/infra/utils/credentials/ICredentialsProvider.ts",
+      "summary": "Type definitions for the credentials provider port: the DecodedCredentials shape and the ICredentialsProvider interface (source name, presence check, load).",
+      "tags": ["type-definition", "interface", "credentials", "port"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/utils/credentials/decodeApiKey.ts",
+      "type": "file",
+      "name": "decodeApiKey.ts",
+      "filePath": "apps/cli/src/infra/utils/credentials/decodeApiKey.ts",
+      "summary": "Decodes a Packmind API key (base64-wrapped host + JWT) into the host and the unverified JWT payload with user, organization and expiry.",
+      "tags": ["utility", "decoding", "jwt", "credentials"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/infra/utils/credentials/CredentialsService.ts:CredentialsService",
+      "type": "class",
+      "name": "CredentialsService",
+      "filePath": "apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "lineRange": [17, 59],
+      "summary": "Iterates injected (or default env/file) providers, returning the first available credentials enriched with source name and expiry status.",
+      "tags": ["service", "credentials", "strategy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/credentials/CredentialsService.ts:loadApiKey",
+      "type": "function",
+      "name": "loadApiKey",
+      "filePath": "apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "lineRange": [72, 74],
+      "summary": "Returns the API key from the default CredentialsService singleton, or an empty string.",
+      "tags": ["utility", "credentials", "facade"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/credentials/CredentialsService.ts:loadCredentials",
+      "type": "function",
+      "name": "loadCredentials",
+      "filePath": "apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "lineRange": [79, 81],
+      "summary": "Returns full decoded credentials (with source and isExpired) from the default CredentialsService singleton.",
+      "tags": ["utility", "credentials", "facade"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts:EnvCredentialsProvider",
+      "type": "class",
+      "name": "EnvCredentialsProvider",
+      "filePath": "apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts",
+      "lineRange": [9, 57],
+      "summary": "Implements ICredentialsProvider by locating a non-empty PACKMIND_API_KEY env var and decoding it into host, user, organization and expiry.",
+      "tags": ["credentials", "adapter", "environment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:FileCredentialsProvider",
+      "type": "class",
+      "name": "FileCredentialsProvider",
+      "filePath": "apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "lineRange": [21, 75],
+      "summary": "Implements ICredentialsProvider by reading the stored apiKey from the home-directory credentials file and decoding it.",
+      "tags": ["credentials", "adapter", "filesystem"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:getCredentialsPath",
+      "type": "function",
+      "name": "getCredentialsPath",
+      "filePath": "apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "lineRange": [17, 19],
+      "summary": "Resolves the absolute path of ~/.packmind/credentials.json.",
+      "tags": ["utility", "filesystem", "path"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:saveCredentials",
+      "type": "function",
+      "name": "saveCredentials",
+      "filePath": "apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "lineRange": [85, 97],
+      "summary": "Writes the API key to the credentials file, creating the directory with 0700 and the file with 0600 permissions.",
+      "tags": ["persistence", "filesystem", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/utils/credentials/decodeApiKey.ts:decodeApiKey",
+      "type": "function",
+      "name": "decodeApiKey",
+      "filePath": "apps/cli/src/infra/utils/credentials/decodeApiKey.ts",
+      "lineRange": [31, 54],
+      "summary": "Base64-decodes the API key wrapper, validates host/jwt fields, and parses the JWT middle segment; returns null on malformed input.",
+      "tags": ["utility", "decoding", "jwt"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "target": "class:apps/cli/src/infra/utils/credentials/CredentialsService.ts:CredentialsService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "target": "class:apps/cli/src/infra/utils/credentials/CredentialsService.ts:CredentialsService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "target": "function:apps/cli/src/infra/utils/credentials/CredentialsService.ts:loadApiKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "target": "function:apps/cli/src/infra/utils/credentials/CredentialsService.ts:loadApiKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "target": "function:apps/cli/src/infra/utils/credentials/CredentialsService.ts:loadCredentials",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "target": "function:apps/cli/src/infra/utils/credentials/CredentialsService.ts:loadCredentials",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts",
+      "target": "class:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts:EnvCredentialsProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts",
+      "target": "class:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts:EnvCredentialsProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "target": "class:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:FileCredentialsProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "target": "class:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:FileCredentialsProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "target": "function:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:getCredentialsPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "target": "function:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:getCredentialsPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "target": "function:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:saveCredentials",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "target": "function:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:saveCredentials",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/decodeApiKey.ts",
+      "target": "function:apps/cli/src/infra/utils/credentials/decodeApiKey.ts:decodeApiKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/decodeApiKey.ts",
+      "target": "function:apps/cli/src/infra/utils/credentials/decodeApiKey.ts:decodeApiKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/CredentialsService.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/ICredentialsProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/ICredentialsProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/decodeApiKey.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/ICredentialsProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts",
+      "target": "file:apps/cli/src/infra/utils/credentials/decodeApiKey.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts:EnvCredentialsProvider",
+      "target": "file:apps/cli/src/infra/utils/credentials/ICredentialsProvider.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:FileCredentialsProvider",
+      "target": "file:apps/cli/src/infra/utils/credentials/ICredentialsProvider.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts:EnvCredentialsProvider",
+      "target": "function:apps/cli/src/infra/utils/credentials/decodeApiKey.ts:decodeApiKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:FileCredentialsProvider",
+      "target": "function:apps/cli/src/infra/utils/credentials/decodeApiKey.ts:decodeApiKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/cli/src/infra/utils/credentials/CredentialsService.ts:CredentialsService",
+      "target": "class:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts:EnvCredentialsProvider",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:apps/cli/src/infra/utils/credentials/CredentialsService.ts:CredentialsService",
+      "target": "class:apps/cli/src/infra/utils/credentials/FileCredentialsProvider.ts:FileCredentialsProvider",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/credentials/CredentialsService.ts:loadApiKey",
+      "target": "class:apps/cli/src/infra/utils/credentials/CredentialsService.ts:CredentialsService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/utils/credentials/CredentialsService.ts:loadCredentials",
+      "target": "class:apps/cli/src/infra/utils/credentials/CredentialsService.ts:CredentialsService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/utils/credentials/EnvCredentialsProvider.ts",
+      "target": "file:apps/cli/src/application/useCases/LogoutUseCase.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

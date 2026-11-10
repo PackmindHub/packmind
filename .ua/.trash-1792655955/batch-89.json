@@ -1,0 +1,186 @@
+{
+  "nodes": [
+    {
+      "id": "document:dockerfile/prod/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "dockerfile/prod/README.md",
+      "summary": "Guide to the self-hosted production deployment files: compose stack, secret generation script, quick-start commands with tag/cookie/OpenAI options and security features.",
+      "tags": ["documentation", "deployment", "self-hosted", "security"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "service:dockerfile/prod/docker-compose.yml",
+      "type": "service",
+      "name": "docker-compose.yml",
+      "filePath": "dockerfile/prod/docker-compose.yml",
+      "summary": "Production Docker Compose stack for self-hosted Packmind running postgres, redis, api and frontend images with shared env anchors, file-based Docker secrets, volumes and a network.",
+      "tags": [
+        "orchestration",
+        "infrastructure",
+        "deployment",
+        "self-hosted",
+        "secrets"
+      ],
+      "complexity": "moderate",
+      "languageNotes": "Uses YAML x- extension fields with anchors to share image tags, database URL, Redis and OpenAI config across services."
+    },
+    {
+      "id": "file:dockerfile/prod/setup-packmind-compose.sh",
+      "type": "file",
+      "name": "setup-packmind-compose.sh",
+      "filePath": "dockerfile/prod/setup-packmind-compose.sh",
+      "summary": "One-shot installer that checks Docker Compose availability, downloads the production compose file and secrets script from GitHub, generates secrets and starts the enterprise stack.",
+      "tags": ["script", "installer", "deployment", "self-hosted"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:dockerfile/prod/setup-production-secrets.sh",
+      "type": "file",
+      "name": "setup-production-secrets.sh",
+      "filePath": "dockerfile/prod/setup-production-secrets.sh",
+      "summary": "Generates a restricted secrets directory with random encryption, API JWT and MCP JWT keys via openssl for the production compose deployment.",
+      "tags": ["script", "security", "secrets", "deployment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:dockerfile/prod/setup-production-secrets.sh:generate_key_if_missing",
+      "type": "function",
+      "name": "generate_key_if_missing",
+      "filePath": "dockerfile/prod/setup-production-secrets.sh",
+      "lineRange": [17, 29],
+      "summary": "Creates a base64 32-byte random key file with 600 permissions unless it already exists.",
+      "tags": ["utility", "secrets", "idempotent"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:dockerfile/prod/docker-compose.yml:postgres",
+      "type": "service",
+      "name": "postgres",
+      "filePath": "dockerfile/prod/docker-compose.yml",
+      "summary": "PostgreSQL 17 database service with a persistent data volume for the Packmind API.",
+      "tags": ["database", "containerization", "infrastructure"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:dockerfile/prod/docker-compose.yml:redis",
+      "type": "service",
+      "name": "redis",
+      "filePath": "dockerfile/prod/docker-compose.yml",
+      "summary": "Redis 7 service used for caching and BullMQ job queues, with a persistent volume.",
+      "tags": ["cache", "containerization", "infrastructure"],
+      "complexity": "simple"
+    },
+    {
+      "id": "service:dockerfile/prod/docker-compose.yml:api",
+      "type": "service",
+      "name": "api",
+      "filePath": "dockerfile/prod/docker-compose.yml",
+      "summary": "Packmind API container (packmind/api image) wired to Postgres, Redis, optional OpenAI and file-mounted JWT/encryption secrets.",
+      "tags": ["api", "containerization", "deployment"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "service:dockerfile/prod/docker-compose.yml:frontend",
+      "type": "service",
+      "name": "frontend",
+      "filePath": "dockerfile/prod/docker-compose.yml",
+      "summary": "Packmind frontend container (packmind/frontend image) serving the SPA through nginx and proxying to the API.",
+      "tags": ["frontend", "containerization", "deployment"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:dockerfile/prod/setup-production-secrets.sh",
+      "target": "function:dockerfile/prod/setup-production-secrets.sh:generate_key_if_missing",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "service:dockerfile/prod/docker-compose.yml",
+      "target": "service:dockerfile/prod/docker-compose.yml:postgres",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "service:dockerfile/prod/docker-compose.yml",
+      "target": "service:dockerfile/prod/docker-compose.yml:redis",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "service:dockerfile/prod/docker-compose.yml",
+      "target": "service:dockerfile/prod/docker-compose.yml:api",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "service:dockerfile/prod/docker-compose.yml",
+      "target": "service:dockerfile/prod/docker-compose.yml:frontend",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "service:dockerfile/prod/docker-compose.yml:api",
+      "target": "service:dockerfile/prod/docker-compose.yml:postgres",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:dockerfile/prod/docker-compose.yml:api",
+      "target": "service:dockerfile/prod/docker-compose.yml:redis",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:dockerfile/prod/docker-compose.yml:frontend",
+      "target": "service:dockerfile/prod/docker-compose.yml:api",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "service:dockerfile/prod/docker-compose.yml",
+      "target": "file:dockerfile/prod/setup-production-secrets.sh",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:dockerfile/prod/setup-packmind-compose.sh",
+      "target": "file:dockerfile/prod/setup-production-secrets.sh",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:dockerfile/prod/setup-packmind-compose.sh",
+      "target": "service:dockerfile/prod/docker-compose.yml",
+      "type": "deploys",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "document:dockerfile/prod/README.md",
+      "target": "service:dockerfile/prod/docker-compose.yml",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:dockerfile/prod/README.md",
+      "target": "file:dockerfile/prod/setup-production-secrets.sh",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

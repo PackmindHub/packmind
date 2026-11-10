@@ -1,0 +1,1265 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "type": "file",
+      "name": "UserAvatarWithInitials.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "summary": "Avatar component that derives initials and a deterministic background color from a user's display name.",
+      "tags": ["component", "avatar", "ui", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx:getInitialsFromDisplayName",
+      "type": "function",
+      "name": "getInitialsFromDisplayName",
+      "filePath": "apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "lineRange": [17, 27],
+      "summary": "Derives up to two initials from a display name.",
+      "tags": ["utility", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx:UserAvatarWithInitials",
+      "type": "function",
+      "name": "UserAvatarWithInitials",
+      "filePath": "apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "lineRange": [49, 70],
+      "summary": "Avatar showing initials on a name-derived color.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx",
+      "type": "file",
+      "name": "UserContextChangeSubscription.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx",
+      "summary": "Headless component subscribing to server-sent user-context-change events and invalidating the accounts 'me' query cache when they occur.",
+      "tags": ["component", "sse", "event-handler", "cache-invalidation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx:UserContextChangeSubscription",
+      "type": "function",
+      "name": "UserContextChangeSubscription",
+      "filePath": "apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx",
+      "lineRange": [6, 34],
+      "summary": "Subscribes to SSE user context changes and invalidates the me query.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/UserProfileSection.tsx",
+      "type": "file",
+      "name": "UserProfileSection.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/UserProfileSection.tsx",
+      "summary": "Profile settings section allowing the current user to view and edit their display name via the update-profile mutation.",
+      "tags": ["component", "profile", "form", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/UserProfileSection.tsx:UserProfileSection",
+      "type": "function",
+      "name": "UserProfileSection",
+      "filePath": "apps/frontend/src/domain/accounts/components/UserProfileSection.tsx",
+      "lineRange": [15, 96],
+      "summary": "Editable display-name section for the current user.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "type": "file",
+      "name": "UsersList.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "summary": "Organization members management table listing users with status badges, invitation, role change and exclusion actions for admins.",
+      "tags": ["component", "user-management", "listing", "admin"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/UsersList.tsx:UsersList",
+      "type": "function",
+      "name": "UsersList",
+      "filePath": "apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "lineRange": [43, 199],
+      "summary": "Table of organization users with search, invite and per-row admin actions.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/UsersList.tsx:UserStatusBadge",
+      "type": "function",
+      "name": "UserStatusBadge",
+      "filePath": "apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "lineRange": [201, 220],
+      "summary": "Badge rendering a user's activation or invitation status.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/UsersList.tsx:UserActions",
+      "type": "function",
+      "name": "UserActions",
+      "filePath": "apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "lineRange": [222, 328],
+      "summary": "Per-user action menu opening role change and exclusion dialogs.",
+      "tags": ["component", "react", "accounts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "file",
+      "name": "useAuthContext.ts",
+      "filePath": "apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "summary": "Hook exposing the authenticated user, current organization and auth actions by combining the AuthProvider context with the getMe query; also defines AuthContext types.",
+      "tags": ["hook", "authentication", "context", "type-definition"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "function",
+      "name": "useAuthContext",
+      "filePath": "apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "lineRange": [61, 83],
+      "summary": "Returns user, organization and auth helpers from AuthProvider and the me query.",
+      "tags": ["hook", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts",
+      "type": "file",
+      "name": "useAuthErrorHandler.ts",
+      "filePath": "apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts",
+      "summary": "Hook that watches auth context errors and, on a 401 PackmindError, clears the query cache and redirects to the sign-in page once.",
+      "tags": ["hook", "authentication", "error-handling", "redirect"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts:useAuthErrorHandler",
+      "type": "function",
+      "name": "useAuthErrorHandler",
+      "filePath": "apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts",
+      "lineRange": [14, 38],
+      "summary": "Redirects to sign-in and clears cache on 401 auth errors.",
+      "tags": ["hook", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx",
+      "type": "file",
+      "name": "ArtifactResultFilePreview.tsx",
+      "filePath": "apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx",
+      "summary": "Preview card for a rendered artifact file showing its markdown content (frontmatter stripped) with copy and download-as-agent actions.",
+      "tags": ["component", "preview", "markdown", "artifacts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx:ArtifactResultFilePreview",
+      "type": "function",
+      "name": "ArtifactResultFilePreview",
+      "filePath": "apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx",
+      "lineRange": [25, 93],
+      "summary": "Displays an artifact file's markdown with copy/download actions.",
+      "tags": ["component", "react", "artifacts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/artifacts/components/CopyMarkdownButton.tsx",
+      "type": "file",
+      "name": "CopyMarkdownButton.tsx",
+      "filePath": "apps/frontend/src/domain/artifacts/components/CopyMarkdownButton.tsx",
+      "summary": "Button that copies artifact markdown content to the clipboard with transient copied feedback.",
+      "tags": ["component", "clipboard", "ui", "artifacts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/artifacts/components/CopyMarkdownButton.tsx:CopyMarkdownButton",
+      "type": "function",
+      "name": "CopyMarkdownButton",
+      "filePath": "apps/frontend/src/domain/artifacts/components/CopyMarkdownButton.tsx",
+      "lineRange": [9, 30],
+      "summary": "Copies markdown to clipboard with feedback state.",
+      "tags": ["component", "react", "artifacts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/artifacts/components/DownloadAsAgentButton.tsx",
+      "type": "file",
+      "name": "DownloadAsAgentButton.tsx",
+      "filePath": "apps/frontend/src/domain/artifacts/components/DownloadAsAgentButton.tsx",
+      "summary": "Placeholder button component for downloading an artifact as an agent-specific file.",
+      "tags": ["component", "ui", "artifacts", "download"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/artifacts/components/DownloadAsAgentButton.tsx:DownloadAsAgentButton",
+      "type": "function",
+      "name": "DownloadAsAgentButton",
+      "filePath": "apps/frontend/src/domain/artifacts/components/DownloadAsAgentButton.tsx",
+      "lineRange": [6, 10],
+      "summary": "Button to download an artifact for a specific agent.",
+      "tags": ["component", "react", "artifacts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/artifacts/utils/stripFrontmatter.ts",
+      "type": "file",
+      "name": "stripFrontmatter.ts",
+      "filePath": "apps/frontend/src/domain/artifacts/utils/stripFrontmatter.ts",
+      "summary": "Utility that removes a leading YAML frontmatter block from markdown content.",
+      "tags": ["utility", "markdown", "frontmatter", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/artifacts/utils/stripFrontmatter.ts:stripFrontmatter",
+      "type": "function",
+      "name": "stripFrontmatter",
+      "filePath": "apps/frontend/src/domain/artifacts/utils/stripFrontmatter.ts",
+      "lineRange": [3, 23],
+      "summary": "Strips a leading YAML frontmatter block from markdown.",
+      "tags": ["utility", "artifacts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "file",
+      "name": "CommandsQueries.ts",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "summary": "TanStack Query options and hooks for commands (recipes): listing by space, fetching by id, versions, and create/update/delete/batch-delete mutations with cross-domain cache invalidation of deployments and organization data.",
+      "tags": [
+        "hook",
+        "react-query",
+        "commands",
+        "mutation",
+        "cache-invalidation"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandsBySpaceQueryOptions",
+      "type": "function",
+      "name": "getCommandsBySpaceQueryOptions",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "lineRange": [23, 38],
+      "summary": "Query options listing commands in a space.",
+      "tags": ["query-options", "react-query", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandsQuery",
+      "type": "function",
+      "name": "useGetCommandsQuery",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "lineRange": [40, 45],
+      "summary": "Hook listing commands of the current space.",
+      "tags": ["hook", "react-query", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandByIdOptions",
+      "type": "function",
+      "name": "getCommandByIdOptions",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "lineRange": [47, 57],
+      "summary": "Query options fetching one command by id.",
+      "tags": ["query-options", "react-query", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandByIdQuery",
+      "type": "function",
+      "name": "useGetCommandByIdQuery",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "lineRange": [59, 81],
+      "summary": "Hook fetching a command by id within the current space.",
+      "tags": ["hook", "react-query", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useCreateCommandMutation",
+      "type": "function",
+      "name": "useCreateCommandMutation",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "lineRange": [85, 120],
+      "summary": "Mutation creating a command and invalidating command lists.",
+      "tags": ["hook", "react-query", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useUpdateCommandMutation",
+      "type": "function",
+      "name": "useUpdateCommandMutation",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "lineRange": [124, 171],
+      "summary": "Mutation updating a command and refreshing detail, list and version caches.",
+      "tags": ["hook", "react-query", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandVersionsQuery",
+      "type": "function",
+      "name": "useGetCommandVersionsQuery",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "lineRange": [173, 188],
+      "summary": "Hook fetching a command's version history.",
+      "tags": ["hook", "react-query", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useDeleteCommandMutation",
+      "type": "function",
+      "name": "useDeleteCommandMutation",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "lineRange": [192, 264],
+      "summary": "Mutation deleting a command with cache removal and deployment/package invalidation.",
+      "tags": ["hook", "react-query", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useDeleteCommandsBatchMutation",
+      "type": "function",
+      "name": "useDeleteCommandsBatchMutation",
+      "filePath": "apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "lineRange": [268, 316],
+      "summary": "Mutation deleting multiple commands and invalidating dependent caches.",
+      "tags": ["hook", "react-query", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "summary": "Query key builders and constants for the commands domain, including change-proposal query and mutation keys scoped under organization and space.",
+      "tags": ["config", "query-keys", "commands", "constants"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandsBySpaceKey",
+      "type": "function",
+      "name": "getCommandsBySpaceKey",
+      "filePath": "apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "lineRange": [14, 21],
+      "summary": "Builds query key for commands listed by space.",
+      "tags": ["query-keys", "utility", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandByIdKey",
+      "type": "function",
+      "name": "getCommandByIdKey",
+      "filePath": "apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "lineRange": [23, 34],
+      "summary": "Builds query key for a single command.",
+      "tags": ["query-keys", "utility", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandVersionsKey",
+      "type": "function",
+      "name": "getCommandVersionsKey",
+      "filePath": "apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "lineRange": [36, 47],
+      "summary": "Builds query key for a command's versions.",
+      "tags": ["query-keys", "utility", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "type": "file",
+      "name": "CommandDetails.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "summary": "Command detail view showing content, version history header, distributions across targets, and actions to edit, delete, or propose content and description changes.",
+      "tags": ["component", "commands", "detail-view", "deployment"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CommandDetails.tsx:CommandDetails",
+      "type": "function",
+      "name": "CommandDetails",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "lineRange": [49, 368],
+      "summary": "Command detail view with content, distributions, deletion and change proposals.",
+      "tags": ["component", "react", "commands"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CommandForm.tsx",
+      "type": "file",
+      "name": "CommandForm.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandForm.tsx",
+      "summary": "Create/edit form for commands with name validation, markdown content editing, and submission handling with error messages.",
+      "tags": ["component", "form", "commands", "validation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CommandForm.tsx:CommandForm",
+      "type": "function",
+      "name": "CommandForm",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandForm.tsx",
+      "lineRange": [39, 286],
+      "summary": "Form for creating or editing a command with validation.",
+      "tags": ["component", "react", "commands"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx",
+      "type": "file",
+      "name": "CommandFrontmatterInfo.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx",
+      "summary": "Collapsible panel showing parsed command frontmatter metadata (description, arguments, tools, model) above command content.",
+      "tags": ["component", "commands", "frontmatter", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx:CommandFrontmatterInfo",
+      "type": "function",
+      "name": "CommandFrontmatterInfo",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx",
+      "lineRange": [29, 126],
+      "summary": "Collapsible display of parsed command frontmatter.",
+      "tags": ["component", "react", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "type": "file",
+      "name": "CommandVersionHistoryHeader.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "summary": "Header for a command's detail page showing title, version drawer access and the packages popover where the command is deployed.",
+      "tags": ["component", "commands", "versioning", "header"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx:CommandVersionHistoryHeader",
+      "type": "function",
+      "name": "CommandVersionHistoryHeader",
+      "filePath": "apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "lineRange": [13, 46],
+      "summary": "Command header with versions drawer and packages popover.",
+      "tags": ["component", "react", "commands"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx:getInitialsFromDisplayName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx:UserAvatarWithInitials",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx:UserAvatarWithInitials",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx:UserContextChangeSubscription",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx:UserContextChangeSubscription",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx",
+      "target": "file:apps/frontend/src/domain/sse/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserProfileSection.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserProfileSection.tsx:UserProfileSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserProfileSection.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserProfileSection.tsx:UserProfileSection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserProfileSection.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UserProfileSection.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UsersList.tsx:UsersList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UsersList.tsx:UsersList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UsersList.tsx:UserStatusBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/UsersList.tsx:UserActions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/ChangeUserRole/ChangeUserRoleDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/ExcludeUserDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/InviteUsers/InviteUsersDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/UsersList.tsx",
+      "target": "file:apps/frontend/src/shared/components/ItemsListing.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/gateways/IAuthGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "target": "file:apps/frontend/src/providers/AuthProvider.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "target": "file:apps/frontend/src/services/auth/AuthService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts:useAuthErrorHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts:useAuthErrorHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx",
+      "target": "function:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx:ArtifactResultFilePreview",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx",
+      "target": "function:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx:ArtifactResultFilePreview",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx",
+      "target": "file:apps/frontend/src/domain/artifacts/components/CopyMarkdownButton.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx",
+      "target": "file:apps/frontend/src/domain/artifacts/components/DownloadAsAgentButton.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx",
+      "target": "file:apps/frontend/src/domain/artifacts/utils/stripFrontmatter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/components/CopyMarkdownButton.tsx",
+      "target": "function:apps/frontend/src/domain/artifacts/components/CopyMarkdownButton.tsx:CopyMarkdownButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/components/CopyMarkdownButton.tsx",
+      "target": "function:apps/frontend/src/domain/artifacts/components/CopyMarkdownButton.tsx:CopyMarkdownButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/components/DownloadAsAgentButton.tsx",
+      "target": "function:apps/frontend/src/domain/artifacts/components/DownloadAsAgentButton.tsx:DownloadAsAgentButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/components/DownloadAsAgentButton.tsx",
+      "target": "function:apps/frontend/src/domain/artifacts/components/DownloadAsAgentButton.tsx:DownloadAsAgentButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/utils/stripFrontmatter.ts",
+      "target": "function:apps/frontend/src/domain/artifacts/utils/stripFrontmatter.ts:stripFrontmatter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/artifacts/utils/stripFrontmatter.ts",
+      "target": "function:apps/frontend/src/domain/artifacts/utils/stripFrontmatter.ts:stripFrontmatter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandsBySpaceQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandsBySpaceQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandByIdOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandByIdOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandByIdQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandByIdQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useCreateCommandMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useCreateCommandMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useUpdateCommandMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useUpdateCommandMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandVersionsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandVersionsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useDeleteCommandMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useDeleteCommandMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useDeleteCommandsBatchMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useDeleteCommandsBatchMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "file:apps/frontend/src/domain/commands/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "file:apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandsBySpaceKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandsBySpaceKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandByIdKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandByIdKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandVersionsKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandVersionsKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/spaces/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandDetails.tsx:CommandDetails",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandDetails.tsx:CommandDetails",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/ProposeChangeModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/commands/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/useNavigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandDetails.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandForm.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandForm.tsx:CommandForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandForm.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandForm.tsx:CommandForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandForm.tsx",
+      "target": "file:apps/frontend/src/domain/commands/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandForm.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/useArtifactNameValidator.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx:CommandFrontmatterInfo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx:CommandFrontmatterInfo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx",
+      "target": "file:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx:CommandVersionHistoryHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx:CommandVersionHistoryHeader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandVersionsListDrawer.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/CommandVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/hooks/useAuthErrorHandler.ts:useAuthErrorHandler",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx:UserAvatarWithInitials",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx:getInitialsFromDisplayName",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/UserProfileSection.tsx:UserProfileSection",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useUpdateProfileMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/UsersList.tsx:UsersList",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetUsersInMyOrganizationQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/UsersList.tsx:UsersList",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetUserStatusesQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx:ArtifactResultFilePreview",
+      "target": "function:apps/frontend/src/domain/artifacts/utils/stripFrontmatter.ts:stripFrontmatter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandsQuery",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandsBySpaceQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandByIdQuery",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandByIdOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandsBySpaceQueryOptions",
+      "target": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandsBySpaceKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:getCommandByIdOptions",
+      "target": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandByIdKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandVersionsQuery",
+      "target": "function:apps/frontend/src/domain/commands/api/queryKeys.ts:getCommandVersionsKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandDetails.tsx:CommandDetails",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useDeleteCommandMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx:CommandFrontmatterInfo",
+      "target": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:parseCommandFrontmatter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

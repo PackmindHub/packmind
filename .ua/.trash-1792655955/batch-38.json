@@ -1,0 +1,1192 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/commands/src/CommandsHexa.ts",
+      "type": "file",
+      "name": "CommandsHexa.ts",
+      "filePath": "packages/commands/src/CommandsHexa.ts",
+      "summary": "Hexagon entry point for the commands domain: wires repositories, services and the CommandsAdapter, exposing the ICommandsPort to other hexagons.",
+      "tags": [
+        "entry-point",
+        "hexagonal-architecture",
+        "dependency-injection",
+        "commands"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/commands/src/CommandsHexa.ts:CommandsHexa",
+      "type": "class",
+      "name": "CommandsHexa",
+      "filePath": "packages/commands/src/CommandsHexa.ts",
+      "lineRange": [30, 124],
+      "summary": "Hexa class extending BaseHexa that constructs repositories/services/adapter and exposes the commands port.",
+      "tags": [
+        "entry-point",
+        "hexagonal-architecture",
+        "dependency-injection",
+        "class"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "type": "file",
+      "name": "CommandsAdapter.ts",
+      "filePath": "packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "summary": "Adapter implementing ICommandsPort that delegates to command use cases and services, and builds the deploy-commands delayed job once ports are injected.",
+      "tags": [
+        "adapter",
+        "port-implementation",
+        "facade",
+        "commands",
+        "service"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/commands/src/application/adapter/CommandsAdapter.ts:CommandsAdapter",
+      "type": "class",
+      "name": "CommandsAdapter",
+      "filePath": "packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "lineRange": [52, 357],
+      "summary": "Implements ICommandsPort and IBaseAdapter, routing every command operation to use cases or services and wiring delayed jobs.",
+      "tags": ["adapter", "port-implementation", "facade", "class"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts",
+      "type": "file",
+      "name": "DeployCommandsDelayedJob.ts",
+      "filePath": "packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts",
+      "summary": "BullMQ-backed delayed job that deploys command versions to a git repository through the deployment port and dispatches completion callbacks.",
+      "tags": ["background-job", "bullmq", "deployment", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts:DeployCommandsDelayedJob",
+      "type": "class",
+      "name": "DeployCommandsDelayedJob",
+      "filePath": "packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts",
+      "lineRange": [23, 210],
+      "summary": "Extends AbstractAIDelayedJob to run command deployments via IDeploymentPort with failure handling and callbacks.",
+      "tags": ["background-job", "bullmq", "deployment", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/commands/src/application/services/CommandService.ts",
+      "type": "file",
+      "name": "CommandService.ts",
+      "filePath": "packages/commands/src/application/services/CommandService.ts",
+      "summary": "Domain service for command CRUD: creation, slug lookup, space listing and counts, updates, soft/hard deletion, duplication and move tracking.",
+      "tags": ["service", "crud", "commands", "domain-logic"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/commands/src/application/services/CommandService.ts:CommandService",
+      "type": "class",
+      "name": "CommandService",
+      "filePath": "packages/commands/src/application/services/CommandService.ts",
+      "lineRange": [42, 275],
+      "summary": "Service encapsulating command persistence operations over ICommandRepository and ICommandVersionRepository.",
+      "tags": ["service", "crud", "commands", "class"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "type": "file",
+      "name": "CommandVersionService.ts",
+      "filePath": "packages/commands/src/application/services/CommandVersionService.ts",
+      "summary": "Domain service managing command versions: adding versions, listing history, fetching latest/by-id versions and deleting versions for a command.",
+      "tags": ["service", "versioning", "commands", "domain-logic"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/commands/src/application/services/CommandVersionService.ts:CommandVersionService",
+      "type": "class",
+      "name": "CommandVersionService",
+      "filePath": "packages/commands/src/application/services/CommandVersionService.ts",
+      "lineRange": [15, 184],
+      "summary": "Service encapsulating command version persistence and queries.",
+      "tags": ["service", "versioning", "commands", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/commands/src/application/services/CommandsServices.ts",
+      "type": "file",
+      "name": "CommandsServices.ts",
+      "filePath": "packages/commands/src/application/services/CommandsServices.ts",
+      "summary": "Aggregator that instantiates CommandService and CommandVersionService from the commands repositories.",
+      "tags": ["service", "factory", "dependency-injection", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/application/services/CommandsServices.ts:CommandsServices",
+      "type": "class",
+      "name": "CommandsServices",
+      "filePath": "packages/commands/src/application/services/CommandsServices.ts",
+      "lineRange": [6, 31],
+      "summary": "Holder giving access to CommandService and CommandVersionService instances.",
+      "tags": ["service", "factory", "dependency-injection", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts",
+      "type": "file",
+      "name": "CaptureCommandUseCase.ts",
+      "filePath": "packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts",
+      "summary": "Space-member use case that captures a new command: resolves a unique sanitized slug, assembles content, persists the command and its first version.",
+      "tags": ["use-case", "commands", "validation", "slug"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts:CaptureCommandUseCase",
+      "type": "class",
+      "name": "CaptureCommandUseCase",
+      "filePath": "packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts",
+      "lineRange": [30, 234],
+      "summary": "Creates a command with unique slug and initial version for a space member.",
+      "tags": ["use-case", "commands", "validation", "class"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts",
+      "type": "file",
+      "name": "DeleteCommandUseCase.ts",
+      "filePath": "packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts",
+      "summary": "Space-member use case that soft-deletes a command after verifying space access and emits the related domain event.",
+      "tags": ["use-case", "commands", "deletion", "authorization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts:DeleteCommandUseCase",
+      "type": "class",
+      "name": "DeleteCommandUseCase",
+      "filePath": "packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts",
+      "lineRange": [27, 102],
+      "summary": "Deletes a command for a space member after access validation.",
+      "tags": ["use-case", "commands", "deletion", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts",
+      "type": "file",
+      "name": "DeleteCommandsBatchUseCase.ts",
+      "filePath": "packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts",
+      "summary": "Use case deleting multiple commands by delegating each to DeleteCommandUseCase.",
+      "tags": ["use-case", "commands", "batch", "deletion"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts:DeleteCommandsBatchUseCase",
+      "type": "class",
+      "name": "DeleteCommandsBatchUseCase",
+      "filePath": "packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts",
+      "lineRange": [11, 49],
+      "summary": "Deletes a list of commands by invoking DeleteCommandUseCase per id.",
+      "tags": ["use-case", "commands", "batch", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/application/useCases/findCommandBySlug/FindCommandBySlugUseCase.ts",
+      "type": "file",
+      "name": "FindCommandBySlugUseCase.ts",
+      "filePath": "packages/commands/src/application/useCases/findCommandBySlug/FindCommandBySlugUseCase.ts",
+      "summary": "Use case looking up a command by slug within an organization via CommandService.",
+      "tags": ["use-case", "commands", "query", "slug"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/application/useCases/findCommandBySlug/FindCommandBySlugUseCase.ts:FindCommandBySlugUseCase",
+      "type": "class",
+      "name": "FindCommandBySlugUseCase",
+      "filePath": "packages/commands/src/application/useCases/findCommandBySlug/FindCommandBySlugUseCase.ts",
+      "lineRange": [7, 40],
+      "summary": "Finds a command by slug and organization.",
+      "tags": ["use-case", "commands", "query", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts",
+      "type": "file",
+      "name": "GetCommandByIdUseCase.ts",
+      "filePath": "packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts",
+      "summary": "Space-member use case returning a command by id, ensuring it belongs to the requested space.",
+      "tags": ["use-case", "commands", "query", "authorization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts:GetCommandByIdUseCase",
+      "type": "class",
+      "name": "GetCommandByIdUseCase",
+      "filePath": "packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts",
+      "lineRange": [20, 73],
+      "summary": "Returns a command by id scoped to an accessible space.",
+      "tags": ["use-case", "commands", "query", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/application/useCases/getCommandVersion/GetCommandVersionUseCase.ts",
+      "type": "file",
+      "name": "GetCommandVersionUseCase.ts",
+      "filePath": "packages/commands/src/application/useCases/getCommandVersion/GetCommandVersionUseCase.ts",
+      "summary": "Use case retrieving a specific version of a command via CommandVersionService.",
+      "tags": ["use-case", "commands", "versioning", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/application/useCases/getCommandVersion/GetCommandVersionUseCase.ts:GetCommandVersionUseCase",
+      "type": "class",
+      "name": "GetCommandVersionUseCase",
+      "filePath": "packages/commands/src/application/useCases/getCommandVersion/GetCommandVersionUseCase.ts",
+      "lineRange": [7, 37],
+      "summary": "Returns a specific command version.",
+      "tags": ["use-case", "commands", "versioning", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/application/useCases/listCommandVersions/ListCommandVersionsUseCase.ts",
+      "type": "file",
+      "name": "ListCommandVersionsUseCase.ts",
+      "filePath": "packages/commands/src/application/useCases/listCommandVersions/ListCommandVersionsUseCase.ts",
+      "summary": "Use case listing all versions of a command via CommandVersionService.",
+      "tags": ["use-case", "commands", "versioning", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/application/useCases/listCommandVersions/ListCommandVersionsUseCase.ts:ListCommandVersionsUseCase",
+      "type": "class",
+      "name": "ListCommandVersionsUseCase",
+      "filePath": "packages/commands/src/application/useCases/listCommandVersions/ListCommandVersionsUseCase.ts",
+      "lineRange": [7, 31],
+      "summary": "Lists version history of a command.",
+      "tags": ["use-case", "commands", "versioning", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts",
+      "type": "file",
+      "name": "ListCommandsBySpaceUseCase.ts",
+      "filePath": "packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts",
+      "summary": "Space-member use case listing the commands of a space after access checks.",
+      "tags": ["use-case", "commands", "query", "space"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts:ListCommandsBySpaceUseCase",
+      "type": "class",
+      "name": "ListCommandsBySpaceUseCase",
+      "filePath": "packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts",
+      "lineRange": [18, 64],
+      "summary": "Lists commands within a space for its members.",
+      "tags": ["use-case", "commands", "query", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts",
+      "type": "file",
+      "name": "UpdateCommandFromUIUseCase.ts",
+      "filePath": "packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts",
+      "summary": "Space-member use case updating a command from the web UI, creating a new command version and emitting an update event.",
+      "tags": ["use-case", "commands", "versioning", "update"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts:UpdateCommandFromUIUseCase",
+      "type": "class",
+      "name": "UpdateCommandFromUIUseCase",
+      "filePath": "packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts",
+      "lineRange": [24, 118],
+      "summary": "Updates a command from the UI, creating a new version.",
+      "tags": ["use-case", "commands", "versioning", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/commands/src/domain/errors/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/commands/src/domain/errors/index.ts",
+      "summary": "Barrel re-exporting all commands domain error classes (not found, slug conflict, space access, queue and port errors).",
+      "tags": ["barrel", "errors", "commands", "domain"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/domain/jobs/DeployCommands.ts",
+      "type": "file",
+      "name": "DeployCommands.ts",
+      "filePath": "packages/commands/src/domain/jobs/DeployCommands.ts",
+      "summary": "Type definitions for the deploy-commands job input (org, git repo, version ids, target paths) and output counts.",
+      "tags": ["type-definition", "background-job", "deployment", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/domain/jobs/ICommandsDelayedJobs.ts",
+      "type": "file",
+      "name": "ICommandsDelayedJobs.ts",
+      "filePath": "packages/commands/src/domain/jobs/ICommandsDelayedJobs.ts",
+      "summary": "Interface listing the commands domain delayed jobs, namely the deploy-commands job.",
+      "tags": ["type-definition", "background-job", "interface", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/domain/repositories/ICommandRepository.ts",
+      "type": "file",
+      "name": "ICommandRepository.ts",
+      "filePath": "packages/commands/src/domain/repositories/ICommandRepository.ts",
+      "summary": "Repository port for commands, extending IRepository with slug, user, space lookups, space counts and move marking.",
+      "tags": ["type-definition", "repository", "port", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/domain/repositories/ICommandVersionRepository.ts",
+      "type": "file",
+      "name": "ICommandVersionRepository.ts",
+      "filePath": "packages/commands/src/domain/repositories/ICommandVersionRepository.ts",
+      "summary": "Repository port for command versions with lookups by command, latest versions, ids and command+version.",
+      "tags": ["type-definition", "repository", "port", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/domain/repositories/ICommandsRepositories.ts",
+      "type": "file",
+      "name": "ICommandsRepositories.ts",
+      "filePath": "packages/commands/src/domain/repositories/ICommandsRepositories.ts",
+      "summary": "Interface aggregating access to the command and command version repositories.",
+      "tags": ["type-definition", "repository", "interface", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts",
+      "type": "file",
+      "name": "DeployCommandsJobFactory.ts",
+      "filePath": "packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts",
+      "summary": "Job factory creating the BullMQ queue and DeployCommandsDelayedJob for command deployments.",
+      "tags": ["factory", "background-job", "bullmq", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts:DeployCommandsJobFactory",
+      "type": "class",
+      "name": "DeployCommandsJobFactory",
+      "filePath": "packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts",
+      "lineRange": [13, 60],
+      "summary": "IJobFactory implementation creating the deploy-commands queue and delayed job.",
+      "tags": ["factory", "background-job", "bullmq", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/infra/repositories/CommandRepository.ts",
+      "type": "file",
+      "name": "CommandRepository.ts",
+      "filePath": "packages/commands/src/infra/repositories/CommandRepository.ts",
+      "summary": "TypeORM repository for commands implementing slug/user/space queries, per-space counts and marking commands as moved.",
+      "tags": ["repository", "typeorm", "data-access", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/commands/src/infra/repositories/CommandRepository.ts:CommandRepository",
+      "type": "class",
+      "name": "CommandRepository",
+      "filePath": "packages/commands/src/infra/repositories/CommandRepository.ts",
+      "lineRange": [17, 162],
+      "summary": "AbstractRepository subclass implementing ICommandRepository with TypeORM queries.",
+      "tags": ["repository", "typeorm", "data-access", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/commands/src/infra/repositories/CommandVersionRepository.ts",
+      "type": "file",
+      "name": "CommandVersionRepository.ts",
+      "filePath": "packages/commands/src/infra/repositories/CommandVersionRepository.ts",
+      "summary": "TypeORM repository for command versions with queries for history, latest versions per command and space-scoped version lookup.",
+      "tags": ["repository", "typeorm", "data-access", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/commands/src/infra/repositories/CommandVersionRepository.ts:CommandVersionRepository",
+      "type": "class",
+      "name": "CommandVersionRepository",
+      "filePath": "packages/commands/src/infra/repositories/CommandVersionRepository.ts",
+      "lineRange": [10, 127],
+      "summary": "AbstractRepository subclass implementing ICommandVersionRepository with TypeORM queries.",
+      "tags": ["repository", "typeorm", "data-access", "class"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "type": "file",
+      "name": "CommandsRepositories.ts",
+      "filePath": "packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "summary": "Concrete ICommandsRepositories building TypeORM-backed command and command version repositories from a DataSource.",
+      "tags": ["repository", "factory", "typeorm", "dependency-injection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/commands/src/infra/repositories/CommandsRepositories.ts:CommandsRepositories",
+      "type": "class",
+      "name": "CommandsRepositories",
+      "filePath": "packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "lineRange": [11, 36],
+      "summary": "Implements ICommandsRepositories by instantiating both TypeORM repositories.",
+      "tags": ["repository", "factory", "typeorm", "class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/commands/src/infra/schemas/CommandSchema.ts",
+      "type": "file",
+      "name": "CommandSchema.ts",
+      "filePath": "packages/commands/src/infra/schemas/CommandSchema.ts",
+      "summary": "TypeORM EntitySchema for the commands table with timestamps, soft delete, space/org relations and git commit link.",
+      "tags": ["data-model", "typeorm", "schema-definition", "database"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/commands/src/infra/schemas/CommandVersionSchema.ts",
+      "type": "file",
+      "name": "CommandVersionSchema.ts",
+      "filePath": "packages/commands/src/infra/schemas/CommandVersionSchema.ts",
+      "summary": "TypeORM EntitySchema for the command_versions table storing versioned command content linked to commands and git commits.",
+      "tags": ["data-model", "typeorm", "schema-definition", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/commands/src/infra/schemas/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/commands/src/infra/schemas/index.ts",
+      "summary": "Barrel exporting the command TypeORM schemas and the commandsSchemas array for DataSource registration.",
+      "tags": ["barrel", "typeorm", "schema-definition", "commands"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/commands/src/CommandsHexa.ts",
+      "target": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/CommandsHexa.ts",
+      "target": "file:packages/commands/src/application/services/CommandsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/CommandsHexa.ts",
+      "target": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/CommandsHexa.ts",
+      "target": "class:packages/commands/src/CommandsHexa.ts:CommandsHexa",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/CommandsHexa.ts",
+      "target": "class:packages/commands/src/CommandsHexa.ts:CommandsHexa",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/application/services/CommandsServices.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/application/useCases/findCommandBySlug/FindCommandBySlugUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/application/useCases/getCommandVersion/GetCommandVersionUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/application/useCases/listCommandVersions/ListCommandVersionsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/domain/jobs/ICommandsDelayedJobs.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "file:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "class:packages/commands/src/application/adapter/CommandsAdapter.ts:CommandsAdapter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/adapter/CommandsAdapter.ts",
+      "target": "class:packages/commands/src/application/adapter/CommandsAdapter.ts:CommandsAdapter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts",
+      "target": "file:packages/commands/src/domain/jobs/DeployCommands.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts",
+      "target": "class:packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts:DeployCommandsDelayedJob",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts",
+      "target": "class:packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts:DeployCommandsDelayedJob",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandService.ts",
+      "target": "file:packages/commands/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandService.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandService.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandService.ts",
+      "target": "file:packages/commands/src/infra/repositories/CommandRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandService.ts",
+      "target": "class:packages/commands/src/application/services/CommandService.ts:CommandService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandService.ts",
+      "target": "class:packages/commands/src/application/services/CommandService.ts:CommandService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "target": "file:packages/commands/src/infra/repositories/CommandVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "target": "class:packages/commands/src/application/services/CommandVersionService.ts:CommandVersionService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "target": "class:packages/commands/src/application/services/CommandVersionService.ts:CommandVersionService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandsServices.ts",
+      "target": "file:packages/commands/src/application/services/CommandService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandsServices.ts",
+      "target": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandsServices.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandsServices.ts",
+      "target": "class:packages/commands/src/application/services/CommandsServices.ts:CommandsServices",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/services/CommandsServices.ts",
+      "target": "class:packages/commands/src/application/services/CommandsServices.ts:CommandsServices",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts",
+      "target": "file:packages/commands/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts:CaptureCommandUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/captureCommand/CaptureCommandUseCase.ts:CaptureCommandUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts",
+      "target": "file:packages/commands/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts:DeleteCommandUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts:DeleteCommandUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts",
+      "target": "file:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts:DeleteCommandsBatchUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts:DeleteCommandsBatchUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/findCommandBySlug/FindCommandBySlugUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/findCommandBySlug/FindCommandBySlugUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/findCommandBySlug/FindCommandBySlugUseCase.ts:FindCommandBySlugUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/findCommandBySlug/FindCommandBySlugUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/findCommandBySlug/FindCommandBySlugUseCase.ts:FindCommandBySlugUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts",
+      "target": "file:packages/commands/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts:GetCommandByIdUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/getCommandById/GetCommandByIdUseCase.ts:GetCommandByIdUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/getCommandVersion/GetCommandVersionUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/getCommandVersion/GetCommandVersionUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/getCommandVersion/GetCommandVersionUseCase.ts:GetCommandVersionUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/getCommandVersion/GetCommandVersionUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/getCommandVersion/GetCommandVersionUseCase.ts:GetCommandVersionUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/listCommandVersions/ListCommandVersionsUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/listCommandVersions/ListCommandVersionsUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/listCommandVersions/ListCommandVersionsUseCase.ts:ListCommandVersionsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/listCommandVersions/ListCommandVersionsUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/listCommandVersions/ListCommandVersionsUseCase.ts:ListCommandVersionsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts",
+      "target": "file:packages/commands/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts:ListCommandsBySpaceUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/listCommandsBySpace/ListCommandsBySpaceUseCase.ts:ListCommandsBySpaceUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts",
+      "target": "file:packages/commands/src/application/services/CommandVersionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts",
+      "target": "file:packages/commands/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts:UpdateCommandFromUIUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts",
+      "target": "class:packages/commands/src/application/useCases/updateCommandFromUI/UpdateCommandFromUIUseCase.ts:UpdateCommandFromUIUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/domain/jobs/ICommandsDelayedJobs.ts",
+      "target": "file:packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/domain/repositories/ICommandsRepositories.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/domain/repositories/ICommandsRepositories.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts",
+      "target": "file:packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts",
+      "target": "file:packages/commands/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts",
+      "target": "file:packages/commands/src/domain/jobs/DeployCommands.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts",
+      "target": "class:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts:DeployCommandsJobFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts",
+      "target": "class:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts:DeployCommandsJobFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandRepository.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandRepository.ts",
+      "target": "file:packages/commands/src/infra/schemas/CommandSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandRepository.ts",
+      "target": "class:packages/commands/src/infra/repositories/CommandRepository.ts:CommandRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandRepository.ts",
+      "target": "class:packages/commands/src/infra/repositories/CommandRepository.ts:CommandRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandVersionRepository.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandVersionRepository.ts",
+      "target": "file:packages/commands/src/infra/schemas/CommandVersionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandVersionRepository.ts",
+      "target": "class:packages/commands/src/infra/repositories/CommandVersionRepository.ts:CommandVersionRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandVersionRepository.ts",
+      "target": "class:packages/commands/src/infra/repositories/CommandVersionRepository.ts:CommandVersionRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "target": "file:packages/commands/src/domain/repositories/ICommandsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "target": "file:packages/commands/src/infra/repositories/CommandRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "target": "file:packages/commands/src/infra/repositories/CommandVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "target": "file:packages/commands/src/infra/schemas/CommandSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "target": "file:packages/commands/src/infra/schemas/CommandVersionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "target": "class:packages/commands/src/infra/repositories/CommandsRepositories.ts:CommandsRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/commands/src/infra/repositories/CommandsRepositories.ts",
+      "target": "class:packages/commands/src/infra/repositories/CommandsRepositories.ts:CommandsRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/commands/src/infra/schemas/index.ts",
+      "target": "file:packages/commands/src/infra/schemas/CommandSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/commands/src/infra/schemas/index.ts",
+      "target": "file:packages/commands/src/infra/schemas/CommandVersionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/commands/src/application/useCases/deleteCommandsBatch/DeleteCommandsBatchUseCase.ts:DeleteCommandsBatchUseCase",
+      "target": "class:packages/commands/src/application/useCases/deleteCommand/DeleteCommandUseCase.ts:DeleteCommandUseCase",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/commands/src/infra/jobs/DeployCommandsJobFactory.ts:DeployCommandsJobFactory",
+      "target": "class:packages/commands/src/application/jobs/DeployCommandsDelayedJob.ts:DeployCommandsDelayedJob",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/commands/src/application/services/CommandsServices.ts:CommandsServices",
+      "target": "class:packages/commands/src/application/services/CommandService.ts:CommandService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/commands/src/application/services/CommandsServices.ts:CommandsServices",
+      "target": "class:packages/commands/src/application/services/CommandVersionService.ts:CommandVersionService",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

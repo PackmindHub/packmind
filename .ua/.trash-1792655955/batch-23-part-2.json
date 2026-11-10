@@ -1,0 +1,1140 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts",
+      "type": "file",
+      "name": "usePackageMembership.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts",
+      "summary": "Hook splitting a space's packages into member and addable packages relative to a selection of artifacts, exposing the exact overlap.",
+      "tags": ["hook", "packages", "membership", "selection"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts:getOwnedArtifactIds",
+      "type": "function",
+      "name": "getOwnedArtifactIds",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts",
+      "lineRange": [22, 34],
+      "summary": "Collects the artifact ids a package holds.",
+      "tags": ["function", "hook", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts:usePackageMembership",
+      "type": "function",
+      "name": "usePackageMembership",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts",
+      "lineRange": [43, 104],
+      "summary": "Splits packages into member and addable lists for an artifact selection.",
+      "tags": ["hook", "react", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "type": "file",
+      "name": "usePackagesForArtifact.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "summary": "Hook and helper listing the packages that contain a given standard, command or skill.",
+      "tags": ["hook", "packages", "artifacts", "data-mapping"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts:getArtifactPackages",
+      "type": "function",
+      "name": "getArtifactPackages",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "lineRange": [21, 38],
+      "summary": "Filters packages that contain a given artifact.",
+      "tags": ["function", "hook", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts:usePackagesForArtifact",
+      "type": "function",
+      "name": "usePackagesForArtifact",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "lineRange": [40, 68],
+      "summary": "Hook returning the packages containing a given artifact.",
+      "tags": ["hook", "react", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/hooks/useRemovePackageFromTargets.ts",
+      "type": "file",
+      "name": "useRemovePackageFromTargets.ts",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useRemovePackageFromTargets.ts",
+      "summary": "Hook wrapping the remove-package-from-targets mutation with cache invalidation and notifications.",
+      "tags": ["hook", "mutation", "deployments", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/hooks/useRemovePackageFromTargets.ts:useRemovePackageFromTargets",
+      "type": "function",
+      "name": "useRemovePackageFromTargets",
+      "filePath": "apps/frontend/src/domain/deployments/hooks/useRemovePackageFromTargets.ts",
+      "lineRange": [10, 48],
+      "summary": "Hook running the remove-package-from-targets mutation.",
+      "tags": ["hook", "react", "mutation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts",
+      "type": "file",
+      "name": "buildRepositorySections.ts",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts",
+      "summary": "Groups active distributed packages into repository/target sections for display, and detects outdated packages.",
+      "tags": [
+        "utility",
+        "data-transformation",
+        "distributions",
+        "repositories"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts:buildRepositorySections",
+      "type": "function",
+      "name": "buildRepositorySections",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts",
+      "lineRange": [29, 74],
+      "summary": "Groups active distributed packages by repository and target.",
+      "tags": ["function", "utility", "data-transformation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts:isPackageOutdated",
+      "type": "function",
+      "name": "isPackageOutdated",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts",
+      "lineRange": [76, 88],
+      "summary": "Tells whether a distributed package is behind its latest version.",
+      "tags": ["function", "utility", "data-transformation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts:countArtifacts",
+      "type": "function",
+      "name": "countArtifacts",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts",
+      "lineRange": [90, 113],
+      "summary": "Counts the artifacts held by distributed packages.",
+      "tags": ["function", "utility", "data-transformation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "type": "file",
+      "name": "deploymentNotificationUtils.ts",
+      "filePath": "apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "summary": "Analyzes distribution results and builds success/warning/error notification payloads for standard, command, package deployments and package removals.",
+      "tags": ["utility", "notifications", "deployments", "analysis"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:analyzeDeploymentResults",
+      "type": "function",
+      "name": "analyzeDeploymentResults",
+      "filePath": "apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "lineRange": [42, 161],
+      "summary": "Aggregates distribution results into a notification describing success, partial or failed deployment.",
+      "tags": ["function", "utility", "notifications"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:getDeploymentAnalysis",
+      "type": "function",
+      "name": "getDeploymentAnalysis",
+      "filePath": "apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "lineRange": [166, 240],
+      "summary": "Computes counts of successful, failed and no-change deployments and failed targets.",
+      "tags": ["function", "utility", "notifications"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createSeparateDeploymentNotifications",
+      "type": "function",
+      "name": "createSeparateDeploymentNotifications",
+      "filePath": "apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "lineRange": [249, 323],
+      "summary": "Builds separate notifications for standards and commands deployments.",
+      "tags": ["function", "utility", "notifications"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createDeploymentSummary",
+      "type": "function",
+      "name": "createDeploymentSummary",
+      "filePath": "apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "lineRange": [325, 367],
+      "summary": "Builds a short summary text of a deployment analysis.",
+      "tags": ["function", "utility", "notifications"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createPackagesDeploymentNotifications",
+      "type": "function",
+      "name": "createPackagesDeploymentNotifications",
+      "filePath": "apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "lineRange": [373, 469],
+      "summary": "Builds notifications for package deployments across targets.",
+      "tags": ["function", "utility", "notifications"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createPackageRemovalNotifications",
+      "type": "function",
+      "name": "createPackageRemovalNotifications",
+      "filePath": "apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "lineRange": [475, 500],
+      "summary": "Builds notifications for removing a package from targets.",
+      "tags": ["function", "utility", "notifications"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/utils/listActiveDistributions.ts",
+      "type": "file",
+      "name": "listActiveDistributions.ts",
+      "filePath": "apps/frontend/src/domain/deployments/utils/listActiveDistributions.ts",
+      "summary": "Filters distribution history to targets where a package is currently deployed, based on the latest add/remove operation and its status.",
+      "tags": ["utility", "distributions", "deployments", "filtering"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/listActiveDistributions.ts:listActiveDistributions",
+      "type": "function",
+      "name": "listActiveDistributions",
+      "filePath": "apps/frontend/src/domain/deployments/utils/listActiveDistributions.ts",
+      "lineRange": [23, 88],
+      "summary": "Keeps distributions where the package's latest operation leaves it deployed.",
+      "tags": ["function", "utility", "distributions"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/standards/components/RuleSummaryTable.tsx",
+      "type": "file",
+      "name": "RuleSummaryTable.tsx",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/standards/components/RuleSummaryTable.tsx",
+      "summary": "OSS-edition stub component rendering a simple table of a standard's rule names linking to each rule.",
+      "tags": ["component", "oss-stub", "standards", "table"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/standards/components/RuleSummaryTable.tsx:RuleSummaryTable",
+      "type": "function",
+      "name": "RuleSummaryTable",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/standards/components/RuleSummaryTable.tsx",
+      "lineRange": [22, 107],
+      "summary": "Renders a table of rule names linking to rule detail pages.",
+      "tags": ["component", "react", "oss-stub"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/shared/components/editor/MarkdownEditorWithMode.tsx",
+      "type": "file",
+      "name": "MarkdownEditorWithMode.tsx",
+      "filePath": "apps/frontend/src/domain/editions/stubs/shared/components/editor/MarkdownEditorWithMode.tsx",
+      "summary": "OSS stub for the proprietary MarkdownEditorWithMode, rendering only the WYSIWYG MarkdownEditor and ignoring the mode switch.",
+      "tags": ["component", "oss-stub", "editor", "markdown"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/shared/components/editor/MarkdownEditorWithMode.tsx:MarkdownEditorWithMode",
+      "type": "function",
+      "name": "MarkdownEditorWithMode",
+      "filePath": "apps/frontend/src/domain/editions/stubs/shared/components/editor/MarkdownEditorWithMode.tsx",
+      "lineRange": [30, 44],
+      "summary": "Renders the WYSIWYG MarkdownEditor, ignoring mode props.",
+      "tags": ["component", "react", "oss-stub"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "summary": "Defines the TanStack Query scope key for the organizations domain.",
+      "tags": ["constants", "query-keys", "organizations"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx",
+      "type": "file",
+      "name": "NewOrganizationDialog.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx",
+      "summary": "Dialog component letting a user create a new organization, then selecting it and navigating to it.",
+      "tags": ["component", "dialog", "organizations", "form"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx:NewOrganizationDialog",
+      "type": "function",
+      "name": "NewOrganizationDialog",
+      "filePath": "apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx",
+      "lineRange": [28, 169],
+      "summary": "Dialog with form to create and switch to a new organization.",
+      "tags": ["component", "react", "dialog"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "type": "file",
+      "name": "OrgaSelector.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "summary": "Sidebar organization selector menu listing the user's organizations, switching between them and opening the new-organization dialog.",
+      "tags": ["component", "organizations", "navigation", "sidebar"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx:SidebarOrgaSelector",
+      "type": "function",
+      "name": "SidebarOrgaSelector",
+      "filePath": "apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "lineRange": [27, 131],
+      "summary": "Menu to switch organizations or create a new one.",
+      "tags": ["component", "react", "organizations"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "type": "file",
+      "name": "SidebarCollapseContext.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "summary": "React context and providers exposing the sidebar collapsed state, including a static provider for fixed layouts.",
+      "tags": ["context", "sidebar", "state", "provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:useSidebarCollapse",
+      "type": "function",
+      "name": "useSidebarCollapse",
+      "filePath": "apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "lineRange": [17, 19],
+      "summary": "Reads the sidebar collapse context.",
+      "tags": ["hook", "react", "sidebar"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:StaticSidebarCollapseProvider",
+      "type": "function",
+      "name": "StaticSidebarCollapseProvider",
+      "filePath": "apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "lineRange": [27, 37],
+      "summary": "Provides a fixed sidebar collapse state.",
+      "tags": ["component", "react", "sidebar"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/SidebarHelpMenu.tsx",
+      "type": "file",
+      "name": "SidebarHelpMenu.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/SidebarHelpMenu.tsx",
+      "summary": "Sidebar help menu linking to documentation, community and the Crisp support chat when enabled.",
+      "tags": ["component", "sidebar", "help", "menu"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SidebarHelpMenu.tsx:SidebarHelpMenu",
+      "type": "function",
+      "name": "SidebarHelpMenu",
+      "filePath": "apps/frontend/src/domain/organizations/components/SidebarHelpMenu.tsx",
+      "lineRange": [13, 68],
+      "summary": "Help menu with docs, community and support chat entries.",
+      "tags": ["component", "react", "sidebar"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "type": "file",
+      "name": "SidebarNavigation.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "summary": "Main application sidebar rendering organization selector, space navigation (today or plugin-first modes), org-level links, help and user menu with collapse toggle.",
+      "tags": ["component", "navigation", "sidebar", "layout"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigationLink",
+      "type": "function",
+      "name": "SidebarNavigationLink",
+      "filePath": "apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "lineRange": [76, 148],
+      "summary": "Sidebar navigation link with icon, badge and collapsed tooltip handling.",
+      "tags": ["component", "react", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarCollapseToggle",
+      "type": "function",
+      "name": "SidebarCollapseToggle",
+      "filePath": "apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "lineRange": [150, 166],
+      "summary": "Button toggling the sidebar collapsed state.",
+      "tags": ["component", "react", "navigation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigation",
+      "type": "function",
+      "name": "SidebarNavigation",
+      "filePath": "apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "lineRange": [168, 513],
+      "summary": "Renders the full app sidebar including spaces, org links and user menu.",
+      "tags": ["component", "react", "navigation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/SkeletonLayout.tsx",
+      "type": "file",
+      "name": "SkeletonLayout.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/SkeletonLayout.tsx",
+      "summary": "Loading skeleton layout mimicking the sidebar and content area while the app shell loads.",
+      "tags": ["component", "loading", "skeleton", "layout"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SkeletonLayout.tsx:SkeletonLayout",
+      "type": "function",
+      "name": "SkeletonLayout",
+      "filePath": "apps/frontend/src/domain/organizations/components/SkeletonLayout.tsx",
+      "lineRange": [10, 76],
+      "summary": "Renders a skeleton placeholder of the app shell.",
+      "tags": ["component", "react", "loading"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "file",
+      "name": "SpaceNavModeContext.tsx",
+      "filePath": "apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "summary": "React context deciding which space navigation architecture (today vs plugin-first) the sidebar renders, combining feature flag default, persisted user choice and URL override.",
+      "tags": [
+        "context",
+        "feature-flag",
+        "navigation",
+        "provider",
+        "persistence"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:useSpaceNavMode",
+      "type": "function",
+      "name": "useSpaceNavMode",
+      "filePath": "apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "lineRange": [63, 65],
+      "summary": "Reads the space navigation mode context.",
+      "tags": ["hook", "react", "feature-flag"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:resolveSpaceNavMode",
+      "type": "function",
+      "name": "resolveSpaceNavMode",
+      "filePath": "apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "lineRange": [159, 164],
+      "summary": "Resolves the effective navigation mode from URL, stored choice and default.",
+      "tags": ["function", "context", "feature-flag"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:withNavMode",
+      "type": "function",
+      "name": "withNavMode",
+      "filePath": "apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "lineRange": [178, 182],
+      "summary": "Adds the nav mode query parameter to a URL.",
+      "tags": ["function", "context", "feature-flag"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:SpaceNavModeProvider",
+      "type": "function",
+      "name": "SpaceNavModeProvider",
+      "filePath": "apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "lineRange": [194, 291],
+      "summary": "Provider computing and persisting the space navigation mode and new-navigation hints.",
+      "tags": ["component", "react", "feature-flag"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts:getOwnedArtifactIds",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts:usePackageMembership",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts:usePackageMembership",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts:getArtifactPackages",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts:getArtifactPackages",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts:usePackagesForArtifact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts:usePackagesForArtifact",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useRemovePackageFromTargets.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useRemovePackageFromTargets.ts:useRemovePackageFromTargets",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useRemovePackageFromTargets.ts",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useRemovePackageFromTargets.ts:useRemovePackageFromTargets",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/hooks/useRemovePackageFromTargets.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts:buildRepositorySections",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts:buildRepositorySections",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts:isPackageOutdated",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts:isPackageOutdated",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildRepositorySections.ts:countArtifacts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:analyzeDeploymentResults",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:analyzeDeploymentResults",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:getDeploymentAnalysis",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createSeparateDeploymentNotifications",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createSeparateDeploymentNotifications",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createDeploymentSummary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createDeploymentSummary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createPackagesDeploymentNotifications",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createPackagesDeploymentNotifications",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createPackageRemovalNotifications",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts:createPackageRemovalNotifications",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/listActiveDistributions.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/listActiveDistributions.ts:listActiveDistributions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/listActiveDistributions.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/listActiveDistributions.ts:listActiveDistributions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/standards/components/RuleSummaryTable.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/standards/components/RuleSummaryTable.tsx:RuleSummaryTable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/standards/components/RuleSummaryTable.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/standards/components/RuleSummaryTable.tsx:RuleSummaryTable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/standards/components/RuleSummaryTable.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/shared/components/editor/MarkdownEditorWithMode.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/shared/components/editor/MarkdownEditorWithMode.tsx:MarkdownEditorWithMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/shared/components/editor/MarkdownEditorWithMode.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/shared/components/editor/MarkdownEditorWithMode.tsx:MarkdownEditorWithMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/shared/components/editor/MarkdownEditorWithMode.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx:NewOrganizationDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx:NewOrganizationDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx:SidebarOrgaSelector",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx:SidebarOrgaSelector",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:useSidebarCollapse",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:useSidebarCollapse",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:StaticSidebarCollapseProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:StaticSidebarCollapseProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarHelpMenu.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarHelpMenu.tsx:SidebarHelpMenu",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarHelpMenu.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarHelpMenu.tsx:SidebarHelpMenu",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigationLink",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigationLink",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarCollapseToggle",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SidebarHelpMenu.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/sidebar/SidebarSectionCaption.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavBlock.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/sidebar/SpaceNavPanel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SkeletonLayout.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SkeletonLayout.tsx:SkeletonLayout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SkeletonLayout.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SkeletonLayout.tsx:SkeletonLayout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:useSpaceNavMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:useSpaceNavMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:resolveSpaceNavMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:resolveSpaceNavMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:withNavMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:withNavMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:SpaceNavModeProvider",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:SpaceNavModeProvider",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts:usePackageMembership",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts:usePackagesForArtifact",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/hooks/useRemovePackageFromTargets.ts:useRemovePackageFromTargets",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemovePackageFromTargetsMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx:NewOrganizationDialog",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useCreateOrganizationMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/NewOrganizationDialog.tsx:NewOrganizationDialog",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSelectOrganizationMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx:SidebarOrgaSelector",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useGetUserOrganizationsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx:SidebarOrgaSelector",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSelectOrganizationMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/OrgaSelector.tsx:SidebarOrgaSelector",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigation",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignOutMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigation",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigationLink",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:useSidebarCollapse",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarCollapseToggle",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:useSidebarCollapse",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigation",
+      "target": "function:apps/frontend/src/domain/organizations/components/SidebarCollapseContext.tsx:useSidebarCollapse",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigation",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:useSpaceNavMode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/organizations/components/SidebarNavigation.tsx:SidebarNavigation",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:useGetSpacesQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

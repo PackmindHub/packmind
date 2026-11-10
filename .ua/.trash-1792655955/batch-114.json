@@ -1,0 +1,1087 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/CreatePackagePage/index.ts",
+      "summary": "Barrel re-exporting the CreatePackagePage component and its props type for the package creation route.",
+      "tags": ["barrel", "entry-point", "component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/DeploymentStatusBadge.tsx",
+      "type": "file",
+      "name": "DeploymentStatusBadge.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/DeploymentStatusBadge.tsx",
+      "summary": "React badge component that renders a colored status label (Failed, No Changes, Up to date, Outdated) for an artifact deployment.",
+      "tags": ["component", "ui", "deployments", "status-badge"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/DeploymentStatusBadge.tsx:DeploymentStatusBadge",
+      "type": "function",
+      "name": "DeploymentStatusBadge",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/DeploymentStatusBadge.tsx",
+      "lineRange": [9, 29],
+      "summary": "Maps deployment status and up-to-date flag to a colored PMBadge, prioritizing failures.",
+      "tags": ["component", "ui", "status-badge"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/index.ts",
+      "summary": "Barrel re-exporting the DeploymentStatusBadge component.",
+      "tags": ["barrel", "entry-point", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/DeploymentsPage/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentsPage/index.ts",
+      "summary": "Barrel re-exporting the DeploymentsPage component.",
+      "tags": ["barrel", "entry-point", "component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/PackageEditForm/index.ts",
+      "summary": "Barrel re-exporting the PackageEditForm component used by the package edit route.",
+      "tags": ["barrel", "entry-point", "component", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/StandardCentricView/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/StandardCentricView/index.ts",
+      "summary": "Barrel re-exporting the StandardCentricView deployments component.",
+      "tags": ["barrel", "entry-point", "component", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/StandardDistributionsList/index.ts",
+      "summary": "Barrel wildcard re-exporting everything from the StandardDistributionsList module.",
+      "tags": ["barrel", "entry-point", "component", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/TargetForm/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/TargetForm/index.ts",
+      "summary": "Barrel re-exporting the TargetForm component for creating and editing deployment targets.",
+      "tags": ["barrel", "entry-point", "component", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/TargetManagementDialog/index.ts",
+      "summary": "Barrel re-exporting the TargetManagementDialog component.",
+      "tags": ["barrel", "entry-point", "component", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx",
+      "type": "file",
+      "name": "artefactOptions.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx",
+      "summary": "Builds package-form dropdown options for standards, commands and skills, disabling artefacts already held by another package and rendering a hint naming that package.",
+      "tags": ["utility", "component", "packages", "form", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx:toArtefactOption",
+      "type": "function",
+      "name": "toArtefactOption",
+      "filePath": "apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx",
+      "lineRange": [22, 36],
+      "summary": "Converts an artefact into a dropdown option, locking it when another package holds it unless already selected.",
+      "tags": ["utility", "form", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx:HeldByPackage",
+      "type": "function",
+      "name": "HeldByPackage",
+      "filePath": "apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx",
+      "lineRange": [42, 50],
+      "summary": "Renders a faded hint naming the package that already holds an artefact.",
+      "tags": ["component", "ui", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "type": "file",
+      "name": "buildArtifactRollups.ts",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "summary": "Aggregates active distributed packages per target into per-artifact deployment statuses (commands, standards, skills), merging target deployments and flagging outdated or deleted artifacts.",
+      "tags": ["utility", "deployments", "aggregation", "data-transformation"],
+      "complexity": "moderate",
+      "languageNotes": "Uses typed Map accumulators keyed by branded ID types, then conditional object spread to add isDeleted only when true."
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:buildArtifactRollups",
+      "type": "function",
+      "name": "buildArtifactRollups",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "lineRange": [43, 71],
+      "summary": "Walks distributed packages per target and rolls deployed commands, standards and skills up into per-artifact deployment statuses.",
+      "tags": ["utility", "aggregation", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:accumulateCommand",
+      "type": "function",
+      "name": "accumulateCommand",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "lineRange": [73, 97],
+      "summary": "Adds a command deployment on a target to the command rollup map, merging with an existing entry.",
+      "tags": ["utility", "aggregation", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:accumulateStandard",
+      "type": "function",
+      "name": "accumulateStandard",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "lineRange": [99, 123],
+      "summary": "Adds a standard deployment on a target to the standard rollup map, merging with an existing entry.",
+      "tags": ["utility", "aggregation", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:accumulateSkill",
+      "type": "function",
+      "name": "accumulateSkill",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "lineRange": [125, 149],
+      "summary": "Adds a skill deployment on a target to the skill rollup map, merging with an existing entry.",
+      "tags": ["utility", "aggregation", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:toCommandStatus",
+      "type": "function",
+      "name": "toCommandStatus",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "lineRange": [151, 163],
+      "summary": "Converts a command rollup into a CommandDeploymentStatus with outdated and deleted flags.",
+      "tags": ["utility", "mapper", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:toStandardStatus",
+      "type": "function",
+      "name": "toStandardStatus",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "lineRange": [165, 176],
+      "summary": "Converts a standard rollup into a StandardDeploymentStatus with outdated and deleted flags.",
+      "tags": ["utility", "mapper", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:toSkillStatus",
+      "type": "function",
+      "name": "toSkillStatus",
+      "filePath": "apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "lineRange": [178, 189],
+      "summary": "Converts a skill rollup into a SkillDeploymentStatus with outdated and deleted flags.",
+      "tags": ["utility", "mapper", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "type": "file",
+      "name": "ChangeProposalsQueries.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "summary": "OSS edition stub of the change-proposal React Query hooks, returning inert no-op query and mutation objects so shared components compile without the proprietary feature.",
+      "tags": ["stub", "oss-edition", "hook", "change-proposals", "api-client"],
+      "complexity": "simple",
+      "languageNotes": "Stubs are swapped for proprietary implementations via the @packmind/proprietary/frontend path alias, so signatures must match."
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useGetGroupedChangeProposalsQuery",
+      "type": "function",
+      "name": "useGetGroupedChangeProposalsQuery",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "lineRange": [17, 18],
+      "summary": "Stub hook returning an inert no-op query object for the change-proposal feature.",
+      "tags": ["stub", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useListChangeProposalsByStandardQuery",
+      "type": "function",
+      "name": "useListChangeProposalsByStandardQuery",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "lineRange": [19, 20],
+      "summary": "Stub hook returning an inert no-op query object for the change-proposal feature.",
+      "tags": ["stub", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useListChangeProposalsByCommandQuery",
+      "type": "function",
+      "name": "useListChangeProposalsByCommandQuery",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "lineRange": [21, 21],
+      "summary": "Stub hook returning an inert no-op query object for the change-proposal feature.",
+      "tags": ["stub", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useListChangeProposalsBySkillQuery",
+      "type": "function",
+      "name": "useListChangeProposalsBySkillQuery",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "lineRange": [22, 22],
+      "summary": "Stub hook returning an inert no-op query object for the change-proposal feature.",
+      "tags": ["stub", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useCreateChangeProposalMutation",
+      "type": "function",
+      "name": "useCreateChangeProposalMutation",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "lineRange": [23, 23],
+      "summary": "Stub hook returning an inert no-op mutation object for the change-proposal feature.",
+      "tags": ["stub", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplyCommandChangeProposalsMutation",
+      "type": "function",
+      "name": "useApplyCommandChangeProposalsMutation",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "lineRange": [24, 24],
+      "summary": "Stub hook returning an inert no-op mutation object for the change-proposal feature.",
+      "tags": ["stub", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplyStandardChangeProposalsMutation",
+      "type": "function",
+      "name": "useApplyStandardChangeProposalsMutation",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "lineRange": [25, 25],
+      "summary": "Stub hook returning an inert no-op mutation object for the change-proposal feature.",
+      "tags": ["stub", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplySkillChangeProposalsMutation",
+      "type": "function",
+      "name": "useApplySkillChangeProposalsMutation",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "lineRange": [26, 26],
+      "summary": "Stub hook returning an inert no-op mutation object for the change-proposal feature.",
+      "tags": ["stub", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplyCreationChangeProposalsMutation",
+      "type": "function",
+      "name": "useApplyCreationChangeProposalsMutation",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "lineRange": [27, 27],
+      "summary": "Stub hook returning an inert no-op mutation object for the change-proposal feature.",
+      "tags": ["stub", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queryKeys.ts",
+      "summary": "OSS stub of change-proposal React Query keys, exporting the scope name and empty key arrays.",
+      "tags": [
+        "stub",
+        "oss-edition",
+        "query-keys",
+        "change-proposals",
+        "config"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/components/ChangeProposalUpdateSubscription.tsx",
+      "type": "file",
+      "name": "ChangeProposalUpdateSubscription.tsx",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/components/ChangeProposalUpdateSubscription.tsx",
+      "summary": "OSS stub of the change-proposal live update subscription component that renders nothing.",
+      "tags": ["stub", "oss-edition", "component", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/components/ChangeProposalUpdateSubscription.tsx:ChangeProposalUpdateSubscription",
+      "type": "function",
+      "name": "ChangeProposalUpdateSubscription",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/components/ChangeProposalUpdateSubscription.tsx",
+      "lineRange": [1, 3],
+      "summary": "No-op subscription component returning null in the OSS edition.",
+      "tags": ["stub", "component", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/hooks/useDraftOutdatedCount.ts",
+      "type": "file",
+      "name": "useDraftOutdatedCount.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/hooks/useDraftOutdatedCount.ts",
+      "summary": "OSS stub of the useDraftOutdatedCount hook that reports an undefined outdated-proposal count since the OSS edition has no merge engine; signature mirrors the proprietary hook.",
+      "tags": ["stub", "oss-edition", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/hooks/useDraftOutdatedCount.ts:useDraftOutdatedCount",
+      "type": "function",
+      "name": "useDraftOutdatedCount",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/hooks/useDraftOutdatedCount.ts",
+      "lineRange": [22, 27],
+      "summary": "Returns an undefined outdated count and non-checking state for any draft.",
+      "tags": ["stub", "hook", "change-proposals"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/buildUnifiedMarkdownDiff.ts",
+      "type": "file",
+      "name": "buildUnifiedMarkdownDiff.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/buildUnifiedMarkdownDiff.ts",
+      "summary": "OSS stub of the unified markdown diff builder, defining the MarkdownBlock type and returning no blocks.",
+      "tags": ["stub", "oss-edition", "utility", "diff", "type-definition"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/buildUnifiedMarkdownDiff.ts:buildUnifiedMarkdownDiff",
+      "type": "function",
+      "name": "buildUnifiedMarkdownDiff",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/buildUnifiedMarkdownDiff.ts",
+      "lineRange": [8, 13],
+      "summary": "Stub diff builder returning an empty list of markdown blocks.",
+      "tags": ["stub", "utility", "diff"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts",
+      "type": "file",
+      "name": "serializeArtifactToMarkdown.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts",
+      "summary": "OSS edition serializers turning an applied standard into frontmatter plus sorted-rule markdown, with a no-op skill serializer.",
+      "tags": ["stub", "oss-edition", "serialization", "markdown", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts:serializeStandardToMarkdown",
+      "type": "function",
+      "name": "serializeStandardToMarkdown",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts",
+      "lineRange": [5, 43],
+      "summary": "Serializes a standard into YAML frontmatter and a markdown body listing its sorted, trimmed rules.",
+      "tags": ["serialization", "markdown", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts:serializeSkillToMarkdown",
+      "type": "function",
+      "name": "serializeSkillToMarkdown",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts",
+      "lineRange": [45, 51],
+      "summary": "Stub skill serializer returning an empty string.",
+      "tags": ["stub", "serialization", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/detection/api/queries/DetectionProgramQueries.ts",
+      "type": "file",
+      "name": "DetectionProgramQueries.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/api/queries/DetectionProgramQueries.ts",
+      "summary": "OSS stub of the detection-program severity mutation hook, a no-op that keeps shared standard rule components compiling without linter support.",
+      "tags": ["stub", "oss-edition", "hook", "detection", "api-client"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/detection/api/queries/DetectionProgramQueries.ts:useUpdateActiveDetectionProgramSeverityMutation",
+      "type": "function",
+      "name": "useUpdateActiveDetectionProgramSeverityMutation",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/api/queries/DetectionProgramQueries.ts",
+      "lineRange": [26, 29],
+      "summary": "No-op mutation hook for updating detection program severity.",
+      "tags": ["stub", "hook", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/detection/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/api/queryKeys.ts",
+      "summary": "OSS stub of detection React Query keys, exporting empty key arrays.",
+      "tags": ["stub", "oss-edition", "query-keys", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/detection/components/DetectionCardUtils.ts",
+      "type": "file",
+      "name": "DetectionCardUtils.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/components/DetectionCardUtils.ts",
+      "summary": "OSS stub of the detection card helper returning an empty language display name.",
+      "tags": ["stub", "oss-edition", "utility", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/detection/components/DetectionCardUtils.ts:getLanguageDisplayName",
+      "type": "function",
+      "name": "getLanguageDisplayName",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/components/DetectionCardUtils.ts",
+      "lineRange": [1, 3],
+      "summary": "Stub returning an empty display name for a detection language.",
+      "tags": ["stub", "utility", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/detection/components/ProgramEditor.tsx",
+      "type": "file",
+      "name": "ProgramEditor.tsx",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/components/ProgramEditor.tsx",
+      "summary": "OSS stub of the detection ProgramEditor that shows an info alert explaining rule detection is unavailable in the Community edition.",
+      "tags": ["stub", "oss-edition", "component", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/detection/components/ProgramEditor.tsx:ProgramEditor",
+      "type": "function",
+      "name": "ProgramEditor",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/components/ProgramEditor.tsx",
+      "lineRange": [13, 22],
+      "summary": "Renders an info alert stating rule detection is not available in the Community edition.",
+      "tags": ["stub", "component", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "type": "file",
+      "name": "useStandardEditionFeatures.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "summary": "OSS stub of standard edition feature hooks: no rule languages, no rule detection, and an always-empty rule detection status query.",
+      "tags": ["stub", "oss-edition", "hook", "detection", "feature-gating"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts:useStandardEditionFeatures",
+      "type": "function",
+      "name": "useStandardEditionFeatures",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "lineRange": [8, 12],
+      "summary": "Returns an empty rule-language map for a standard.",
+      "tags": ["stub", "hook", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts:hasRuleDetection",
+      "type": "function",
+      "name": "hasRuleDetection",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "lineRange": [19, 21],
+      "summary": "Always reports that rule detection is unavailable.",
+      "tags": ["stub", "feature-gating", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts:useGetStandardRulesDetectionStatusQuery",
+      "type": "function",
+      "name": "useGetStandardRulesDetectionStatusQuery",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "lineRange": [23, 26],
+      "summary": "Query-shaped stub returning an empty rule detection status array.",
+      "tags": ["stub", "hook", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution.ts",
+      "type": "file",
+      "name": "useMarketplaceBatchDistribution.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution.ts",
+      "summary": "OSS stub of the marketplace batch distribution hook returning a stable callback that accepts nothing and counts every plugin pick as failed.",
+      "tags": ["stub", "oss-edition", "hook", "marketplaces", "distribution"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution.ts:useMarketplaceBatchDistribution",
+      "type": "function",
+      "name": "useMarketplaceBatchDistribution",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution.ts",
+      "lineRange": [23, 41],
+      "summary": "Returns a memoized async callback that reports every marketplace plugin pick as failed.",
+      "tags": ["stub", "hook", "marketplaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/usePackageMarketplacePublications.ts",
+      "type": "file",
+      "name": "usePackageMarketplacePublications.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/usePackageMarketplacePublications.ts",
+      "summary": "OSS stub of the hook listing a package's marketplace publications, always returning a stable empty list that is not loading.",
+      "tags": ["stub", "oss-edition", "hook", "marketplaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/usePackageMarketplacePublications.ts:usePackageMarketplacePublications",
+      "type": "function",
+      "name": "usePackageMarketplacePublications",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/usePackageMarketplacePublications.ts",
+      "lineRange": [30, 35],
+      "summary": "Returns a stable empty publications list with isLoading false.",
+      "tags": ["stub", "hook", "marketplaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/hooks/usePackageMarketplaceStatus.ts",
+      "type": "file",
+      "name": "usePackageMarketplaceStatus.ts",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/marketplaces/hooks/usePackageMarketplaceStatus.ts",
+      "summary": "OSS stub of the package marketplace status hook reporting zero published marketplaces for any package.",
+      "tags": ["stub", "oss-edition", "hook", "marketplaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/hooks/usePackageMarketplaceStatus.ts:usePackageMarketplaceStatus",
+      "type": "function",
+      "name": "usePackageMarketplaceStatus",
+      "filePath": "apps/frontend/src/domain/editions/stubs/domain/marketplaces/hooks/usePackageMarketplaceStatus.ts",
+      "lineRange": [18, 24],
+      "summary": "Returns a status object whose published-marketplace counter always yields zero.",
+      "tags": ["stub", "hook", "marketplaces"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/DeploymentStatusBadge.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/DeploymentStatusBadge.tsx:DeploymentStatusBadge",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/DeploymentStatusBadge.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/DeploymentStatusBadge.tsx:DeploymentStatusBadge",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentStatusBadge/DeploymentStatusBadge.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsPage/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentsPage/DeploymentsPage.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageEditForm/PackageEditForm.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardCentricView/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/StandardCentricView/StandardCentricView.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetForm/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/TargetForm/TargetForm.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/index.ts",
+      "target": "file:apps/frontend/src/domain/deployments/components/TargetManagementDialog/TargetManagementDialog.tsx",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx:toArtefactOption",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx:toArtefactOption",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx:HeldByPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/packageForm/artefactOptions.tsx:HeldByPackage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:buildArtifactRollups",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:buildArtifactRollups",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:accumulateCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:accumulateStandard",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:accumulateSkill",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:toCommandStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:toStandardStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:toSkillStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useGetGroupedChangeProposalsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useGetGroupedChangeProposalsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useListChangeProposalsByStandardQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useListChangeProposalsByStandardQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useListChangeProposalsByCommandQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useListChangeProposalsByCommandQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useListChangeProposalsBySkillQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useListChangeProposalsBySkillQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useCreateChangeProposalMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useCreateChangeProposalMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplyCommandChangeProposalsMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplyCommandChangeProposalsMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplyStandardChangeProposalsMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplyStandardChangeProposalsMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplySkillChangeProposalsMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplySkillChangeProposalsMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplyCreationChangeProposalsMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/api/queries/ChangeProposalsQueries.ts:useApplyCreationChangeProposalsMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/components/ChangeProposalUpdateSubscription.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/components/ChangeProposalUpdateSubscription.tsx:ChangeProposalUpdateSubscription",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/components/ChangeProposalUpdateSubscription.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/components/ChangeProposalUpdateSubscription.tsx:ChangeProposalUpdateSubscription",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/hooks/useDraftOutdatedCount.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/hooks/useDraftOutdatedCount.ts:useDraftOutdatedCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/hooks/useDraftOutdatedCount.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/hooks/useDraftOutdatedCount.ts:useDraftOutdatedCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/buildUnifiedMarkdownDiff.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/buildUnifiedMarkdownDiff.ts:buildUnifiedMarkdownDiff",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/buildUnifiedMarkdownDiff.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/buildUnifiedMarkdownDiff.ts:buildUnifiedMarkdownDiff",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts:serializeStandardToMarkdown",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts:serializeStandardToMarkdown",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts:serializeSkillToMarkdown",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/change-proposals/utils/serializeArtifactToMarkdown.ts:serializeSkillToMarkdown",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/api/queries/DetectionProgramQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/api/queries/DetectionProgramQueries.ts:useUpdateActiveDetectionProgramSeverityMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/api/queries/DetectionProgramQueries.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/api/queries/DetectionProgramQueries.ts:useUpdateActiveDetectionProgramSeverityMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/components/DetectionCardUtils.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/components/DetectionCardUtils.ts:getLanguageDisplayName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/components/DetectionCardUtils.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/components/DetectionCardUtils.ts:getLanguageDisplayName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/components/ProgramEditor.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/components/ProgramEditor.tsx:ProgramEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/components/ProgramEditor.tsx",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/components/ProgramEditor.tsx:ProgramEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts:useStandardEditionFeatures",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts:useStandardEditionFeatures",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts:hasRuleDetection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts:hasRuleDetection",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts:useGetStandardRulesDetectionStatusQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/detection/hooks/useStandardEditionFeatures.ts:useGetStandardRulesDetectionStatusQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution.ts:useMarketplaceBatchDistribution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/redesign/useMarketplaceBatchDistribution.ts:useMarketplaceBatchDistribution",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/usePackageMarketplacePublications.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/usePackageMarketplacePublications.ts:usePackageMarketplacePublications",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/usePackageMarketplacePublications.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/components/usePackageMarketplacePublications.ts:usePackageMarketplacePublications",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/hooks/usePackageMarketplaceStatus.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/hooks/usePackageMarketplaceStatus.ts:usePackageMarketplaceStatus",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/editions/stubs/domain/marketplaces/hooks/usePackageMarketplaceStatus.ts",
+      "target": "function:apps/frontend/src/domain/editions/stubs/domain/marketplaces/hooks/usePackageMarketplaceStatus.ts:usePackageMarketplaceStatus",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:buildArtifactRollups",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:accumulateCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:buildArtifactRollups",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:accumulateStandard",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:buildArtifactRollups",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:accumulateSkill",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:buildArtifactRollups",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:toCommandStatus",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:buildArtifactRollups",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:toStandardStatus",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:buildArtifactRollups",
+      "target": "function:apps/frontend/src/domain/deployments/utils/buildArtifactRollups.ts:toSkillStatus",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

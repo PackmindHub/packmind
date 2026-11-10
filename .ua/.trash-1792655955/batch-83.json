@@ -1,0 +1,86 @@
+{
+  "nodes": [
+    {
+      "id": "document:apps/cli/.packmind/standards/cli-command-structure.md",
+      "type": "document",
+      "name": "cli-command-structure.md",
+      "filePath": "apps/cli/.packmind/standards/cli-command-structure.md",
+      "summary": "Packmind-deployed 'CLI Command Structure' standard defining its scope and rules for separating command definitions from Handler.ts files containing validation, execution, output, and exit codes in apps/cli/src/infra/commands/.",
+      "tags": [
+        "documentation",
+        "coding-standard",
+        "packmind-artifacts",
+        "cli",
+        "commands"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/cli/.packmind/standards/cli-packmindgateway-method-implementation.md",
+      "type": "document",
+      "name": "cli-packmindgateway-method-implementation.md",
+      "filePath": "apps/cli/.packmind/standards/cli-packmindgateway-method-implementation.md",
+      "summary": "Packmind-deployed 'CLI Gateway Implementation' standard defining its scope and rules for implementing new PackmindGateway methods via the PackmindHttpClient abstraction with Gateway<UseCase> typing instead of duplicated boilerplate.",
+      "tags": [
+        "documentation",
+        "coding-standard",
+        "packmind-artifacts",
+        "cli",
+        "gateway"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/cli/.packmind/standards/cli-use-case-structure.md",
+      "type": "document",
+      "name": "cli-use-case-structure.md",
+      "filePath": "apps/cli/.packmind/standards/cli-use-case-structure.md",
+      "summary": "Packmind-deployed 'CLI Use Case Structure' standard defining its scope and rules for basing CLI use cases on IPublicUseCase<Command, Response> and keeping presentation concerns out of domain/application use cases.",
+      "tags": [
+        "documentation",
+        "coding-standard",
+        "packmind-artifacts",
+        "cli",
+        "use-case"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:apps/cli/.packmind/standards/cli-command-structure.md",
+      "target": "document:apps/cli/.github/instructions/packmind-cli-command-structure.instructions.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/.packmind/standards/cli-command-structure.md",
+      "target": "file:apps/cli/src/main.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/.packmind/standards/cli-packmindgateway-method-implementation.md",
+      "target": "document:apps/cli/.github/instructions/packmind-cli-packmindgateway-method-implementation.instructions.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/.packmind/standards/cli-packmindgateway-method-implementation.md",
+      "target": "file:apps/cli/src/infra/repositories/PackmindGateway.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/.packmind/standards/cli-use-case-structure.md",
+      "target": "document:apps/cli/.github/instructions/packmind-cli-use-case-structure.instructions.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

@@ -1,0 +1,656 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/logger/.swcrc",
+      "type": "file",
+      "name": ".swcrc",
+      "filePath": "packages/logger/.swcrc",
+      "summary": "SWC compiler configuration for the logger package, targeting ES2022 CommonJS output with TypeScript parsing, preserved class names and source maps.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/logger/src/PackmindLogger.ts",
+      "type": "file",
+      "name": "PackmindLogger.ts",
+      "filePath": "packages/logger/src/PackmindLogger.ts",
+      "summary": "Winston-based PackmindLogger used across the monorepo, with level control via PACKMIND_LOG_LEVEL and a console line formatter that surfaces OpenTelemetry trace ids compactly.",
+      "tags": ["logging", "utility", "service", "observability"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/logger/src/PackmindLogger.ts:formatConsoleLine",
+      "type": "function",
+      "name": "formatConsoleLine",
+      "filePath": "packages/logger/src/PackmindLogger.ts",
+      "lineRange": [27, 39],
+      "summary": "Renders a human-readable console log line, extracting OpenTelemetry trace_id into a short marker and serializing remaining metadata as JSON.",
+      "tags": ["logging", "formatting", "observability"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/logger/src/PackmindLogger.ts:PackmindLogger",
+      "type": "class",
+      "name": "PackmindLogger",
+      "filePath": "packages/logger/src/PackmindLogger.ts",
+      "lineRange": [52, 118],
+      "summary": "Named logger wrapper around winston exposing error/warn/info/debug methods, honoring an environment-driven log level and a silent mode.",
+      "tags": ["logging", "service", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/logger/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/logger/src/index.ts",
+      "summary": "Barrel entry point of the @packmind/logger package re-exporting PackmindLogger and maskEmail.",
+      "tags": ["entry-point", "barrel", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/logger/src/maskEmail.ts",
+      "type": "file",
+      "name": "maskEmail.ts",
+      "filePath": "packages/logger/src/maskEmail.ts",
+      "summary": "Helper that masks email addresses so they can be logged without leaking personal data.",
+      "tags": ["utility", "privacy", "logging", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/logger/src/maskEmail.ts:maskEmail",
+      "type": "function",
+      "name": "maskEmail",
+      "filePath": "packages/logger/src/maskEmail.ts",
+      "lineRange": [1, 11],
+      "summary": "Masks the local part of an email address for safe inclusion in logs.",
+      "tags": ["utility", "privacy", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/.swcrc",
+      "type": "file",
+      "name": ".swcrc",
+      "filePath": "packages/node-utils/.swcrc",
+      "summary": "SWC compiler configuration for the node-utils package, controlling TypeScript transpilation to CommonJS with source maps.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/adapter/IBaseAdapter.ts",
+      "type": "file",
+      "name": "IBaseAdapter.ts",
+      "filePath": "packages/node-utils/src/adapter/IBaseAdapter.ts",
+      "summary": "Defines IBaseAdapter, the base contract every hexagonal domain adapter implements: initialize with resolved ports (and instrument use cases), readiness check and port exposure.",
+      "tags": [
+        "type-definition",
+        "hexagonal-architecture",
+        "adapter",
+        "interface"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/application/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/node-utils/src/application/index.ts",
+      "summary": "Barrel re-exporting user access errors and the abstract admin/member/space-admin/space-member use case base classes.",
+      "tags": ["barrel", "entry-point", "use-case", "authorization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/database/migrationColumns.ts",
+      "type": "file",
+      "name": "migrationColumns.ts",
+      "filePath": "packages/node-utils/src/database/migrationColumns.ts",
+      "summary": "Reusable TypeORM migration column definitions for UUID primary keys, created/updated timestamps and soft-delete columns.",
+      "tags": ["database", "migration", "typeorm", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/database/schemas.ts",
+      "type": "file",
+      "name": "schemas.ts",
+      "filePath": "packages/node-utils/src/database/schemas.ts",
+      "summary": "Reusable TypeORM EntitySchema column fragments for UUID ids, timestamps and soft-delete fields shared by domain entity schemas.",
+      "tags": ["database", "typeorm", "schema-definition", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/database/types.ts",
+      "type": "file",
+      "name": "types.ts",
+      "filePath": "packages/node-utils/src/database/types.ts",
+      "summary": "Type helpers for persisted entities: WithTimestamps generic and a re-export of WithSoftDelete from @packmind/types.",
+      "tags": ["type-definition", "database", "typeorm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/errors/errors.ts",
+      "type": "file",
+      "name": "errors.ts",
+      "filePath": "packages/node-utils/src/errors/errors.ts",
+      "summary": "Provides getErrorMessage, normalizing unknown thrown values into a message string.",
+      "tags": ["utility", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/errors/errors.ts:getErrorMessage",
+      "type": "function",
+      "name": "getErrorMessage",
+      "filePath": "packages/node-utils/src/errors/errors.ts",
+      "lineRange": [1, 3],
+      "summary": "Returns the message of an Error or the stringified value for any other thrown value.",
+      "tags": ["utility", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/errors/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/node-utils/src/errors/index.ts",
+      "summary": "Barrel re-exporting getErrorMessage from the errors module.",
+      "tags": ["barrel", "error-handling", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/git/extractBaseUrl.ts",
+      "type": "file",
+      "name": "extractBaseUrl.ts",
+      "filePath": "packages/node-utils/src/git/extractBaseUrl.ts",
+      "summary": "Extracts the https base URL (host, with http port kept) from a git remote URL, rewriting SSH remotes so they can be compared to stored git provider URLs.",
+      "tags": ["git", "utility", "url-parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/git/extractBaseUrl.ts:extractBaseUrl",
+      "type": "function",
+      "name": "extractBaseUrl",
+      "filePath": "packages/node-utils/src/git/extractBaseUrl.ts",
+      "lineRange": [9, 22],
+      "summary": "Normalizes a git remote URL (HTTP or SSH) into an https://host base URL, dropping user info and SSH ports.",
+      "tags": ["git", "url-parsing", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/git/gitBlobSha.ts",
+      "type": "file",
+      "name": "gitBlobSha.ts",
+      "filePath": "packages/node-utils/src/git/gitBlobSha.ts",
+      "summary": "Computes the git blob SHA-1 of content so local files can be compared with provider tree listings without downloading them.",
+      "tags": ["git", "hashing", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/git/gitBlobSha.ts:gitBlobSha",
+      "type": "function",
+      "name": "gitBlobSha",
+      "filePath": "packages/node-utils/src/git/gitBlobSha.ts",
+      "lineRange": [20, 27],
+      "summary": "Hashes content as a git blob object (header with byte length plus bytes) without line-ending normalization.",
+      "tags": ["git", "hashing", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/git/gitHost.ts",
+      "type": "file",
+      "name": "gitHost.ts",
+      "filePath": "packages/node-utils/src/git/gitHost.ts",
+      "summary": "Git host comparison helpers: extract a normalized host, compare provider URLs with remotes, read provider path prefixes and compute candidate owner readings for prefixed self-hosted instances.",
+      "tags": ["git", "utility", "url-parsing", "git-provider"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/git/gitHost.ts:gitHostOf",
+      "type": "function",
+      "name": "gitHostOf",
+      "filePath": "packages/node-utils/src/git/gitHost.ts",
+      "lineRange": [19, 29],
+      "summary": "Returns the lowercased host of a git remote or provider URL without scheme, user or port, or null if unreadable.",
+      "tags": ["git", "url-parsing", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/git/gitHost.ts:sameGitHost",
+      "type": "function",
+      "name": "sameGitHost",
+      "filePath": "packages/node-utils/src/git/gitHost.ts",
+      "lineRange": [37, 43],
+      "summary": "Checks whether a git provider URL and a remote point at the same host instance.",
+      "tags": ["git", "comparison", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/git/gitHost.ts:providerPathPrefix",
+      "type": "function",
+      "name": "providerPathPrefix",
+      "filePath": "packages/node-utils/src/git/gitHost.ts",
+      "lineRange": [55, 66],
+      "summary": "Returns the lowercased path prefix a provider URL places before every group (e.g. gitlab), or null at host root.",
+      "tags": ["git", "url-parsing", "git-provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/git/gitHost.ts:ownerReadingsOf",
+      "type": "function",
+      "name": "ownerReadingsOf",
+      "filePath": "packages/node-utils/src/git/gitHost.ts",
+      "lineRange": [75, 91],
+      "summary": "Computes the possible owner names of a remote group given a provider path prefix, keeping both readings when the remote kind is unknown.",
+      "tags": ["git", "git-provider", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/git/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/node-utils/src/git/index.ts",
+      "summary": "Barrel re-exporting all git URL and hashing helpers of node-utils.",
+      "tags": ["barrel", "git", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/git/parseGitProviderVendor.ts",
+      "type": "file",
+      "name": "parseGitProviderVendor.ts",
+      "filePath": "packages/node-utils/src/git/parseGitProviderVendor.ts",
+      "summary": "Detects the git provider vendor (github or gitlab) from a URL, returning unknown for self-hosted domains.",
+      "tags": ["git", "git-provider", "parsing", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/git/parseGitProviderVendor.ts:parseGitProviderVendor",
+      "type": "function",
+      "name": "parseGitProviderVendor",
+      "filePath": "packages/node-utils/src/git/parseGitProviderVendor.ts",
+      "lineRange": [7, 21],
+      "summary": "Maps a URL to github, gitlab or unknown based on the hosted github.com and gitlab.com domains.",
+      "tags": ["git", "git-provider", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/git/parseGitRepoInfo.ts",
+      "type": "file",
+      "name": "parseGitRepoInfo.ts",
+      "filePath": "packages/node-utils/src/git/parseGitRepoInfo.ts",
+      "summary": "Parses a git remote URL into repository owner/name information.",
+      "tags": ["git", "parsing", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/git/parseGitRepoInfo.ts:parseGitRepoInfo",
+      "type": "function",
+      "name": "parseGitRepoInfo",
+      "filePath": "packages/node-utils/src/git/parseGitRepoInfo.ts",
+      "lineRange": [15, 40],
+      "summary": "Parses HTTP or SSH git remote URLs to extract repository owner and repository name.",
+      "tags": ["git", "parsing", "url-parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/git/stripGitRemoteCredentials.ts",
+      "type": "file",
+      "name": "stripGitRemoteCredentials.ts",
+      "filePath": "packages/node-utils/src/git/stripGitRemoteCredentials.ts",
+      "summary": "Removes embedded credentials from git remote URLs so they can be stored or logged safely.",
+      "tags": ["git", "security", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/git/stripGitRemoteCredentials.ts:stripGitRemoteCredentials",
+      "type": "function",
+      "name": "stripGitRemoteCredentials",
+      "filePath": "packages/node-utils/src/git/stripGitRemoteCredentials.ts",
+      "lineRange": [12, 18],
+      "summary": "Strips user/password credentials from a git remote URL.",
+      "tags": ["git", "security", "sanitization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/hexa/events/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/node-utils/src/hexa/events/index.ts",
+      "summary": "Barrel re-exporting the PackmindEventEmitterService and PackmindListener domain event infrastructure.",
+      "tags": ["barrel", "event-handler", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/test/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/node-utils/src/jobs/test/index.ts",
+      "summary": "Barrel exposing MockJobQueue and mockQueueFactory test doubles for BullMQ job queues.",
+      "tags": ["barrel", "test", "jobs", "mock"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/mail/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/node-utils/src/mail/index.ts",
+      "summary": "Barrel exposing the MailService abstraction, SmtpMailService implementation and SmtpConfigurationError.",
+      "tags": ["barrel", "mail", "service"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/nest/Public.ts",
+      "type": "file",
+      "name": "Public.ts",
+      "filePath": "packages/node-utils/src/nest/Public.ts",
+      "summary": "NestJS @Public() decorator that sets IS_PUBLIC_KEY metadata to mark routes as bypassing authentication.",
+      "tags": ["nestjs", "decorator", "authentication", "middleware"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/nest/Public.ts:Public",
+      "type": "function",
+      "name": "Public",
+      "filePath": "packages/node-utils/src/nest/Public.ts",
+      "lineRange": [4, 4],
+      "summary": "Decorator factory applying isPublic metadata so auth guards skip the decorated route.",
+      "tags": ["nestjs", "decorator", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/nest/authRequest.ts",
+      "type": "file",
+      "name": "authRequest.ts",
+      "filePath": "packages/node-utils/src/nest/authRequest.ts",
+      "summary": "Defines AuthenticatedRequest, the Express request type enriched with the user, (deprecated) organization context and client source (ui or cli).",
+      "tags": ["type-definition", "nestjs", "authentication", "express"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts",
+      "type": "file",
+      "name": "DomainExceptionFilter.ts",
+      "filePath": "packages/node-utils/src/nest/filters/DomainExceptionFilter.ts",
+      "summary": "Global NestJS exception filter mapping domain and upstream error kinds to HTTP statuses via total policy tables, logging internal errors with context and delegating others to BaseExceptionFilter.",
+      "tags": ["nestjs", "error-handling", "middleware", "api-handler"],
+      "complexity": "moderate",
+      "languageNotes": "Uses Record<Union, Policy> maps so adding a new error kind fails to compile until its policy row exists."
+    },
+    {
+      "id": "function:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts:hasContext",
+      "type": "function",
+      "name": "hasContext",
+      "filePath": "packages/node-utils/src/nest/filters/DomainExceptionFilter.ts",
+      "lineRange": [84, 86],
+      "summary": "Type guard checking whether a value is an object carrying a context property.",
+      "tags": ["type-guard", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts:DomainExceptionFilter",
+      "type": "class",
+      "name": "DomainExceptionFilter",
+      "filePath": "packages/node-utils/src/nest/filters/DomainExceptionFilter.ts",
+      "lineRange": [102, 205],
+      "summary": "@Catch() filter extending BaseExceptionFilter that answers domain/upstream errors with kind-derived statuses and reason bodies, logs internal errors, and falls back to Nest default handling.",
+      "tags": ["nestjs", "error-handling", "middleware", "exception-filter"],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/logger/src/PackmindLogger.ts",
+      "target": "function:packages/logger/src/PackmindLogger.ts:formatConsoleLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/logger/src/PackmindLogger.ts",
+      "target": "function:packages/logger/src/PackmindLogger.ts:formatConsoleLine",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/logger/src/PackmindLogger.ts",
+      "target": "class:packages/logger/src/PackmindLogger.ts:PackmindLogger",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/logger/src/PackmindLogger.ts",
+      "target": "class:packages/logger/src/PackmindLogger.ts:PackmindLogger",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/logger/src/maskEmail.ts",
+      "target": "function:packages/logger/src/maskEmail.ts:maskEmail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/logger/src/maskEmail.ts",
+      "target": "function:packages/logger/src/maskEmail.ts:maskEmail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/errors/errors.ts",
+      "target": "function:packages/node-utils/src/errors/errors.ts:getErrorMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/errors/errors.ts",
+      "target": "function:packages/node-utils/src/errors/errors.ts:getErrorMessage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/git/extractBaseUrl.ts",
+      "target": "function:packages/node-utils/src/git/extractBaseUrl.ts:extractBaseUrl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/git/extractBaseUrl.ts",
+      "target": "function:packages/node-utils/src/git/extractBaseUrl.ts:extractBaseUrl",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/git/gitBlobSha.ts",
+      "target": "function:packages/node-utils/src/git/gitBlobSha.ts:gitBlobSha",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/git/gitBlobSha.ts",
+      "target": "function:packages/node-utils/src/git/gitBlobSha.ts:gitBlobSha",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/git/gitHost.ts",
+      "target": "function:packages/node-utils/src/git/gitHost.ts:gitHostOf",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/git/gitHost.ts",
+      "target": "function:packages/node-utils/src/git/gitHost.ts:gitHostOf",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/git/gitHost.ts",
+      "target": "function:packages/node-utils/src/git/gitHost.ts:sameGitHost",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/git/gitHost.ts",
+      "target": "function:packages/node-utils/src/git/gitHost.ts:sameGitHost",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/git/gitHost.ts",
+      "target": "function:packages/node-utils/src/git/gitHost.ts:providerPathPrefix",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/git/gitHost.ts",
+      "target": "function:packages/node-utils/src/git/gitHost.ts:providerPathPrefix",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/git/gitHost.ts",
+      "target": "function:packages/node-utils/src/git/gitHost.ts:ownerReadingsOf",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/git/gitHost.ts",
+      "target": "function:packages/node-utils/src/git/gitHost.ts:ownerReadingsOf",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/git/parseGitProviderVendor.ts",
+      "target": "function:packages/node-utils/src/git/parseGitProviderVendor.ts:parseGitProviderVendor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/git/parseGitProviderVendor.ts",
+      "target": "function:packages/node-utils/src/git/parseGitProviderVendor.ts:parseGitProviderVendor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/git/parseGitRepoInfo.ts",
+      "target": "function:packages/node-utils/src/git/parseGitRepoInfo.ts:parseGitRepoInfo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/git/parseGitRepoInfo.ts",
+      "target": "function:packages/node-utils/src/git/parseGitRepoInfo.ts:parseGitRepoInfo",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/git/stripGitRemoteCredentials.ts",
+      "target": "function:packages/node-utils/src/git/stripGitRemoteCredentials.ts:stripGitRemoteCredentials",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/git/stripGitRemoteCredentials.ts",
+      "target": "function:packages/node-utils/src/git/stripGitRemoteCredentials.ts:stripGitRemoteCredentials",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/nest/Public.ts",
+      "target": "function:packages/node-utils/src/nest/Public.ts:Public",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/nest/Public.ts",
+      "target": "function:packages/node-utils/src/nest/Public.ts:Public",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts",
+      "target": "function:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts:hasContext",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts",
+      "target": "class:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts:DomainExceptionFilter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts",
+      "target": "class:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts:DomainExceptionFilter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/git/extractBaseUrl.ts",
+      "target": "file:packages/node-utils/src/git/gitHost.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts",
+      "target": "file:packages/node-utils/src/nest/filters/describeCause.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts:DomainExceptionFilter",
+      "target": "function:packages/node-utils/src/nest/filters/describeCause.ts:describeCause",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/logger/.swcrc",
+      "target": "file:packages/logger/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/node-utils/.swcrc",
+      "target": "file:packages/node-utils/src/git/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "function:packages/node-utils/src/git/extractBaseUrl.ts:extractBaseUrl",
+      "target": "function:packages/node-utils/src/git/gitHost.ts:gitHostOf",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

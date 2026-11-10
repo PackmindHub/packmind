@@ -1,0 +1,203 @@
+{
+  "nodes": [
+    {
+      "id": "document:apps/frontend/AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "apps/frontend/AGENTS.md",
+      "summary": "Agent-facing overview of the React Router v7 frontend (Chakra UI, TanStack Query, Vite, commands, config) plus a Packmind-generated block inlining the four frontend standards.",
+      "tags": [
+        "documentation",
+        "ai-agent-instructions",
+        "react",
+        "packmind-standards"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:apps/frontend/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "apps/frontend/CLAUDE.md",
+      "summary": "Claude Code instructions for the frontend pointing to the four standards in .claude/rules, and documenting stack, dev commands, port, VITE_ env vars and the hardcoded /api base URL.",
+      "tags": [
+        "documentation",
+        "ai-agent-instructions",
+        "react",
+        "configuration"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/frontend/NAVIGATION.md",
+      "type": "document",
+      "name": "NAVIGATION.md",
+      "filePath": "apps/frontend/NAVIGATION.md",
+      "summary": "Developer guide to the frontend navigation service: the useNavigation() hook and routes utility, available org/space/auth routes, examples, best practices, migration guide and how to add routes.",
+      "tags": ["documentation", "navigation", "react-router", "guide"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/frontend/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "apps/frontend/package.json",
+      "summary": "Minimal package manifest for the frontend app declaring workspace @packmind/assets and nprogress dependencies.",
+      "tags": ["configuration", "dependencies", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/frontend/packmind-lock.json",
+      "type": "config",
+      "name": "packmind-lock.json",
+      "filePath": "apps/frontend/packmind-lock.json",
+      "summary": "Packmind lockfile recording the @frontend/react package, target agents and the versioned frontend standards rendered into this folder.",
+      "tags": [
+        "configuration",
+        "packmind",
+        "lockfile",
+        "ai-agent-instructions"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/frontend/packmind.json",
+      "type": "config",
+      "name": "packmind.json",
+      "filePath": "apps/frontend/packmind.json",
+      "summary": "Packmind manifest subscribing the frontend app to the @frontend/react playbook package.",
+      "tags": ["configuration", "packmind", "manifest"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/frontend/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "apps/frontend/project.json",
+      "summary": "Nx project definition for the frontend app overriding typecheck (app + spec tsconfigs) and build (no ^build deps, env-var cache inputs so release builds do not ship cloud Crisp/Sentry keys).",
+      "tags": ["configuration", "build-system", "nx", "frontend"],
+      "complexity": "moderate",
+      "languageNotes": "Uses \"// key\" pseudo-comment properties to document JSON config decisions inline."
+    },
+    {
+      "id": "file:apps/frontend/styles.scss",
+      "type": "file",
+      "name": "styles.scss",
+      "filePath": "apps/frontend/styles.scss",
+      "summary": "Placeholder global stylesheet for the frontend containing only a comment.",
+      "tags": ["styles", "placeholder", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/frontend/tsconfig.app.json",
+      "type": "config",
+      "name": "tsconfig.app.json",
+      "filePath": "apps/frontend/tsconfig.app.json",
+      "summary": "TypeScript config for the frontend application sources (JSX, bundler resolution, Vite/React Router types), excluding spec files.",
+      "tags": ["configuration", "typescript", "build-system", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/frontend/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "apps/frontend/tsconfig.json",
+      "summary": "Root TypeScript config for the frontend project extending the effective base config and referencing app and spec tsconfigs.",
+      "tags": ["configuration", "typescript", "build-system"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:apps/frontend/project.json",
+      "target": "file:apps/frontend/vite.config.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/frontend/project.json",
+      "target": "config:apps/frontend/tsconfig.app.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/frontend/tsconfig.app.json",
+      "target": "config:apps/frontend/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/frontend/tsconfig.json",
+      "target": "config:apps/frontend/tsconfig.app.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:apps/frontend/packmind-lock.json",
+      "target": "config:apps/frontend/packmind.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/frontend/packmind.json",
+      "target": "document:apps/frontend/AGENTS.md",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "document:apps/frontend/NAVIGATION.md",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/frontend/CLAUDE.md",
+      "target": "file:apps/frontend/vite.config.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/frontend/CLAUDE.md",
+      "target": "document:apps/frontend/AGENTS.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:apps/frontend/packmind-lock.json",
+      "target": "document:apps/frontend/.packmind/standards/frontend-data-flow.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:apps/frontend/packmind-lock.json",
+      "target": "document:apps/frontend/.packmind/standards/frontend-error-management.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:apps/frontend/packmind-lock.json",
+      "target": "document:apps/frontend/.packmind/standards/frontend-navigation-with-react-router.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:apps/frontend/packmind-lock.json",
+      "target": "document:apps/frontend/.packmind/standards/tanstack-query-key-management.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

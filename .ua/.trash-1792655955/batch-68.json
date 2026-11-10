@@ -1,0 +1,102 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.account-settings.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.account-settings.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.account-settings.tsx",
+      "summary": "React Router file route for the protected organization account settings page, rendering SettingsPage.",
+      "tags": ["route", "react-router", "entry-point", "settings"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.account-settings.tsx:SettingsRouteModule",
+      "type": "function",
+      "name": "SettingsRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.account-settings.tsx",
+      "lineRange": [3, 5],
+      "summary": "Default route component that renders the account SettingsPage.",
+      "tags": ["route", "component"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/index.ts",
+      "summary": "Barrel re-exporting the LocalEnvironmentSetup component and its types.",
+      "tags": ["barrel", "entry-point", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/SettingsPage.tsx",
+      "type": "file",
+      "name": "SettingsPage.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/SettingsPage.tsx",
+      "summary": "Account settings page wrapping the local environment setup (CLI/access tokens) in a PMPage layout.",
+      "tags": ["component", "react", "page", "settings", "accounts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/SettingsPage.tsx:SettingsPage",
+      "type": "function",
+      "name": "SettingsPage",
+      "filePath": "apps/frontend/src/domain/accounts/components/SettingsPage.tsx",
+      "lineRange": [5, 16],
+      "summary": "Renders a Settings page with the LocalEnvironmentSetup section.",
+      "tags": ["component", "page"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.account-settings.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.account-settings.tsx:SettingsRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.account-settings.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.account-settings.tsx:SettingsRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SettingsPage.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SettingsPage.tsx:SettingsPage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SettingsPage.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SettingsPage.tsx:SettingsPage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.account-settings.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/SettingsPage.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SettingsPage.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "direction": "forward",
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.account-settings.tsx:SettingsRouteModule",
+      "target": "function:apps/frontend/src/domain/accounts/components/SettingsPage.tsx:SettingsPage",
+      "type": "calls",
+      "weight": 0.8
+    }
+  ]
+}

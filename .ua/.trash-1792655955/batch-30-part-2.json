@@ -1,0 +1,808 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/api/src/app/organizations/skills/skills.service.ts",
+      "type": "file",
+      "name": "skills.service.ts",
+      "filePath": "apps/api/src/app/organizations/skills/skills.service.ts",
+      "summary": "Service delegating default-skill deployment to the deployment adapter.",
+      "tags": ["service", "skills", "adapter-facade"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/skills/skills.service.ts:OrganizationSkillsService",
+      "type": "class",
+      "name": "OrganizationSkillsService",
+      "filePath": "apps/api/src/app/organizations/skills/skills.service.ts",
+      "lineRange": [10, 21],
+      "summary": "Service wrapping the deployment port's deployDefaultSkills use case.",
+      "tags": ["service", "skills", "adapter-facade"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts",
+      "type": "file",
+      "name": "commands.alias.controller.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts",
+      "summary": "Alias controller that subclasses the space commands controller to expose the same routes under the new /commands path alongside legacy /recipes.",
+      "tags": [
+        "api-handler",
+        "controller",
+        "alias",
+        "commands",
+        "backward-compatibility"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts:CommandsAliasController",
+      "type": "class",
+      "name": "CommandsAliasController",
+      "filePath": "apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts",
+      "lineRange": [24, 24],
+      "summary": "Empty subclass of OrganizationsSpacesCommandsController re-declaring @Controller and guard to dual-mount routes.",
+      "tags": ["controller", "alias", "inheritance"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts",
+      "type": "file",
+      "name": "commands.alias.module.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts",
+      "summary": "NestJS module mounting the commands alias controller so space commands are reachable under /commands.",
+      "tags": ["module", "nestjs", "commands", "alias"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts:CommandsAliasModule",
+      "type": "class",
+      "name": "CommandsAliasModule",
+      "filePath": "apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts",
+      "lineRange": [34, 34],
+      "summary": "Distinct NestJS module required to mount the alias controller under a second route path.",
+      "tags": ["module", "nestjs", "alias"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/commands/commands.controller.ts",
+      "type": "file",
+      "name": "commands.controller.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/commands/commands.controller.ts",
+      "summary": "Space-scoped REST controller for commands (recipes): listing, fetching, creating, updating, deleting (single and batch) and version history.",
+      "tags": ["api-handler", "controller", "commands", "crud"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/commands/commands.controller.ts:OrganizationsSpacesCommandsController",
+      "type": "class",
+      "name": "OrganizationsSpacesCommandsController",
+      "filePath": "apps/api/src/app/organizations/spaces/commands/commands.controller.ts",
+      "lineRange": [51, 369],
+      "summary": "Controller implementing CRUD and versioning endpoints for space commands, delegating to CommandsService.",
+      "tags": ["api-handler", "controller", "crud"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/commands/commands.module.ts",
+      "type": "file",
+      "name": "commands.module.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/commands/commands.module.ts",
+      "summary": "NestJS module wiring the space commands controller and service.",
+      "tags": ["module", "nestjs", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/commands/commands.module.ts:CommandsModule",
+      "type": "class",
+      "name": "CommandsModule",
+      "filePath": "apps/api/src/app/organizations/spaces/commands/commands.module.ts",
+      "lineRange": [35, 35],
+      "summary": "NestJS module for space-scoped commands (legacy /recipes path).",
+      "tags": ["module", "nestjs", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/commands/commands.service.ts",
+      "type": "file",
+      "name": "commands.service.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/commands/commands.service.ts",
+      "summary": "Service delegating command CRUD and version queries to the commands and deployment adapters.",
+      "tags": ["service", "commands", "adapter-facade"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/commands/commands.service.ts:CommandsService",
+      "type": "class",
+      "name": "CommandsService",
+      "filePath": "apps/api/src/app/organizations/spaces/commands/commands.service.ts",
+      "lineRange": [28, 130],
+      "summary": "Service forwarding command listing, creation, update, deletion and version operations to hexagon ports.",
+      "tags": ["service", "commands", "adapter-facade"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/members/members.controller.ts",
+      "type": "file",
+      "name": "members.controller.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/members/members.controller.ts",
+      "summary": "Space members REST controller for listing, adding, removing members and updating their roles.",
+      "tags": ["api-handler", "controller", "members", "access-control"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/members/members.controller.ts:SpaceMembersController",
+      "type": "class",
+      "name": "SpaceMembersController",
+      "filePath": "apps/api/src/app/organizations/spaces/members/members.controller.ts",
+      "lineRange": [25, 114],
+      "summary": "Controller exposing space membership management endpoints.",
+      "tags": ["api-handler", "controller", "members"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/members/members.module.ts",
+      "type": "file",
+      "name": "members.module.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/members/members.module.ts",
+      "summary": "NestJS module wiring the space members controller and service.",
+      "tags": ["module", "nestjs", "members"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/members/members.module.ts:OrganizationsSpacesMembersModule",
+      "type": "class",
+      "name": "OrganizationsSpacesMembersModule",
+      "filePath": "apps/api/src/app/organizations/spaces/members/members.module.ts",
+      "lineRange": [17, 17],
+      "summary": "NestJS module for space membership management.",
+      "tags": ["module", "nestjs", "members"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/members/members.service.ts",
+      "type": "file",
+      "name": "members.service.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/members/members.service.ts",
+      "summary": "Service delegating space membership listing, addition, removal and role updates to the spaces and accounts adapters.",
+      "tags": ["service", "members", "adapter-facade"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/members/members.service.ts:SpaceMembersService",
+      "type": "class",
+      "name": "SpaceMembersService",
+      "filePath": "apps/api/src/app/organizations/spaces/members/members.service.ts",
+      "lineRange": [19, 110],
+      "summary": "Service coordinating spaces and accounts ports for space membership operations.",
+      "tags": ["service", "members", "adapter-facade"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/packages/packages.controller.ts",
+      "type": "file",
+      "name": "packages.controller.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/packages/packages.controller.ts",
+      "summary": "Space-scoped packages REST controller covering package CRUD, summaries, deployments, releases and adding/moving/removing artefacts, delegating to the deployments service.",
+      "tags": ["api-handler", "controller", "packages", "releases", "crud"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/packages/packages.controller.ts:OrganizationsSpacesPackagesController",
+      "type": "class",
+      "name": "OrganizationsSpacesPackagesController",
+      "filePath": "apps/api/src/app/organizations/spaces/packages/packages.controller.ts",
+      "lineRange": [108, 626],
+      "summary": "Large controller implementing package lifecycle, release and artefact membership endpoints within a space.",
+      "tags": ["api-handler", "controller", "packages"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/packages/packages.module.ts",
+      "type": "file",
+      "name": "packages.module.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/packages/packages.module.ts",
+      "summary": "NestJS module wiring the space packages controller with the deployments module.",
+      "tags": ["module", "nestjs", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/packages/packages.module.ts:OrganizationsSpacesPackagesModule",
+      "type": "class",
+      "name": "OrganizationsSpacesPackagesModule",
+      "filePath": "apps/api/src/app/organizations/spaces/packages/packages.module.ts",
+      "lineRange": [28, 28],
+      "summary": "NestJS module for space-scoped packages.",
+      "tags": ["module", "nestjs", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/skills/skills.controller.ts",
+      "type": "file",
+      "name": "skills.controller.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/skills/skills.controller.ts",
+      "summary": "Space-scoped skills REST controller for listing, fetching with files, versions, uploading, updating files, deleting and downloading agent-specific skill zips.",
+      "tags": ["api-handler", "controller", "skills", "file-upload", "crud"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/skills/skills.controller.ts:OrganizationsSpacesSkillsController",
+      "type": "class",
+      "name": "OrganizationsSpacesSkillsController",
+      "filePath": "apps/api/src/app/organizations/spaces/skills/skills.controller.ts",
+      "lineRange": [54, 389],
+      "summary": "Controller implementing skill CRUD, versioning, upload and zip download endpoints.",
+      "tags": ["api-handler", "controller", "skills"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "type": "file",
+      "name": "skills.module.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "summary": "NestJS module wiring the space skills controller and service with the hexagon registry.",
+      "tags": ["module", "nestjs", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/skills/skills.module.ts:OrganizationsSpacesSkillsModule",
+      "type": "class",
+      "name": "OrganizationsSpacesSkillsModule",
+      "filePath": "apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "lineRange": [31, 31],
+      "summary": "NestJS module for space-scoped skills.",
+      "tags": ["module", "nestjs", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/skills/skills.service.ts",
+      "type": "file",
+      "name": "skills.service.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/skills/skills.service.ts",
+      "summary": "Service delegating space skill operations (upload, file updates, versions, deletion, zip download) to the skills and deployment adapters.",
+      "tags": ["service", "skills", "adapter-facade"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/skills/skills.service.ts:SkillsService",
+      "type": "class",
+      "name": "SkillsService",
+      "filePath": "apps/api/src/app/organizations/spaces/skills/skills.service.ts",
+      "lineRange": [32, 201],
+      "summary": "Service forwarding skill commands to hexagon ports.",
+      "tags": ["service", "skills", "adapter-facade"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/api/src/app/organizations/spaces/spaces.controller.ts",
+      "type": "file",
+      "name": "spaces.controller.ts",
+      "filePath": "apps/api/src/app/organizations/spaces/spaces.controller.ts",
+      "summary": "Organization spaces controller listing spaces and fetching a space by slug via SpacesService.",
+      "tags": ["api-handler", "controller", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/api/src/app/organizations/spaces/spaces.controller.ts:OrganizationsSpacesController",
+      "type": "class",
+      "name": "OrganizationsSpacesController",
+      "filePath": "apps/api/src/app/organizations/spaces/spaces.controller.ts",
+      "lineRange": [24, 72],
+      "summary": "Controller exposing space listing and slug lookup endpoints.",
+      "tags": ["api-handler", "controller", "spaces"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/api/src/app/organizations/skills/skills.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/skills/skills.service.ts",
+      "target": "class:apps/api/src/app/organizations/skills/skills.service.ts:OrganizationSkillsService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/skills/skills.service.ts",
+      "target": "class:apps/api/src/app/organizations/skills/skills.service.ts:OrganizationSkillsService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/commands/commands.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts:CommandsAliasController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts:CommandsAliasController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/commands/commands.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts:CommandsAliasModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.alias.module.ts:CommandsAliasModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.controller.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/commands/commands.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.controller.ts:OrganizationsSpacesCommandsController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.controller.ts:OrganizationsSpacesCommandsController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.module.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/commands/commands.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/commands/commands.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.module.ts:CommandsModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.module.ts:CommandsModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.service.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.service.ts:CommandsService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/commands/commands.service.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.service.ts:CommandsService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.controller.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/members/members.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/members/members.controller.ts:SpaceMembersController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/members/members.controller.ts:SpaceMembersController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/members/members.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/members/members.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/members/members.module.ts:OrganizationsSpacesMembersModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/members/members.module.ts:OrganizationsSpacesMembersModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.service.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/members/members.service.ts:SpaceMembersService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/members/members.service.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/members/members.service.ts:SpaceMembersService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/packages/packages.controller.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/deployments.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/packages/packages.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/packages/packages.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/packages/packages.controller.ts:OrganizationsSpacesPackagesController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/packages/packages.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/packages/packages.controller.ts:OrganizationsSpacesPackagesController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/packages/packages.module.ts",
+      "target": "file:apps/api/src/app/organizations/deployments/deployments.module.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/packages/packages.module.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/packages/packages.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/packages/packages.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/packages/packages.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/packages/packages.module.ts:OrganizationsSpacesPackagesModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/packages/packages.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/packages/packages.module.ts:OrganizationsSpacesPackagesModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.controller.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/skills/skills.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/skills/skills.controller.ts:OrganizationsSpacesSkillsController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/skills/skills.controller.ts:OrganizationsSpacesSkillsController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/skills/skills.controller.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "target": "file:apps/api/src/app/organizations/spaces/skills/skills.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "target": "file:apps/api/src/app/shared/HexaRegistryModule.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/skills/skills.module.ts:OrganizationsSpacesSkillsModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.module.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/skills/skills.module.ts:OrganizationsSpacesSkillsModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.service.ts",
+      "target": "file:apps/api/src/app/shared/HexaInjection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.service.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/skills/skills.service.ts:SkillsService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/skills/skills.service.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/skills/skills.service.ts:SkillsService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.controller.ts",
+      "target": "file:apps/api/src/app/organizations/guards/organization-access.guard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.controller.ts",
+      "target": "file:apps/api/src/app/spaces/spaces.service.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/spaces.controller.ts:OrganizationsSpacesController",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/api/src/app/organizations/spaces/spaces.controller.ts",
+      "target": "class:apps/api/src/app/organizations/spaces/spaces.controller.ts:OrganizationsSpacesController",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/commands/commands.alias.controller.ts:CommandsAliasController",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.controller.ts:OrganizationsSpacesCommandsController",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/commands/commands.controller.ts:OrganizationsSpacesCommandsController",
+      "target": "class:apps/api/src/app/organizations/spaces/commands/commands.service.ts:CommandsService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/members/members.controller.ts:SpaceMembersController",
+      "target": "class:apps/api/src/app/organizations/spaces/members/members.service.ts:SpaceMembersService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/skills/skills.controller.ts:OrganizationsSpacesSkillsController",
+      "target": "class:apps/api/src/app/organizations/spaces/skills/skills.service.ts:SkillsService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/packages/packages.controller.ts:OrganizationsSpacesPackagesController",
+      "target": "class:apps/api/src/app/organizations/deployments/deployments.service.ts:DeploymentsService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/spaces.controller.ts:OrganizationsSpacesController",
+      "target": "class:apps/api/src/app/spaces/spaces.service.ts:SpacesService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/skills/skills.service.ts:OrganizationSkillsService",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectDeploymentAdapter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/commands/commands.service.ts:CommandsService",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectCommandsAdapter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/commands/commands.service.ts:CommandsService",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectDeploymentAdapter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/members/members.service.ts:SpaceMembersService",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectSpacesAdapter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/members/members.service.ts:SpaceMembersService",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectAccountsAdapter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/api/src/app/organizations/spaces/skills/skills.service.ts:SkillsService",
+      "target": "function:apps/api/src/app/shared/HexaInjection.ts:InjectDeploymentAdapter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

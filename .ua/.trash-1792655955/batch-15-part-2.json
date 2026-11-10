@@ -1,0 +1,849 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "type": "file",
+      "name": "AddCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "summary": "cmd-ts command definition for `playbook add` that stages local artefact files, wiring lock file and playbook repositories to playbookAddHandler.",
+      "tags": ["cli", "command-definition", "playbook", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/AddCommand.ts:addPlaybookCommand",
+      "type": "function",
+      "name": "addPlaybookCommand",
+      "filePath": "apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "lineRange": [11, 48],
+      "summary": "cmd-ts command object: `playbook add` that stages local artefact files, wiring lock file and playbook repositories to playbookAddHandler.",
+      "tags": ["cli", "command-definition", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/DiffCommand.ts",
+      "type": "file",
+      "name": "DiffCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/DiffCommand.ts",
+      "summary": "cmd-ts command definition for `playbook diff` showing local changes versus deployed artefacts via diffArtefactsHandler.",
+      "tags": ["cli", "command-definition", "playbook", "diff"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/DiffCommand.ts:diffCommand",
+      "type": "function",
+      "name": "diffCommand",
+      "filePath": "apps/cli/src/infra/commands/playbook/DiffCommand.ts",
+      "lineRange": [6, 35],
+      "summary": "cmd-ts command object: `playbook diff` showing local changes versus deployed artefacts via diffArtefactsHandler.",
+      "tags": ["cli", "command-definition", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/RmCommand.ts",
+      "type": "file",
+      "name": "RmCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/RmCommand.ts",
+      "summary": "cmd-ts command definition for `playbook rm` that stages artefact removals via playbookRmHandler.",
+      "tags": ["cli", "command-definition", "playbook", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/RmCommand.ts:rmPlaybookCommand",
+      "type": "function",
+      "name": "rmPlaybookCommand",
+      "filePath": "apps/cli/src/infra/commands/playbook/RmCommand.ts",
+      "lineRange": [8, 38],
+      "summary": "cmd-ts command object: `playbook rm` that stages artefact removals via playbookRmHandler.",
+      "tags": ["cli", "command-definition", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/StatusCommand.ts",
+      "type": "file",
+      "name": "StatusCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/StatusCommand.ts",
+      "summary": "cmd-ts command definition for `playbook status` that reports staged and untracked artefact changes via playbookStatusHandler.",
+      "tags": ["cli", "command-definition", "playbook", "status"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/StatusCommand.ts:statusPlaybookCommand",
+      "type": "function",
+      "name": "statusPlaybookCommand",
+      "filePath": "apps/cli/src/infra/commands/playbook/StatusCommand.ts",
+      "lineRange": [10, 41],
+      "summary": "cmd-ts command object: `playbook status` that reports staged and untracked artefact changes via playbookStatusHandler.",
+      "tags": ["cli", "command-definition", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/SubmitCommand.ts",
+      "type": "file",
+      "name": "SubmitCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/SubmitCommand.ts",
+      "summary": "cmd-ts command definition for `playbook submit` that sends staged changes as change proposals, with editor-based message input.",
+      "tags": ["cli", "command-definition", "playbook", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/SubmitCommand.ts:submitPlaybookCommand",
+      "type": "function",
+      "name": "submitPlaybookCommand",
+      "filePath": "apps/cli/src/infra/commands/playbook/SubmitCommand.ts",
+      "lineRange": [10, 49],
+      "summary": "cmd-ts command object: `playbook submit` that sends staged changes as change proposals, with editor-based message input.",
+      "tags": ["cli", "command-definition", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/UnstageCommand.ts",
+      "type": "file",
+      "name": "UnstageCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/UnstageCommand.ts",
+      "summary": "cmd-ts command definition for `playbook unstage` that removes paths from the local playbook staging area.",
+      "tags": ["cli", "command-definition", "playbook", "staging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/UnstageCommand.ts:unstagePlaybookCommand",
+      "type": "function",
+      "name": "unstagePlaybookCommand",
+      "filePath": "apps/cli/src/infra/commands/playbook/UnstageCommand.ts",
+      "lineRange": [8, 42],
+      "summary": "cmd-ts command object: `playbook unstage` that removes paths from the local playbook staging area.",
+      "tags": ["cli", "command-definition", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "type": "file",
+      "name": "linkExistingArtifact.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "summary": "Helpers to match a local file to an existing artifact in a space by name and adopt it into the Packmind lock file.",
+      "tags": ["utility", "cli", "lock-file", "artifact-linking"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:resolveExistingArtifact",
+      "type": "function",
+      "name": "resolveExistingArtifact",
+      "filePath": "apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "lineRange": [17, 30],
+      "summary": "Finds an existing artifact in a space by type and name.",
+      "tags": ["utility", "cli", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:listArtifactsForSpace",
+      "type": "function",
+      "name": "listArtifactsForSpace",
+      "filePath": "apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "lineRange": [32, 57],
+      "summary": "Lists skills, commands or standards for a space as id/name pairs.",
+      "tags": ["utility", "cli", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:adoptArtifactIntoLockFile",
+      "type": "function",
+      "name": "adoptArtifactIntoLockFile",
+      "filePath": "apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "lineRange": [72, 110],
+      "summary": "Adds an existing artifact entry into the lock file so a local file becomes tracked.",
+      "tags": ["utility", "cli", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "type": "file",
+      "name": "stageSinglePath.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "summary": "Core staging logic for `playbook add`: detects artefact type from a path, parses standards/commands/skills, resolves deployed context and target space, and stages create/update/remove changes.",
+      "tags": ["service", "cli", "staging", "parsing", "playbook"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:tryStageRemovedFromLockFile",
+      "type": "function",
+      "name": "tryStageRemovedFromLockFile",
+      "filePath": "apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "lineRange": [75, 127],
+      "summary": "Stages a removal when a path refers to a lock-file artefact deleted locally.",
+      "tags": ["service", "cli", "staging"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:resolveSkillDirectoryRoot",
+      "type": "function",
+      "name": "resolveSkillDirectoryRoot",
+      "filePath": "apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "lineRange": [129, 154],
+      "summary": "Finds the root skill directory containing a SKILL.md for a given path.",
+      "tags": ["service", "cli", "staging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "type": "function",
+      "name": "stageSinglePath",
+      "filePath": "apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "lineRange": [163, 619],
+      "summary": "Detects and parses the artefact at a path, resolves its context and stages the appropriate change.",
+      "tags": ["service", "cli", "staging"],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/AddCommand.ts:addPlaybookCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/AddCommand.ts:addPlaybookCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/customParameters/SpaceSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/addHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/LockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/AddCommand.ts",
+      "target": "file:apps/cli/src/infra/utils/readSkillDirectory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/AddCommand.ts:addPlaybookCommand",
+      "target": "function:apps/cli/src/infra/commands/playbook/addHandler.ts:playbookAddHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/DiffCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/DiffCommand.ts:diffCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/DiffCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/DiffCommand.ts:diffCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/DiffCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/DiffCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/DiffCommand.ts:diffCommand",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:diffArtefactsHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/RmCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/RmCommand.ts:rmPlaybookCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/RmCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/RmCommand.ts:rmPlaybookCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/RmCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/RmCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/RmCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/LockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/RmCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/RmCommand.ts:rmPlaybookCommand",
+      "target": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/StatusCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/StatusCommand.ts:statusPlaybookCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/StatusCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/StatusCommand.ts:statusPlaybookCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/StatusCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/StatusCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/StatusCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/LockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/StatusCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/StatusCommand.ts",
+      "target": "file:apps/cli/src/infra/utils/listDirectoryFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/StatusCommand.ts:statusPlaybookCommand",
+      "target": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:playbookStatusHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/SubmitCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/SubmitCommand.ts:submitPlaybookCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/SubmitCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/SubmitCommand.ts:submitPlaybookCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/SubmitCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/SubmitCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/SubmitCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/SubmitCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/LockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/SubmitCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/SubmitCommand.ts:submitPlaybookCommand",
+      "target": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/UnstageCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/UnstageCommand.ts:unstagePlaybookCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/UnstageCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/UnstageCommand.ts:unstagePlaybookCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/UnstageCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/UnstageCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/customParameters/SpaceSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/UnstageCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/UnstageCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/PlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/UnstageCommand.ts:unstagePlaybookCommand",
+      "target": "function:apps/cli/src/infra/commands/playbook/unstageHandler.ts:playbookUnstageHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:resolveExistingArtifact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:resolveExistingArtifact",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:listArtifactsForSpace",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:adoptArtifactIntoLockFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:adoptArtifactIntoLockFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "target": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:adoptArtifactIntoLockFile",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:tryStageRemovedFromLockFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:resolveSkillDirectoryRoot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/application/utils/lockFileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/application/utils/parseCommandFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/application/utils/parseLenientStandard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/application/utils/parseSkillDirectory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/application/utils/resolveArtefactFromPath.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/application/utils/resolveDeployedContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:tryStageRemovedFromLockFile",
+      "target": "function:apps/cli/src/application/utils/findNearestConfigDir.ts:findNearestConfigDir",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:tryStageRemovedFromLockFile",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:tryStageRemovedFromLockFile",
+      "target": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryForPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:tryStageRemovedFromLockFile",
+      "target": "function:apps/cli/src/application/utils/resolveDeployedContext.ts:resolveDeployedContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:tryStageRemovedFromLockFile",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/application/utils/findNearestConfigDir.ts:findNearestConfigDir",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryAndFileForPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/application/utils/resolveArtefactFromPath.ts:resolveArtefactFromPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/application/utils/parseSkillDirectory.ts:parseSkillDirectory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/application/utils/parseCommandFile.ts:parseCommandFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMdForAgent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/application/utils/parseLenientStandard.ts:parseLenientStandard",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/application/utils/resolveDeployedContext.ts:resolveDeployedContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryForPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:resolveExistingArtifact",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/linkExistingArtifact.ts:adoptArtifactIntoLockFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:fetchDeployedFiles",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

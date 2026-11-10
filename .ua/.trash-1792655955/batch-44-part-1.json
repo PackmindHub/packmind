@@ -1,0 +1,792 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/git/src/application/useCases/listAvailableRepos/ListAvailableReposUseCase.ts",
+      "type": "file",
+      "name": "ListAvailableReposUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/listAvailableRepos/ListAvailableReposUseCase.ts",
+      "summary": "Member use case that lists the remote repositories available from a git provider (paginated), after verifying the provider belongs to the organization and has a token and source configured.",
+      "tags": ["use-case", "git-provider", "repository-listing", "hexagonal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/listAvailableRepos/ListAvailableReposUseCase.ts:ListAvailableReposUseCase",
+      "type": "class",
+      "name": "ListAvailableReposUseCase",
+      "filePath": "packages/git/src/application/useCases/listAvailableRepos/ListAvailableReposUseCase.ts",
+      "lineRange": [17, 71],
+      "summary": "Member use case that lists the remote repositories available from a git provider (paginated), after verifying the provider belongs to the organization and has a token and source configured.",
+      "tags": ["use-case", "class", "hexagonal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/listProviders/ListProvidersUseCase.ts",
+      "type": "file",
+      "name": "ListProvidersUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/listProviders/ListProvidersUseCase.ts",
+      "summary": "Member use case that fetches all git providers configured for the caller's organization and returns them for display.",
+      "tags": ["use-case", "git-provider", "query", "hexagonal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/listProviders/ListProvidersUseCase.ts:ListProvidersUseCase",
+      "type": "class",
+      "name": "ListProvidersUseCase",
+      "filePath": "packages/git/src/application/useCases/listProviders/ListProvidersUseCase.ts",
+      "lineRange": [15, 64],
+      "summary": "Member use case that fetches all git providers configured for the caller's organization and returns them for display.",
+      "tags": ["use-case", "class", "hexagonal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/listRepos/ListReposUseCase.ts",
+      "type": "file",
+      "name": "ListReposUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/listRepos/ListReposUseCase.ts",
+      "summary": "Use case returning the git repositories persisted for a given git provider, failing if the provider is missing.",
+      "tags": ["use-case", "git-repository", "query", "hexagonal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/listRepos/ListReposUseCase.ts:ListReposUseCase",
+      "type": "class",
+      "name": "ListReposUseCase",
+      "filePath": "packages/git/src/application/useCases/listRepos/ListReposUseCase.ts",
+      "lineRange": [14, 35],
+      "summary": "Use case returning the git repositories persisted for a given git provider, failing if the provider is missing.",
+      "tags": ["use-case", "class", "hexagonal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts",
+      "type": "file",
+      "name": "RemoveTrackedRepositoryUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts",
+      "summary": "Admin use case that stops tracking a repository: resolves it via owner readings, marks tracking removed, and emits a domain event; idempotent when already untracked.",
+      "tags": ["use-case", "repository-tracking", "domain-events", "admin"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts:RemoveTrackedRepositoryUseCase",
+      "type": "class",
+      "name": "RemoveTrackedRepositoryUseCase",
+      "filePath": "packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts",
+      "lineRange": [27, 124],
+      "summary": "Admin use case that stops tracking a repository: resolves it via owner readings, marks tracking removed, and emits a domain event; idempotent when already untracked.",
+      "tags": ["use-case", "class", "hexagonal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/searchProviderBranches/SearchProviderBranchesUseCase.ts",
+      "type": "file",
+      "name": "SearchProviderBranchesUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/searchProviderBranches/SearchProviderBranchesUseCase.ts",
+      "summary": "Member use case that searches branches of a repository through a git provider after checking organization ownership of the provider.",
+      "tags": ["use-case", "git-provider", "branch-search", "hexagonal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/searchProviderBranches/SearchProviderBranchesUseCase.ts:SearchProviderBranchesUseCase",
+      "type": "class",
+      "name": "SearchProviderBranchesUseCase",
+      "filePath": "packages/git/src/application/useCases/searchProviderBranches/SearchProviderBranchesUseCase.ts",
+      "lineRange": [16, 57],
+      "summary": "Member use case that searches branches of a repository through a git provider after checking organization ownership of the provider.",
+      "tags": ["use-case", "class", "hexagonal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts",
+      "type": "file",
+      "name": "SetTrackedRepositoryUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts",
+      "summary": "Admin use case that marks a repository/branch as tracked, finding or creating the git repo record, emitting a tracking event and syncing distribution state from lock files.",
+      "tags": [
+        "use-case",
+        "repository-tracking",
+        "domain-events",
+        "deployments"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts:SetTrackedRepositoryUseCase",
+      "type": "class",
+      "name": "SetTrackedRepositoryUseCase",
+      "filePath": "packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts",
+      "lineRange": [24, 152],
+      "summary": "Admin use case that marks a repository/branch as tracked, finding or creating the git repo record, emitting a tracking event and syncing distribution state from lock files.",
+      "tags": ["use-case", "class", "hexagonal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/shared/findByOwnerReadings.ts",
+      "type": "file",
+      "name": "findByOwnerReadings.ts",
+      "filePath": "packages/git/src/application/useCases/shared/findByOwnerReadings.ts",
+      "summary": "Shared helper that tries a sequence of owner readings (owner plus optional provider id) and returns the first git repo found.",
+      "tags": ["utility", "repository-lookup", "shared-helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/application/useCases/shared/findByOwnerReadings.ts:findByOwnerReadings",
+      "type": "function",
+      "name": "findByOwnerReadings",
+      "filePath": "packages/git/src/application/useCases/shared/findByOwnerReadings.ts",
+      "lineRange": [8, 22],
+      "summary": "Iterates owner readings in order and returns the first repository the provided finder resolves, or null.",
+      "tags": ["utility", "lookup", "shared-helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "type": "file",
+      "name": "probeCandidateCredentials.ts",
+      "filePath": "packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "summary": "Shared helper that probes candidate git provider credentials against GitHub/GitLab and throws user-facing InvalidGitProviderCredentialsError messages when the check fails.",
+      "tags": ["utility", "credentials", "validation", "git-provider"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts:isProbeableSource",
+      "type": "function",
+      "name": "isProbeableSource",
+      "filePath": "packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "lineRange": [21, 23],
+      "summary": "Returns whether a provider source is one that can be probed (GitHub or GitLab).",
+      "tags": ["utility", "predicate", "shared-helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts:assertCandidateCredentialsWork",
+      "type": "function",
+      "name": "assertCandidateCredentialsWork",
+      "filePath": "packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "lineRange": [48, 74],
+      "summary": "Builds a provider from candidate credentials, runs an auth check and throws a user-facing credentials error on failure.",
+      "tags": ["validation", "credentials", "shared-helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/shared/validateDisplayName.ts",
+      "type": "file",
+      "name": "validateDisplayName.ts",
+      "filePath": "packages/git/src/application/useCases/shared/validateDisplayName.ts",
+      "summary": "Shared helpers that normalize git provider display names and enforce case-insensitive uniqueness within an organization.",
+      "tags": ["utility", "validation", "git-provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/application/useCases/shared/validateDisplayName.ts:normalizeDisplayName",
+      "type": "function",
+      "name": "normalizeDisplayName",
+      "filePath": "packages/git/src/application/useCases/shared/validateDisplayName.ts",
+      "lineRange": [14, 19],
+      "summary": "Trims a display name and caps it at the persisted column length, mapping null to empty.",
+      "tags": ["utility", "normalization", "shared-helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/application/useCases/shared/validateDisplayName.ts:ensureDisplayNameAvailable",
+      "type": "function",
+      "name": "ensureDisplayNameAvailable",
+      "filePath": "packages/git/src/application/useCases/shared/validateDisplayName.ts",
+      "lineRange": [25, 48],
+      "summary": "Throws when a non-empty display name collides case-insensitively with another provider in the organization.",
+      "tags": ["validation", "uniqueness", "shared-helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/shared/validateProviderCredentials.ts",
+      "type": "file",
+      "name": "validateProviderCredentials.ts",
+      "filePath": "packages/git/src/application/useCases/shared/validateProviderCredentials.ts",
+      "summary": "Shared validator ensuring a git provider credential view is coherent for its auth method (token vs GitHub App) and the configured GitHub App mode.",
+      "tags": ["utility", "validation", "credentials", "github-app"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/git/src/application/useCases/shared/validateProviderCredentials.ts:validateProviderCredentials",
+      "type": "function",
+      "name": "validateProviderCredentials",
+      "filePath": "packages/git/src/application/useCases/shared/validateProviderCredentials.ts",
+      "lineRange": [19, 72],
+      "summary": "Validates the credential fields required or forbidden for token and GitHub App auth methods.",
+      "tags": ["validation", "credentials", "shared-helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts",
+      "type": "file",
+      "name": "UpdateGitProviderUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts",
+      "summary": "Admin use case that updates a git provider: checks organization ownership, validates credentials and display name, probes new credentials when relevant, then persists the patch.",
+      "tags": ["use-case", "git-provider", "validation", "admin"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts:UpdateGitProviderUseCase",
+      "type": "class",
+      "name": "UpdateGitProviderUseCase",
+      "filePath": "packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts",
+      "lineRange": [28, 175],
+      "summary": "Admin use case that updates a git provider: checks organization ownership, validates credentials and display name, probes new credentials when relevant, then persists the patch.",
+      "tags": ["use-case", "class", "hexagonal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts",
+      "type": "file",
+      "name": "UpdateTrackedBranchUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts",
+      "summary": "Admin use case that switches the tracked branch of a repository: untracks the old record, finds or creates the new branch repo, emits an event and resyncs distributions from lock files.",
+      "tags": [
+        "use-case",
+        "repository-tracking",
+        "domain-events",
+        "deployments"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts:UpdateTrackedBranchUseCase",
+      "type": "class",
+      "name": "UpdateTrackedBranchUseCase",
+      "filePath": "packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts",
+      "lineRange": [26, 157],
+      "summary": "Admin use case that switches the tracked branch of a repository: untracks the old record, finds or creates the new branch repo, emits an event and resyncs distributions from lock files.",
+      "tags": ["use-case", "class", "hexagonal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts",
+      "type": "file",
+      "name": "AvailableRemoteDirectoriesFailedError.ts",
+      "filePath": "packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts",
+      "summary": "Upstream error raised when listing available remote directories from a git provider fails.",
+      "tags": ["error", "upstream-error", "git-provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts:AvailableRemoteDirectoriesFailedError",
+      "type": "class",
+      "name": "AvailableRemoteDirectoriesFailedError",
+      "filePath": "packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts",
+      "lineRange": [12, 26],
+      "summary": "Error class AvailableRemoteDirectoriesFailedError: Upstream error raised when listing available remote directories from a git provider fails.",
+      "tags": ["error", "upstream-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts",
+      "type": "file",
+      "name": "DirectoryExistenceCheckFailedError.ts",
+      "filePath": "packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts",
+      "summary": "Upstream error raised when checking whether a directory exists in a remote repository fails.",
+      "tags": ["error", "upstream-error", "git-provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts:DirectoryExistenceCheckFailedError",
+      "type": "class",
+      "name": "DirectoryExistenceCheckFailedError",
+      "filePath": "packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts",
+      "lineRange": [12, 27],
+      "summary": "Error class DirectoryExistenceCheckFailedError: Upstream error raised when checking whether a directory exists in a remote repository fails.",
+      "tags": ["error", "upstream-error"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/git/src/application/useCases/listAvailableRepos/ListAvailableReposUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/listAvailableRepos/ListAvailableReposUseCase.ts:ListAvailableReposUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/listAvailableRepos/ListAvailableReposUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/listAvailableRepos/ListAvailableReposUseCase.ts:ListAvailableReposUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/listAvailableRepos/ListAvailableReposUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/listAvailableRepos/ListAvailableReposUseCase.ts",
+      "target": "file:packages/git/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/listProviders/ListProvidersUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/listProviders/ListProvidersUseCase.ts:ListProvidersUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/listProviders/ListProvidersUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/listProviders/ListProvidersUseCase.ts:ListProvidersUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/listProviders/ListProvidersUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/listRepos/ListReposUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/listRepos/ListReposUseCase.ts:ListReposUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/listRepos/ListReposUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/listRepos/ListReposUseCase.ts:ListReposUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/listRepos/ListReposUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/listRepos/ListReposUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts:RemoveTrackedRepositoryUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts:RemoveTrackedRepositoryUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts",
+      "target": "file:packages/git/src/application/useCases/shared/findByOwnerReadings.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/searchProviderBranches/SearchProviderBranchesUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/searchProviderBranches/SearchProviderBranchesUseCase.ts:SearchProviderBranchesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/searchProviderBranches/SearchProviderBranchesUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/searchProviderBranches/SearchProviderBranchesUseCase.ts:SearchProviderBranchesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/searchProviderBranches/SearchProviderBranchesUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts:SetTrackedRepositoryUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts:SetTrackedRepositoryUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts",
+      "target": "file:packages/git/src/application/useCases/shared/findByOwnerReadings.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/findByOwnerReadings.ts",
+      "target": "function:packages/git/src/application/useCases/shared/findByOwnerReadings.ts:findByOwnerReadings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/findByOwnerReadings.ts",
+      "target": "function:packages/git/src/application/useCases/shared/findByOwnerReadings.ts:findByOwnerReadings",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/findByOwnerReadings.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "target": "function:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts:isProbeableSource",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "target": "function:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts:isProbeableSource",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "target": "function:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts:assertCandidateCredentialsWork",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "target": "function:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts:assertCandidateCredentialsWork",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitProvider.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitProviderFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/validateDisplayName.ts",
+      "target": "function:packages/git/src/application/useCases/shared/validateDisplayName.ts:normalizeDisplayName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/validateDisplayName.ts",
+      "target": "function:packages/git/src/application/useCases/shared/validateDisplayName.ts:normalizeDisplayName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/validateDisplayName.ts",
+      "target": "function:packages/git/src/application/useCases/shared/validateDisplayName.ts:ensureDisplayNameAvailable",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/validateDisplayName.ts",
+      "target": "function:packages/git/src/application/useCases/shared/validateDisplayName.ts:ensureDisplayNameAvailable",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/validateProviderCredentials.ts",
+      "target": "function:packages/git/src/application/useCases/shared/validateProviderCredentials.ts:validateProviderCredentials",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/validateProviderCredentials.ts",
+      "target": "function:packages/git/src/application/useCases/shared/validateProviderCredentials.ts:validateProviderCredentials",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/shared/validateProviderCredentials.ts",
+      "target": "file:packages/git/src/infra/repositories/github/auth/GithubTokenResolverFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts:UpdateGitProviderUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts:UpdateGitProviderUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts",
+      "target": "file:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts",
+      "target": "file:packages/git/src/application/useCases/shared/validateDisplayName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts",
+      "target": "file:packages/git/src/application/useCases/shared/validateProviderCredentials.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts",
+      "target": "file:packages/git/src/infra/repositories/github/auth/GithubTokenResolverFactory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts:UpdateTrackedBranchUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts:UpdateTrackedBranchUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts",
+      "target": "file:packages/git/src/application/useCases/shared/findByOwnerReadings.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts:AvailableRemoteDirectoriesFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts:AvailableRemoteDirectoriesFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts:AvailableRemoteDirectoriesFailedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts:DirectoryExistenceCheckFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts:DirectoryExistenceCheckFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts:DirectoryExistenceCheckFailedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/DirectoryExistenceCheckFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/removeTrackedRepository/RemoveTrackedRepositoryUseCase.ts:RemoveTrackedRepositoryUseCase",
+      "target": "function:packages/git/src/application/useCases/shared/findByOwnerReadings.ts:findByOwnerReadings",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/setTrackedRepository/SetTrackedRepositoryUseCase.ts:SetTrackedRepositoryUseCase",
+      "target": "function:packages/git/src/application/useCases/shared/findByOwnerReadings.ts:findByOwnerReadings",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/updateTrackedBranch/UpdateTrackedBranchUseCase.ts:UpdateTrackedBranchUseCase",
+      "target": "function:packages/git/src/application/useCases/shared/findByOwnerReadings.ts:findByOwnerReadings",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts:UpdateGitProviderUseCase",
+      "target": "function:packages/git/src/application/useCases/shared/validateProviderCredentials.ts:validateProviderCredentials",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts:UpdateGitProviderUseCase",
+      "target": "function:packages/git/src/application/useCases/shared/validateDisplayName.ts:normalizeDisplayName",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts:UpdateGitProviderUseCase",
+      "target": "function:packages/git/src/application/useCases/shared/validateDisplayName.ts:ensureDisplayNameAvailable",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/updateGitProvider/UpdateGitProviderUseCase.ts:UpdateGitProviderUseCase",
+      "target": "function:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts:assertCandidateCredentialsWork",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

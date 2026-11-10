@@ -1,0 +1,133 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/coding-agent/src/domain/errors/CodingAgentAdapterPortsMissingError.ts",
+      "type": "file",
+      "name": "CodingAgentAdapterPortsMissingError.ts",
+      "filePath": "packages/coding-agent/src/domain/errors/CodingAgentAdapterPortsMissingError.ts",
+      "summary": "Internal error raised when the coding-agent hexagon is used before its required adapter ports are wired, recording the missing port names.",
+      "tags": ["error-handling", "domain-error", "coding-agent", "wiring"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/domain/errors/CodingAgentAdapterPortsMissingError.ts:CodingAgentAdapterPortsMissingError",
+      "type": "class",
+      "name": "CodingAgentAdapterPortsMissingError",
+      "filePath": "packages/coding-agent/src/domain/errors/CodingAgentAdapterPortsMissingError.ts",
+      "lineRange": [8, 17],
+      "summary": "Signals that the coding-agent adapter was used without its required ports.",
+      "tags": ["error-handling", "domain-error", "coding-agent"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts",
+      "type": "file",
+      "name": "CodingAgentInternalError.ts",
+      "filePath": "packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts",
+      "summary": "Base class for coding-agent broken-invariant errors: always a 500, carrying a literal reason union and typed context, distinct from caller-fault CodingAgentError.",
+      "tags": ["error-handling", "domain-error", "base-class", "coding-agent"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts:CodingAgentInternalError",
+      "type": "class",
+      "name": "CodingAgentInternalError",
+      "filePath": "packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts",
+      "lineRange": [24, 33],
+      "summary": "Abstract-style base for coding-agent internal invariant failures with reason and context.",
+      "tags": ["error-handling", "base-class", "coding-agent"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/domain/errors/DeployerNotCreatedError.ts",
+      "type": "file",
+      "name": "DeployerNotCreatedError.ts",
+      "filePath": "packages/coding-agent/src/domain/errors/DeployerNotCreatedError.ts",
+      "summary": "Internal error thrown when the deployer registry fails to create a deployer for a given coding agent, signalling a wiring mistake.",
+      "tags": ["error-handling", "domain-error", "coding-agent", "deployment"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/domain/errors/DeployerNotCreatedError.ts:DeployerNotCreatedError",
+      "type": "class",
+      "name": "DeployerNotCreatedError",
+      "filePath": "packages/coding-agent/src/domain/errors/DeployerNotCreatedError.ts",
+      "lineRange": [8, 17],
+      "summary": "Thrown when the deployer registry returns null for an agent.",
+      "tags": ["error-handling", "domain-error", "deployment"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/CodingAgentAdapterPortsMissingError.ts",
+      "target": "class:packages/coding-agent/src/domain/errors/CodingAgentAdapterPortsMissingError.ts:CodingAgentAdapterPortsMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/CodingAgentAdapterPortsMissingError.ts",
+      "target": "class:packages/coding-agent/src/domain/errors/CodingAgentAdapterPortsMissingError.ts:CodingAgentAdapterPortsMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/domain/errors/CodingAgentAdapterPortsMissingError.ts:CodingAgentAdapterPortsMissingError",
+      "target": "class:packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts:CodingAgentInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/CodingAgentAdapterPortsMissingError.ts",
+      "target": "file:packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts",
+      "target": "class:packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts:CodingAgentInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts",
+      "target": "class:packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts:CodingAgentInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/DeployerNotCreatedError.ts",
+      "target": "class:packages/coding-agent/src/domain/errors/DeployerNotCreatedError.ts:DeployerNotCreatedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/DeployerNotCreatedError.ts",
+      "target": "class:packages/coding-agent/src/domain/errors/DeployerNotCreatedError.ts:DeployerNotCreatedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/domain/errors/DeployerNotCreatedError.ts:DeployerNotCreatedError",
+      "target": "class:packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts:CodingAgentInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/errors/DeployerNotCreatedError.ts",
+      "target": "file:packages/coding-agent/src/domain/errors/CodingAgentInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

@@ -1,0 +1,1032 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "type": "file",
+      "name": "submitLogger.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "summary": "Console logging helpers for `playbook submit`: review URLs, package-add guidance, removed package notices and count formatting.",
+      "tags": ["utility", "cli", "console-output", "change-proposal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:fetchAvailablePackageSlugs",
+      "type": "function",
+      "name": "fetchAvailablePackageSlugs",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "lineRange": [12, 38],
+      "summary": "Fetches package slugs available in a space for guidance.",
+      "tags": ["utility", "cli", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logPackageAddGuidance",
+      "type": "function",
+      "name": "logPackageAddGuidance",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "lineRange": [40, 79],
+      "summary": "Logs guidance on adding newly created artefacts to packages.",
+      "tags": ["utility", "cli", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logReviewUrls",
+      "type": "function",
+      "name": "logReviewUrls",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "lineRange": [81, 110],
+      "summary": "Logs review URLs for submitted change proposals.",
+      "tags": ["utility", "cli", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logRemovedPackagesNotification",
+      "type": "function",
+      "name": "logRemovedPackagesNotification",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "lineRange": [112, 147],
+      "summary": "Logs notifications for packages affected by removals.",
+      "tags": ["utility", "cli", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:formatCount",
+      "type": "function",
+      "name": "formatCount",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "lineRange": [149, 155],
+      "summary": "Formats a count with singular/plural label.",
+      "tags": ["utility", "cli", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:collectParts",
+      "type": "function",
+      "name": "collectParts",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "lineRange": [157, 166],
+      "summary": "Collects non-empty count parts into a summary list.",
+      "tags": ["utility", "cli", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "type": "file",
+      "name": "targetContextResolver.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "summary": "Factory for a memoized resolver that determines target space/package context for a path from the nearest lock file and deployed files.",
+      "tags": ["factory", "cli", "lock-file", "context-resolution"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts:createTargetContextResolver",
+      "type": "function",
+      "name": "createTargetContextResolver",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "lineRange": [23, 62],
+      "summary": "Creates a memoized resolver mapping paths to target space/package context.",
+      "tags": ["factory", "cli", "lock-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "type": "file",
+      "name": "submitHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "summary": "Handler for `playbook submit` orchestrating proposal building, duplicate and description validation, message prompting, batch submission and result logging, clearing staged entries on success.",
+      "tags": [
+        "api-handler",
+        "cli",
+        "change-proposal",
+        "playbook",
+        "orchestration"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:buildEditorPrefill",
+      "type": "function",
+      "name": "buildEditorPrefill",
+      "filePath": "apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "lineRange": [65, 75],
+      "summary": "Builds the prefilled editor text for the submission message.",
+      "tags": ["api-handler", "cli", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "type": "function",
+      "name": "playbookSubmitHandler",
+      "filePath": "apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "lineRange": [102, 568],
+      "summary": "Orchestrates building, validating and submitting change proposals.",
+      "tags": ["api-handler", "cli", "change-proposal"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "type": "file",
+      "name": "unstageHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "summary": "Handler for `playbook unstage` that removes matching staged entries (files or skill directories) from the local playbook.",
+      "tags": ["api-handler", "cli", "playbook", "staging"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/unstageHandler.ts:playbookUnstageHandler",
+      "type": "function",
+      "name": "playbookUnstageHandler",
+      "filePath": "apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "lineRange": [22, 115],
+      "summary": "Removes matching staged entries from the local playbook.",
+      "tags": ["api-handler", "cli", "playbook"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts",
+      "type": "file",
+      "name": "DeletePluginCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts",
+      "summary": "cmd-ts command definition for `plugins delete` that removes a rendered Packmind plugin after confirmation via deletePluginHandler.",
+      "tags": ["cli", "command-definition", "plugins", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts:deletePluginCommand",
+      "type": "function",
+      "name": "deletePluginCommand",
+      "filePath": "apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts",
+      "lineRange": [8, 34],
+      "summary": "cmd-ts command object: `plugins delete` that removes a rendered Packmind plugin after confirmation via deletePluginHandler.",
+      "tags": ["cli", "command-definition", "plugins"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts",
+      "type": "file",
+      "name": "RenderPluginCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts",
+      "summary": "cmd-ts command definition for `plugins render` that renders a package as an agent plugin with overwrite confirmation via renderPluginHandler.",
+      "tags": ["cli", "command-definition", "plugins", "rendering"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts:renderPluginCommand",
+      "type": "function",
+      "name": "renderPluginCommand",
+      "filePath": "apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts",
+      "lineRange": [8, 35],
+      "summary": "cmd-ts command object: `plugins render` that renders a package as an agent plugin with overwrite confirmation via renderPluginHandler.",
+      "tags": ["cli", "command-definition", "plugins"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/plugins/confirmOverwrite.ts",
+      "type": "file",
+      "name": "confirmOverwrite.ts",
+      "filePath": "apps/cli/src/infra/commands/plugins/confirmOverwrite.ts",
+      "summary": "Interactive yes/no confirmation prompt used before overwriting or deleting plugin output.",
+      "tags": ["utility", "cli", "interactive-prompt", "plugins"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/confirmOverwrite.ts:confirmOverwrite",
+      "type": "function",
+      "name": "confirmOverwrite",
+      "filePath": "apps/cli/src/infra/commands/plugins/confirmOverwrite.ts",
+      "lineRange": [7, 20],
+      "summary": "Prompts the user for a yes/no confirmation.",
+      "tags": ["utility", "cli", "interactive-prompt"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "type": "file",
+      "name": "deletePluginHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "summary": "Handler for `plugins delete` that resolves git/plugin context, removes the plugin directory and marketplace entry, and tracks the deletion.",
+      "tags": ["api-handler", "cli", "plugins", "filesystem"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "type": "function",
+      "name": "deletePluginHandler",
+      "filePath": "apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "lineRange": [33, 121],
+      "summary": "Deletes a rendered plugin directory and its marketplace entry.",
+      "tags": ["api-handler", "cli", "plugins"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:trackDeletion",
+      "type": "function",
+      "name": "trackDeletion",
+      "filePath": "apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "lineRange": [123, 136],
+      "summary": "Tracks the plugin deletion analytics event.",
+      "tags": ["api-handler", "cli", "plugins"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:fetchAvailablePackageSlugs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:fetchAvailablePackageSlugs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logPackageAddGuidance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logPackageAddGuidance",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logReviewUrls",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logReviewUrls",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logRemovedPackagesNotification",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logRemovedPackagesNotification",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:formatCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:formatCount",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:collectParts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:collectParts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "target": "file:apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logPackageAddGuidance",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logPackageAddGuidance",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logReviewUrls",
+      "target": "function:apps/cli/src/infra/utils/urlBuilderUtils.ts:resolveUrlBuilder",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logReviewUrls",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logRemovedPackagesNotification",
+      "target": "function:apps/cli/src/infra/utils/urlBuilderUtils.ts:resolveUrlBuilder",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logRemovedPackagesNotification",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logWarningConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logRemovedPackagesNotification",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts:createTargetContextResolver",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts:createTargetContextResolver",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "target": "file:apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "target": "file:apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "target": "file:apps/cli/src/domain/repositories/PackmindLockFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "target": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts:createTargetContextResolver",
+      "target": "function:apps/cli/src/application/utils/findNearestConfigDir.ts:findNearestConfigDir",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts:createTargetContextResolver",
+      "target": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:fetchDeployedFiles",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:buildEditorPrefill",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/domain/errors/CommunityEditionError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submitHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/stringUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:buildEditorPrefill",
+      "target": "function:apps/cli/src/infra/utils/stringUtils.ts:capitalize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts:checkForDuplicateNames",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts:duplicateNameKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts:createTargetContextResolver",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildProposals",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts:validateProposalSkillDescriptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/utils/stringUtils.ts:capitalize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logWarningConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logRemovedPackagesNotification",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:collectParts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:fetchAvailablePackageSlugs",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logPackageAddGuidance",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/domain/errors/CommunityEditionError.ts:isCommunityEditionError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submitHandler.ts:playbookSubmitHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/submitLogger.ts:logReviewUrls",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/unstageHandler.ts:playbookUnstageHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/unstageHandler.ts:playbookUnstageHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "target": "file:apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "target": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/unstageHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/unstageHandler.ts:playbookUnstageHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/unstageHandler.ts:playbookUnstageHandler",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:resolveSkillDirPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/unstageHandler.ts:playbookUnstageHandler",
+      "target": "function:apps/cli/src/application/utils/findNearestConfigDir.ts:findNearestConfigDir",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/unstageHandler.ts:playbookUnstageHandler",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/unstageHandler.ts:playbookUnstageHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts:deletePluginCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts:deletePluginCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/customParameters/PackageSlugArgType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/plugins/confirmOverwrite.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/DeletePluginCommand.ts:deletePluginCommand",
+      "target": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts:renderPluginCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts:renderPluginCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/customParameters/PackageSlugArgType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/plugins/confirmOverwrite.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/RenderPluginCommand.ts:renderPluginCommand",
+      "target": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:renderPluginHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/confirmOverwrite.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/confirmOverwrite.ts:confirmOverwrite",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/confirmOverwrite.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/confirmOverwrite.ts:confirmOverwrite",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:trackDeletion",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "target": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/plugins/resolveGitContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:detectPluginMode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/resolveGitContext.ts:resolveGitContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:readMarketplace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:findPluginEntry",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:classifySource",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:writeMarketplace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:removePluginEntry",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:deletePluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:stripBom",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/deletePluginHandler.ts:trackDeletion",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logWarningConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

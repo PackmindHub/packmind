@@ -1,0 +1,400 @@
+{
+  "nodes": [
+    {
+      "id": "file:.husky/pre-commit",
+      "type": "file",
+      "name": "pre-commit",
+      "filePath": ".husky/pre-commit",
+      "summary": "Husky pre-commit hook that formats staged files with pretty-quick and runs the precommit lint script.",
+      "tags": ["git-hook", "build-system", "formatting", "linting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:.husky/pre-push",
+      "type": "file",
+      "name": "pre-push",
+      "filePath": ".husky/pre-push",
+      "summary": "Husky pre-push hook that checks OSS/proprietary edition parity, always typechecks the frontend, then runs Nx affected lint, test and build against origin/main.",
+      "tags": ["git-hook", "ci-cd", "nx", "quality-gate"],
+      "complexity": "simple",
+      "languageNotes": "Uses `set -eu` and `git merge-base` with a HEAD~1 fallback so `nx affected` has a stable base even offline."
+    },
+    {
+      "id": "config:.impeccable/design.json",
+      "type": "config",
+      "name": "design.json",
+      "filePath": ".impeccable/design.json",
+      "summary": "Impeccable design-system sidecar describing the Packmind visual system: color roles with tonal ramps, components, and design narrative.",
+      "tags": ["configuration", "design-system", "design-tokens", "theming"],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:.junie/guidelines.md",
+      "type": "document",
+      "name": "guidelines.md",
+      "filePath": ".junie/guidelines.md",
+      "summary": "Junie agent guidelines file aggregating Packmind standards such as tests redaction, NestJS module hierarchy and frontend error management.",
+      "tags": [
+        "documentation",
+        "ai-agent-instructions",
+        "coding-standards",
+        "packmind-standards"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:.nvmrc",
+      "type": "file",
+      "name": ".nvmrc",
+      "filePath": ".nvmrc",
+      "summary": "Pins the Node.js runtime version (24.18.0) used by nvm for the monorepo.",
+      "tags": ["configuration", "node-version", "runtime", "tooling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:.nxignore",
+      "type": "file",
+      "name": ".nxignore",
+      "filePath": ".nxignore",
+      "summary": "Excludes node_modules, dist, tmp, .git and linter JS playground folders from Nx project graph processing.",
+      "tags": ["configuration", "nx", "ignore-file", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.packmind/standards-index.md",
+      "type": "document",
+      "name": "standards-index.md",
+      "filePath": ".packmind/standards-index.md",
+      "summary": "Auto-generated root index of deployed Packmind standards (backend tests, changelog, code comments, PII logging compliance, TypeScript practices) for AI agents.",
+      "tags": [
+        "documentation",
+        "packmind-standards",
+        "index",
+        "ai-agent-instructions"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:.prettierignore",
+      "type": "file",
+      "name": ".prettierignore",
+      "filePath": ".prettierignore",
+      "summary": "Lists paths and generated artifacts excluded from Prettier formatting.",
+      "tags": ["configuration", "formatting", "ignore-file", "tooling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:.ua/config.json",
+      "type": "config",
+      "name": "config.json",
+      "filePath": ".ua/config.json",
+      "summary": "Understand-Anything configuration setting the output language for generated knowledge graph content.",
+      "tags": ["configuration", "knowledge-graph", "tooling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "apps/AGENTS.md",
+      "summary": "Agent-facing overview of the apps directory: backend services, frontend and CLI, testing and docs apps, plus common Nx commands.",
+      "tags": ["documentation", "ai-agent-instructions", "overview", "nx"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "apps/CLAUDE.md",
+      "summary": "Claude Code instructions describing application categories in apps/ and how to type-check the two e2e test suites.",
+      "tags": [
+        "documentation",
+        "ai-agent-instructions",
+        "overview",
+        "e2e-tests"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/api/.github/instructions/packmind-nestjs-module-hierarchy.instructions.md",
+      "type": "document",
+      "name": "packmind-nestjs-module-hierarchy.instructions.md",
+      "filePath": "apps/api/.github/instructions/packmind-nestjs-module-hierarchy.instructions.md",
+      "summary": "GitHub Copilot instruction file rendering the NestJS Module Hierarchy standard for the API app.",
+      "tags": [
+        "documentation",
+        "copilot-instructions",
+        "nestjs",
+        "packmind-standards"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/api/.github/instructions/packmind-rest-api-endpoint-design.instructions.md",
+      "type": "document",
+      "name": "packmind-rest-api-endpoint-design.instructions.md",
+      "filePath": "apps/api/.github/instructions/packmind-rest-api-endpoint-design.instructions.md",
+      "summary": "GitHub Copilot instruction file rendering the REST API Endpoint Design standard for the API app.",
+      "tags": [
+        "documentation",
+        "copilot-instructions",
+        "rest-api",
+        "packmind-standards"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/api/.packmind/standards-index.md",
+      "type": "document",
+      "name": "standards-index.md",
+      "filePath": "apps/api/.packmind/standards-index.md",
+      "summary": "Auto-generated index of Packmind standards deployed to the API app: NestJS module hierarchy and REST API endpoint design.",
+      "tags": ["documentation", "packmind-standards", "index", "api"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/api/.packmind/standards/nestjs-module-hierarchy.md",
+      "type": "document",
+      "name": "nestjs-module-hierarchy.md",
+      "filePath": "apps/api/.packmind/standards/nestjs-module-hierarchy.md",
+      "summary": "Packmind standard defining scope and rules for organizing NestJS modules hierarchically in the API.",
+      "tags": ["documentation", "packmind-standards", "nestjs", "architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/api/.packmind/standards/rest-api-endpoint-design.md",
+      "type": "document",
+      "name": "rest-api-endpoint-design.md",
+      "filePath": "apps/api/.packmind/standards/rest-api-endpoint-design.md",
+      "summary": "Packmind standard defining scope and rules for designing REST API endpoints in the API app.",
+      "tags": ["documentation", "packmind-standards", "rest-api", "api-design"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/api/src/assets/.gitkeep",
+      "type": "file",
+      "name": ".gitkeep",
+      "filePath": "apps/api/src/assets/.gitkeep",
+      "summary": "Empty placeholder keeping the API assets directory tracked in git.",
+      "tags": ["placeholder", "git", "assets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/cli/.packmind/standards-index.md",
+      "type": "document",
+      "name": "standards-index.md",
+      "filePath": "apps/cli/.packmind/standards-index.md",
+      "summary": "Auto-generated index of CLI standards: command structure, PackmindGateway method implementation, and use case structure.",
+      "tags": ["documentation", "packmind-standards", "index", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/bun-build.ts",
+      "type": "file",
+      "name": "bun-build.ts",
+      "filePath": "apps/cli/bun-build.ts",
+      "summary": "Bun build script that compiles the Packmind CLI into standalone executables per OS/arch target, embedding WASM files and aliasing unused backend dependencies to a stub module.",
+      "tags": ["build-system", "cli", "bun", "entry-point", "cross-platform"],
+      "complexity": "complex",
+      "languageNotes": "Uses Bun build `alias` to swap backend-only packages (typeorm, ioredis, openai) for a stub, shrinking compiled binaries."
+    },
+    {
+      "id": "function:apps/cli/bun-build.ts:buildForTarget",
+      "type": "function",
+      "name": "buildForTarget",
+      "filePath": "apps/cli/bun-build.ts",
+      "summary": "Bundles the CLI entry with stub aliases and compiles it into a standalone binary for one Bun target.",
+      "tags": ["build-system", "bundling", "cli", "async"],
+      "complexity": "moderate",
+      "lineRange": [178, 254]
+    },
+    {
+      "id": "file:apps/cli/esbuild-publish.config.js",
+      "type": "file",
+      "name": "esbuild-publish.config.js",
+      "filePath": "apps/cli/esbuild-publish.config.js",
+      "summary": "esbuild config factory for npm publishing of the CLI that marks web-tree-sitter and backend-only modules as external, to be stubbed at runtime.",
+      "tags": ["build-system", "esbuild", "cli", "configuration"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/jest.setup.ts",
+      "type": "file",
+      "name": "jest.setup.ts",
+      "filePath": "apps/cli/jest.setup.ts",
+      "summary": "Jest setup for the CLI that globally mocks the error log utility so specs never write to ~/.packmind/error.log.",
+      "tags": ["test", "test-setup", "mocking", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/frontend/.packmind/standards-index.md",
+      "type": "document",
+      "name": "standards-index.md",
+      "filePath": "apps/frontend/.packmind/standards-index.md",
+      "summary": "Auto-generated index of frontend standards: data flow, error management, React Router navigation, and TanStack Query key management.",
+      "tags": ["documentation", "packmind-standards", "index", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/app-nav.tsx",
+      "type": "file",
+      "name": "app-nav.tsx",
+      "filePath": "apps/frontend/app/app-nav.tsx",
+      "summary": "Scaffold navigation component rendering React Router NavLinks to home, about and recipe routes.",
+      "tags": ["component", "navigation", "react", "scaffold"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/app-nav.tsx:AppNav",
+      "type": "function",
+      "name": "AppNav",
+      "filePath": "apps/frontend/app/app-nav.tsx",
+      "summary": "React component rendering a nav bar of NavLinks for basic routes.",
+      "tags": ["component", "navigation", "react"],
+      "complexity": "simple",
+      "lineRange": [3, 21]
+    },
+    {
+      "id": "file:apps/frontend/app/app.module.scss",
+      "type": "file",
+      "name": "app.module.scss",
+      "filePath": "apps/frontend/app/app.module.scss",
+      "summary": "Empty Nx-generated SCSS module placeholder for the scaffold App component.",
+      "tags": ["styles", "scss", "scaffold"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/app.tsx",
+      "type": "file",
+      "name": "app.tsx",
+      "filePath": "apps/frontend/app/app.tsx",
+      "summary": "Nx-generated scaffold App component rendering the NxWelcome page.",
+      "tags": ["component", "react", "scaffold"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/app.tsx:App",
+      "type": "function",
+      "name": "App",
+      "filePath": "apps/frontend/app/app.tsx",
+      "summary": "Default-exported scaffold component wrapping NxWelcome titled frontend.",
+      "tags": ["component", "react", "scaffold"],
+      "complexity": "simple",
+      "lineRange": [5, 11]
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/bun-build.ts",
+      "target": "function:apps/cli/bun-build.ts:buildForTarget",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/app-nav.tsx",
+      "target": "function:apps/frontend/app/app-nav.tsx:AppNav",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/app.tsx",
+      "target": "function:apps/frontend/app/app.tsx:App",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/app-nav.tsx",
+      "target": "function:apps/frontend/app/app-nav.tsx:AppNav",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/app.tsx",
+      "target": "function:apps/frontend/app/app.tsx:App",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/app.tsx",
+      "target": "file:apps/frontend/app/nx-welcome.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/app/app.tsx:App",
+      "target": "function:apps/frontend/app/nx-welcome.tsx:NxWelcome",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/app.tsx",
+      "target": "file:apps/frontend/app/app.module.scss",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/api/.packmind/standards-index.md",
+      "target": "document:apps/api/.packmind/standards/nestjs-module-hierarchy.md",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/api/.packmind/standards-index.md",
+      "target": "document:apps/api/.packmind/standards/rest-api-endpoint-design.md",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/api/.github/instructions/packmind-nestjs-module-hierarchy.instructions.md",
+      "target": "document:apps/api/.packmind/standards/nestjs-module-hierarchy.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/api/.github/instructions/packmind-rest-api-endpoint-design.instructions.md",
+      "target": "document:apps/api/.packmind/standards/rest-api-endpoint-design.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:.junie/guidelines.md",
+      "target": "document:apps/api/.packmind/standards/nestjs-module-hierarchy.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/CLAUDE.md",
+      "target": "document:apps/AGENTS.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:.husky/pre-push",
+      "target": "file:.husky/pre-commit",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:apps/cli/esbuild-publish.config.js",
+      "target": "file:apps/cli/bun-build.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

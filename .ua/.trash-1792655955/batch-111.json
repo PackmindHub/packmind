@@ -1,0 +1,499 @@
+{
+  "nodes": [
+    {
+      "id": "config:packages/standards/samples/generated/nuxtjs.json",
+      "type": "config",
+      "name": "nuxtjs.json",
+      "filePath": "packages/standards/samples/generated/nuxtjs.json",
+      "summary": "Generated sample coding standard \"Nuxt.js Best Practices\" (scope **/*.vue,**/*.ts,**/*.js) with 10 rules and positive/negative examples covering high-impact Nuxt 3 practices for server/client boundary safety, network resilience, runtime configuration, SSR caching, composable lifecycle management, consistent error handling, . Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "nuxtjs",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/php.json",
+      "type": "config",
+      "name": "php.json",
+      "filePath": "packages/standards/samples/generated/php.json",
+      "summary": "Generated sample coding standard \"PHP Best Practices\" (scope **/*.php,**/*.phtml) with 10 rules and positive/negative examples covering high-impact PHP practices around boundary validation, secure data access, safe resource and error handling, predictable time and timezone usage, reliable network I/O, structured lo. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "php",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/python.json",
+      "type": "config",
+      "name": "python.json",
+      "filePath": "packages/standards/samples/generated/python.json",
+      "summary": "Generated sample coding standard \"Python Best Practices\" (scope **/*.py,**/*.pyx,**/*.pyw) with 10 rules and positive/negative examples covering high-impact Python practices for dependency boundaries, configuration, resource and concurrency safety, network robustness, validation, structured logging, and deterministic tests . Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "python",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/rails.json",
+      "type": "config",
+      "name": "rails.json",
+      "filePath": "packages/standards/samples/generated/rails.json",
+      "summary": "Generated sample coding standard \"Ruby on Rails Best Practices\" (scope **/*.rb) with 10 rules and positive/negative examples covering high-impact Rails pitfalls around query performance, external I/O safety, transactional boundaries, background jobs, configuration, logging, migrations, and concurrency in common p. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "rails",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/react-native.json",
+      "type": "config",
+      "name": "react-native.json",
+      "filePath": "packages/standards/samples/generated/react-native.json",
+      "summary": "Generated sample coding standard \"React Native Best Practices\" (scope **/*.tsx,**/*.jsx,**/*.ts,**/*.js) with 10 rules and positive/negative examples covering high-impact practices for React Native codebases: safe network behavior, predictable state updates, reliable navigation and lifecycle handling, disciplined bridge usage, resilient . Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "react-native",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/react.json",
+      "type": "config",
+      "name": "react.json",
+      "filePath": "packages/standards/samples/generated/react.json",
+      "summary": "Generated sample coding standard \"React Best Practices\" (scope **/*.tsx,**/*.jsx,**/*.ts,**/*.js) with 10 rules and positive/negative examples covering high-impact React patterns around effects, concurrency, async work, state ownership, rendering performance, input handling, and boundaries between UI and side effects. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "react",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/ruby.json",
+      "type": "config",
+      "name": "ruby.json",
+      "filePath": "packages/standards/samples/generated/ruby.json",
+      "summary": "Generated sample coding standard \"Ruby Best Practices\" (scope **/*.rb) with 10 rules and positive/negative examples covering high-impact Ruby practices for managing resources, handling errors, validating inputs, controlling network behavior, maintaining thread safety, producing useful logs, managing conf. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "ruby",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/rust.json",
+      "type": "config",
+      "name": "rust.json",
+      "filePath": "packages/standards/samples/generated/rust.json",
+      "summary": "Generated sample coding standard \"Rust Best Practices\" (scope **/*.rs) with 10 rules and positive/negative examples covering high-impact Rust practices for fallible boundaries, resource lifetimes, async cancellation, retries/timeouts, secure input handling, concurrency correctness, structured logging, co. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "rust",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/spring-boot.json",
+      "type": "config",
+      "name": "spring-boot.json",
+      "filePath": "packages/standards/samples/generated/spring-boot.json",
+      "summary": "Generated sample coding standard \"Spring Boot Best Practices\" (scope **/*.java) with 10 rules and positive/negative examples covering high-impact, non-obvious Spring Boot practices covering configuration binding, validation at boundaries, transactional correctness, HTTP client resilience, logging, exception handl. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "spring-boot",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/sql.json",
+      "type": "config",
+      "name": "sql.json",
+      "filePath": "packages/standards/samples/generated/sql.json",
+      "summary": "Generated sample coding standard \"SQL Best Practices\" (scope **/*.sql) with 10 rules and positive/negative examples covering high-impact SQL practices for security, concurrency, transactional correctness, performance stability, and operability. It targets non-obvious pitfalls around isolation, locking, p. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "sql",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/svelte.json",
+      "type": "config",
+      "name": "svelte.json",
+      "filePath": "packages/standards/samples/generated/svelte.json",
+      "summary": "Generated sample coding standard \"Svelte Best Practices\" (scope **/*.svelte,**/*.ts,**/*.js) with 10 rules and positive/negative examples covering high-impact Svelte and SvelteKit patterns for managing side effects, reactive state, server/client boundaries, data fetching, cleanup, and security-sensitive rendering. It targets . Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "svelte",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/swift.json",
+      "type": "config",
+      "name": "swift.json",
+      "filePath": "packages/standards/samples/generated/swift.json",
+      "summary": "Generated sample coding standard \"Swift Best Practices\" (scope **/*.swift) with 10 rules and positive/negative examples covering high-impact Swift practices for network safety (timeouts, retries, cancellation), strict boundary validation, robust error mapping, thread-safe state, resource lifecycle control, d. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "swift",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/symfony.json",
+      "type": "config",
+      "name": "symfony.json",
+      "filePath": "packages/standards/samples/generated/symfony.json",
+      "summary": "Generated sample coding standard \"Symfony Best Practices\" (scope **/*.php,**/*.phtml) with 10 rules and positive/negative examples covering high-impact Symfony patterns around DI container boundaries, request handling, validation, I/O resilience, Doctrine usage, caching, logging, and test reliability, targeting common . Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "symfony",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/terraform.json",
+      "type": "config",
+      "name": "terraform.json",
+      "filePath": "packages/standards/samples/generated/terraform.json",
+      "summary": "Generated sample coding standard \"Terraform Best Practices\" (scope **/*.tf) with 10 rules and positive/negative examples covering high-impact Terraform patterns around planning determinism, state safety, module interfaces, secret handling, lifecycle controls, and provider/resource behaviors that commonly caus. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "terraform",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/typescript.json",
+      "type": "config",
+      "name": "typescript.json",
+      "filePath": "packages/standards/samples/generated/typescript.json",
+      "summary": "Generated sample coding standard \"TypeScript Best Practices\" (scope **/*.ts) with 10 rules and positive/negative examples covering high-impact TypeScript patterns for runtime boundaries, error and async handling, resource lifecycle, configuration access, logging, retries/timeouts, concurrency safety, and test . Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "typescript",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/vue.json",
+      "type": "config",
+      "name": "vue.json",
+      "filePath": "packages/standards/samples/generated/vue.json",
+      "summary": "Generated sample coding standard \"Vue.js Best Practices\" (scope **/*.vue,**/*.ts,**/*.js) with 10 rules and positive/negative examples covering high-impact Vue.js practices for reactive state safety, async lifecycle control, routing/data loading, error boundaries, configuration, logging, and test reliability across compone. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "vue",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:packages/standards/samples/generated/zend.json",
+      "type": "config",
+      "name": "zend.json",
+      "filePath": "packages/standards/samples/generated/zend.json",
+      "summary": "Generated sample coding standard \"Zend Framework Best Practices\" (scope **/*.php,**/*.phtml) with 10 rules and positive/negative examples covering frequent, high-impact pitfalls in Zend Framework applications: input handling at boundaries, DI wiring, database/query safety, HTTP timeouts, transactional consistency, error handl. Loaded as a built-in standard template by the standards samples module.",
+      "tags": [
+        "sample-standard",
+        "coding-standards",
+        "zend",
+        "generated",
+        "template"
+      ],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:packages/standards/samples/generated/nuxtjs.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/nuxtjs.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/php.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/php.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/python.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/python.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/rails.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/rails.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/react-native.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/react-native.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/react.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/react.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/ruby.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/ruby.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/rust.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/rust.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/spring-boot.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/spring-boot.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/sql.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/sql.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/svelte.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/svelte.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/swift.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/swift.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/symfony.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/symfony.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/terraform.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/terraform.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/typescript.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/typescript.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/vue.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/vue.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/zend.json",
+      "target": "file:packages/standards/samples/index.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/standards/samples/generated/zend.json",
+      "target": "file:packages/standards/samples/generateSamples.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

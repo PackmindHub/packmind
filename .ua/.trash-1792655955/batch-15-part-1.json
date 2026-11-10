@@ -1,0 +1,873 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/infra/commands/packages/listPackagesHandler.ts",
+      "type": "file",
+      "name": "listPackagesHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/packages/listPackagesHandler.ts",
+      "summary": "CLI handler that lists packages available to the user, optionally filtered by space, grouped by space with web URLs.",
+      "tags": ["api-handler", "cli", "packages", "listing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/listPackagesHandler.ts:listPackagesHandler",
+      "type": "function",
+      "name": "listPackagesHandler",
+      "filePath": "apps/cli/src/infra/commands/packages/listPackagesHandler.ts",
+      "lineRange": [14, 91],
+      "summary": "Fetches packages, applies the space filter, and prints them grouped by space with URLs.",
+      "tags": ["api-handler", "cli", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "type": "file",
+      "name": "moveToPackageHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "summary": "CLI handler that moves a standard, command or skill from one package to another via MoveToPackageUseCase and reports the outcome.",
+      "tags": ["api-handler", "cli", "packages", "artefact-membership"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:logMovedArtefact",
+      "type": "function",
+      "name": "logMovedArtefact",
+      "filePath": "apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "lineRange": [41, 70],
+      "summary": "Logs the result of moving an artefact between packages.",
+      "tags": ["api-handler", "cli", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:moveToPackageHandler",
+      "type": "function",
+      "name": "moveToPackageHandler",
+      "filePath": "apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "lineRange": [72, 122],
+      "summary": "Resolves the package ref and item type, executes the move use case and handles not-found errors.",
+      "tags": ["api-handler", "cli", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "type": "file",
+      "name": "packageMembershipOutput.ts",
+      "filePath": "apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "summary": "Shared console output helpers for package membership commands: not-found hints, package lists and artefact subject labels.",
+      "tags": ["utility", "cli", "console-output", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logItemNotFoundHint",
+      "type": "function",
+      "name": "logItemNotFoundHint",
+      "filePath": "apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "lineRange": [17, 24],
+      "summary": "Prints a hint when the requested artefact is not found.",
+      "tags": ["utility", "cli", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logPackageList",
+      "type": "function",
+      "name": "logPackageList",
+      "filePath": "apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "lineRange": [30, 41],
+      "summary": "Prints a list of packages an artefact belongs to.",
+      "tags": ["utility", "cli", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:artefactSubject",
+      "type": "function",
+      "name": "artefactSubject",
+      "filePath": "apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "lineRange": [44, 46],
+      "summary": "Builds a display label for an artefact subject.",
+      "tags": ["utility", "cli", "console-output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "type": "file",
+      "name": "removeFromPackageHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "summary": "CLI handler that removes an artefact from a package through RemoveFromPackageUseCase and logs results or not-found hints.",
+      "tags": ["api-handler", "cli", "packages", "artefact-membership"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:logRemovedArtefact",
+      "type": "function",
+      "name": "logRemovedArtefact",
+      "filePath": "apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "lineRange": [38, 68],
+      "summary": "Logs the result of removing an artefact from a package.",
+      "tags": ["api-handler", "cli", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:removeFromPackageHandler",
+      "type": "function",
+      "name": "removeFromPackageHandler",
+      "filePath": "apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "lineRange": [70, 113],
+      "summary": "Resolves the package ref, executes the remove use case and reports results.",
+      "tags": ["api-handler", "cli", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/packages/resolvePackageRef.ts",
+      "type": "file",
+      "name": "resolvePackageRef.ts",
+      "filePath": "apps/cli/src/infra/commands/packages/resolvePackageRef.ts",
+      "summary": "Parses and validates a package slug argument, prompting or erroring when the space-qualified reference is ambiguous.",
+      "tags": ["utility", "cli", "packages", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/resolvePackageRef.ts:resolvePackageRef",
+      "type": "function",
+      "name": "resolvePackageRef",
+      "filePath": "apps/cli/src/infra/commands/packages/resolvePackageRef.ts",
+      "lineRange": [18, 50],
+      "summary": "Parses a package slug argument and fails with guidance if it is invalid or ambiguous.",
+      "tags": ["utility", "cli", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/packages/selectItemType.ts",
+      "type": "file",
+      "name": "selectItemType.ts",
+      "filePath": "apps/cli/src/infra/commands/packages/selectItemType.ts",
+      "summary": "Interactive prompt helper letting the user choose an artefact item type (standard, command, skill) for package commands.",
+      "tags": ["utility", "cli", "interactive-prompt", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/selectItemType.ts:selectItemType",
+      "type": "function",
+      "name": "selectItemType",
+      "filePath": "apps/cli/src/infra/commands/packages/selectItemType.ts",
+      "lineRange": [19, 47],
+      "summary": "Prompts the user to select an artefact item type.",
+      "tags": ["utility", "cli", "interactive-prompt"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/packages/showPackageCommand.ts",
+      "type": "file",
+      "name": "showPackageCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/packages/showPackageCommand.ts",
+      "summary": "cmd-ts command definition for `packages show <slug>` that wires CLI arguments to showPackageHandler.",
+      "tags": ["cli", "command-definition", "packages", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/showPackageCommand.ts:showPackageCommand",
+      "type": "function",
+      "name": "showPackageCommand",
+      "filePath": "apps/cli/src/infra/commands/packages/showPackageCommand.ts",
+      "lineRange": [7, 23],
+      "summary": "cmd-ts command object: `packages show <slug>` that wires CLI arguments to showPackageHandler.",
+      "tags": ["cli", "command-definition", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "type": "file",
+      "name": "showPackageHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "summary": "CLI handler that resolves a package (with space disambiguation) and prints its summary including standards, commands and skills.",
+      "tags": ["api-handler", "cli", "packages", "display"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:resolvePackage",
+      "type": "function",
+      "name": "resolvePackage",
+      "filePath": "apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "lineRange": [37, 112],
+      "summary": "Resolves a package by slug, disambiguating across spaces when needed.",
+      "tags": ["api-handler", "cli", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:showPackageHandler",
+      "type": "function",
+      "name": "showPackageHandler",
+      "filePath": "apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "lineRange": [114, 171],
+      "summary": "Fetches the package summary and prints its details and artefacts.",
+      "tags": ["api-handler", "cli", "packages"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/listPackagesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/listPackagesHandler.ts:listPackagesHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/listPackagesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/listPackagesHandler.ts:listPackagesHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/listPackagesHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/listPackagesHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/listPackagesHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/listPackagesHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/spaceFilterUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/listPackagesHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/listPackagesHandler.ts:listPackagesHandler",
+      "target": "function:apps/cli/src/infra/utils/spaceFilterUtils.ts:resolveSpaceFromArgs",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/listPackagesHandler.ts:listPackagesHandler",
+      "target": "function:apps/cli/src/infra/utils/urlBuilderUtils.ts:resolveUrlBuilder",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/listPackagesHandler.ts:listPackagesHandler",
+      "target": "function:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts:groupArtefactBySpaces",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:logMovedArtefact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:moveToPackageHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:moveToPackageHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "file:apps/cli/src/application/useCases/MoveToPackageUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "file:apps/cli/src/domain/errors/ItemNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "file:apps/cli/src/domain/useCases/IMoveToPackageUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/packages/resolvePackageRef.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:logMovedArtefact",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:artefactSubject",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:logMovedArtefact",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:logMovedArtefact",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:logMovedArtefact",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logPackageList",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:moveToPackageHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:moveToPackageHandler",
+      "target": "function:apps/cli/src/infra/commands/packages/resolvePackageRef.ts:resolvePackageRef",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:moveToPackageHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:moveToPackageHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/moveToPackageHandler.ts:moveToPackageHandler",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logItemNotFoundHint",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logItemNotFoundHint",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logItemNotFoundHint",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logPackageList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logPackageList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:artefactSubject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:artefactSubject",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "target": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "target": "file:apps/cli/src/domain/errors/ItemNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logItemNotFoundHint",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logItemNotFoundHint",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logPackageList",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:logRemovedArtefact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:removeFromPackageHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:removeFromPackageHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "file:apps/cli/src/application/useCases/RemoveFromPackageUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "file:apps/cli/src/domain/errors/ItemNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "file:apps/cli/src/domain/useCases/IRemoveFromPackageUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/packages/resolvePackageRef.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:logRemovedArtefact",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:artefactSubject",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:logRemovedArtefact",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:logRemovedArtefact",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:logRemovedArtefact",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logPackageList",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:removeFromPackageHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:removeFromPackageHandler",
+      "target": "function:apps/cli/src/infra/commands/packages/resolvePackageRef.ts:resolvePackageRef",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:removeFromPackageHandler",
+      "target": "function:apps/cli/src/infra/commands/packages/packageMembershipOutput.ts:logItemNotFoundHint",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/resolvePackageRef.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/resolvePackageRef.ts:resolvePackageRef",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/resolvePackageRef.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/resolvePackageRef.ts:resolvePackageRef",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/resolvePackageRef.ts",
+      "target": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/resolvePackageRef.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/resolvePackageRef.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/resolvePackageRef.ts:resolvePackageRef",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:isFullParsedPackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/resolvePackageRef.ts:resolvePackageRef",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/resolvePackageRef.ts:resolvePackageRef",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/selectItemType.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/selectItemType.ts:selectItemType",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/selectItemType.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/selectItemType.ts:selectItemType",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/selectItemType.ts",
+      "target": "file:apps/cli/src/domain/entities/ItemType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/selectItemType.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/selectItemType.ts:selectItemType",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/showPackageCommand.ts:showPackageCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/showPackageCommand.ts:showPackageCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/customParameters/PackageSlugArgType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/showPackageCommand.ts:showPackageCommand",
+      "target": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:showPackageHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:resolvePackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:showPackageHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:showPackageHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "target": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "target": "file:apps/cli/src/domain/useCases/IGetPackageSummaryUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/packages/showPackageHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:resolvePackage",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:isFullParsedPackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:showPackageHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:showPackageHandler",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:showPackageHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/packages/showPackageHandler.ts:showPackageHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

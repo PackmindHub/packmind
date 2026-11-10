@@ -1,0 +1,1711 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx",
+      "type": "file",
+      "name": "ProposeDescriptionChangeModal.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx",
+      "summary": "Modal with a Markdown editor letting a user propose a new command description/content as a change proposal.",
+      "tags": ["component", "react", "modal", "change-proposal", "markdown"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx:ProposeDescriptionChangeModal",
+      "type": "function",
+      "name": "ProposeDescriptionChangeModal",
+      "filePath": "apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx",
+      "lineRange": [35, 167],
+      "summary": "Modal form proposing a new command description using a Markdown editor and the change-proposal mutation.",
+      "tags": ["component", "modal", "change-proposal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx",
+      "type": "file",
+      "name": "useCommandCreationOptions.tsx",
+      "filePath": "apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx",
+      "summary": "Custom hook that builds the list of command creation options (from scratch, via agent, etc.) with routes and dialog triggers, honouring the current package context.",
+      "tags": ["hook", "react", "commands", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx:useCommandCreationOptions",
+      "type": "function",
+      "name": "useCommandCreationOptions",
+      "filePath": "apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx",
+      "lineRange": [25, 132],
+      "summary": "Hook returning available command creation options and handlers, keeping the active package context in links.",
+      "tags": ["hook", "commands", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/constants/messages.ts",
+      "type": "file",
+      "name": "messages.ts",
+      "filePath": "apps/frontend/src/domain/commands/constants/messages.ts",
+      "summary": "Centralized validation, success, and error alert messages for the commands domain (RECIPE_MESSAGES).",
+      "tags": ["constants", "messages", "commands", "i18n"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "type": "file",
+      "name": "parseCommandFrontmatter.ts",
+      "filePath": "apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "summary": "Utility that splits a command's stored content into its YAML frontmatter fields, raw block, and Markdown body, plus a helper deriving a one-line command summary.",
+      "tags": ["utility", "parser", "yaml", "frontmatter"],
+      "complexity": "moderate",
+      "languageNotes": "Documents with JSDoc why frontmatter must be stripped before Markdown rendering (setext heading pitfall)."
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:parseCommandFrontmatter",
+      "type": "function",
+      "name": "parseCommandFrontmatter",
+      "filePath": "apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "lineRange": [36, 58],
+      "summary": "Extracts the leading YAML block from command content, returning parsed fields, raw text, and the remaining Markdown body.",
+      "tags": ["parser", "yaml", "frontmatter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:commandSummary",
+      "type": "function",
+      "name": "commandSummary",
+      "filePath": "apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "lineRange": [68, 77],
+      "summary": "Derives a short one-line summary for a command from its frontmatter description or first prose line.",
+      "tags": ["utility", "summary", "frontmatter"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:parseFields",
+      "type": "function",
+      "name": "parseFields",
+      "filePath": "apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "lineRange": [79, 94],
+      "summary": "Parses frontmatter YAML into ordered key/value pairs, returning null when it is not a mapping.",
+      "tags": ["parser", "yaml", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:firstProseLine",
+      "type": "function",
+      "name": "firstProseLine",
+      "filePath": "apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "lineRange": [101, 112],
+      "summary": "Finds the first non-heading prose line in a Markdown body.",
+      "tags": ["utility", "markdown", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "file",
+      "name": "DeploymentsQueries.ts",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "summary": "TanStack Query hooks layer for the deployments domain: queries and mutations for distributions, packages, package releases, targets, render-mode configuration, dashboard KPIs, and lock-file sync, with cache invalidation logic.",
+      "tags": ["api-client", "react-query", "hook", "deployments", "packages"],
+      "complexity": "complex",
+      "languageNotes": "Pairs exported query-option factories with useQuery hooks and exports mutation keys as constants so other components can observe pending mutations."
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListCommandDeploymentsQuery",
+      "type": "function",
+      "name": "useListCommandDeploymentsQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [62, 80],
+      "summary": "Query hook listing deployments of a given command.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackageDeploymentsQuery",
+      "type": "function",
+      "name": "useListPackageDeploymentsQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [82, 104],
+      "summary": "Query hook listing deployments of a given package.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getListActiveDistributedPackagesBySpaceOptions",
+      "type": "function",
+      "name": "getListActiveDistributedPackagesBySpaceOptions",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [106, 128],
+      "summary": "Builds query options for packages actively distributed in a space.",
+      "tags": ["query-options", "react-query", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListActiveDistributedPackagesBySpaceQuery",
+      "type": "function",
+      "name": "useListActiveDistributedPackagesBySpaceQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [130, 137],
+      "summary": "Query hook for packages actively distributed in the current space.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListCommandDistributionsQuery",
+      "type": "function",
+      "name": "useListCommandDistributionsQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [139, 157],
+      "summary": "Query hook listing distribution history of a command.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListStandardDistributionsQuery",
+      "type": "function",
+      "name": "useListStandardDistributionsQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [159, 177],
+      "summary": "Query hook listing distribution history of a standard.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListSkillDistributionsQuery",
+      "type": "function",
+      "name": "useListSkillDistributionsQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [179, 202],
+      "summary": "Query hook listing distribution history of a skill.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackagesBySpaceQueryOptions",
+      "type": "function",
+      "name": "getPackagesBySpaceQueryOptions",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [204, 222],
+      "summary": "Builds query options to list packages of a space.",
+      "tags": ["query-options", "react-query", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "type": "function",
+      "name": "useListPackagesBySpaceQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [224, 229],
+      "summary": "Query hook listing packages of a space.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageByIdOptions",
+      "type": "function",
+      "name": "getPackageByIdOptions",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [231, 244],
+      "summary": "Builds query options to fetch a package by id.",
+      "tags": ["query-options", "react-query", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetPackageByIdQuery",
+      "type": "function",
+      "name": "useGetPackageByIdQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [246, 279],
+      "summary": "Query hook fetching a single package by id with not-found handling.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageReleasesQueryOptions",
+      "type": "function",
+      "name": "getPackageReleasesQueryOptions",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [281, 309],
+      "summary": "Builds query options listing releases of a package.",
+      "tags": ["query-options", "react-query", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackageReleasesQuery",
+      "type": "function",
+      "name": "useListPackageReleasesQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [311, 319],
+      "summary": "Query hook listing releases of a package.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageReleaseQueryOptions",
+      "type": "function",
+      "name": "getPackageReleaseQueryOptions",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [321, 354],
+      "summary": "Builds query options fetching a specific package release.",
+      "tags": ["query-options", "react-query", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetPackageReleaseQuery",
+      "type": "function",
+      "name": "useGetPackageReleaseQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [356, 365],
+      "summary": "Query hook fetching a specific package release.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetDashboardKpiQuery",
+      "type": "function",
+      "name": "useGetDashboardKpiQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [367, 383],
+      "summary": "Query hook fetching organization dashboard distribution KPIs.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetDashboardNonLiveQuery",
+      "type": "function",
+      "name": "useGetDashboardNonLiveQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [385, 406],
+      "summary": "Query hook fetching artifacts not live on any target for the dashboard.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployCommandsMutation",
+      "type": "function",
+      "name": "useDeployCommandsMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [409, 447],
+      "summary": "Mutation deploying commands to targets and invalidating deployment caches.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployStandardsMutation",
+      "type": "function",
+      "name": "useDeployStandardsMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [450, 488],
+      "summary": "Mutation deploying standards to targets and invalidating deployment caches.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployPackagesMutation",
+      "type": "function",
+      "name": "useDeployPackagesMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [491, 545],
+      "summary": "Mutation distributing packages to targets and invalidating related caches.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetTargetsByRepositoryQuery",
+      "type": "function",
+      "name": "useGetTargetsByRepositoryQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [555, 572],
+      "summary": "Query hook listing targets of a git repository.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetTargetsByOrganizationQuery",
+      "type": "function",
+      "name": "useGetTargetsByOrganizationQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [574, 589],
+      "summary": "Query hook listing all targets of the organization.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useAddTargetMutation",
+      "type": "function",
+      "name": "useAddTargetMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [592, 637],
+      "summary": "Mutation adding a distribution target to a repository.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdateTargetMutation",
+      "type": "function",
+      "name": "useUpdateTargetMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [640, 684],
+      "summary": "Mutation updating a distribution target.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeleteTargetMutation",
+      "type": "function",
+      "name": "useDeleteTargetMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [687, 731],
+      "summary": "Mutation deleting a distribution target.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetRenderModeConfigurationQuery",
+      "type": "function",
+      "name": "useGetRenderModeConfigurationQuery",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [733, 750],
+      "summary": "Query hook fetching the organization render-mode (agent) configuration.",
+      "tags": ["query", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdateRenderModeConfigurationMutation",
+      "type": "function",
+      "name": "useUpdateRenderModeConfigurationMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [754, 785],
+      "summary": "Mutation updating the organization render-mode configuration.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useCreatePackageMutation",
+      "type": "function",
+      "name": "useCreatePackageMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [788, 805],
+      "summary": "Mutation creating a new package.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useCreatePackageReleaseMutation",
+      "type": "function",
+      "name": "useCreatePackageReleaseMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [808, 845],
+      "summary": "Mutation creating a package release and refreshing release state.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidatePackageReleaseState",
+      "type": "function",
+      "name": "invalidatePackageReleaseState",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [867, 878],
+      "summary": "Invalidates package, release, and distribution caches after release changes.",
+      "tags": ["cache-invalidation", "react-query", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidateChangeProposalQueries",
+      "type": "function",
+      "name": "invalidateChangeProposalQueries",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [880, 892],
+      "summary": "Invalidates change-proposal caches affected by package changes.",
+      "tags": ["cache-invalidation", "react-query", "helper"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdatePackageMutation",
+      "type": "function",
+      "name": "useUpdatePackageMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [894, 916],
+      "summary": "Mutation updating package metadata and contents.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useAddArtefactsToPackagesMutation",
+      "type": "function",
+      "name": "useAddArtefactsToPackagesMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [930, 980],
+      "summary": "Mutation adding artifacts to one or more packages.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useMoveArtefactsToPackageMutation",
+      "type": "function",
+      "name": "useMoveArtefactsToPackageMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [988, 1031],
+      "summary": "Mutation moving artifacts from one package to another.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemoveArtefactsFromPackageMutation",
+      "type": "function",
+      "name": "useRemoveArtefactsFromPackageMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [1035, 1078],
+      "summary": "Mutation removing artifacts from a package.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeletePackagesBatchMutation",
+      "type": "function",
+      "name": "useDeletePackagesBatchMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [1081, 1103],
+      "summary": "Mutation deleting several packages at once.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemovePackageFromTargetsMutation",
+      "type": "function",
+      "name": "useRemovePackageFromTargetsMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [1105, 1149],
+      "summary": "Mutation removing a package from distribution targets.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useSyncRepositoryFromLockFilesMutation",
+      "type": "function",
+      "name": "useSyncRepositoryFromLockFilesMutation",
+      "filePath": "apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "lineRange": [1151, 1188],
+      "summary": "Mutation syncing repository distribution state from its lock files.",
+      "tags": ["mutation", "react-query", "hook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "type": "file",
+      "name": "queryKeys.ts",
+      "filePath": "apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "summary": "Defines the hierarchical TanStack Query cache keys and key-builder functions for the deployments domain, scoped under the organization query scope.",
+      "tags": ["react-query", "cache-keys", "constants", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getDashboardKpiKey",
+      "type": "function",
+      "name": "getDashboardKpiKey",
+      "filePath": "apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "lineRange": [124, 125],
+      "summary": "Builds the dashboard KPI cache key for an organization and space.",
+      "tags": ["cache-keys", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getDashboardNonLiveKey",
+      "type": "function",
+      "name": "getDashboardNonLiveKey",
+      "filePath": "apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "lineRange": [133, 134],
+      "summary": "Builds the cache key for non-live dashboard artifacts.",
+      "tags": ["cache-keys", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getListPackageReleasesKey",
+      "type": "function",
+      "name": "getListPackageReleasesKey",
+      "filePath": "apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "lineRange": [142, 147],
+      "summary": "Builds the cache key listing releases of a package.",
+      "tags": ["cache-keys", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getGetPackageReleaseKey",
+      "type": "function",
+      "name": "getGetPackageReleaseKey",
+      "filePath": "apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "lineRange": [155, 167],
+      "summary": "Builds the cache key for a single package release.",
+      "tags": ["cache-keys", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesBatchAction.tsx",
+      "type": "file",
+      "name": "AddToPackagesBatchAction.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesBatchAction.tsx",
+      "summary": "Batch-action button for item listings that opens the AddToPackagesDialog for the currently selected artifacts.",
+      "tags": ["component", "react", "batch-actions", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesBatchAction.tsx:AddToPackagesBatchAction",
+      "type": "function",
+      "name": "AddToPackagesBatchAction",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesBatchAction.tsx",
+      "lineRange": [24, 63],
+      "summary": "Batch action button opening the add-to-packages dialog for selected artifacts.",
+      "tags": ["component", "batch-actions", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "type": "file",
+      "name": "AddToPackagesDialog.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "summary": "Dialog for adding standards, commands, or skills to packages, showing current membership, deployment status, and allowing add/remove/move between packages.",
+      "tags": ["component", "react", "dialog", "packages", "mutation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:buildArtefactIdsPayload",
+      "type": "function",
+      "name": "buildArtefactIdsPayload",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "lineRange": [79, 91],
+      "summary": "Builds the per-kind artifact id payload expected by package mutations.",
+      "tags": ["helper", "payload"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:AddToPackagesDialog",
+      "type": "function",
+      "name": "AddToPackagesDialog",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "lineRange": [109, 538],
+      "summary": "Dialog orchestrating add, remove, and move of artifacts across packages with membership and deployment status.",
+      "tags": ["component", "dialog", "packages"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:SectionLabel",
+      "type": "function",
+      "name": "SectionLabel",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "lineRange": [540, 552],
+      "summary": "Small label component for dialog sections.",
+      "tags": ["component", "presentational"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:PackageRowContent",
+      "type": "function",
+      "name": "PackageRowContent",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "lineRange": [554, 586],
+      "summary": "Renders a package row with name and deployment info.",
+      "tags": ["component", "presentational"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:MemberRow",
+      "type": "function",
+      "name": "MemberRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "lineRange": [588, 654],
+      "summary": "Row for a package the artifact already belongs to, with remove action.",
+      "tags": ["component", "packages"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:moveHint",
+      "type": "function",
+      "name": "moveHint",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "lineRange": [666, 690],
+      "summary": "Computes the hint text explaining a move between packages.",
+      "tags": ["helper", "copy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:MoveRow",
+      "type": "function",
+      "name": "MoveRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "lineRange": [692, 753],
+      "summary": "Row offering to move the artifact into another package.",
+      "tags": ["component", "packages"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx:ProposeDescriptionChangeModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx:ProposeDescriptionChangeModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx:useCommandCreationOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx",
+      "target": "function:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx:useCommandCreationOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "target": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:parseCommandFrontmatter",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "target": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:parseCommandFrontmatter",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "target": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:commandSummary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "target": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:commandSummary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "target": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:parseFields",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "target": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:firstProseLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListCommandDeploymentsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListCommandDeploymentsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackageDeploymentsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackageDeploymentsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getListActiveDistributedPackagesBySpaceOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getListActiveDistributedPackagesBySpaceOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListActiveDistributedPackagesBySpaceQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListActiveDistributedPackagesBySpaceQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListCommandDistributionsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListCommandDistributionsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListStandardDistributionsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListStandardDistributionsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListSkillDistributionsQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListSkillDistributionsQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackagesBySpaceQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackagesBySpaceQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageByIdOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageByIdOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetPackageByIdQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetPackageByIdQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageReleasesQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageReleasesQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackageReleasesQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackageReleasesQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageReleaseQueryOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageReleaseQueryOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetPackageReleaseQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetPackageReleaseQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetDashboardKpiQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetDashboardKpiQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetDashboardNonLiveQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetDashboardNonLiveQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployCommandsMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployCommandsMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployStandardsMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployStandardsMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployPackagesMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployPackagesMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetTargetsByRepositoryQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetTargetsByRepositoryQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetTargetsByOrganizationQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetTargetsByOrganizationQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useAddTargetMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useAddTargetMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdateTargetMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdateTargetMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeleteTargetMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeleteTargetMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetRenderModeConfigurationQuery",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetRenderModeConfigurationQuery",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdateRenderModeConfigurationMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdateRenderModeConfigurationMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useCreatePackageMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useCreatePackageMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useCreatePackageReleaseMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useCreatePackageReleaseMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidatePackageReleaseState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidateChangeProposalQueries",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdatePackageMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdatePackageMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useAddArtefactsToPackagesMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useAddArtefactsToPackagesMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useMoveArtefactsToPackageMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useMoveArtefactsToPackageMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemoveArtefactsFromPackageMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemoveArtefactsFromPackageMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeletePackagesBatchMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeletePackagesBatchMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemovePackageFromTargetsMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemovePackageFromTargetsMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useSyncRepositoryFromLockFilesMutation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useSyncRepositoryFromLockFilesMutation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getDashboardKpiKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getDashboardKpiKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getDashboardNonLiveKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getDashboardNonLiveKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getListPackageReleasesKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getListPackageReleasesKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getGetPackageReleaseKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getGetPackageReleaseKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesBatchAction.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesBatchAction.tsx:AddToPackagesBatchAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesBatchAction.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesBatchAction.tsx:AddToPackagesBatchAction",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:buildArtefactIdsPayload",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:AddToPackagesDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:AddToPackagesDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:SectionLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:PackageRowContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:MemberRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:moveHint",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:MoveRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedWidget.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/gateways/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/api/queryKeys.ts",
+      "target": "file:apps/frontend/src/domain/organizations/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesBatchAction.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx:ProposeDescriptionChangeModal",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditor",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx:ProposeDescriptionChangeModal",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditorProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/components/useCommandCreationOptions.tsx:useCommandCreationOptions",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:withPackageParam",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetDashboardKpiQuery",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getDashboardKpiKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetDashboardNonLiveQuery",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getDashboardNonLiveKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageReleasesQueryOptions",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getListPackageReleasesKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useCreatePackageReleaseMutation",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getListPackageReleasesKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageReleaseQueryOptions",
+      "target": "function:apps/frontend/src/domain/deployments/api/queryKeys.ts:getGetPackageReleaseKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetPackageByIdQuery",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useAddTargetMutation",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdateTargetMutation",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeleteTargetMutation",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemovePackageFromTargetsMutation",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useSyncRepositoryFromLockFilesMutation",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesBatchAction.tsx:AddToPackagesBatchAction",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:AddToPackagesDialog",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:AddToPackagesDialog",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useMoveArtefactsToPackageMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:AddToPackagesDialog",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemoveArtefactsFromPackageMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:AddToPackagesDialog",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackageDeploymentStatus.ts:usePackageDeploymentStatus",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:AddToPackagesDialog",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/usePackageMembership.ts:usePackageMembership",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:parseCommandFrontmatter",
+      "target": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:parseFields",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:commandSummary",
+      "target": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:parseCommandFrontmatter",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:commandSummary",
+      "target": "function:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts:firstProseLine",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListActiveDistributedPackagesBySpaceQuery",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getListActiveDistributedPackagesBySpaceOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackagesBySpaceQuery",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackagesBySpaceQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListPackageReleasesQuery",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageReleasesQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useGetPackageReleaseQuery",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:getPackageReleaseQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdatePackageMutation",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidatePackageReleaseState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useUpdatePackageMutation",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidateChangeProposalQueries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useAddArtefactsToPackagesMutation",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidatePackageReleaseState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useMoveArtefactsToPackageMutation",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidatePackageReleaseState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemoveArtefactsFromPackageMutation",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidatePackageReleaseState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeletePackagesBatchMutation",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidateChangeProposalQueries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useRemovePackageFromTargetsMutation",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:invalidateChangeProposalQueries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:MoveRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/AddToPackagesDialog.tsx:moveHint",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

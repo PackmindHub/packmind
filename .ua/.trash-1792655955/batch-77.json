@@ -1,0 +1,45 @@
+{
+  "nodes": [
+    {
+      "id": "document:.github/SECURITY.md",
+      "type": "document",
+      "name": "SECURITY.md",
+      "filePath": ".github/SECURITY.md",
+      "summary": "Security policy describing supported versions and how to privately report vulnerabilities via GitHub Security Advisories.",
+      "tags": [
+        "documentation",
+        "security",
+        "policy",
+        "vulnerability-disclosure"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:.github/dependabot.yml",
+      "type": "config",
+      "name": "dependabot.yml",
+      "filePath": ".github/dependabot.yml",
+      "summary": "Dependabot configuration scheduling monthly npm updates (ignoring Nx packages) and weekly Docker base-image updates.",
+      "tags": ["configuration", "dependency-management", "security", "ci-cd"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:.github/pull_request_template.md",
+      "type": "document",
+      "name": "pull_request_template.md",
+      "filePath": ".github/pull_request_template.md",
+      "summary": "Pull request template guiding contributors to describe changes, type of change, testing, and a review checklist.",
+      "tags": ["documentation", "github", "pull-request", "development"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:.github/pull_request_template.md",
+      "target": "document:.github/SECURITY.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

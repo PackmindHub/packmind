@@ -1,0 +1,155 @@
+# .understandignore — patterns for files/dirs to exclude from analysis
+# Syntax: same as .gitignore (globs, # comments, ! negation, trailing / for dirs)
+# Lines below are suggestions — uncomment to activate.
+# Use ! prefix to force-include something excluded by defaults.
+#
+# Built-in defaults (always excluded unless negated):
+#   node_modules/, .git/, dist/, build/, obj/, *.lock, *.min.js, etc.
+#
+
+# --- From .gitignore (uncomment to exclude) ---
+
+# .nx-daemon/
+# .pnpm-store/
+# /fly/
+# .agents/
+# .codex/
+# .claude/plans/
+# .claude/specs/
+# qa-test/
+# qa-tmp/
+# specs/
+# docs/
+# tmp/
+# apps/api/.env
+# .env
+# .nx/cache
+# .nx/workspace-data
+# graph.json
+# .cursor/rules/nx-rules.mdc
+# .github/instructions/nx.instructions.md
+# dockerfile/helm-chart/playground-values/
+# vite.config.*.timestamp*
+# vitest.config.*.timestamp*
+# storybook-static
+# .DS_Store
+# dockerfile/prod/secrets
+# .docusaurus/
+# tsconfig.base.effective.json
+# packages/linter/js-playground-local
+# docker-compose.override.yml
+# dockerfile/local/docker-compose.override.yaml
+# DECISIONS.md
+# LEARNINGS.md
+# test-results/
+# .env
+# .env.*
+# compose.env
+# .mcp.json
+# !scripts/michel/.mcp.json
+# .worktrees/
+# .claude/worktrees
+# .claude/settings.local.json
+# docker/nginx/ssl
+# .nx/polygraph
+# .nx/self-healing
+# node-compile-cache/
+# sprites/*
+# !sprites/run-michel.sh
+# screenshots/
+# videos/
+# .sprite
+# .env.michel
+# .claude/skills/michel-*/
+# .nx/migrate-runs
+# .impeccable
+# .claude/pipeline/metrics.jsonl
+
+# --- Detected directories (uncomment to exclude) ---
+
+# scripts/
+
+# --- Test file patterns (uncomment to exclude) ---
+
+# JS / TS
+# *.test.*
+# *.spec.*
+# *.snap
+# C# / .NET
+# **/*Tests.cs
+# **/*Test.cs
+# **/*Fixture.cs
+# **/*.Tests.csproj
+# Java / Kotlin
+# **/src/test/**
+# **/*Test.java
+# **/*IT.java
+# **/*Spec.kt
+# Go
+# **/*_test.go
+# C++
+# **/*_test.cc
+# **/*_test.cpp
+# **/*_test.cxx
+# **/*Test.cc
+# **/*Test.cpp
+# **/*_unittest.cc
+# **/*_unittest.cpp
+# **/*_browsertest.cc
+# **/*_benchmark.cc
+# **/*Benchmark.cpp
+# Python
+# **/test_*.py
+# **/*_test.py
+# **/tests.py
+# **/conftest.py
+# Rust
+# **/tests.rs
+# **/test_*.rs
+# **/*_test.rs
+# **/bench_*.rs
+# **/*_bench.rs
+# Ruby
+# **/*_spec.rb
+# **/*_test.rb
+# **/test_*.rb
+# **/spec_helper.rb
+# **/test_helper.rb
+# **/rails_helper.rb
+# Swift
+# **/Tests/**/*.swift
+# **/Specs/**/*.swift
+
+# --- Active exclusions (lean core scope) ---
+*.test.*
+*.spec.*
+*.snap
+__snapshots__/
+.claude/
+.cursor/
+.agents/
+.opencode/
+.codex/
+.gitlab/
+.github/skills/
+.github/instructions/
+.github/prompts/
+.github/agents/
+packages/.*/
+apps/playground/
+apps/e2e-tests/
+apps/cli-e2e-tests/
+packages/integration-tests/
+packages/migrations/
+docs/
+tmp/
+specs/
+scripts/
+tools/
+sprites/
+.nx/
+packages/types/
+packages/ui/
+packages/test-utils/
+apps/doc/
+packages/editions/

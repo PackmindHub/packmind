@@ -1,0 +1,47 @@
+{
+  "nodes": [
+    {
+      "id": "document:eslint-rules/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "eslint-rules/README.md",
+      "summary": "Documents the workspace ESLint plugin: its custom rules (use-case-filename, usecase-casing, throw-kind-carrying-error), wiring into the root eslint.config.mjs, tests and how to add a rule.",
+      "tags": ["documentation", "linting", "eslint", "development"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:eslint-rules/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "eslint-rules/project.json",
+      "summary": "Nx project definition registering eslint-rules as a Node library project.",
+      "tags": ["configuration", "nx", "linting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:eslint-rules/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "eslint-rules/tsconfig.json",
+      "summary": "TypeScript config for the eslint-rules project extending the base config with CommonJS modules and a spec tsconfig reference.",
+      "tags": ["configuration", "typescript", "linting"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:eslint-rules/README.md",
+      "target": "config:eslint-rules/project.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:eslint-rules/tsconfig.json",
+      "target": "config:eslint-rules/project.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

@@ -1,0 +1,283 @@
+{
+  "nodes": [
+    {
+      "id": "document:apps/cli/AGENTS.md",
+      "type": "document",
+      "name": "AGENTS.md",
+      "filePath": "apps/cli/AGENTS.md",
+      "summary": "Agent instructions for the CLI app describing its cmd-ts/tree-sitter architecture, build and test commands, plus an injected Packmind standards index.",
+      "tags": ["documentation", "ai-agent-instructions", "cli", "development"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:apps/cli/CHANGELOG.MD",
+      "type": "document",
+      "name": "CHANGELOG.MD",
+      "filePath": "apps/cli/CHANGELOG.MD",
+      "summary": "Release history of the Packmind CLI, with an Unreleased section and per-version Added/Changed/Fixed entries for commands like install and distribution record.",
+      "tags": ["documentation", "changelog", "release", "cli"],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:apps/cli/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "apps/cli/CLAUDE.md",
+      "summary": "Claude Code guidance for the packmind-cli Nx project: command aggregation in src/main.ts, pointers to CLI standards, and the difference between the CJS bundle build and Bun executables.",
+      "tags": ["documentation", "ai-agent-instructions", "cli", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/cli/MACOS_SIGNING_SETUP.md",
+      "type": "document",
+      "name": "MACOS_SIGNING_SETUP.md",
+      "filePath": "apps/cli/MACOS_SIGNING_SETUP.md",
+      "summary": "Setup guide for macOS code signing and notarization of CLI binaries in CI, covering required GitHub secrets, entitlements, testing modes and troubleshooting.",
+      "tags": ["documentation", "code-signing", "macos", "ci-cd", "security"],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:apps/cli/MACOS_SIGNING_SUMMARY.md",
+      "type": "document",
+      "name": "MACOS_SIGNING_SUMMARY.md",
+      "filePath": "apps/cli/MACOS_SIGNING_SUMMARY.md",
+      "summary": "Implementation summary of macOS CLI signing: the minimal entitlements file and the GitHub Actions workflow changes that sign the Bun-built binaries.",
+      "tags": ["documentation", "code-signing", "macos", "security"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "document:apps/cli/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "apps/cli/README.md",
+      "summary": "Main CLI README covering requirements, running from source, bundled and standalone Bun builds per platform, macOS signing, auth/lint usage, architecture and troubleshooting.",
+      "tags": ["documentation", "entry-point", "cli", "build-system"],
+      "complexity": "complex"
+    },
+    {
+      "id": "document:apps/cli/RELEASING.md",
+      "type": "document",
+      "name": "RELEASING.md",
+      "filePath": "apps/cli/RELEASING.md",
+      "summary": "Short release procedure for packmind-cli, including the Unreleased changelog template with Added/Changed/Fixed/Removed sections.",
+      "tags": ["documentation", "release", "cli"],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:apps/cli/WASM_EMBEDDING.md",
+      "type": "document",
+      "name": "WASM_EMBEDDING.md",
+      "filePath": "apps/cli/WASM_EMBEDDING.md",
+      "summary": "Explains how tree-sitter WASM parser files are embedded into Bun-compiled CLI executables, the build process, resulting file sizes and distribution notes.",
+      "tags": ["documentation", "wasm", "build-system", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/cli/bunfig.toml",
+      "type": "config",
+      "name": "bunfig.toml",
+      "filePath": "apps/cli/bunfig.toml",
+      "summary": "Bun configuration for CLI compilation, disabling dev installs and setting no external packages so everything is embedded in the executable.",
+      "tags": ["configuration", "bun", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/cli/entitlements.plist",
+      "type": "config",
+      "name": "entitlements.plist",
+      "filePath": "apps/cli/entitlements.plist",
+      "summary": "macOS hardened-runtime entitlements (JIT, unsigned executable memory, disabled page protection) applied when signing the Bun-built CLI binary.",
+      "tags": ["configuration", "code-signing", "macos", "security"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/cli/knip.json",
+      "type": "config",
+      "name": "knip.json",
+      "filePath": "apps/cli/knip.json",
+      "summary": "Knip dead-code analysis configuration for the CLI, using src/main.ts as entry and ignoring spec and mock files.",
+      "tags": ["configuration", "dead-code", "tooling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/cli/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "apps/cli/package.json",
+      "summary": "npm package manifest for @packmind/cli, declaring the packmind/packmind-cli bin entries pointing to main.cjs and the files published (bundle, WASM parsers, stubs, changelog).",
+      "tags": ["configuration", "npm-package", "cli", "build-system"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/cli/packmind-lock.json",
+      "type": "config",
+      "name": "packmind-lock.json",
+      "filePath": "apps/cli/packmind-lock.json",
+      "summary": "Packmind lockfile recording the installed @cli/implementation package, target agents and the distributed standard/skill artifacts with their versions and files.",
+      "tags": [
+        "configuration",
+        "packmind",
+        "lockfile",
+        "ai-agent-instructions"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/cli/packmind.json",
+      "type": "config",
+      "name": "packmind.json",
+      "filePath": "apps/cli/packmind.json",
+      "summary": "Packmind CLI manifest declaring that this app consumes the @cli/implementation playbook package.",
+      "tags": ["configuration", "packmind", "manifest"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/cli/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "apps/cli/project.json",
+      "summary": "Nx project configuration for packmind-cli defining typecheck, build, publish bundle, Bun executable targets per platform, run and test targets.",
+      "tags": ["configuration", "nx", "build-system", "cli"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "config:apps/cli/tsconfig.app.json",
+      "type": "config",
+      "name": "tsconfig.app.json",
+      "filePath": "apps/cli/tsconfig.app.json",
+      "summary": "TypeScript app build config for the CLI emitting CommonJS with Node types, excluding tests and mocks.",
+      "tags": ["configuration", "typescript", "build-system"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:apps/cli/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "apps/cli/tsconfig.json",
+      "summary": "Root TypeScript config for the CLI project extending the effective base config and referencing app and spec configs with esModuleInterop.",
+      "tags": ["configuration", "typescript", "build-system"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "config:apps/cli/package.json",
+      "target": "file:apps/cli/src/main.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/cli/knip.json",
+      "target": "file:apps/cli/src/main.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/cli/tsconfig.app.json",
+      "target": "file:apps/cli/src/main.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/cli/project.json",
+      "target": "file:apps/cli/src/main.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/cli/tsconfig.app.json",
+      "target": "config:apps/cli/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:apps/cli/packmind-lock.json",
+      "target": "config:apps/cli/packmind.json",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/CLAUDE.md",
+      "target": "file:apps/cli/src/main.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/AGENTS.md",
+      "target": "file:apps/cli/src/main.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/README.md",
+      "target": "file:apps/cli/src/main.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/README.md",
+      "target": "config:apps/cli/entitlements.plist",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/MACOS_SIGNING_SETUP.md",
+      "target": "config:apps/cli/entitlements.plist",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/MACOS_SIGNING_SUMMARY.md",
+      "target": "config:apps/cli/entitlements.plist",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/MACOS_SIGNING_SUMMARY.md",
+      "target": "document:apps/cli/MACOS_SIGNING_SETUP.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/RELEASING.md",
+      "target": "document:apps/cli/CHANGELOG.MD",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/WASM_EMBEDDING.md",
+      "target": "config:apps/cli/bunfig.toml",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:apps/cli/CLAUDE.md",
+      "target": "config:apps/cli/project.json",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:apps/cli/package.json",
+      "target": "document:apps/cli/CHANGELOG.MD",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

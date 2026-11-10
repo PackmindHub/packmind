@@ -1,0 +1,854 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx",
+      "type": "file",
+      "name": "StandardExampleDialog.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx",
+      "summary": "Dialog showing a worked example of a standard (rules plus positive/negative code samples) rendered via MarkdownEditor, with a trigger button used from the standards blank state.",
+      "tags": ["component", "dialog", "standards", "onboarding"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx:StandardExampleDialogButton",
+      "type": "function",
+      "name": "StandardExampleDialogButton",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx",
+      "lineRange": [332, 374],
+      "summary": "Button that opens the standard example dialog and tracks its open state.",
+      "tags": ["component", "button", "dialog"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx:StandardExampleDialog",
+      "type": "function",
+      "name": "StandardExampleDialog",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx",
+      "lineRange": [376, 384],
+      "summary": "Exported dialog component rendering the example standard content.",
+      "tags": ["component", "dialog", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "type": "file",
+      "name": "StandardForm.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "summary": "Create/edit form for a standard covering name, description, scope and rules with examples, validating artifact names and warning about pending change proposals before saving.",
+      "tags": ["component", "form", "standards", "validation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardForm.tsx:StandardForm",
+      "type": "function",
+      "name": "StandardForm",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "lineRange": [62, 529],
+      "summary": "Form component handling standard creation and edition, rule management, validation and submission.",
+      "tags": ["component", "form", "standards"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardRulesFrame.tsx",
+      "type": "file",
+      "name": "StandardRulesFrame.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardRulesFrame.tsx",
+      "summary": "Presentational frame listing a standard's rules in a styled container for the standard detail view.",
+      "tags": ["component", "standards", "presentation", "rules"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardRulesFrame.tsx:StandardRulesFrame",
+      "type": "function",
+      "name": "StandardRulesFrame",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardRulesFrame.tsx",
+      "lineRange": [30, 97],
+      "summary": "Renders a framed list of standard rules.",
+      "tags": ["component", "rules", "presentation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/SampleIcon.tsx",
+      "type": "file",
+      "name": "SampleIcon.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardSamplesModal/SampleIcon.tsx",
+      "summary": "Maps a standard sample's language or framework identifier to a matching icon for display in the samples picker.",
+      "tags": ["component", "icon", "standards", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardSamplesModal/SampleIcon.tsx:SampleIcon",
+      "type": "function",
+      "name": "SampleIcon",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardSamplesModal/SampleIcon.tsx",
+      "lineRange": [91, 103],
+      "summary": "Resolves and renders the icon for a sample identifier.",
+      "tags": ["component", "icon", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx",
+      "type": "file",
+      "name": "StandardSamplesModal.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx",
+      "summary": "Modal letting users browse ready-made standard samples by category, select several and create them in the current space through the standards queries.",
+      "tags": ["component", "modal", "standards", "samples"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx:StandardSamplesModal",
+      "type": "function",
+      "name": "StandardSamplesModal",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx",
+      "lineRange": [40, 220],
+      "summary": "Modal managing sample selection and creation of standards from samples.",
+      "tags": ["component", "modal", "samples"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx:SampleCardGrid",
+      "type": "function",
+      "name": "SampleCardGrid",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx",
+      "lineRange": [228, 275],
+      "summary": "Grid of selectable sample cards with icons.",
+      "tags": ["component", "grid", "samples"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardSamplesModal/index.ts",
+      "summary": "Barrel re-exporting StandardSamplesModal.",
+      "tags": ["barrel", "entry-point", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx",
+      "type": "file",
+      "name": "StandardVersionHistoryHeader.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx",
+      "summary": "Header for a standard's version history page, showing package membership via PackagesPopover and the list of versions.",
+      "tags": ["component", "standards", "versioning", "header"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx:StandardVersionHistoryHeader",
+      "type": "function",
+      "name": "StandardVersionHistoryHeader",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx",
+      "lineRange": [17, 59],
+      "summary": "Header component for the standard version history view.",
+      "tags": ["component", "header", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardVersionsList.tsx",
+      "type": "file",
+      "name": "StandardVersionsList.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardVersionsList.tsx",
+      "summary": "Renders the chronological list of a standard's versions with author and date information.",
+      "tags": ["component", "standards", "versioning", "list"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardVersionsList.tsx:StandardVersionsList",
+      "type": "function",
+      "name": "StandardVersionsList",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardVersionsList.tsx",
+      "lineRange": [22, 87],
+      "summary": "Lists standard versions with metadata.",
+      "tags": ["component", "list", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx",
+      "type": "file",
+      "name": "StandardsBlankState.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardsBlankState.tsx",
+      "summary": "Empty-state screen for the standards page explaining what standards are and offering creation paths, an example dialog and getting-started guidance.",
+      "tags": ["component", "blank-state", "standards", "onboarding"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx:StandardsBlankState",
+      "type": "function",
+      "name": "StandardsBlankState",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardsBlankState.tsx",
+      "lineRange": [26, 220],
+      "summary": "Blank-state component guiding users to create their first standard.",
+      "tags": ["component", "blank-state", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx",
+      "type": "file",
+      "name": "StandardsCreateButton.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx",
+      "summary": "Create button with a menu of standard creation options (agent, samples, manual form) driven by useStandardCreationOptions.",
+      "tags": ["component", "button", "standards", "creation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx:StandardsCreateButton",
+      "type": "function",
+      "name": "StandardsCreateButton",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx",
+      "lineRange": [9, 31],
+      "summary": "Menu button rendering standard creation options and their dialogs.",
+      "tags": ["component", "button", "creation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "type": "file",
+      "name": "StandardsList.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "summary": "Main standards listing table for a space with search, selection, bulk deletion, package membership chips and add-to-packages actions, falling back to a blank state.",
+      "tags": ["component", "list", "standards", "packages"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardsList.tsx:StandardsList",
+      "type": "function",
+      "name": "StandardsList",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "lineRange": [45, 403],
+      "summary": "Standards table with search, selection, deletion and package actions.",
+      "tags": ["component", "list", "standards"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts",
+      "type": "file",
+      "name": "useSamplesIntoPackage.ts",
+      "filePath": "apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts",
+      "summary": "Hook returning a callback that attaches standards freshly created from samples to a target package and toasts on failure.",
+      "tags": ["hook", "standards", "packages", "samples"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts:useSamplesIntoPackage",
+      "type": "function",
+      "name": "useSamplesIntoPackage",
+      "filePath": "apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts",
+      "lineRange": [22, 37],
+      "summary": "Returns a callback attaching created standards to a package with failure toast.",
+      "tags": ["hook", "packages", "samples"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "type": "file",
+      "name": "useStandardCreationOptions.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "summary": "Hook building the shared standard-creation menu items and their dialogs (agent, samples, form) so the standards page and Context surface offer identical options.",
+      "tags": ["hook", "standards", "creation", "menu"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx:useStandardCreationOptions",
+      "type": "function",
+      "name": "useStandardCreationOptions",
+      "filePath": "apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "lineRange": [36, 177],
+      "summary": "Builds menu items and dialog nodes for standard creation paths.",
+      "tags": ["hook", "creation", "menu"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/constants/messages.ts",
+      "type": "file",
+      "name": "messages.ts",
+      "filePath": "apps/frontend/src/domain/standards/constants/messages.ts",
+      "summary": "Centralized user-facing success and error message strings for standard operations.",
+      "tags": ["constants", "messages", "standards", "microcopy"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/utils/scopeGlobs.ts",
+      "type": "file",
+      "name": "scopeGlobs.ts",
+      "filePath": "apps/frontend/src/domain/standards/utils/scopeGlobs.ts",
+      "summary": "Splits a standard's comma-separated scope into globs (brace-aware, mirroring coding-agent deployers) and detects scopes that are not valid patterns.",
+      "tags": ["utility", "glob", "standards", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/utils/scopeGlobs.ts:splitScopeGlobs",
+      "type": "function",
+      "name": "splitScopeGlobs",
+      "filePath": "apps/frontend/src/domain/standards/utils/scopeGlobs.ts",
+      "lineRange": [22, 45],
+      "summary": "Splits a scope string into globs on top-level commas, respecting brace groups.",
+      "tags": ["utility", "parser", "glob"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/utils/scopeGlobs.ts:unmatchableScopeGlobs",
+      "type": "function",
+      "name": "unmatchableScopeGlobs",
+      "filePath": "apps/frontend/src/domain/standards/utils/scopeGlobs.ts",
+      "lineRange": [61, 63],
+      "summary": "Returns globs in a scope that are not real patterns and will match nothing.",
+      "tags": ["utility", "validation", "glob"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx:StandardExampleDialogButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx:StandardExampleDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx:StandardExampleDialog",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardForm.tsx:StandardForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardForm.tsx:StandardForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "target": "file:apps/frontend/src/domain/standards/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "target": "file:apps/frontend/src/shared/components/PendingChangeProposals.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/useArtifactNameValidator.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardRulesFrame.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardRulesFrame.tsx:StandardRulesFrame",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardRulesFrame.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardRulesFrame.tsx:StandardRulesFrame",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/SampleIcon.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardSamplesModal/SampleIcon.tsx:SampleIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/SampleIcon.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardSamplesModal/SampleIcon.tsx:SampleIcon",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx:StandardSamplesModal",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx:StandardSamplesModal",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx:SampleCardGrid",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/SampleIcon.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx:StandardVersionHistoryHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx:StandardVersionHistoryHeader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackagesPopover/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardVersionsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardVersionsList.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardVersionsList.tsx:StandardVersionsList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardVersionsList.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardVersionsList.tsx:StandardVersionsList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx:StandardsBlankState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx:StandardsBlankState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedLearnMoreDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedWidget.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx:StandardsCreateButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx:StandardsCreateButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardsList.tsx:StandardsList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardsList.tsx:StandardsList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/UserAvatarWithInitials.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/MembershipChips/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/PackageCountBadge/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/usePackagesForArtifact.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardsList.styles.scss",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/domain/standards/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/shared/components/ItemsListing.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardsList.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts",
+      "target": "function:apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts:useSamplesIntoPackage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts",
+      "target": "function:apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts:useSamplesIntoPackage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx:useStandardCreationOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx:useStandardCreationOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/dashboard/GettingStartedWidget.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/utils/scopeGlobs.ts",
+      "target": "function:apps/frontend/src/domain/standards/utils/scopeGlobs.ts:splitScopeGlobs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/utils/scopeGlobs.ts",
+      "target": "function:apps/frontend/src/domain/standards/utils/scopeGlobs.ts:splitScopeGlobs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/utils/scopeGlobs.ts",
+      "target": "function:apps/frontend/src/domain/standards/utils/scopeGlobs.ts:unmatchableScopeGlobs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/utils/scopeGlobs.ts",
+      "target": "function:apps/frontend/src/domain/standards/utils/scopeGlobs.ts:unmatchableScopeGlobs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardsCreateButton.tsx:StandardsCreateButton",
+      "target": "function:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx:useStandardCreationOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/useStandardCreationOptions.tsx:useStandardCreationOptions",
+      "target": "function:apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts:useSamplesIntoPackage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardForm.tsx:StandardForm",
+      "target": "function:apps/frontend/src/shared/hooks/useArtifactNameValidator.ts:useArtifactNameValidator",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardForm.tsx:StandardForm",
+      "target": "function:apps/frontend/src/shared/components/PendingChangeProposals.tsx:countPendingChangeProposals",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx:StandardsBlankState",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx:StandardExampleDialogButton",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardsList.tsx:StandardsList",
+      "target": "function:apps/frontend/src/shared/components/ItemsListing.tsx:ItemsListing",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardsList.tsx:StandardsList",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardsBlankState.tsx:StandardsBlankState",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardSamplesModal/StandardSamplesModal.tsx:SampleCardGrid",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardSamplesModal/SampleIcon.tsx:SampleIcon",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardVersionHistoryHeader.tsx:StandardVersionHistoryHeader",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardVersionsList.tsx:StandardVersionsList",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/standards/components/StandardExampleDialog.tsx:StandardExampleDialog",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditor",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

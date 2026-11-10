@@ -1,0 +1,917 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "type": "file",
+      "name": "pluginsContext.ts",
+      "filePath": "apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "summary": "Detects the local plugin descriptor mode (Claude/Copilot marketplace or standalone Claude plugin) and provides helpers to read, write and upsert/remove entries in marketplace.json manifests.",
+      "tags": ["utility", "plugin", "marketplace", "file-io"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:detectPluginMode",
+      "type": "function",
+      "name": "detectPluginMode",
+      "filePath": "apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "lineRange": [30, 52],
+      "summary": "Probes ordered candidate manifest paths to decide marketplace/standalone/none mode and Claude/Copilot vendor.",
+      "tags": ["function", "utility", "plugin", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:stripBom",
+      "type": "function",
+      "name": "stripBom",
+      "filePath": "apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "lineRange": [77, 79],
+      "summary": "Strips a UTF-8 BOM from file content.",
+      "tags": ["function", "utility", "plugin", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:readMarketplace",
+      "type": "function",
+      "name": "readMarketplace",
+      "filePath": "apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "lineRange": [81, 85],
+      "summary": "Reads and parses a marketplace.json manifest.",
+      "tags": ["function", "utility", "plugin", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:writeMarketplace",
+      "type": "function",
+      "name": "writeMarketplace",
+      "filePath": "apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "lineRange": [87, 89],
+      "summary": "Serializes and writes a marketplace.json manifest.",
+      "tags": ["function", "utility", "plugin", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:classifySource",
+      "type": "function",
+      "name": "classifySource",
+      "filePath": "apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "lineRange": [91, 99],
+      "summary": "Classifies a plugin entry source as local or remote.",
+      "tags": ["function", "utility", "plugin", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:findPluginEntry",
+      "type": "function",
+      "name": "findPluginEntry",
+      "filePath": "apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "lineRange": [101, 106],
+      "summary": "Finds a plugin entry by name in a marketplace manifest.",
+      "tags": ["function", "utility", "plugin", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:upsertPluginEntry",
+      "type": "function",
+      "name": "upsertPluginEntry",
+      "filePath": "apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "lineRange": [108, 121],
+      "summary": "Inserts or replaces a plugin entry in a marketplace manifest.",
+      "tags": ["function", "utility", "plugin", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:removePluginEntry",
+      "type": "function",
+      "name": "removePluginEntry",
+      "filePath": "apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "lineRange": [123, 131],
+      "summary": "Removes a plugin entry from a marketplace manifest.",
+      "tags": ["function", "utility", "plugin", "marketplace"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "type": "file",
+      "name": "renderPluginHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "summary": "CLI handler that renders a Packmind package as an agent plugin: resolves plugin mode and git context, calls the render use case, writes generated files and reports skipped standards.",
+      "tags": ["api-handler", "plugin", "cli-command", "rendering"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:renderPluginHandler",
+      "type": "function",
+      "name": "renderPluginHandler",
+      "filePath": "apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "lineRange": [34, 193],
+      "summary": "Orchestrates plugin rendering: detects mode, parses package slug, resolves git context, renders via the API and writes the resulting files.",
+      "tags": ["function", "api-handler", "plugin", "cli-command"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:reportSkippedStandards",
+      "type": "function",
+      "name": "reportSkippedStandards",
+      "filePath": "apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "lineRange": [195, 204],
+      "summary": "Logs standards that were skipped during plugin rendering.",
+      "tags": ["function", "api-handler", "plugin", "cli-command"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/plugins/resolveGitContext.ts",
+      "type": "file",
+      "name": "resolveGitContext.ts",
+      "filePath": "apps/cli/src/infra/commands/plugins/resolveGitContext.ts",
+      "summary": "Resolves the current git remote URL and branch via PackmindCliHexa for plugin rendering commands.",
+      "tags": ["utility", "git", "plugin"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/plugins/resolveGitContext.ts:resolveGitContext",
+      "type": "function",
+      "name": "resolveGitContext",
+      "filePath": "apps/cli/src/infra/commands/plugins/resolveGitContext.ts",
+      "lineRange": [5, 21],
+      "summary": "Returns git remote URL and current branch for a directory.",
+      "tags": ["function", "utility", "git", "plugin"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "type": "file",
+      "name": "removedCommandHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "summary": "Handlers for the removed top-level track/untrack commands that print a migration notice pointing users to the new git subcommands.",
+      "tags": ["api-handler", "deprecation", "cli-command"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:reportRemovedCommand",
+      "type": "function",
+      "name": "reportRemovedCommand",
+      "filePath": "apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "lineRange": [23, 36],
+      "summary": "Prints an error explaining a command was removed and its replacement.",
+      "tags": ["function", "api-handler", "deprecation", "cli-command"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:removedTrackHandler",
+      "type": "function",
+      "name": "removedTrackHandler",
+      "filePath": "apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "lineRange": [38, 59],
+      "summary": "Stub handler for the removed `track` command that redirects to `git track`.",
+      "tags": ["function", "api-handler", "deprecation", "cli-command"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:removedUntrackHandler",
+      "type": "function",
+      "name": "removedUntrackHandler",
+      "filePath": "apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "lineRange": [61, 66],
+      "summary": "Stub handler for the removed `untrack` command that redirects to `git untrack`.",
+      "tags": ["function", "api-handler", "deprecation", "cli-command"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/sharedOptions.ts",
+      "type": "file",
+      "name": "sharedOptions.ts",
+      "filePath": "apps/cli/src/infra/commands/sharedOptions.ts",
+      "summary": "Declares the reusable cmd-ts `--origin-skill` option shared by package-related CLI commands.",
+      "tags": ["config", "cli-option", "shared"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "type": "file",
+      "name": "InstallDefaultSkillsCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "summary": "cmd-ts `skills install-default` command that checks CLI version drift, installs default Packmind skills for configured agents, handles incompatible skills and warns when agents lack skill support.",
+      "tags": ["cli-command", "skills", "entry-point", "installation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "type": "file",
+      "name": "incompatibleSkillsHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "summary": "Reports and optionally removes installed skills that are incompatible with the current CLI version, with interactive and silent variants.",
+      "tags": ["api-handler", "skills", "compatibility", "prompt"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts:handleIncompatibleInstalledSkillsSilently",
+      "type": "function",
+      "name": "handleIncompatibleInstalledSkillsSilently",
+      "filePath": "apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "lineRange": [23, 32],
+      "summary": "Removes incompatible installed skills without prompting.",
+      "tags": ["function", "api-handler", "skills", "compatibility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts:handleIncompatibleInstalledSkills",
+      "type": "function",
+      "name": "handleIncompatibleInstalledSkills",
+      "filePath": "apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "lineRange": [34, 85],
+      "summary": "Lists incompatible installed skills and asks for confirmation before removing them.",
+      "tags": ["function", "api-handler", "skills", "compatibility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/skills/listSkillsHandler.ts",
+      "type": "file",
+      "name": "listSkillsHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/skills/listSkillsHandler.ts",
+      "summary": "Handler for `skills list` that fetches skills and spaces, filters by space, and prints them grouped by space with web URLs.",
+      "tags": ["api-handler", "skills", "listing", "cli-command"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/skills/listSkillsHandler.ts:listSkillsHandler",
+      "type": "function",
+      "name": "listSkillsHandler",
+      "filePath": "apps/cli/src/infra/commands/skills/listSkillsHandler.ts",
+      "lineRange": [13, 77],
+      "summary": "Fetches and prints skills grouped by space, optionally filtered by a space argument.",
+      "tags": ["function", "api-handler", "skills", "listing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "type": "file",
+      "name": "skillsCapabilityWarning.ts",
+      "filePath": "apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "summary": "Checks whether configured coding agents support skills and builds the warning shown when skill installation is skipped.",
+      "tags": ["utility", "skills", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/skillsCapabilityWarning.ts:configuredAgentsSupportSkills",
+      "type": "function",
+      "name": "configuredAgentsSupportSkills",
+      "filePath": "apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "lineRange": [5, 9],
+      "summary": "Returns whether any configured agent supports skills.",
+      "tags": ["function", "utility", "skills", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/skillsCapabilityWarning.ts:buildSkillsSkippedWarning",
+      "type": "function",
+      "name": "buildSkillsSkippedWarning",
+      "filePath": "apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "lineRange": [11, 21],
+      "summary": "Builds the warning message shown when skills are skipped for unsupported agents.",
+      "tags": ["function", "utility", "skills", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/spaces/listSpacesHandler.ts",
+      "type": "file",
+      "name": "listSpacesHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/spaces/listSpacesHandler.ts",
+      "summary": "Handler for `spaces list` that retrieves the organization spaces and prints their names and slugs.",
+      "tags": ["api-handler", "spaces", "listing", "cli-command"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/spaces/listSpacesHandler.ts:listSpacesHandler",
+      "type": "function",
+      "name": "listSpacesHandler",
+      "filePath": "apps/cli/src/infra/commands/spaces/listSpacesHandler.ts",
+      "lineRange": [22, 53],
+      "summary": "Fetches and prints organization spaces.",
+      "tags": ["function", "api-handler", "spaces", "listing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/standards/listStandardsHandler.ts",
+      "type": "file",
+      "name": "listStandardsHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/standards/listStandardsHandler.ts",
+      "summary": "Handler for `standards list` that fetches standards and spaces, applies space filtering, and prints standards grouped by space with links.",
+      "tags": ["api-handler", "standards", "listing", "cli-command"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/standards/listStandardsHandler.ts:listStandardsHandler",
+      "type": "function",
+      "name": "listStandardsHandler",
+      "filePath": "apps/cli/src/infra/commands/standards/listStandardsHandler.ts",
+      "lineRange": [13, 79],
+      "summary": "Fetches and prints standards grouped by space with URLs.",
+      "tags": ["function", "api-handler", "standards", "listing"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:detectPluginMode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:detectPluginMode",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:stripBom",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:stripBom",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:readMarketplace",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:readMarketplace",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:writeMarketplace",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:writeMarketplace",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:classifySource",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:classifySource",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:findPluginEntry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:findPluginEntry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:upsertPluginEntry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:upsertPluginEntry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:removePluginEntry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:removePluginEntry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:renderPluginHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:renderPluginHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:reportSkippedStandards",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "target": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/plugins/pluginsContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/plugins/resolveGitContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/resolveGitContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/resolveGitContext.ts:resolveGitContext",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/resolveGitContext.ts",
+      "target": "function:apps/cli/src/infra/commands/plugins/resolveGitContext.ts:resolveGitContext",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/plugins/resolveGitContext.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:reportRemovedCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:removedTrackHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:removedTrackHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:removedUntrackHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:removedUntrackHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "target": "file:apps/cli/src/domain/repositories/IOutput.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "file:apps/cli/package.json",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "file:apps/cli/src/domain/errors/SkillsInitBootstrapError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/ensureCliVersionReporter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/ConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts:handleIncompatibleInstalledSkillsSilently",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts:handleIncompatibleInstalledSkillsSilently",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts:handleIncompatibleInstalledSkills",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts:handleIncompatibleInstalledSkills",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "target": "file:apps/cli/src/domain/useCases/IInstallDefaultSkillsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/listSkillsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/skills/listSkillsHandler.ts:listSkillsHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/listSkillsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/skills/listSkillsHandler.ts:listSkillsHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/listSkillsHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/listSkillsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/listSkillsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/spaceFilterUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/listSkillsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "target": "function:apps/cli/src/infra/commands/skillsCapabilityWarning.ts:configuredAgentsSupportSkills",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "target": "function:apps/cli/src/infra/commands/skillsCapabilityWarning.ts:configuredAgentsSupportSkills",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "target": "function:apps/cli/src/infra/commands/skillsCapabilityWarning.ts:buildSkillsSkippedWarning",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "target": "function:apps/cli/src/infra/commands/skillsCapabilityWarning.ts:buildSkillsSkippedWarning",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skillsCapabilityWarning.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/spaces/listSpacesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/spaces/listSpacesHandler.ts:listSpacesHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/spaces/listSpacesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/spaces/listSpacesHandler.ts:listSpacesHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/spaces/listSpacesHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/spaces/listSpacesHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/standards/listStandardsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/standards/listStandardsHandler.ts:listStandardsHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/standards/listStandardsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/standards/listStandardsHandler.ts:listStandardsHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/standards/listStandardsHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/standards/listStandardsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/standards/listStandardsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/spaceFilterUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/standards/listStandardsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:renderPluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/pluginsContext.ts:detectPluginMode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:renderPluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/resolveGitContext.ts:resolveGitContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:renderPluginHandler",
+      "target": "function:apps/cli/src/domain/entities/PackageSlug.ts:displayableParsedPackageSlug",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:renderPluginHandler",
+      "target": "function:apps/cli/src/infra/commands/plugins/renderPluginHandler.ts:reportSkippedStandards",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/skills/listSkillsHandler.ts:listSkillsHandler",
+      "target": "function:apps/cli/src/infra/utils/spaceFilterUtils.ts:resolveSpaceFromArgs",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/skills/listSkillsHandler.ts:listSkillsHandler",
+      "target": "function:apps/cli/src/infra/utils/urlBuilderUtils.ts:resolveUrlBuilder",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/skills/listSkillsHandler.ts:listSkillsHandler",
+      "target": "function:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts:groupArtefactBySpaces",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/standards/listStandardsHandler.ts:listStandardsHandler",
+      "target": "function:apps/cli/src/infra/utils/spaceFilterUtils.ts:resolveSpaceFromArgs",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/standards/listStandardsHandler.ts:listStandardsHandler",
+      "target": "function:apps/cli/src/infra/utils/urlBuilderUtils.ts:resolveUrlBuilder",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/standards/listStandardsHandler.ts:listStandardsHandler",
+      "target": "function:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts:groupArtefactBySpaces",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:removedTrackHandler",
+      "target": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:reportRemovedCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/skills/incompatibleSkillsHandler.ts:handleIncompatibleInstalledSkillsSilently",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/skillsCapabilityWarning.ts:buildSkillsSkippedWarning",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/skillsCapabilityWarning.ts:configuredAgentsSupportSkills",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/ensureCliVersionReporter.ts:reportEnsureCliVersionOutcome",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

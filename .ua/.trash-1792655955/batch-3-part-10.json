@@ -1,0 +1,175 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts",
+      "type": "file",
+      "name": "GetDeployedContentUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts",
+      "summary": "Use case reconstructing the content previously deployed to a target resolved from git info, rendering the deployed artifact versions for active agents.",
+      "tags": ["use-case", "query", "rendering", "distribution"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts:GetDeployedContentUseCase",
+      "type": "class",
+      "name": "GetDeployedContentUseCase",
+      "filePath": "packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts",
+      "lineRange": [24, 223],
+      "summary": "Use case reconstructing the content previously deployed to a target resolved from git info, rendering the deployed artifact versions for active agents.",
+      "tags": ["use-case", "class", "query", "rendering"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/GetLastDistributionDateByProvidersUseCase.ts",
+      "type": "file",
+      "name": "GetLastDistributionDateByProvidersUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/GetLastDistributionDateByProvidersUseCase.ts",
+      "summary": "Member-scoped query returning the last distribution date per git provider.",
+      "tags": ["use-case", "query", "distribution", "git-provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/GetLastDistributionDateByProvidersUseCase.ts:GetLastDistributionDateByProvidersUseCase",
+      "type": "class",
+      "name": "GetLastDistributionDateByProvidersUseCase",
+      "filePath": "packages/deployments/src/application/useCases/GetLastDistributionDateByProvidersUseCase.ts",
+      "lineRange": [13, 49],
+      "summary": "Member-scoped query returning the last distribution date per git provider.",
+      "tags": ["use-case", "class", "query", "distribution"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/useCases/GetRenderModeConfigurationUseCase.ts",
+      "type": "file",
+      "name": "GetRenderModeConfigurationUseCase.ts",
+      "filePath": "packages/deployments/src/application/useCases/GetRenderModeConfigurationUseCase.ts",
+      "summary": "Member-scoped query returning the organization render mode configuration.",
+      "tags": ["use-case", "query", "render-mode", "configuration"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/application/useCases/GetRenderModeConfigurationUseCase.ts:GetRenderModeConfigurationUseCase",
+      "type": "class",
+      "name": "GetRenderModeConfigurationUseCase",
+      "filePath": "packages/deployments/src/application/useCases/GetRenderModeConfigurationUseCase.ts",
+      "lineRange": [12, 61],
+      "summary": "Member-scoped query returning the organization render mode configuration.",
+      "tags": ["use-case", "class", "query", "render-mode"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts:GetDeployedContentUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts:GetDeployedContentUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/PackageService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/TargetResolutionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts",
+      "target": "file:packages/deployments/src/application/utils/ArtifactMetadataUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetLastDistributionDateByProvidersUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/GetLastDistributionDateByProvidersUseCase.ts:GetLastDistributionDateByProvidersUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetLastDistributionDateByProvidersUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/GetLastDistributionDateByProvidersUseCase.ts:GetLastDistributionDateByProvidersUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetLastDistributionDateByProvidersUseCase.ts",
+      "target": "file:packages/deployments/src/domain/repositories/IDistributionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetRenderModeConfigurationUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/GetRenderModeConfigurationUseCase.ts:GetRenderModeConfigurationUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetRenderModeConfigurationUseCase.ts",
+      "target": "class:packages/deployments/src/application/useCases/GetRenderModeConfigurationUseCase.ts:GetRenderModeConfigurationUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/useCases/GetRenderModeConfigurationUseCase.ts",
+      "target": "file:packages/deployments/src/application/services/RenderModeConfigurationService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts:GetDeployedContentUseCase",
+      "target": "class:packages/deployments/src/application/services/TargetResolutionService.ts:TargetResolutionService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/GetDeployedContentUseCase.ts:GetDeployedContentUseCase",
+      "target": "class:packages/deployments/src/application/services/RenderModeConfigurationService.ts:RenderModeConfigurationService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/deployments/src/application/useCases/GetRenderModeConfigurationUseCase.ts:GetRenderModeConfigurationUseCase",
+      "target": "class:packages/deployments/src/application/services/RenderModeConfigurationService.ts:RenderModeConfigurationService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

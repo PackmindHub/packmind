@@ -1,0 +1,1038 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx",
+      "type": "file",
+      "name": "InstallCliStep.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx",
+      "summary": "Wizard step component guiding users through installing the Packmind CLI, offering OS-specific install commands (npm, Homebrew, curl) with copyable fields.",
+      "tags": ["component", "onboarding", "cli-setup", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx:InstallCliStep",
+      "type": "function",
+      "name": "InstallCliStep",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx",
+      "lineRange": [21, 162],
+      "summary": "Renders the CLI install step with OS selector and install command options.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/index.ts",
+      "summary": "Barrel re-exporting the local environment setup wizard steps (install CLI, authenticate, distribute).",
+      "tags": ["barrel", "entry-point", "onboarding"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/types.ts",
+      "type": "file",
+      "name": "types.ts",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/types.ts",
+      "summary": "Type definitions for the local environment setup wizard: OS and auth method unions plus prop interfaces for steps and selector components.",
+      "tags": ["type-definition", "onboarding", "props"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "type": "file",
+      "name": "utils.ts",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "summary": "Helpers for the CLI setup wizard: detects the user OS, builds npm/Homebrew/curl install and CLI login commands, and formats login code expiry dates.",
+      "tags": ["utility", "cli-setup", "formatting", "onboarding"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:detectUserOs",
+      "type": "function",
+      "name": "detectUserOs",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "lineRange": [16, 24],
+      "summary": "Detects whether the user is on Windows or macOS/Linux from the browser user agent.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildNpmInstallCommand",
+      "type": "function",
+      "name": "buildNpmInstallCommand",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "lineRange": [30, 30],
+      "summary": "Builds the npm global install command for the CLI.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildHomebrewInstallCommand",
+      "type": "function",
+      "name": "buildHomebrewInstallCommand",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "lineRange": [32, 33],
+      "summary": "Builds the Homebrew install command for the CLI.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildCurlInstallCommand",
+      "type": "function",
+      "name": "buildCurlInstallCommand",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "lineRange": [35, 40],
+      "summary": "Builds the curl-based install script command, injecting the host when non-default.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildCliLoginCommand",
+      "type": "function",
+      "name": "buildCliLoginCommand",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "lineRange": [42, 45],
+      "summary": "Builds the packmind-cli login command with code and host.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:formatExpirationDate",
+      "type": "function",
+      "name": "formatExpirationDate",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "lineRange": [47, 55],
+      "summary": "Formats an API key expiration date for display.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:formatCodeExpiresAt",
+      "type": "function",
+      "name": "formatCodeExpiresAt",
+      "filePath": "apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "lineRange": [57, 68],
+      "summary": "Formats remaining time before a CLI login code expires.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx",
+      "type": "file",
+      "name": "OrganizationCreationForm.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx",
+      "summary": "Form component letting a signed-in user create a new organization, then selecting it and navigating to its dashboard.",
+      "tags": ["component", "form", "organization", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx:OrganizationCreationForm",
+      "type": "function",
+      "name": "OrganizationCreationForm",
+      "filePath": "apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx",
+      "lineRange": [9, 94],
+      "summary": "Form that creates and selects a new organization.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx",
+      "type": "file",
+      "name": "OrganizationSelectionForm.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx",
+      "summary": "Form component letting a user with multiple organizations pick one to sign into, handling selection errors and redirection.",
+      "tags": ["component", "form", "organization", "authentication"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx:OrganizationSelectionForm",
+      "type": "function",
+      "name": "OrganizationSelectionForm",
+      "filePath": "apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx",
+      "lineRange": [19, 112],
+      "summary": "Form to choose which organization to sign into.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx",
+      "type": "file",
+      "name": "ResetPasswordForm.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx",
+      "summary": "Password reset form validating new password strength rules (length, special characters, confirmation) and submitting the reset token.",
+      "tags": ["component", "form", "authentication", "validation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx:ResetPasswordForm",
+      "type": "function",
+      "name": "ResetPasswordForm",
+      "filePath": "apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx",
+      "lineRange": [33, 254],
+      "summary": "Password reset form with strength validation and submission.",
+      "tags": ["component", "react", "complex-ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx",
+      "type": "file",
+      "name": "SetupLocalEnvironment.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx",
+      "summary": "Component that generates a CLI login code and shows install and login commands so users can connect their local environment to Packmind.",
+      "tags": ["component", "cli-setup", "onboarding", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx:formatCodeExpiresAt",
+      "type": "function",
+      "name": "formatCodeExpiresAt",
+      "filePath": "apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx",
+      "lineRange": [17, 28],
+      "summary": "Formats remaining time before a CLI login code expires.",
+      "tags": ["utility", "helper", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx:SetupLocalEnvironment",
+      "type": "function",
+      "name": "SetupLocalEnvironment",
+      "filePath": "apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx",
+      "lineRange": [30, 108],
+      "summary": "Generates a login code and shows CLI setup commands.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx",
+      "type": "file",
+      "name": "SidebarAccountMenu.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx",
+      "summary": "Sidebar account dropdown showing the current user with links to account settings and a sign-out action.",
+      "tags": ["component", "navigation", "authentication", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx:SidebarAccountMenu",
+      "type": "function",
+      "name": "SidebarAccountMenu",
+      "filePath": "apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx",
+      "lineRange": [17, 90],
+      "summary": "Sidebar dropdown with account links and sign out.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx",
+      "type": "file",
+      "name": "SignInCredentialsForm.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx",
+      "summary": "Email/password sign-in form with error handling for invalid credentials and optional social login buttons.",
+      "tags": ["component", "form", "authentication", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx:SignInCredentialsForm",
+      "type": "function",
+      "name": "SignInCredentialsForm",
+      "filePath": "apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx",
+      "lineRange": [19, 150],
+      "summary": "Email/password sign-in form.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "type": "file",
+      "name": "SignInForm.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "summary": "Sign-in orchestrator component switching between credentials, organization selection and organization creation steps based on the current user state.",
+      "tags": ["component", "authentication", "orchestration", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/SignInForm.tsx:SignInForm",
+      "type": "function",
+      "name": "SignInForm",
+      "filePath": "apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "lineRange": [11, 89],
+      "summary": "Switches between sign-in, organization selection and creation sub-forms.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "type": "file",
+      "name": "SignUpWithOrganizationForm.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "summary": "Sign-up form creating a user account together with an organization, with email availability check, password validation, auto sign-in and product tour kickoff.",
+      "tags": ["component", "form", "authentication", "onboarding"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx:SignUpWithOrganizationForm",
+      "type": "function",
+      "name": "SignUpWithOrganizationForm",
+      "filePath": "apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "lineRange": [23, 300],
+      "summary": "Combined account and organization sign-up form.",
+      "tags": ["component", "react", "complex-ui"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx",
+      "type": "file",
+      "name": "SocialLoginButtons.tsx",
+      "filePath": "apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx",
+      "summary": "Renders OAuth social login buttons for the providers enabled on the backend.",
+      "tags": ["component", "authentication", "oauth", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx:SocialLoginButtons",
+      "type": "function",
+      "name": "SocialLoginButtons",
+      "filePath": "apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx",
+      "lineRange": [25, 71],
+      "summary": "Lists social OAuth login buttons from available providers.",
+      "tags": ["component", "react", "frontend"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts",
+      "type": "file",
+      "name": "useIsAuthenticated.ts",
+      "filePath": "apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts",
+      "summary": "Hook deriving whether the current user is authenticated from the getMe query.",
+      "tags": ["hook", "authentication", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts:useIsAuthenticated",
+      "type": "function",
+      "name": "useIsAuthenticated",
+      "filePath": "apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts",
+      "lineRange": [7, 16],
+      "summary": "Returns authentication status from the getMe query.",
+      "tags": ["hook", "react-query", "frontend"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts",
+      "type": "file",
+      "name": "CommandsGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts",
+      "summary": "HTTP gateway implementation for commands: lists, fetches, creates and updates commands and their versions within a space.",
+      "tags": ["service", "api-client", "gateway", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts:CommandsGatewayApi",
+      "type": "class",
+      "name": "CommandsGatewayApi",
+      "filePath": "apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts",
+      "lineRange": [12, 90],
+      "summary": "Gateway class calling the commands REST API.",
+      "tags": ["gateway", "api-client", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/api/gateways/ICommandsGateway.ts",
+      "type": "file",
+      "name": "ICommandsGateway.ts",
+      "filePath": "apps/frontend/src/domain/commands/api/gateways/ICommandsGateway.ts",
+      "summary": "Port interface defining the frontend commands gateway contract (CRUD plus version history).",
+      "tags": ["type-definition", "gateway", "commands", "port"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/commands/api/gateways/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/commands/api/gateways/index.ts",
+      "summary": "Barrel exposing the singleton commandsGateway instance and its interface.",
+      "tags": ["barrel", "singleton", "gateway"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx:InstallCliStep",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx:InstallCliStep",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:detectUserOs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:detectUserOs",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildNpmInstallCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildNpmInstallCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildHomebrewInstallCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildHomebrewInstallCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildCurlInstallCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildCurlInstallCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildCliLoginCommand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildCliLoginCommand",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:formatExpirationDate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:formatExpirationDate",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:formatCodeExpiresAt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:formatCodeExpiresAt",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx:OrganizationCreationForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx:OrganizationCreationForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx:OrganizationSelectionForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx:OrganizationSelectionForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx:ResetPasswordForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx:ResetPasswordForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx:formatCodeExpiresAt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx:SetupLocalEnvironment",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx:SetupLocalEnvironment",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx:SidebarAccountMenu",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx:SidebarAccountMenu",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx:SignInCredentialsForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx:SignInCredentialsForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignInForm.tsx:SignInForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignInForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignInForm.tsx:SignInForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "target": "file:apps/frontend/src/shared/components/StartProductTour.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx:SignUpWithOrganizationForm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx:SignUpWithOrganizationForm",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx:SocialLoginButtons",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx",
+      "target": "function:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx:SocialLoginButtons",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts:useIsAuthenticated",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useIsAuthenticated.ts:useIsAuthenticated",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/commands/api/gateways/ICommandsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts:CommandsGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts:CommandsGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts:CommandsGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/commands/api/gateways/index.ts",
+      "target": "file:apps/frontend/src/domain/commands/api/gateways/ICommandsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx:OrganizationSelectionForm",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSelectOrganizationMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx:OrganizationCreationForm",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSelectOrganizationMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx:OrganizationCreationForm",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AccountsQueries.ts:useCreateOrganizationMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/ResetPasswordForm.tsx:ResetPasswordForm",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useResetPasswordMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SetupLocalEnvironment.tsx:SetupLocalEnvironment",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useCreateCliLoginCodeMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx:SidebarAccountMenu",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignOutMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SidebarAccountMenu.tsx:SidebarAccountMenu",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx:SignInCredentialsForm",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignInMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx:SocialLoginButtons",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSocialProvidersQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignInForm.tsx:SignInForm",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetMeQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx:SignUpWithOrganizationForm",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignUpWithOrganizationMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx:SignUpWithOrganizationForm",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useCheckEmailAvailabilityMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx:SignUpWithOrganizationForm",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts:useSignInMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx:SignUpWithOrganizationForm",
+      "target": "function:apps/frontend/src/shared/components/StartProductTour.tsx:StartProductTour",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignInForm.tsx:SignInForm",
+      "target": "function:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx:SignInCredentialsForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignInForm.tsx:SignInForm",
+      "target": "function:apps/frontend/src/domain/accounts/components/OrganizationSelectionForm.tsx:OrganizationSelectionForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignInForm.tsx:SignInForm",
+      "target": "function:apps/frontend/src/domain/accounts/components/OrganizationCreationForm.tsx:OrganizationCreationForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignInCredentialsForm.tsx:SignInCredentialsForm",
+      "target": "function:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx:SocialLoginButtons",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/SignUpWithOrganizationForm.tsx:SignUpWithOrganizationForm",
+      "target": "function:apps/frontend/src/domain/accounts/components/SocialLoginButtons.tsx:SocialLoginButtons",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/steps/InstallCliStep.tsx:InstallCliStep",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts:buildCurlInstallCommand",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/commands/api/gateways/CommandsGatewayApi.ts:CommandsGatewayApi",
+      "target": "file:apps/frontend/src/domain/commands/api/gateways/ICommandsGateway.ts",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    }
+  ]
+}

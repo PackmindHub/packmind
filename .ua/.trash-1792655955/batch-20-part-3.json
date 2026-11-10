@@ -1,0 +1,894 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/AddToPackagesDialog/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/deployments/components/AddToPackagesDialog/index.ts",
+      "summary": "Barrel re-exporting AddToPackagesBatchAction, AddToPackagesDialog, and the AddToPackagesArtifactKind type.",
+      "tags": ["barrel", "entry-point", "exports"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "type": "file",
+      "name": "ArtifactsView.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "summary": "Artifacts-centric distribution view that groups commands, standards, and skills deployments by repository with status and version nodes, filtering, and empty states.",
+      "tags": [
+        "component",
+        "react",
+        "deployments",
+        "dashboard",
+        "visualization"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:getEmptyStateProps",
+      "type": "function",
+      "name": "getEmptyStateProps",
+      "filePath": "apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "lineRange": [39, 56],
+      "summary": "Returns empty-state copy depending on artifact type and filters.",
+      "tags": ["helper", "empty-state"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:filterAndSortDeployments",
+      "type": "function",
+      "name": "filterAndSortDeployments",
+      "filePath": "apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "lineRange": [76, 93],
+      "summary": "Filters deployments by search/status and sorts them.",
+      "tags": ["helper", "filtering", "sorting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:renderStatusNode",
+      "type": "function",
+      "name": "renderStatusNode",
+      "filePath": "apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "lineRange": [95, 130],
+      "summary": "Renders the up-to-date/outdated status node for a deployment.",
+      "tags": ["render-helper", "status"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:renderVersionNode",
+      "type": "function",
+      "name": "renderVersionNode",
+      "filePath": "apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "lineRange": [132, 161],
+      "summary": "Renders the deployed versus latest version node.",
+      "tags": ["render-helper", "versioning"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildCommandBlocks",
+      "type": "function",
+      "name": "buildCommandBlocks",
+      "filePath": "apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "lineRange": [171, 248],
+      "summary": "Groups command deployments into repository blocks for display.",
+      "tags": ["helper", "grouping", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildStandardBlocks",
+      "type": "function",
+      "name": "buildStandardBlocks",
+      "filePath": "apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "lineRange": [250, 327],
+      "summary": "Groups standard deployments into repository blocks for display.",
+      "tags": ["helper", "grouping", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildSkillBlocks",
+      "type": "function",
+      "name": "buildSkillBlocks",
+      "filePath": "apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "lineRange": [329, 392],
+      "summary": "Groups skill deployments into repository blocks for display.",
+      "tags": ["helper", "grouping", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:ArtifactsView",
+      "type": "function",
+      "name": "ArtifactsView",
+      "filePath": "apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "lineRange": [396, 569],
+      "summary": "Main view rendering artifact deployment blocks with filters and empty states.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx",
+      "type": "file",
+      "name": "BatchDistributeButton.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx",
+      "summary": "Button that distributes several outdated packages to their targets in one go via useDeployPackage and reports results through deployment notifications.",
+      "tags": ["component", "react", "deployments", "batch-actions"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx:BatchDistributeButton",
+      "type": "function",
+      "name": "BatchDistributeButton",
+      "filePath": "apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx",
+      "lineRange": [18, 71],
+      "summary": "Triggers distribution of multiple package/target groups and shows notifications.",
+      "tags": ["component", "deployments", "batch-actions"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx",
+      "type": "file",
+      "name": "CommandDeploymentsList.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx",
+      "summary": "Wrapper component fetching a command's deployments and users and rendering them through DeploymentsHistory.",
+      "tags": ["component", "react", "deployments", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx:CommandDeploymentsList",
+      "type": "function",
+      "name": "CommandDeploymentsList",
+      "filePath": "apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx",
+      "lineRange": [11, 49],
+      "summary": "Fetches command deployments and users then renders DeploymentsHistory.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "type": "file",
+      "name": "CommandDistributionsList.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "summary": "Wrapper component fetching a command's distribution history, live package and target ids, and rendering DeploymentsHistory.",
+      "tags": ["component", "react", "distributions", "commands"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx:CommandDistributionsList",
+      "type": "function",
+      "name": "CommandDistributionsList",
+      "filePath": "apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "lineRange": [15, 57],
+      "summary": "Fetches command distributions and live ids then renders DeploymentsHistory.",
+      "tags": ["component", "distributions"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "type": "file",
+      "name": "CreatePackagePage.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "summary": "Package creation page with a form for name, description, and selection of standards, commands, and skills, showing existing package ownership and creating the package via mutation.",
+      "tags": ["component", "react", "form", "packages", "page"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:PackageFormContent",
+      "type": "function",
+      "name": "PackageFormContent",
+      "filePath": "apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "lineRange": [66, 459],
+      "summary": "Package form body with fields and artifact pickers for standards, commands, and skills including ownership hints.",
+      "tags": ["component", "form", "packages"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "type": "function",
+      "name": "CreatePackagePage",
+      "filePath": "apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "lineRange": [461, 721],
+      "summary": "Page loading space artifacts and submitting the create-package mutation, then navigating to the new package.",
+      "tags": ["component", "page", "packages"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/DeploymentStatsSummary/DeploymentStatsSummary.tsx",
+      "type": "file",
+      "name": "DeploymentStatsSummary.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentStatsSummary/DeploymentStatsSummary.tsx",
+      "summary": "Presentational component summarizing deployment stats (up-to-date, outdated, total counts).",
+      "tags": ["component", "react", "presentational", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/DeploymentStatsSummary/DeploymentStatsSummary.tsx:DeploymentStatsSummary",
+      "type": "function",
+      "name": "DeploymentStatsSummary",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentStatsSummary/DeploymentStatsSummary.tsx",
+      "lineRange": [9, 45],
+      "summary": "Renders deployment count statistics.",
+      "tags": ["component", "presentational"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "type": "file",
+      "name": "DeploymentsHistory.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "summary": "Generic distribution history table for commands, standards, and skills, showing author, target, package version, render modes, and status with live-target awareness.",
+      "tags": ["component", "react", "table", "deployments", "history"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:DeploymentsHistory",
+      "type": "function",
+      "name": "DeploymentsHistory",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "lineRange": [70, 539],
+      "summary": "Renders the distribution history table with rows per deployment and removal/live states.",
+      "tags": ["component", "table", "history"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:ClippedText",
+      "type": "function",
+      "name": "ClippedText",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "lineRange": [556, 605],
+      "summary": "Text component that truncates content and shows the full value in a tooltip.",
+      "tags": ["component", "presentational"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:PackageVersion",
+      "type": "function",
+      "name": "PackageVersion",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "lineRange": [607, 678],
+      "summary": "Renders the package and release version of a distribution entry with links.",
+      "tags": ["component", "versioning"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:RenderModes",
+      "type": "function",
+      "name": "RenderModes",
+      "filePath": "apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "lineRange": [680, 734],
+      "summary": "Renders the list of render modes (agents) used by a distribution.",
+      "tags": ["component", "presentational"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:getEmptyStateProps",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:filterAndSortDeployments",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:renderStatusNode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:renderVersionNode",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildCommandBlocks",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildStandardBlocks",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildSkillBlocks",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:ArtifactsView",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:ArtifactsView",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx:BatchDistributeButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx:BatchDistributeButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx:CommandDeploymentsList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx:CommandDeploymentsList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx:CommandDistributionsList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx:CommandDistributionsList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:PackageFormContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:PackageFormContent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentStatsSummary/DeploymentStatsSummary.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentStatsSummary/DeploymentStatsSummary.tsx:DeploymentStatsSummary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentStatsSummary/DeploymentStatsSummary.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentStatsSummary/DeploymentStatsSummary.tsx:DeploymentStatsSummary",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:DeploymentsHistory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:DeploymentsHistory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:ClippedText",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:PackageVersion",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:RenderModes",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentStatsSummary/DeploymentStatsSummary.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/utils/deploymentNotificationUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/packageForm/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx",
+      "target": "file:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:ArtifactsView",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentStatsSummary/DeploymentStatsSummary.tsx:DeploymentStatsSummary",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:ArtifactsView",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/BatchDistributeButton/BatchDistributeButton.tsx:BatchDistributeButton",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useDeployPackage.ts:useDeployPackage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx:CommandDeploymentsList",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetUsersInMyOrganizationQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx:CommandDeploymentsList",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListCommandDeploymentsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CommandDeploymentsList/CommandDeploymentsList.tsx:CommandDeploymentsList",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:DeploymentsHistory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx:CommandDistributionsList",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:useGetUsersInMyOrganizationQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx:CommandDistributionsList",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListCommandDistributionsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx:CommandDistributionsList",
+      "target": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:DeploymentsHistory",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx:CommandDistributionsList",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLivePackageIds.ts:useLivePackageIds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx:CommandDistributionsList",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useLiveTargetIds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "target": "function:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts:useGetCommandsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useCreatePackageMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts:contextPackageHref",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useArtefactPackageOwners.ts:useArtefactPackageOwners",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:useSpaceNavMode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/CreatePackagePage/CreatePackagePage.tsx:CreatePackagePage",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditorProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:DeploymentsHistory",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts:packageHref",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:DeploymentsHistory",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:isOnLiveTarget",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/DeploymentsHistory/DeploymentsHistory.tsx:DeploymentsHistory",
+      "target": "function:apps/frontend/src/domain/organizations/components/SpaceNavModeContext.tsx:useSpaceNavMode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildCommandBlocks",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:filterAndSortDeployments",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildCommandBlocks",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:renderVersionNode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildCommandBlocks",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:renderStatusNode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildStandardBlocks",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:filterAndSortDeployments",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildStandardBlocks",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:renderVersionNode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildStandardBlocks",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:renderStatusNode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildSkillBlocks",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:filterAndSortDeployments",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildSkillBlocks",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:renderVersionNode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildSkillBlocks",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:renderStatusNode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:ArtifactsView",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildCommandBlocks",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:ArtifactsView",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildStandardBlocks",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:ArtifactsView",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:buildSkillBlocks",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:ArtifactsView",
+      "target": "function:apps/frontend/src/domain/deployments/components/ArtifactsView/ArtifactsView.tsx:getEmptyStateProps",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

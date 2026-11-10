@@ -1,0 +1,1009 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx",
+      "summary": "Skill detail index route that redirects to Context when applicable, otherwise navigates to the skill files tab.",
+      "tags": ["routing", "skills", "redirect"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx",
+      "lineRange": [13, 15],
+      "summary": "Delegates to redirectSkillToContextComponent for skill index addresses.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx:SkillDetailIndexRouteModule",
+      "type": "function",
+      "name": "SkillDetailIndexRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx",
+      "lineRange": [17, 19],
+      "summary": "Navigates to the files sub-route.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx",
+      "summary": "Skill distributions tab listing where a skill has been distributed, with loading and empty states.",
+      "tags": ["routing", "skills", "deployments", "component"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx:SkillDistributionsRouteModule",
+      "type": "function",
+      "name": "SkillDistributionsRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx",
+      "lineRange": [8, 53],
+      "summary": "Fetches skill distributions and renders the distributions list or an empty state.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "summary": "Splat route displaying a single skill file (SKILL.md by default) with frontmatter info, link rewriting and edit capability checks.",
+      "tags": ["routing", "skills", "file-preview", "component"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "lineRange": [32, 38],
+      "summary": "Redirects the requested skill file to the Context pane in plugin-first navigation.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:SkillFilesRouteModule",
+      "type": "function",
+      "name": "SkillFilesRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "lineRange": [40, 139],
+      "summary": "Resolves the selected skill file, rewrites relative links and renders the file preview with frontmatter info.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "summary": "Skill detail layout route that loads the skill with files, renders the file-tree sidebar, version history header, actions and delete flow, and passes skill data to nested tabs via outlet context.",
+      "tags": ["routing", "skills", "layout", "loader", "component"],
+      "complexity": "complex",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "lineRange": [57, 95],
+      "summary": "Loads user, space and skill with files, redirecting to dashboard when the skill is missing.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "type": "function",
+      "name": "SkillDetailLayoutRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "lineRange": [97, 308],
+      "summary": "Skill detail layout managing file selection, section navigation, deletion and change proposals, exposing outlet context to child routes.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx",
+      "summary": "Skills list route displaying the space skills with a create button.",
+      "tags": ["routing", "skills", "list", "component"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx:SkillsIndexRouteModule",
+      "type": "function",
+      "name": "SkillsIndexRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx",
+      "lineRange": [8, 39],
+      "summary": "Renders the skills list page with a create-skill action.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx",
+      "summary": "Standard detail index route that redirects to the Context pane in plugin-first navigation.",
+      "tags": ["routing", "standards", "redirect"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx",
+      "lineRange": [16, 18],
+      "summary": "Delegates to redirectToContextComponent for standard addresses.",
+      "tags": ["loader", "data-fetching", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx:StandardDetailIndexRouteModule",
+      "type": "function",
+      "name": "StandardDetailIndexRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx",
+      "lineRange": [20, 22],
+      "summary": "Navigates to the standard summary sub-route.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx",
+      "summary": "Standard distribution tab showing distributed file information (scope, path) and the list of distributions of the standard.",
+      "tags": ["routing", "standards", "deployments", "component"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx:StandardDetailDeploymentRouteModule",
+      "type": "function",
+      "name": "StandardDetailDeploymentRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx",
+      "lineRange": [17, 98],
+      "summary": "Fetches standard distributions and renders file info plus the distributions list or an empty state.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "summary": "Standard edit route rendering the StandardForm in a markdown editor context and returning to the originating Context package or standard page.",
+      "tags": ["routing", "standards", "form", "component"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx:EditStandardRouteModule",
+      "type": "function",
+      "name": "EditStandardRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "lineRange": [12, 83],
+      "summary": "Loads the standard and renders the edit form, navigating back to the package or standard page on save/cancel.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx",
+      "summary": "Standard rule detail route selecting a rule from the outlet context and rendering RuleDetails.",
+      "tags": ["routing", "standards", "rules", "component"],
+      "complexity": "simple",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx:StandardDetailRuleRouteModule",
+      "type": "function",
+      "name": "StandardDetailRuleRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx",
+      "lineRange": [7, 56],
+      "summary": "Finds the selected rule in the standard and renders its details with loading/error states.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx",
+      "summary": "Standard summary tab showing the generated standard file preview and the rules summary table.",
+      "tags": ["routing", "standards", "rules", "component"],
+      "complexity": "moderate",
+      "languageNotes": "React Router file-based route: dots map to URL segments, $ marks params, _ prefixes pathless layouts, and clientLoader runs before render."
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx:StandardDetailSummaryRouteModule",
+      "type": "function",
+      "name": "StandardDetailSummaryRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx",
+      "lineRange": [9, 72],
+      "summary": "Builds the standard markdown and renders the artifact file preview with the rules table.",
+      "tags": ["component", "route-module", "react"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectSkillToContextComponent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx:SkillDetailIndexRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx:SkillDetailIndexRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx:SkillDistributionsRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx:SkillDistributionsRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx:SkillDistributionsRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListSkillDistributionsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx:SkillDistributionsRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx:SkillDistributionsList",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx:SkillDistributionsRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useCountOnLiveTargets",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx",
+      "target": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.distributions.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectSkillToContextComponent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:SkillFilesRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:SkillFilesRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:SkillFilesRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx:SkillFilePreview",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:SkillFilesRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx:SkillFrontmatterInfo",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:SkillFilesRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts:useCanEditSkillFiles",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:SkillFilesRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts:buildSkillLinkTransformer",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:SkillFilesRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillMdUtils.ts:buildVirtualSkillMdFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx:SkillFilesRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillMdUtils.ts:buildSkillMdContent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillFilePreview.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "file:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/skillLinkUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.files.$.tsx",
+      "target": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts:getMeQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillsBySpaceQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:getSkillBySlugQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:clientLoader",
+      "target": "function:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts:getSpaceBySlugQueryOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillBySlugQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useDeleteSkillMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillActions.tsx:SkillActions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx:SkillDetailsSidebar",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx:SkillVersionHistoryHeader",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts:useSkillSectionNavigation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx:SkillDetailLayoutRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/utils/skillMdUtils.ts:buildVirtualSkillMdFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillActions.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillDetailsSidebar.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillVersionHistoryHeader.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/domain/skills/constants/messages.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/domain/skills/hooks/useSkillSectionNavigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/api/queries/SpacesQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/shared/data/queryClient.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills.$skillSlug.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx:SkillsIndexRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx:SkillsIndexRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx:SkillsIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts:useAuthContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx:SkillsIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx:SkillsIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx:SkillsCreateButton",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx:SkillsIndexRouteModule",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsList.tsx:SkillsList",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.skills._index.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx:clientLoader",
+      "target": "function:apps/frontend/src/shared/data/redirectToContext.ts:redirectToContextComponent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx:StandardDetailIndexRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx:StandardDetailIndexRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId._index.tsx",
+      "target": "file:apps/frontend/src/shared/data/redirectToContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx:StandardDetailDeploymentRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx:StandardDetailDeploymentRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx:StandardDetailDeploymentRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useListStandardDistributionsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx:StandardDetailDeploymentRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx:StandardDistributionsList",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx:StandardDetailDeploymentRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts:useCountOnLiveTargets",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.deployment.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx:EditStandardRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx:EditStandardRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx:EditStandardRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts:contextPackageHref",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx:EditStandardRouteModule",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:usePackageInAddress",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx:EditStandardRouteModule",
+      "target": "function:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts:useGetStandardByIdQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx:EditStandardRouteModule",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardForm.tsx:StandardForm",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx:EditStandardRouteModule",
+      "target": "function:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx:MarkdownEditorProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardForm.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "target": "file:apps/frontend/src/shared/components/editor/MarkdownEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.edit.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx:StandardDetailRuleRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx:StandardDetailRuleRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx",
+      "target": "file:apps/frontend/src/domain/rules/components/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.rule.$ruleId.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx:StandardDetailSummaryRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx:StandardDetailSummaryRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx:StandardDetailSummaryRouteModule",
+      "target": "function:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx:ArtifactResultFilePreview",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx",
+      "target": "file:apps/frontend/src/domain/artifacts/components/ArtifactResultFilePreview.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.summary.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardDetails.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

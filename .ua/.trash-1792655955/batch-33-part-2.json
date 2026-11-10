@@ -1,0 +1,811 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "file",
+      "name": "ICodingAgentDeployer.ts",
+      "filePath": "packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "summary": "Port interface every coding-agent deployer implements: deploying commands, standards, skills, default skills and artifacts, plus removal/cleanup file updates and skills folder path.",
+      "tags": ["type-definition", "interface", "port", "deployment", "domain"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts:ICodingAgentDeployer",
+      "type": "class",
+      "name": "ICodingAgentDeployer",
+      "filePath": "packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "lineRange": [17, 73],
+      "summary": "Contract for agent deployers covering commands, standards, skills, artifacts and cleanup.",
+      "tags": ["interface", "type-definition", "port"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts",
+      "type": "file",
+      "name": "ICodingAgentDeployerRegistry.ts",
+      "filePath": "packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts",
+      "summary": "Interface for the registry that looks up and registers ICodingAgentDeployer instances per coding agent.",
+      "tags": ["type-definition", "interface", "registry", "domain"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts:ICodingAgentDeployerRegistry",
+      "type": "class",
+      "name": "ICodingAgentDeployerRegistry",
+      "filePath": "packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts",
+      "lineRange": [4, 8],
+      "summary": "Contract for looking up and registering deployers per agent.",
+      "tags": ["interface", "type-definition", "port"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "type": "file",
+      "name": "CodingAgentDeployerRegistry.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "summary": "Registry that lazily instantiates and caches the deployer for each supported coding agent (Claude, Cursor, Copilot, Continue, Codex, Junie, Kiro, OpenCode, GitLab Duo, Packmind, plugins).",
+      "tags": ["registry", "factory", "deployment", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "type": "class",
+      "name": "CodingAgentDeployerRegistry",
+      "filePath": "packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "lineRange": [21, 95],
+      "summary": "Caches and lazily creates agent-specific deployers.",
+      "tags": ["registry", "factory", "deployment"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts",
+      "type": "file",
+      "name": "CodingAgentRepositories.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts",
+      "summary": "Infrastructure implementation of ICodingAgentRepositories that builds and exposes the deployer registry using standards and git ports.",
+      "tags": ["repository", "infrastructure", "dependency-injection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts:CodingAgentRepositories",
+      "type": "class",
+      "name": "CodingAgentRepositories",
+      "filePath": "packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts",
+      "lineRange": [7, 26],
+      "summary": "Provides the deployer registry to services.",
+      "tags": ["repository", "infrastructure", "dependency-injection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts",
+      "type": "file",
+      "name": "AgentsMDDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts",
+      "summary": "Deployer for the AGENTS.md convention, a thin SingleFileDeployer subclass targeting AGENTS.md.",
+      "tags": ["deployer", "agents-md", "single-file", "infrastructure"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts:AgentsMDDeployer",
+      "type": "class",
+      "name": "AgentsMDDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts",
+      "lineRange": [6, 11],
+      "summary": "SingleFileDeployer configured for AGENTS.md.",
+      "tags": ["deployer", "agents-md", "single-file"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "type": "file",
+      "name": "ClaudeDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "summary": "Claude Code deployer that renders commands, standards (as .claude/rules files with path globs) and skills into .claude folders, and generates removal and cleanup file updates.",
+      "tags": [
+        "deployer",
+        "claude-code",
+        "rendering",
+        "skills",
+        "infrastructure"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts:ClaudeDeployer",
+      "type": "class",
+      "name": "ClaudeDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "lineRange": [27, 626],
+      "summary": "Renders Claude Code commands, rules and skills and computes removal/cleanup updates.",
+      "tags": ["deployer", "claude-code", "rendering"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts",
+      "type": "file",
+      "name": "ClaudePluginDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts",
+      "summary": "Deployer producing a Claude Code plugin layout (commands, skills, plugin manifest) under a plugin root folder; standards are skipped and counted.",
+      "tags": ["deployer", "claude-plugin", "manifest", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts:ClaudePluginDeployer",
+      "type": "class",
+      "name": "ClaudePluginDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts",
+      "lineRange": [31, 220],
+      "summary": "Renders a Claude Code plugin package with manifest, commands and skills.",
+      "tags": ["deployer", "claude-plugin", "manifest"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts",
+      "type": "file",
+      "name": "buildPluginManifest.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts",
+      "summary": "Builds the JSON plugin manifest string (name, version, description, author) shared by Claude and Copilot plugin deployers.",
+      "tags": ["utility", "manifest", "serialization", "plugin"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts:buildPluginManifest",
+      "type": "function",
+      "name": "buildPluginManifest",
+      "filePath": "packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts",
+      "lineRange": [18, 31],
+      "summary": "Serializes plugin metadata into a formatted JSON manifest string.",
+      "tags": ["utility", "serialization", "manifest"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts",
+      "type": "file",
+      "name": "CodexDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts",
+      "summary": "OpenAI Codex deployer built on SingleFileDeployer writing AGENTS.md, plus skills deployment into the Codex skills folder.",
+      "tags": ["deployer", "codex", "single-file", "skills", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts:CodexDeployer",
+      "type": "class",
+      "name": "CodexDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts",
+      "lineRange": [21, 143],
+      "summary": "Codex single-file deployer with skills support.",
+      "tags": ["deployer", "codex", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts",
+      "type": "file",
+      "name": "ContinueDeployer.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts",
+      "summary": "Continue.dev deployer rendering standards as .continue/rules with globs, commands as prompts, and skills, with removal and cleanup updates.",
+      "tags": ["deployer", "continue", "rendering", "infrastructure"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts:ContinueDeployer",
+      "type": "class",
+      "name": "ContinueDeployer",
+      "filePath": "packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts",
+      "lineRange": [24, 453],
+      "summary": "Renders Continue rules, prompts and skills.",
+      "tags": ["deployer", "continue", "rendering"],
+      "complexity": "complex"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts:ICodingAgentDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts:ICodingAgentDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts:ICodingAgentDeployerRegistry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts:ICodingAgentDeployerRegistry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/domain/errors/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts:CodingAgentRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts:CodingAgentRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts",
+      "target": "file:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts:AgentsMDDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts:AgentsMDDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts:ClaudeDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts:ClaudeDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts:ClaudePluginDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts:ClaudePluginDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts:buildPluginManifest",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts:buildPluginManifest",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts:CodexDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts:CodexDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts:ContinueDeployer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts",
+      "target": "class:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts:ContinueDeployer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts",
+      "target": "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts:ClaudeDeployer",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts:ICodingAgentDeployer",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts:ContinueDeployer",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts:ICodingAgentDeployer",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts:ClaudePluginDeployer",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts:ICodingAgentDeployer",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/domain/repository/ICodingAgentDeployerRegistry.ts:ICodingAgentDeployerRegistry",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts:CodingAgentRepositories",
+      "target": "class:packages/coding-agent/src/domain/repositories/ICodingAgentRepositories.ts:ICodingAgentRepositories",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts:AgentsMDDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts:SingleFileDeployer",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts:CodexDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/SingleFileDeployer.ts:SingleFileDeployer",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentRepositories.ts:CodingAgentRepositories",
+      "target": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts:ClaudeDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts:CodexDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/DefaultSkillsDeployer.ts:DefaultSkillsDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts:ClaudeDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts:GenericStandardSectionWriter",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts:ContinueDeployer",
+      "target": "class:packages/coding-agent/src/infra/repositories/genericSectionWriter/GenericStandardSectionWriter.ts:GenericStandardSectionWriter",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts:ClaudePluginDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/claudePlugin/buildPluginManifest.ts:buildPluginManifest",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts:ClaudeDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts:generateSkillMdContent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts:ClaudePluginDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/SkillMdContentBuilder.ts:generateSkillMdContent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts:ClaudeDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts:ContinueDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts:CodexDeployer",
+      "target": "function:packages/coding-agent/src/infra/repositories/utils/FileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/gitlabDuo/GitlabDuoDeployer.ts:GitlabDuoDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/junie/JunieDeployer.ts:JunieDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/kiro/KiroDeployer.ts:KiroDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/opencode/OpenCodeDeployer.ts:OpenCodeDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/packmind/PackmindDeployer.ts:PackmindDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/agentsmd/AgentsMDDeployer.ts:AgentsMDDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts:ClaudeDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/claudePlugin/ClaudePluginDeployer.ts:ClaudePluginDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/codex/CodexDeployer.ts:CodexDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/continue/ContinueDeployer.ts:ContinueDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/copilot/CopilotDeployer.ts:CopilotDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/copilotPlugin/CopilotPluginDeployer.ts:CopilotPluginDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts:CodingAgentDeployerRegistry",
+      "target": "class:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts:CursorDeployer",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

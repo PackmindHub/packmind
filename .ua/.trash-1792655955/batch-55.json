@@ -1,0 +1,640 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/node-utils/src/cache/Cache.ts",
+      "type": "file",
+      "name": "Cache.ts",
+      "filePath": "packages/node-utils/src/cache/Cache.ts",
+      "summary": "Redis-backed singleton cache used across the backend, lazily connecting via the REDIS_URI configuration value.",
+      "tags": ["singleton", "cache", "redis", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/cache/Cache.ts:Cache",
+      "type": "class",
+      "name": "Cache",
+      "filePath": "packages/node-utils/src/cache/Cache.ts",
+      "lineRange": [13, 173],
+      "summary": "Singleton Redis cache client offering set/get/invalidate with lazy initialization and disconnect handling.",
+      "tags": ["singleton", "cache", "redis"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "type": "file",
+      "name": "Configuration.ts",
+      "filePath": "packages/node-utils/src/config/config/Configuration.ts",
+      "summary": "Central configuration singleton resolving secrets and settings from environment variables, falling back to Infisical when configured.",
+      "tags": ["config", "singleton", "secrets", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/config/config/Configuration.ts:Configuration",
+      "type": "class",
+      "name": "Configuration",
+      "filePath": "packages/node-utils/src/config/config/Configuration.ts",
+      "lineRange": [6, 169],
+      "summary": "Singleton exposing static getConfig() that reads env vars and optionally Infisical-managed secrets, with one-time guarded initialization.",
+      "tags": ["config", "singleton", "secrets"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/config/infra/Infisical/InfisicalConfig.ts",
+      "type": "file",
+      "name": "InfisicalConfig.ts",
+      "filePath": "packages/node-utils/src/config/infra/Infisical/InfisicalConfig.ts",
+      "summary": "Infisical SDK adapter that authenticates a client and fetches secret values by key.",
+      "tags": ["config", "secrets", "adapter", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/config/infra/Infisical/InfisicalConfig.ts:InfisicalConfig",
+      "type": "class",
+      "name": "InfisicalConfig",
+      "filePath": "packages/node-utils/src/config/infra/Infisical/InfisicalConfig.ts",
+      "lineRange": [6, 87],
+      "summary": "Wraps the Infisical client: initializes authentication and retrieves individual secret values.",
+      "tags": ["secrets", "adapter", "config"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/featureFlags/isFeatureEnabled.ts",
+      "type": "file",
+      "name": "isFeatureEnabled.ts",
+      "filePath": "packages/node-utils/src/featureFlags/isFeatureEnabled.ts",
+      "summary": "Backend feature-flag gate combining FF_* environment kill-switches with the shared email-domain rules from @packmind/feature-flags.",
+      "tags": ["feature-flags", "utility", "config"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/featureFlags/isFeatureEnabled.ts:isFeatureEnabled",
+      "type": "function",
+      "name": "isFeatureEnabled",
+      "filePath": "packages/node-utils/src/featureFlags/isFeatureEnabled.ts",
+      "lineRange": [30, 56],
+      "summary": "Resolves whether a feature flag is enabled: env override FF_<FLAG> forces on/off, otherwise defers to the email-domain rule.",
+      "tags": ["feature-flags", "utility", "config"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts",
+      "type": "file",
+      "name": "AbstractAIDelayedJob.ts",
+      "filePath": "packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts",
+      "summary": "Abstract base for AI-powered delayed jobs that lazily builds a queue and worker, runs jobs with timeouts, and tracks token usage.",
+      "tags": ["service", "jobs", "abstract-class", "ai"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts:AbstractAIDelayedJob",
+      "type": "class",
+      "name": "AbstractAIDelayedJob",
+      "filePath": "packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts",
+      "lineRange": [10, 116],
+      "summary": "Template-method base class implementing IDelayedJob: lazy queue/worker setup, job add/cancel, timeout parsing, failure hooks, and token assessment.",
+      "tags": ["jobs", "abstract-class", "template-method", "ai"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/domain/IDelayedJob.ts",
+      "type": "file",
+      "name": "IDelayedJob.ts",
+      "filePath": "packages/node-utils/src/jobs/domain/IDelayedJob.ts",
+      "summary": "Domain port describing a delayed job that can be enqueued and cancelled.",
+      "tags": ["type-definition", "port", "jobs"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/domain/IQueue.ts",
+      "type": "file",
+      "name": "IQueue.ts",
+      "filePath": "packages/node-utils/src/jobs/domain/IQueue.ts",
+      "summary": "Domain port for job queues plus Runner, WorkerListeners, QueueListeners and WithTimeout types.",
+      "tags": ["type-definition", "port", "jobs", "queue"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/domain/TokensUsed.ts",
+      "type": "file",
+      "name": "TokensUsed.ts",
+      "filePath": "packages/node-utils/src/jobs/domain/TokensUsed.ts",
+      "summary": "Types describing AI token consumption, optionally broken down by operation.",
+      "tags": ["type-definition", "data-model", "ai"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts",
+      "type": "file",
+      "name": "DelayedJobsFactory.ts",
+      "filePath": "packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts",
+      "summary": "Factory creating BullMQ-backed WorkerQueue instances from the configured REDIS_URI, including Redis URI parsing.",
+      "tags": ["factory", "jobs", "redis", "infrastructure"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts:parseRedisUri",
+      "type": "function",
+      "name": "parseRedisUri",
+      "filePath": "packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts",
+      "lineRange": [15, 73],
+      "summary": "Parses a Redis connection URI into BullMQ connection options (host, port, credentials, TLS, db).",
+      "tags": ["parsing", "redis", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts:queueFactory",
+      "type": "function",
+      "name": "queueFactory",
+      "filePath": "packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts",
+      "lineRange": [75, 84],
+      "summary": "Builds a WorkerQueue for a queue id using the Redis connection from configuration.",
+      "tags": ["factory", "jobs", "queue"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts",
+      "type": "file",
+      "name": "AbstractQueue.ts",
+      "filePath": "packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts",
+      "summary": "BullMQ adapter base implementing IQueue: adds, cancels and removes repeatable jobs with serialized payloads and queue event wiring.",
+      "tags": ["adapter", "queue", "bullmq", "jobs"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts:AbstractQueue",
+      "type": "class",
+      "name": "AbstractQueue",
+      "filePath": "packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts",
+      "lineRange": [17, 168],
+      "summary": "Abstract BullMQ queue implementing IQueue: job enqueueing with Packmind serialization, cancellation, repeatable removal and queue event listeners.",
+      "tags": ["adapter", "bullmq", "queue"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts",
+      "type": "file",
+      "name": "WorkerQueue.ts",
+      "filePath": "packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts",
+      "summary": "Concrete BullMQ queue that attaches a worker with configurable concurrency and AI request timeouts.",
+      "tags": ["adapter", "worker", "bullmq", "jobs"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts:WorkerQueue",
+      "type": "class",
+      "name": "WorkerQueue",
+      "filePath": "packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts",
+      "lineRange": [6, 132],
+      "summary": "Extends AbstractQueue to create a BullMQ Worker, applying timeout via AbortController, configured concurrency and worker event handlers.",
+      "tags": ["worker", "bullmq", "queue"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/test/MockJobQueue.ts",
+      "type": "file",
+      "name": "MockJobQueue.ts",
+      "filePath": "packages/node-utils/src/jobs/test/MockJobQueue.ts",
+      "summary": "In-memory IQueue test double recording enqueued jobs without Redis.",
+      "tags": ["test", "mock", "queue"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/jobs/test/MockJobQueue.ts:MockJobQueue",
+      "type": "class",
+      "name": "MockJobQueue",
+      "filePath": "packages/node-utils/src/jobs/test/MockJobQueue.ts",
+      "lineRange": [5, 76],
+      "summary": "In-memory queue mock implementing IQueue with helpers to inspect recorded jobs.",
+      "tags": ["test", "mock", "queue"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/test/mockQueueFactory.ts",
+      "type": "file",
+      "name": "mockQueueFactory.ts",
+      "filePath": "packages/node-utils/src/jobs/test/mockQueueFactory.ts",
+      "summary": "Drop-in replacement for queueFactory returning a MockJobQueue for tests that need no Redis.",
+      "tags": ["test", "mock", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/jobs/test/mockQueueFactory.ts:mockQueueFactory",
+      "type": "function",
+      "name": "mockQueueFactory",
+      "filePath": "packages/node-utils/src/jobs/test/mockQueueFactory.ts",
+      "lineRange": [5, 20],
+      "summary": "Returns a new MockJobQueue after validating the queue id; ignores queue listeners.",
+      "tags": ["test", "mock", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/jobs/utils/PackmindSerializer.ts",
+      "type": "file",
+      "name": "PackmindSerializer.ts",
+      "filePath": "packages/node-utils/src/jobs/utils/PackmindSerializer.ts",
+      "summary": "Serializer converting Dates to and from a tagged safe representation so job payloads survive BullMQ JSON round-trips.",
+      "tags": ["serialization", "utility", "jobs"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/jobs/utils/PackmindSerializer.ts:PackmindSerializer",
+      "type": "class",
+      "name": "PackmindSerializer",
+      "filePath": "packages/node-utils/src/jobs/utils/PackmindSerializer.ts",
+      "lineRange": [1, 56],
+      "summary": "Recursively encodes Date values into Packmind-safe objects and decodes them back.",
+      "tags": ["serialization", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/jobs/utils/PackmindSerializer.ts:isPackmindSerializedDate",
+      "type": "function",
+      "name": "isPackmindSerializedDate",
+      "filePath": "packages/node-utils/src/jobs/utils/PackmindSerializer.ts",
+      "lineRange": [63, 72],
+      "summary": "Type guard detecting a serialized Packmind date object.",
+      "tags": ["type-guard", "serialization"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/node-utils/src/cache/Cache.ts",
+      "target": "class:packages/node-utils/src/cache/Cache.ts:Cache",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/cache/Cache.ts",
+      "target": "class:packages/node-utils/src/cache/Cache.ts:Cache",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "target": "class:packages/node-utils/src/config/config/Configuration.ts:Configuration",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "target": "class:packages/node-utils/src/config/config/Configuration.ts:Configuration",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/config/infra/Infisical/InfisicalConfig.ts",
+      "target": "class:packages/node-utils/src/config/infra/Infisical/InfisicalConfig.ts:InfisicalConfig",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/config/infra/Infisical/InfisicalConfig.ts",
+      "target": "class:packages/node-utils/src/config/infra/Infisical/InfisicalConfig.ts:InfisicalConfig",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/featureFlags/isFeatureEnabled.ts",
+      "target": "function:packages/node-utils/src/featureFlags/isFeatureEnabled.ts:isFeatureEnabled",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/featureFlags/isFeatureEnabled.ts",
+      "target": "function:packages/node-utils/src/featureFlags/isFeatureEnabled.ts:isFeatureEnabled",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts",
+      "target": "class:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts:AbstractAIDelayedJob",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts",
+      "target": "class:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts:AbstractAIDelayedJob",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts",
+      "target": "function:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts:parseRedisUri",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts",
+      "target": "function:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts:queueFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts",
+      "target": "function:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts:queueFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts",
+      "target": "class:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts:AbstractQueue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts",
+      "target": "class:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts:AbstractQueue",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts",
+      "target": "class:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts:WorkerQueue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts",
+      "target": "class:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts:WorkerQueue",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/test/MockJobQueue.ts",
+      "target": "class:packages/node-utils/src/jobs/test/MockJobQueue.ts:MockJobQueue",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/test/MockJobQueue.ts",
+      "target": "class:packages/node-utils/src/jobs/test/MockJobQueue.ts:MockJobQueue",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/test/mockQueueFactory.ts",
+      "target": "function:packages/node-utils/src/jobs/test/mockQueueFactory.ts:mockQueueFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/test/mockQueueFactory.ts",
+      "target": "function:packages/node-utils/src/jobs/test/mockQueueFactory.ts:mockQueueFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/utils/PackmindSerializer.ts",
+      "target": "class:packages/node-utils/src/jobs/utils/PackmindSerializer.ts:PackmindSerializer",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/utils/PackmindSerializer.ts",
+      "target": "class:packages/node-utils/src/jobs/utils/PackmindSerializer.ts:PackmindSerializer",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/utils/PackmindSerializer.ts",
+      "target": "function:packages/node-utils/src/jobs/utils/PackmindSerializer.ts:isPackmindSerializedDate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/cache/Cache.ts",
+      "target": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "target": "file:packages/node-utils/src/config/infra/Infisical/InfisicalConfig.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/featureFlags/isFeatureEnabled.ts",
+      "target": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts",
+      "target": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts",
+      "target": "file:packages/node-utils/src/jobs/domain/IDelayedJob.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts",
+      "target": "file:packages/node-utils/src/jobs/domain/IQueue.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts",
+      "target": "file:packages/node-utils/src/jobs/domain/TokensUsed.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts",
+      "target": "file:packages/node-utils/src/jobs/utils/PackmindSerializer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts",
+      "target": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts",
+      "target": "file:packages/node-utils/src/jobs/domain/IQueue.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts",
+      "target": "file:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts",
+      "target": "file:packages/node-utils/src/jobs/domain/IQueue.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts",
+      "target": "file:packages/node-utils/src/jobs/utils/PackmindSerializer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts",
+      "target": "file:packages/node-utils/src/config/config/Configuration.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts",
+      "target": "file:packages/node-utils/src/jobs/domain/IQueue.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts",
+      "target": "file:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/test/MockJobQueue.ts",
+      "target": "file:packages/node-utils/src/jobs/domain/IQueue.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/test/mockQueueFactory.ts",
+      "target": "file:packages/node-utils/src/jobs/domain/IQueue.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/node-utils/src/jobs/test/mockQueueFactory.ts",
+      "target": "file:packages/node-utils/src/jobs/test/MockJobQueue.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/node-utils/src/cache/Cache.ts:Cache",
+      "target": "class:packages/node-utils/src/config/config/Configuration.ts:Configuration",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/config/config/Configuration.ts:Configuration",
+      "target": "class:packages/node-utils/src/config/infra/Infisical/InfisicalConfig.ts:InfisicalConfig",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/node-utils/src/featureFlags/isFeatureEnabled.ts:isFeatureEnabled",
+      "target": "class:packages/node-utils/src/config/config/Configuration.ts:Configuration",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts:queueFactory",
+      "target": "class:packages/node-utils/src/config/config/Configuration.ts:Configuration",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts:queueFactory",
+      "target": "class:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts:WorkerQueue",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts:queueFactory",
+      "target": "function:packages/node-utils/src/jobs/infra/DelayedJobsFactory.ts:parseRedisUri",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/jobs/infra/bullMQ/WorkerQueue.ts:WorkerQueue",
+      "target": "class:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts:AbstractQueue",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/node-utils/src/jobs/infra/bullMQ/AbstractQueue.ts:AbstractQueue",
+      "target": "class:packages/node-utils/src/jobs/utils/PackmindSerializer.ts:PackmindSerializer",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts:AbstractAIDelayedJob",
+      "target": "class:packages/node-utils/src/jobs/utils/PackmindSerializer.ts:PackmindSerializer",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/node-utils/src/jobs/application/AbstractAIDelayedJob.ts:AbstractAIDelayedJob",
+      "target": "class:packages/node-utils/src/config/config/Configuration.ts:Configuration",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/node-utils/src/jobs/test/mockQueueFactory.ts:mockQueueFactory",
+      "target": "class:packages/node-utils/src/jobs/test/MockJobQueue.ts:MockJobQueue",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

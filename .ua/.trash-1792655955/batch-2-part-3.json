@@ -1,0 +1,738 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "type": "file",
+      "name": "RepositoryMasterRail.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "summary": "Master list rail of repositories in the deployments redesign with drift counts, filters, selection and a bulk action bar.",
+      "tags": [
+        "component",
+        "deployments",
+        "master-list",
+        "repository",
+        "react"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryMasterRail",
+      "type": "function",
+      "name": "RepositoryMasterRail",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "lineRange": [40, 225],
+      "summary": "Rail listing repositories with drift filter, selection and bulk action bar.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryRow",
+      "type": "function",
+      "name": "RepositoryRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "lineRange": [237, 443],
+      "summary": "Row for one repository showing drifted packages, targets and failures.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RailActionBar",
+      "type": "function",
+      "name": "RailActionBar",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "lineRange": [456, 566],
+      "summary": "Bulk action bar for selected repositories in the rail.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:FilteredZero",
+      "type": "function",
+      "name": "FilteredZero",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "lineRange": [568, 614],
+      "summary": "Message shown when filters hide every repository.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:DriftFilterControl",
+      "type": "function",
+      "name": "DriftFilterControl",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "lineRange": [633, 704],
+      "summary": "Control toggling the drift filter of the repository rail.",
+      "tags": ["component", "deployments", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "type": "file",
+      "name": "SyncSurface.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "summary": "Large multi-step sync/distribution surface that lets users review per-package and per-marketplace changes, pick installs, confirm distribution (app or CLI) and see success state.",
+      "tags": ["component", "deployments", "distribution", "wizard", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:initialPluginSelection",
+      "type": "function",
+      "name": "initialPluginSelection",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [158, 168],
+      "summary": "Computes the initial set of selected marketplace plugins.",
+      "tags": ["utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SyncSurface",
+      "type": "function",
+      "name": "SyncSurface",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [259, 896],
+      "summary": "Orchestrates the distribution flow: selecting installs, reviewing moves, confirming app or CLI distribution and showing results.",
+      "tags": ["component", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:StepLabel",
+      "type": "function",
+      "name": "StepLabel",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [898, 907],
+      "summary": "Label for a step in the sync flow.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:confirmLabel",
+      "type": "function",
+      "name": "confirmLabel",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [930, 957],
+      "summary": "Computes the confirm button label from the selection.",
+      "tags": ["utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:titleForScope",
+      "type": "function",
+      "name": "titleForScope",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [959, 990],
+      "summary": "Computes the surface title from the sync scope (package, repository, bulk).",
+      "tags": ["utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:buildPackageBlocks",
+      "type": "function",
+      "name": "buildPackageBlocks",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [992, 1027],
+      "summary": "Groups installs to sync into per-package blocks.",
+      "tags": ["utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:sortVersionsAscending",
+      "type": "function",
+      "name": "sortVersionsAscending",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1037, 1046],
+      "summary": "Sorts release versions in ascending semantic order.",
+      "tags": ["utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:packageMoveLine",
+      "type": "function",
+      "name": "packageMoveLine",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1061, 1079],
+      "summary": "Describes the version move a package will make.",
+      "tags": ["utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:entryMoveLine",
+      "type": "function",
+      "name": "entryMoveLine",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1094, 1105],
+      "summary": "Describes the version move of a single install entry.",
+      "tags": ["utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:pinnedMove",
+      "type": "function",
+      "name": "pinnedMove",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1115, 1124],
+      "summary": "Computes the move for an install pinned to a release.",
+      "tags": ["utility", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:InstallSyncRows",
+      "type": "function",
+      "name": "InstallSyncRows",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1153, 1185],
+      "summary": "Renders the list of install rows within a sync block.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:PackageSyncBlock",
+      "type": "function",
+      "name": "PackageSyncBlock",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1204, 1353],
+      "summary": "Block letting the user select installs of one package to sync.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SinglePackageSyncList",
+      "type": "function",
+      "name": "SinglePackageSyncList",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1362, 1397],
+      "summary": "Sync list variant for a single package scope.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:MarketplaceSyncBlock",
+      "type": "function",
+      "name": "MarketplaceSyncBlock",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1420, 1585],
+      "summary": "Block letting the user select marketplace plugins to publish.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:InstallSyncRow",
+      "type": "function",
+      "name": "InstallSyncRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1611, 1819],
+      "summary": "Selectable row for one install with its move, lock and change details.",
+      "tags": ["component", "deployments"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:LockSummary",
+      "type": "function",
+      "name": "LockSummary",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1821, 1935],
+      "summary": "Summarizes installs that are locked or require the CLI.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:AllInProgressState",
+      "type": "function",
+      "name": "AllInProgressState",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1937, 1953],
+      "summary": "State shown when every install already has a distribution in progress.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:NoActionableNote",
+      "type": "function",
+      "name": "NoActionableNote",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1955, 1971],
+      "summary": "Note shown when nothing in the selection is actionable.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:CliInstallSection",
+      "type": "function",
+      "name": "CliInstallSection",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [1973, 2155],
+      "summary": "Section explaining how to update CLI-managed installs with commands to run.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:NothingToDistribute",
+      "type": "function",
+      "name": "NothingToDistribute",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [2157, 2171],
+      "summary": "Empty state when there is nothing to distribute.",
+      "tags": ["component", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SuccessSurface",
+      "type": "function",
+      "name": "SuccessSurface",
+      "filePath": "apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "lineRange": [2173, 2297],
+      "summary": "Post-distribution success view summarizing accepted and failed distributions.",
+      "tags": ["component", "deployments"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryMasterRail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryMasterRail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RailActionBar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:FilteredZero",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:DriftFilterControl",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryMasterRail",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasDrift",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryMasterRail",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasFailedDistribution",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryMasterRail",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryBehindInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryMasterRail",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryLockProfile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryBehindInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryDriftedTargetCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryHasFailedDistribution",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/RepositoryMasterRail.tsx:RepositoryRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/buildRepositoryDriftOverview.ts:repositoryFailedInstallCount",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:initialPluginSelection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SyncSurface",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SyncSurface",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:StepLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:confirmLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:titleForScope",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:buildPackageBlocks",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:sortVersionsAscending",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:packageMoveLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:entryMoveLine",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:pinnedMove",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:InstallSyncRows",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:PackageSyncBlock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SinglePackageSyncList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:MarketplaceSyncBlock",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:InstallSyncRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:LockSummary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:AllInProgressState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:NoActionableNote",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:CliInstallSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:NothingToDistribute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SuccessSurface",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/noGitConnection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/DestinationChangeList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/selectors/installLock.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SyncSurface",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:buildPackageBlocks",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SyncSurface",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:initialPluginSelection",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SyncSurface",
+      "target": "function:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts:useDeployPackagesMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SyncSurface",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:titleForScope",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SyncSurface",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:confirmLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:buildPackageBlocks",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:installDriftEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:packageMoveLine",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:sortVersionsAscending",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:entryMoveLine",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:pinnedMove",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:PackageSyncBlock",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:multiLandingRepoIds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:PackageSyncBlock",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:packageMoveLine",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:SinglePackageSyncList",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:multiLandingRepoIds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:InstallSyncRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:pinnedMove",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:InstallSyncRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:entryMoveLine",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:InstallSyncRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:targetLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:InstallSyncRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:formatRelativeDate",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:InstallSyncRow",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/destinationChanges.ts:liveDestinationChanges",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:CliInstallSection",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:multiLandingRepoIds",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:CliInstallSection",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/selectors/installDriftEntries.ts:targetLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:CliInstallSection",
+      "target": "function:apps/frontend/src/domain/deployments/components/redesign/components/SyncSurface.tsx:entryMoveLine",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

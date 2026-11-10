@@ -1,0 +1,962 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/infra/commands/RemoveFromPackageCommand.ts",
+      "type": "file",
+      "name": "RemoveFromPackageCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/RemoveFromPackageCommand.ts",
+      "summary": "cmd-ts subcommand that removes standards, commands or skills from a package via removeFromPackageHandler.",
+      "tags": ["cli-command", "packages", "cmd-ts", "api-handler"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/SkillsCommand.ts",
+      "type": "file",
+      "name": "SkillsCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/SkillsCommand.ts",
+      "summary": "cmd-ts subcommand group 'skills' with list and install-default subcommands.",
+      "tags": ["cli-command", "subcommand-group", "skills", "barrel"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/SpacesCommand.ts",
+      "type": "file",
+      "name": "SpacesCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/SpacesCommand.ts",
+      "summary": "cmd-ts subcommand group 'spaces' exposing the list subcommand.",
+      "tags": ["cli-command", "subcommand-group", "spaces", "barrel"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/StandardsCommand.ts",
+      "type": "file",
+      "name": "StandardsCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/StandardsCommand.ts",
+      "summary": "cmd-ts subcommand group 'standards' exposing the list subcommand.",
+      "tags": ["cli-command", "subcommand-group", "standards", "barrel"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/TrackCommand.ts",
+      "type": "file",
+      "name": "TrackCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/TrackCommand.ts",
+      "summary": "Deprecated 'track' command kept as a stub that tells users to use 'git track' instead via removedTrackHandler.",
+      "tags": ["cli-command", "deprecated", "cmd-ts", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/UninstallCommand.ts",
+      "type": "file",
+      "name": "UninstallCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/UninstallCommand.ts",
+      "summary": "cmd-ts 'uninstall' command that removes packages from packmind.json and deletes their artifacts, after ensuring CLI version compatibility, then prints a summary.",
+      "tags": ["cli-command", "install", "cmd-ts", "api-handler"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/UninstallCommand.ts:buildUninstallSummary",
+      "type": "function",
+      "name": "buildUninstallSummary",
+      "filePath": "apps/cli/src/infra/commands/UninstallCommand.ts",
+      "lineRange": [15, 36],
+      "summary": "Builds the human-readable summary lines for an uninstall result.",
+      "tags": ["formatting", "install", "summary"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/UntrackCommand.ts",
+      "type": "file",
+      "name": "UntrackCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/UntrackCommand.ts",
+      "summary": "Deprecated 'untrack' command stub redirecting users to 'git untrack' via removedUntrackHandler.",
+      "tags": ["cli-command", "deprecated", "cmd-ts", "git"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/UpdateCommand.ts",
+      "type": "file",
+      "name": "UpdateCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/UpdateCommand.ts",
+      "summary": "cmd-ts 'update' command that self-updates the Packmind CLI binary to the latest version (or only checks with --check).",
+      "tags": ["cli-command", "self-update", "cmd-ts"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "type": "file",
+      "name": "WhoamiCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "summary": "cmd-ts 'whoami' command that displays the authenticated user, organization, host and credential expiry, plus a version check notice.",
+      "tags": ["cli-command", "authentication", "cmd-ts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/WhoamiCommand.ts:formatExpiresAt",
+      "type": "function",
+      "name": "formatExpiresAt",
+      "filePath": "apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "lineRange": [17, 37],
+      "summary": "Formats the credential expiry date as a relative human-readable string.",
+      "tags": ["formatting", "authentication", "date"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/WhoamiCommand.ts:displayAuthInfo",
+      "type": "function",
+      "name": "displayAuthInfo",
+      "filePath": "apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "lineRange": [39, 57],
+      "summary": "Prints the authenticated user, organization and host information.",
+      "tags": ["output", "authentication", "formatting"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "type": "file",
+      "name": "bootstrapInstallContext.ts",
+      "filePath": "apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "summary": "Prepares the install context before packages are installed: ensures a packmind.json exists, detects/confirms coding agents and prompts for organization render modes when configuration is missing.",
+      "tags": ["install", "configuration", "interactive-prompt", "service"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:bootstrapInstallContext",
+      "type": "function",
+      "name": "bootstrapInstallContext",
+      "filePath": "apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "lineRange": [58, 179],
+      "summary": "Ensures packmind.json and agent configuration exist before install, initializing config and prompting for agents and render modes when needed.",
+      "tags": ["install", "bootstrap", "configuration"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:promptOrgRenderModes",
+      "type": "function",
+      "name": "promptOrgRenderModes",
+      "filePath": "apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "lineRange": [181, 268],
+      "summary": "Asks the user whether to use the organization's default render modes for coding agents and persists the choice.",
+      "tags": ["interactive-prompt", "agents", "configuration"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:confirmWithReadline",
+      "type": "function",
+      "name": "confirmWithReadline",
+      "filePath": "apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "lineRange": [270, 283],
+      "summary": "Asks a Y/n question through readline and resolves to a boolean.",
+      "tags": ["interactive-prompt", "utility", "readline"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "type": "file",
+      "name": "checkUpgradesHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "summary": "Implements 'install --check-upgrades': scans target directories for pinned packages, computes available upgrades via the use case, formats per-package and per-artifact upgrade lines and sets the exit code.",
+      "tags": ["install", "upgrades", "formatting", "api-handler"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:formatArtifactLines",
+      "type": "function",
+      "name": "formatArtifactLines",
+      "filePath": "apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "lineRange": [61, 73],
+      "summary": "Formats per-artifact upgrade change lines for display.",
+      "tags": ["formatting", "upgrades"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:formatCheckUpgradesResult",
+      "type": "function",
+      "name": "formatCheckUpgradesResult",
+      "filePath": "apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "lineRange": [103, 127],
+      "summary": "Turns a check-upgrades result into printable lines covering agents, packages and unattributed artifacts.",
+      "tags": ["formatting", "upgrades", "output"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:findCheckUpgradesConflict",
+      "type": "function",
+      "name": "findCheckUpgradesConflict",
+      "filePath": "apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "lineRange": [140, 155],
+      "summary": "Returns an error message when --check-upgrades is combined with incompatible arguments or flags.",
+      "tags": ["validation", "upgrades", "cli-flags"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:checkUpgradesHandler",
+      "type": "function",
+      "name": "checkUpgradesHandler",
+      "filePath": "apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "lineRange": [161, 189],
+      "summary": "Entry handler for --check-upgrades: resolves target directories, checks each and exits with a status reflecting available upgrades.",
+      "tags": ["upgrades", "api-handler", "entry-point"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:checkDirectories",
+      "type": "function",
+      "name": "checkDirectories",
+      "filePath": "apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "lineRange": [198, 237],
+      "summary": "Runs the check-upgrades use case for each target directory, printing results and collecting errors.",
+      "tags": ["upgrades", "iteration", "error-handling"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:reportOutcome",
+      "type": "function",
+      "name": "reportOutcome",
+      "filePath": "apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "lineRange": [240, 272],
+      "summary": "Prints the final check-upgrades outcome and computes the process exit code.",
+      "tags": ["reporting", "upgrades", "exit-code"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/commands/listCommandsHandler.ts",
+      "type": "file",
+      "name": "listCommandsHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/commands/listCommandsHandler.ts",
+      "summary": "Handler that fetches Packmind commands, filters them by space and prints them grouped by space with web URLs.",
+      "tags": ["listing", "api-handler", "cli", "formatting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/commands/listCommandsHandler.ts:listCommandsHandler",
+      "type": "function",
+      "name": "listCommandsHandler",
+      "filePath": "apps/cli/src/infra/commands/commands/listCommandsHandler.ts",
+      "lineRange": [13, 77],
+      "summary": "Lists Packmind commands filtered by space and prints them grouped by space with links.",
+      "tags": ["listing", "api-handler", "output"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts",
+      "type": "file",
+      "name": "ConfigAgentsAddCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts",
+      "summary": "cmd-ts 'add' subcommand under 'config agents' that adds coding agents to the project config, with a readline confirmation prompt.",
+      "tags": ["cli-command", "configuration", "agents", "cmd-ts"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts:createPromptConfirm",
+      "type": "function",
+      "name": "createPromptConfirm",
+      "filePath": "apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts",
+      "lineRange": [9, 21],
+      "summary": "Creates a readline-based Y/n confirmation function used by the add-agents command.",
+      "tags": ["interactive-prompt", "utility", "readline"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/config/ConfigAgentsCommand.ts",
+      "type": "file",
+      "name": "ConfigAgentsCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/config/ConfigAgentsCommand.ts",
+      "summary": "cmd-ts 'agents' subcommand group with interactive 'setup' plus add/list/remove subcommands for choosing which coding agents receive generated artifacts.",
+      "tags": ["cli-command", "subcommand-group", "configuration", "agents"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/config/ConfigAgentsListCommand.ts",
+      "type": "file",
+      "name": "ConfigAgentsListCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/config/ConfigAgentsListCommand.ts",
+      "summary": "cmd-ts 'list' subcommand that prints the coding agents configured for the project.",
+      "tags": ["cli-command", "configuration", "agents", "listing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/config/ConfigAgentsRemoveCommand.ts",
+      "type": "file",
+      "name": "ConfigAgentsRemoveCommand.ts",
+      "filePath": "apps/cli/src/infra/commands/config/ConfigAgentsRemoveCommand.ts",
+      "summary": "cmd-ts 'remove' subcommand that removes coding agents from the project config via removeAgentsHandler.",
+      "tags": ["cli-command", "configuration", "agents", "cmd-ts"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/infra/commands/RemoveFromPackageCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/RemoveFromPackageCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/customParameters/PackageSlugArgType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/RemoveFromPackageCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/RemoveFromPackageCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/packages/selectItemType.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/SkillsCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/ListSkillsCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/SkillsCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/skills/InstallDefaultSkillsCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/SpacesCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/ListSpacesCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/StandardsCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/ListStandardsCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/TrackCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/TrackCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UninstallCommand.ts",
+      "target": "file:apps/cli/package.json",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UninstallCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UninstallCommand.ts",
+      "target": "file:apps/cli/src/domain/useCases/IInstallUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UninstallCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/ensureCliVersionReporter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UninstallCommand.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UninstallCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/UninstallCommand.ts:buildUninstallSummary",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UntrackCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UntrackCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/removedCommandHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UpdateCommand.ts",
+      "target": "file:apps/cli/package.json",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UpdateCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/updateHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UpdateCommand.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UpdateCommand.ts",
+      "target": "file:apps/cli/src/wasm-runtime.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "target": "file:apps/cli/package.json",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "target": "file:apps/cli/src/domain/useCases/IWhoamiUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/versionCheckNotice.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/WhoamiCommand.ts:formatExpiresAt",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/WhoamiCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/WhoamiCommand.ts:displayAuthInfo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "file:apps/cli/src/application/services/AgentArtifactDetectionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "file:apps/cli/src/domain/repositories/IConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "file:apps/cli/src/infra/commands/config/configAgentsHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "file:apps/cli/src/infra/commands/initHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:bootstrapInstallContext",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:bootstrapInstallContext",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:promptOrgRenderModes",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/bootstrapInstallContext.ts",
+      "target": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:confirmWithReadline",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "file:apps/cli/src/domain/entities/PackageSlug.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "file:apps/cli/src/domain/errors/PackmindConfigInvalidError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "file:apps/cli/src/domain/errors/PackmindConfigNotFoundError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "file:apps/cli/src/domain/useCases/ICheckUpgradesUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/installTargetDirectories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:formatArtifactLines",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:formatCheckUpgradesResult",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:formatCheckUpgradesResult",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:findCheckUpgradesConflict",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:findCheckUpgradesConflict",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:checkUpgradesHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:checkUpgradesHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:checkDirectories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/checkUpgradesHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:reportOutcome",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/commands/listCommandsHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/commands/listCommandsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/groupArtefactsBySpaces.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/commands/listCommandsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/spaceFilterUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/commands/listCommandsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/urlBuilderUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/commands/listCommandsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/commands/listCommandsHandler.ts:listCommandsHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/commands/listCommandsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/commands/listCommandsHandler.ts:listCommandsHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/config/agents/addAgentsHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/customParameters/AgentNamesPositional.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/ConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts:createPromptConfirm",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsCommand.ts",
+      "target": "file:apps/cli/src/application/services/AgentArtifactDetectionService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/config/ConfigAgentsListCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/config/ConfigAgentsRemoveCommand.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/config/configAgentsHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/ConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsListCommand.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsListCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/config/agents/listAgentsHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsListCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/ConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsRemoveCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/config/agents/removeAgentsHandler.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsRemoveCommand.ts",
+      "target": "file:apps/cli/src/infra/commands/customParameters/AgentNamesPositional.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsRemoveCommand.ts",
+      "target": "file:apps/cli/src/infra/repositories/ConfigFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:checkUpgradesHandler",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:checkDirectories",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:checkUpgradesHandler",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:reportOutcome",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:checkDirectories",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:formatCheckUpgradesResult",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:formatCheckUpgradesResult",
+      "target": "function:apps/cli/src/infra/commands/checkUpgradesHandler.ts:formatArtifactLines",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:bootstrapInstallContext",
+      "target": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:promptOrgRenderModes",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:promptOrgRenderModes",
+      "target": "function:apps/cli/src/infra/commands/bootstrapInstallContext.ts:confirmWithReadline",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/RemoveFromPackageCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/packages/removeFromPackageHandler.ts:removeFromPackageHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/TrackCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:removedTrackHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UntrackCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/removedCommandHandler.ts:removedUntrackHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/UpdateCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/updateHandler.ts:updateHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/config/configAgentsHandler.ts:configAgentsHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsAddCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/config/agents/addAgentsHandler.ts:addAgentsHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsListCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/config/agents/listAgentsHandler.ts:listAgentsHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/config/ConfigAgentsRemoveCommand.ts",
+      "target": "function:apps/cli/src/infra/commands/config/agents/removeAgentsHandler.ts:removeAgentsHandler",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

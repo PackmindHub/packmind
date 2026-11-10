@@ -1,0 +1,1506 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ContextBlankState.tsx",
+      "type": "file",
+      "name": "ContextBlankState.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextBlankState.tsx",
+      "summary": "Full-surface empty state shown when a space has no package and no component, offering the single next action to create one instead of rendering the rail and pane.",
+      "tags": ["component", "empty-state", "react", "context-surface"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextBlankState.tsx:ContextBlankState",
+      "type": "function",
+      "name": "ContextBlankState",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextBlankState.tsx",
+      "lineRange": [38, 129],
+      "summary": "Renders the centred empty-space statement with the control to create the first package.",
+      "tags": ["component", "empty-state", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ContextChip.tsx",
+      "type": "file",
+      "name": "ContextChip.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextChip.tsx",
+      "summary": "Low-contrast toggle chip used across the Context surface to switch between readings of a list (component types, distribution sides), with an optional accessible count.",
+      "tags": ["component", "react", "filter", "ui-control"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextChip.tsx:ContextChip",
+      "type": "function",
+      "name": "ContextChip",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextChip.tsx",
+      "lineRange": [18, 70],
+      "summary": "Toggle chip with optional count and spelled-out accessible label.",
+      "tags": ["component", "ui-control", "filter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "type": "file",
+      "name": "ContextComponentDetail.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "summary": "Detail pane for a single standard, command or skill in the Context surface, with tabs for instructions, rules, distribution, history and maintenance info, plus edit/propose-change actions.",
+      "tags": ["component", "react", "detail-view", "standards", "skills"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ContextComponentDetail",
+      "type": "function",
+      "name": "ContextComponentDetail",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [142, 542],
+      "summary": "Main detail component for a standard, command or skill: header, tabs, and body routing to instructions, distribution, history or rules.",
+      "tags": ["component", "detail-view", "tabs"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ComponentBody",
+      "type": "function",
+      "name": "ComponentBody",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [544, 565],
+      "summary": "Dispatches to the type-specific body (command, standard or skill).",
+      "tags": ["component", "dispatcher"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:BodySectionLabel",
+      "type": "function",
+      "name": "BodySectionLabel",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [568, 581],
+      "summary": "Small section label used inside component bodies.",
+      "tags": ["component", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommandProposals",
+      "type": "function",
+      "name": "CommandProposals",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [597, 643],
+      "summary": "Shows pending change proposals for a command with entry points to propose changes.",
+      "tags": ["component", "proposals"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ComponentMaintenance",
+      "type": "function",
+      "name": "ComponentMaintenance",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [666, 710],
+      "summary": "Renders maintenance metadata (last update, pending reviews) for a component.",
+      "tags": ["component", "maintenance"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:MaintenanceMeta",
+      "type": "function",
+      "name": "MaintenanceMeta",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [725, 760],
+      "summary": "Formats the last-updated date and pending proposal count line.",
+      "tags": ["component", "maintenance"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommandMaintenance",
+      "type": "function",
+      "name": "CommandMaintenance",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [762, 784],
+      "summary": "Fetches command data and renders its maintenance metadata.",
+      "tags": ["component", "maintenance", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:StandardMaintenance",
+      "type": "function",
+      "name": "StandardMaintenance",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [786, 800],
+      "summary": "Fetches standard data and renders its maintenance metadata.",
+      "tags": ["component", "maintenance", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:SkillMaintenance",
+      "type": "function",
+      "name": "SkillMaintenance",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [808, 822],
+      "summary": "Fetches skill data and renders its maintenance metadata.",
+      "tags": ["component", "maintenance", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:DistributionCount",
+      "type": "function",
+      "name": "DistributionCount",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [836, 851],
+      "summary": "Renders the count of distributions for a component's tab label.",
+      "tags": ["component", "distribution"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ComponentDistribution",
+      "type": "function",
+      "name": "ComponentDistribution",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [900, 935],
+      "summary": "Distribution tab content routing to type-specific distribution lists.",
+      "tags": ["component", "distribution"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:DistributedAs",
+      "type": "function",
+      "name": "DistributedAs",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [950, 962],
+      "summary": "Explains under which package(s) a component is distributed.",
+      "tags": ["component", "distribution"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:DistributionBody",
+      "type": "function",
+      "name": "DistributionBody",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [976, 1029],
+      "summary": "Shared layout for a component's distribution tab with live-target filtering.",
+      "tags": ["component", "distribution"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommandDistribution",
+      "type": "function",
+      "name": "CommandDistribution",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1031, 1058],
+      "summary": "Lists command distributions using CommandDistributionsList.",
+      "tags": ["component", "distribution", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:StandardDistribution",
+      "type": "function",
+      "name": "StandardDistribution",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1060, 1082],
+      "summary": "Lists standard distributions using StandardDistributionsList.",
+      "tags": ["component", "distribution", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:SkillDistribution",
+      "type": "function",
+      "name": "SkillDistribution",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1089, 1111],
+      "summary": "Lists skill distributions using SkillDistributionsList.",
+      "tags": ["component", "distribution", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ComponentHistory",
+      "type": "function",
+      "name": "ComponentHistory",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1124, 1135],
+      "summary": "History tab routing to type-specific version queries.",
+      "tags": ["component", "history"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommandHistory",
+      "type": "function",
+      "name": "CommandHistory",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1137, 1147],
+      "summary": "Loads command versions and renders history.",
+      "tags": ["component", "history", "commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:StandardHistory",
+      "type": "function",
+      "name": "StandardHistory",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1149, 1159],
+      "summary": "Loads standard versions and renders history.",
+      "tags": ["component", "history", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:SkillHistory",
+      "type": "function",
+      "name": "SkillHistory",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1161, 1171],
+      "summary": "Loads skill versions and renders history.",
+      "tags": ["component", "history", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:HistoryBody",
+      "type": "function",
+      "name": "HistoryBody",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1180, 1238],
+      "summary": "Renders version history rows built by historyEntries with author names.",
+      "tags": ["component", "history"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:HistoryRow",
+      "type": "function",
+      "name": "HistoryRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1251, 1303],
+      "summary": "One version row with number, date, author, rename and commit details.",
+      "tags": ["component", "history"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommitSubject",
+      "type": "function",
+      "name": "CommitSubject",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1312, 1348],
+      "summary": "Renders a commit's short sha and subject line, linked when a URL exists.",
+      "tags": ["component", "git", "history"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommandBody",
+      "type": "function",
+      "name": "CommandBody",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1364, 1411],
+      "summary": "Instructions body for a command, showing frontmatter info and markdown content.",
+      "tags": ["component", "commands", "markdown"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CopyStandardMarkdown",
+      "type": "function",
+      "name": "CopyStandardMarkdown",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1430, 1461],
+      "summary": "Copy-as-markdown action for a standard and its rules.",
+      "tags": ["component", "clipboard", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ScopeWarning",
+      "type": "function",
+      "name": "ScopeWarning",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1475, 1506],
+      "summary": "Warns about problematic scope glob patterns on a standard.",
+      "tags": ["component", "validation", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:StandardBody",
+      "type": "function",
+      "name": "StandardBody",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1508, 1608],
+      "summary": "Instructions body for a standard: description, scope and rules section.",
+      "tags": ["component", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:RulesSection",
+      "type": "function",
+      "name": "RulesSection",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1624, 1729],
+      "summary": "Lists a standard's rules sorted by content with links to rule detail.",
+      "tags": ["component", "rules", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:RuleRow",
+      "type": "function",
+      "name": "RuleRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1751, 1880],
+      "summary": "One rule row showing content, detection languages and examples/linter state.",
+      "tags": ["component", "rules", "detection"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:SkillBody",
+      "type": "function",
+      "name": "SkillBody",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "lineRange": [1907, 2008],
+      "summary": "Instructions body for a skill: frontmatter info, SKILL.md content, editor and download actions.",
+      "tags": ["component", "skills", "markdown"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "type": "file",
+      "name": "ContextComponentList.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "summary": "Grouped, selectable list of a package's components (standards, commands, skills) with section headers, drift, review and package columns, and the shared type/action icon maps.",
+      "tags": ["component", "react", "list", "selection", "context-surface"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:ContextComponentList",
+      "type": "function",
+      "name": "ContextComponentList",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "lineRange": [122, 311],
+      "summary": "Renders grouped component sections with selection, drift, review and package columns.",
+      "tags": ["component", "list", "selection"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:SectionHeader",
+      "type": "function",
+      "name": "SectionHeader",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "lineRange": [328, 451],
+      "summary": "Group header with type label, counts and group pick checkbox.",
+      "tags": ["component", "list", "selection"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:ComponentRow",
+      "type": "function",
+      "name": "ComponentRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "lineRange": [453, 668],
+      "summary": "One component row with pick box, icon, name, summary and optional columns.",
+      "tags": ["component", "list", "row"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:DriftColumn",
+      "type": "function",
+      "name": "DriftColumn",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "lineRange": [692, 744],
+      "summary": "Column showing drift state for a component.",
+      "tags": ["component", "drift"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:ReviewColumn",
+      "type": "function",
+      "name": "ReviewColumn",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "lineRange": [773, 819],
+      "summary": "Column showing pending review count for a component.",
+      "tags": ["component", "proposals"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:PackageColumn",
+      "type": "function",
+      "name": "PackageColumn",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "lineRange": [830, 864],
+      "summary": "Column listing the packages carrying a component.",
+      "tags": ["component", "package"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "type": "file",
+      "name": "ContextCreateMenu.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "summary": "Create menu for the Context surface that offers creation methods (form, from code via CLI, import, samples) for standards, commands and skills directly into a package.",
+      "tags": ["component", "react", "menu", "artifact-creation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:ContextCreateMenu",
+      "type": "function",
+      "name": "ContextCreateMenu",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "lineRange": [71, 293],
+      "summary": "Menu offering creation methods per artifact type and opening the matching dialog.",
+      "tags": ["component", "menu", "artifact-creation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:formRoute",
+      "type": "function",
+      "name": "formRoute",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "lineRange": [302, 312],
+      "summary": "Builds the creation form route for an artifact type scoped to a package.",
+      "tags": ["utility", "routing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:MethodBody",
+      "type": "function",
+      "name": "MethodBody",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "lineRange": [319, 359],
+      "summary": "Renders the content of the chosen creation method (CLI, import, samples).",
+      "tags": ["component", "artifact-creation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:MethodItem",
+      "type": "function",
+      "name": "MethodItem",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "lineRange": [366, 405],
+      "summary": "Menu item describing one creation method.",
+      "tags": ["component", "menu"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:MethodDialog",
+      "type": "function",
+      "name": "MethodDialog",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "lineRange": [411, 456],
+      "summary": "Dialog wrapper hosting a creation method's body.",
+      "tags": ["component", "dialog"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "type": "file",
+      "name": "ContextDestinationList.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "summary": "Lists a package's distribution destinations (repositories/targets) grouped into state bands with filters, selection actions, failure notes and per-row push/update actions.",
+      "tags": ["component", "react", "distribution", "drift", "selection"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:ContextDestinationList",
+      "type": "function",
+      "name": "ContextDestinationList",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [54, 257],
+      "summary": "Lists destinations grouped by state with filters and selection bar.",
+      "tags": ["component", "distribution", "list"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:selectionActions",
+      "type": "function",
+      "name": "selectionActions",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [278, 341],
+      "summary": "Computes which bulk actions (push, release-and-update) apply to the picked destinations.",
+      "tags": ["utility", "selection", "distribution"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:FilterRow",
+      "type": "function",
+      "name": "FilterRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [366, 430],
+      "summary": "Row of chips filtering destinations by state.",
+      "tags": ["component", "filter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:Band",
+      "type": "function",
+      "name": "Band",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [467, 537],
+      "summary": "A state band grouping destinations under a header.",
+      "tags": ["component", "list"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:UpToDateBand",
+      "type": "function",
+      "name": "UpToDateBand",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [546, 646],
+      "summary": "Collapsible band of up-to-date destinations.",
+      "tags": ["component", "list"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:DestinationRow",
+      "type": "function",
+      "name": "DestinationRow",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [648, 885],
+      "summary": "One destination row with state dot, sentence, failure note and action.",
+      "tags": ["component", "row", "distribution"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:FailureNote",
+      "type": "function",
+      "name": "FailureNote",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [900, 949],
+      "summary": "Shows the error report of a failed distribution.",
+      "tags": ["component", "error-display"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:StateDot",
+      "type": "function",
+      "name": "StateDot",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [996, 1016],
+      "summary": "Coloured dot conveying a destination's state.",
+      "tags": ["component", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:GutterIcon",
+      "type": "function",
+      "name": "GutterIcon",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [1026, 1040],
+      "summary": "Gutter icon for a destination row.",
+      "tags": ["component", "ui"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:stateSentence",
+      "type": "function",
+      "name": "stateSentence",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [1051, 1117],
+      "summary": "Builds the human sentence describing a destination's distribution state.",
+      "tags": ["utility", "formatting"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:RowAction",
+      "type": "function",
+      "name": "RowAction",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "lineRange": [1153, 1173],
+      "summary": "Per-row action button for a destination.",
+      "tags": ["component", "action"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "type": "file",
+      "name": "ContextOrphanPane.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "summary": "Pane for reading a component that no package carries, reusing the component/rule/skill-file detail views and offering move and delete actions.",
+      "tags": ["component", "react", "orphan", "detail-view"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx:ContextOrphanPane",
+      "type": "function",
+      "name": "ContextOrphanPane",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "lineRange": [54, 254],
+      "summary": "Renders an orphan component's detail with move and delete flows.",
+      "tags": ["component", "orphan", "detail-view"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDescription.tsx",
+      "type": "file",
+      "name": "ContextPackageDescription.tsx",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextPackageDescription.tsx",
+      "summary": "Renders a package's description with a collapsible preview, truncating long markdown to a readable excerpt.",
+      "tags": ["component", "react", "markdown", "package"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/deployments/components/context/ContextPackageDescription.tsx:ContextPackageDescription",
+      "type": "function",
+      "name": "ContextPackageDescription",
+      "filePath": "apps/frontend/src/domain/deployments/components/context/ContextPackageDescription.tsx",
+      "lineRange": [37, 143],
+      "summary": "Shows a package description with expand/collapse preview.",
+      "tags": ["component", "markdown"],
+      "complexity": "moderate"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextBlankState.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextBlankState.tsx:ContextBlankState",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextBlankState.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextBlankState.tsx:ContextBlankState",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextChip.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextChip.tsx:ContextChip",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextChip.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextChip.tsx:ContextChip",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ContextComponentDetail",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ContextComponentDetail",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ComponentBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:BodySectionLabel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommandProposals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ComponentMaintenance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:MaintenanceMeta",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommandMaintenance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:StandardMaintenance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:SkillMaintenance",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:DistributionCount",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ComponentDistribution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:DistributedAs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:DistributionBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommandDistribution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:StandardDistribution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:SkillDistribution",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ComponentHistory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommandHistory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:StandardHistory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:SkillHistory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:HistoryBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:HistoryRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommitSubject",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CommandBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:CopyStandardMarkdown",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:ScopeWarning",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:StandardBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:RulesSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:RuleRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:SkillBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/UserQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/useAuthContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/artifacts/components/CopyMarkdownButton.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/commands/api/queries/CommandsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/CommandFrontmatterInfo.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/ProposeChangeModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/commands/components/ProposeDescriptionChangeModal.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/commands/utils/parseCommandFrontmatter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/api/queries/DeploymentsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/CommandDistributionsList/CommandDistributionsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/RelativeDate.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/SkillDistributionsList/SkillDistributionsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/StandardDistributionsList/StandardDistributionsList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/RuleDetectionLanguages.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/componentHistory.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ruleDetection.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useLiveTargetIds.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/DownloadSkillPopover.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillFileEditor.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillFrontmatterInfo.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/skills/hooks/useCanEditSkillFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/skillMdUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/domain/standards/utils/scopeGlobs.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:ContextComponentList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:ContextComponentList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:SectionHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:ComponentRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:DriftColumn",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:ReviewColumn",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx:PackageColumn",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextPickBox.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:ContextCreateMenu",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:ContextCreateMenu",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:formRoute",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:MethodBody",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:MethodItem",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx:MethodDialog",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardSamplesModal/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/useSamplesIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "file:apps/frontend/src/shared/creation/artifactCreationRoutes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextCreateMenu.tsx",
+      "target": "file:apps/frontend/src/shared/creation/buildCreationMethods.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:ContextDestinationList",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:ContextDestinationList",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:selectionActions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:selectionActions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:FilterRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:Band",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:UpToDateBand",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:DestinationRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:FailureNote",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:StateDot",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:GutterIcon",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:stateSentence",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx:RowAction",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/SelectionBar.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextChip.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextPickBox.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextSearchField.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageDestinations.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextDestinationList.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/redesign/components/DriftArtifactRow.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx:ContextOrphanPane",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx:ContextOrphanPane",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextRuleDetail.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/ContextSkillFileDetail.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/MoveComponentDrawer.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/buildPackageContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextOrphanPane.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/useDeleteContextComponents.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDescription.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextPackageDescription.tsx:ContextPackageDescription",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1.0
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDescription.tsx",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/ContextPackageDescription.tsx:ContextPackageDescription",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/deployments/components/context/ContextPackageDescription.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/context/packageDescriptionPreview.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:HistoryBody",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentHistory.ts:historyEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:MaintenanceMeta",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/componentMaintenance.ts:reviewChangesLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/deployments/components/context/ContextComponentDetail.tsx:RulesSection",
+      "target": "function:apps/frontend/src/domain/deployments/components/context/buildComponentDetail.ts:sortRulesByContent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

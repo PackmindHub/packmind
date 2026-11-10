@@ -1,0 +1,916 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/deployments/src/application/utils/GitFileUtils.ts",
+      "type": "file",
+      "name": "GitFileUtils.ts",
+      "filePath": "packages/deployments/src/application/utils/GitFileUtils.ts",
+      "summary": "Helpers for git-based distribution: maps coding agents to their instruction file paths, prefixes file paths with a target sub-directory, and fetches the existing agent files from a git repository before publishing.",
+      "tags": ["utility", "git", "file-paths", "deployment", "coding-agents"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/GitFileUtils.ts:getFilePathForAgent",
+      "type": "function",
+      "name": "getFilePathForAgent",
+      "filePath": "packages/deployments/src/application/utils/GitFileUtils.ts",
+      "lineRange": [6, 23],
+      "summary": "Returns the root instruction file path (CLAUDE.md, AGENTS.md, .cursor rules, copilot instructions...) for a given coding agent.",
+      "tags": ["utility", "coding-agents", "mapping"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/GitFileUtils.ts:getTargetPrefixedPath",
+      "type": "function",
+      "name": "getTargetPrefixedPath",
+      "filePath": "packages/deployments/src/application/utils/GitFileUtils.ts",
+      "lineRange": [25, 42],
+      "summary": "Prefixes a file path with the normalized target directory path, leaving it unchanged for root targets.",
+      "tags": ["utility", "file-paths", "targets"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/GitFileUtils.ts:fetchExistingFilesFromGit",
+      "type": "function",
+      "name": "fetchExistingFilesFromGit",
+      "filePath": "packages/deployments/src/application/utils/GitFileUtils.ts",
+      "lineRange": [47, 113],
+      "summary": "Reads the current content of each coding agent instruction file from the git repository at the target path and returns a path-to-content map.",
+      "tags": ["git", "io", "deployment", "async"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/GitFileUtils.ts:applyTargetPrefixingToFileUpdates",
+      "type": "function",
+      "name": "applyTargetPrefixingToFileUpdates",
+      "filePath": "packages/deployments/src/application/utils/GitFileUtils.ts",
+      "lineRange": [118, 147],
+      "summary": "Rewrites the paths of file updates and deletions so they land under the target directory in the repository.",
+      "tags": ["utility", "file-paths", "targets", "transformation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/utils/assertArtefactsInSpace.ts",
+      "type": "file",
+      "name": "assertArtefactsInSpace.ts",
+      "filePath": "packages/deployments/src/application/utils/assertArtefactsInSpace.ts",
+      "summary": "Guard that verifies every standard, command and skill being added to a package belongs to the package space, raising ArtefactNotInSpaceError otherwise.",
+      "tags": ["validation", "guard", "packages", "spaces", "utility"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/assertArtefactsInSpace.ts:assertArtefactsInSpace",
+      "type": "function",
+      "name": "assertArtefactsInSpace",
+      "filePath": "packages/deployments/src/application/utils/assertArtefactsInSpace.ts",
+      "lineRange": [35, 87],
+      "summary": "Fetches each requested command, standard and skill through its port and throws ArtefactNotInSpaceError when one is missing or belongs to another space.",
+      "tags": ["validation", "guard", "spaces", "async"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "type": "file",
+      "name": "defaultSkillIdUtils.ts",
+      "filePath": "packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "summary": "Maps built-in Packmind default skill slugs to frozen UUIDs for stable lockfile ids, and memoizes synthetic version and author ids for default skills.",
+      "tags": ["utility", "default-skills", "lockfile", "identifiers"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillId",
+      "type": "function",
+      "name": "getDefaultSkillId",
+      "filePath": "packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "lineRange": [36, 42],
+      "summary": "Returns the frozen UUID for a known default skill slug, throwing DefaultSkillIdMissingError for unknown slugs.",
+      "tags": ["default-skills", "identifiers", "lookup"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:isDefaultSkillId",
+      "type": "function",
+      "name": "isDefaultSkillId",
+      "filePath": "packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "lineRange": [44, 46],
+      "summary": "Checks whether an id is one of the frozen default skill UUIDs.",
+      "tags": ["default-skills", "predicate", "identifiers"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:isDefaultSkillSlug",
+      "type": "function",
+      "name": "isDefaultSkillSlug",
+      "filePath": "packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "lineRange": [52, 54],
+      "summary": "Checks whether an id is a default skill slug, supporting older lockfiles that stored slugs as ids.",
+      "tags": ["default-skills", "predicate", "backward-compatibility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillVersionId",
+      "type": "function",
+      "name": "getDefaultSkillVersionId",
+      "filePath": "packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "lineRange": [56, 68],
+      "summary": "Returns a memoized random UUID per default skill slug and version pair.",
+      "tags": ["default-skills", "memoization", "identifiers"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillAuthorUserId",
+      "type": "function",
+      "name": "getDefaultSkillAuthorUserId",
+      "filePath": "packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "lineRange": [70, 75],
+      "summary": "Returns a lazily generated, process-wide synthetic author user id for default skills.",
+      "tags": ["default-skills", "memoization", "singleton"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "type": "file",
+      "name": "findPlacementConflicts.ts",
+      "filePath": "packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "summary": "Detects artefacts (standards, commands, skills) being placed into a package that are already held by another package, keyed by artefact kind and id.",
+      "tags": ["utility", "validation", "packages", "conflict-detection"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:placementKey",
+      "type": "function",
+      "name": "placementKey",
+      "filePath": "packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "lineRange": [13, 14],
+      "summary": "Builds a type-qualified key for an artefact so ids from different artefact kinds never collide.",
+      "tags": ["utility", "key-builder", "packages"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:findPlacementConflicts",
+      "type": "function",
+      "name": "findPlacementConflicts",
+      "filePath": "packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "lineRange": [29, 70],
+      "summary": "Scans packages (excluding the target one) for artefacts already held and returns named placement conflicts for the caller.",
+      "tags": ["conflict-detection", "packages", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts",
+      "type": "file",
+      "name": "ArtefactAlreadyInAnotherPackageError.ts",
+      "filePath": "packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts",
+      "summary": "409 conflict raised when artefacts being added already belong to another package; builds a self-contained user-facing message naming artefacts and packages.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "moderate",
+      "languageNotes": "Exports a companion type (ArtefactPlacementConflict) alongside the error class so callers share one conflict shape."
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts:ArtefactAlreadyInAnotherPackageError",
+      "type": "class",
+      "name": "ArtefactAlreadyInAnotherPackageError",
+      "filePath": "packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts",
+      "lineRange": [46, 74],
+      "summary": "409 conflict raised when artefacts being added already belong to another package; builds a self-contained user-facing message naming artefacts and packages.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts",
+      "type": "file",
+      "name": "ArtefactNotInSpaceError.ts",
+      "filePath": "packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts",
+      "summary": "404 error raised when an artefact is missing or lives outside the package space, deliberately not distinguishing the two cases.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts:ArtefactNotInSpaceError",
+      "type": "class",
+      "name": "ArtefactNotInSpaceError",
+      "filePath": "packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts",
+      "lineRange": [18, 28],
+      "summary": "404 error raised when an artefact is missing or lives outside the package space, deliberately not distinguishing the two cases.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts",
+      "type": "file",
+      "name": "ArtefactsMoveFailedError.ts",
+      "filePath": "packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts",
+      "summary": "Internal 500 invariant error raised when moving artefacts between packages fails, recording whether the change was reverted.",
+      "tags": ["error", "domain-error", "deployments", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts:ArtefactsMoveFailedError",
+      "type": "class",
+      "name": "ArtefactsMoveFailedError",
+      "filePath": "packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts",
+      "lineRange": [13, 29],
+      "summary": "Internal 500 invariant error raised when moving artefacts between packages fails, recording whether the change was reverted.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/ArtifactVersionNotFoundError.ts",
+      "type": "file",
+      "name": "ArtifactVersionNotFoundError.ts",
+      "filePath": "packages/deployments/src/domain/errors/ArtifactVersionNotFoundError.ts",
+      "summary": "404 error raised when a requested artifact version cannot be found during publishing.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/ArtifactVersionNotFoundError.ts:ArtifactVersionNotFoundError",
+      "type": "class",
+      "name": "ArtifactVersionNotFoundError",
+      "filePath": "packages/deployments/src/domain/errors/ArtifactVersionNotFoundError.ts",
+      "lineRange": [11, 24],
+      "summary": "404 error raised when a requested artifact version cannot be found during publishing.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts",
+      "type": "file",
+      "name": "DefaultSkillIdMissingError.ts",
+      "filePath": "packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts",
+      "summary": "Internal invariant error raised when a default skill slug has no frozen UUID mapping.",
+      "tags": ["error", "domain-error", "deployments", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts:DefaultSkillIdMissingError",
+      "type": "class",
+      "name": "DefaultSkillIdMissingError",
+      "filePath": "packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts",
+      "lineRange": [10, 19],
+      "summary": "Internal invariant error raised when a default skill slug has no frozen UUID mapping.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts",
+      "type": "file",
+      "name": "DeploymentsAdapterErrors.ts",
+      "filePath": "packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts",
+      "summary": "Defines internal deployments adapter wiring errors: AdapterPortsMissingError and DelayedJobNotCreatedError.",
+      "tags": ["error", "domain-error", "deployments", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts:AdapterPortsMissingError",
+      "type": "class",
+      "name": "AdapterPortsMissingError",
+      "filePath": "packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts",
+      "lineRange": [9, 18],
+      "summary": "Internal wiring error raised when DeploymentsAdapter is built without its required ports.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts:DelayedJobNotCreatedError",
+      "type": "class",
+      "name": "DelayedJobNotCreatedError",
+      "filePath": "packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts",
+      "lineRange": [27, 36],
+      "summary": "Internal error raised when the queue accepts a publish-artifacts enqueue but returns no job.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "file",
+      "name": "DeploymentsInternalError.ts",
+      "filePath": "packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "summary": "Base class for deployments broken invariants: always 500, typed reason union and context, message withheld from clients.",
+      "tags": [
+        "error",
+        "base-class",
+        "domain-error",
+        "deployments",
+        "type-definition"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "class",
+      "name": "DeploymentsInternalError",
+      "filePath": "packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "lineRange": [45, 55],
+      "summary": "Base class for deployments broken invariants: always 500, typed reason union and context, message withheld from clients.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/GitRepositoryNotFoundError.ts",
+      "type": "file",
+      "name": "GitRepositoryNotFoundError.ts",
+      "filePath": "packages/deployments/src/domain/errors/GitRepositoryNotFoundError.ts",
+      "summary": "404 error raised when the referenced git repository does not exist.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/GitRepositoryNotFoundError.ts:GitRepositoryNotFoundError",
+      "type": "class",
+      "name": "GitRepositoryNotFoundError",
+      "filePath": "packages/deployments/src/domain/errors/GitRepositoryNotFoundError.ts",
+      "lineRange": [9, 19],
+      "summary": "404 error raised when the referenced git repository does not exist.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/InvalidPackageVersionSpecError.ts",
+      "type": "file",
+      "name": "InvalidPackageVersionSpecError.ts",
+      "filePath": "packages/deployments/src/domain/errors/InvalidPackageVersionSpecError.ts",
+      "summary": "Invalid-input error raised when a package version specifier in a request cannot be parsed.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/InvalidPackageVersionSpecError.ts:InvalidPackageVersionSpecError",
+      "type": "class",
+      "name": "InvalidPackageVersionSpecError",
+      "filePath": "packages/deployments/src/domain/errors/InvalidPackageVersionSpecError.ts",
+      "lineRange": [12, 25],
+      "summary": "Invalid-input error raised when a package version specifier in a request cannot be parsed.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/InvalidRenderModeError.ts",
+      "type": "file",
+      "name": "InvalidRenderModeError.ts",
+      "filePath": "packages/deployments/src/domain/errors/InvalidRenderModeError.ts",
+      "summary": "Invalid-input error raised when an unknown render mode is supplied to the render mode configuration.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/InvalidRenderModeError.ts:InvalidRenderModeError",
+      "type": "class",
+      "name": "InvalidRenderModeError",
+      "filePath": "packages/deployments/src/domain/errors/InvalidRenderModeError.ts",
+      "lineRange": [9, 19],
+      "summary": "Invalid-input error raised when an unknown render mode is supplied to the render mode configuration.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/InvalidTargetNameError.ts",
+      "type": "file",
+      "name": "InvalidTargetNameError.ts",
+      "filePath": "packages/deployments/src/domain/errors/InvalidTargetNameError.ts",
+      "summary": "Invalid-input error raised when a deployment target name is empty or invalid.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/InvalidTargetNameError.ts:InvalidTargetNameError",
+      "type": "class",
+      "name": "InvalidTargetNameError",
+      "filePath": "packages/deployments/src/domain/errors/InvalidTargetNameError.ts",
+      "lineRange": [8, 18],
+      "summary": "Invalid-input error raised when a deployment target name is empty or invalid.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/InvalidTargetPathError.ts",
+      "type": "file",
+      "name": "InvalidTargetPathError.ts",
+      "filePath": "packages/deployments/src/domain/errors/InvalidTargetPathError.ts",
+      "summary": "Invalid-input error raised when a deployment target path is malformed.",
+      "tags": ["error", "domain-error", "deployments", "client-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/InvalidTargetPathError.ts:InvalidTargetPathError",
+      "type": "class",
+      "name": "InvalidTargetPathError",
+      "filePath": "packages/deployments/src/domain/errors/InvalidTargetPathError.ts",
+      "lineRange": [12, 22],
+      "summary": "Invalid-input error raised when a deployment target path is malformed.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/deployments/src/domain/errors/NoFileUpdatesResolvedError.ts",
+      "type": "file",
+      "name": "NoFileUpdatesResolvedError.ts",
+      "filePath": "packages/deployments/src/domain/errors/NoFileUpdatesResolvedError.ts",
+      "summary": "Internal error raised when publishing resolves no file updates for a target.",
+      "tags": ["error", "domain-error", "deployments", "internal-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/deployments/src/domain/errors/NoFileUpdatesResolvedError.ts:NoFileUpdatesResolvedError",
+      "type": "class",
+      "name": "NoFileUpdatesResolvedError",
+      "filePath": "packages/deployments/src/domain/errors/NoFileUpdatesResolvedError.ts",
+      "lineRange": [11, 20],
+      "summary": "Internal error raised when publishing resolves no file updates for a target.",
+      "tags": ["error", "domain-error", "deployments"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/deployments/src/application/utils/GitFileUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/GitFileUtils.ts:getFilePathForAgent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/GitFileUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/GitFileUtils.ts:getTargetPrefixedPath",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/GitFileUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/GitFileUtils.ts:getTargetPrefixedPath",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/GitFileUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/GitFileUtils.ts:fetchExistingFilesFromGit",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/GitFileUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/GitFileUtils.ts:fetchExistingFilesFromGit",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/GitFileUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/GitFileUtils.ts:applyTargetPrefixingToFileUpdates",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/GitFileUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/GitFileUtils.ts:applyTargetPrefixingToFileUpdates",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/assertArtefactsInSpace.ts",
+      "target": "function:packages/deployments/src/application/utils/assertArtefactsInSpace.ts:assertArtefactsInSpace",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/assertArtefactsInSpace.ts",
+      "target": "function:packages/deployments/src/application/utils/assertArtefactsInSpace.ts:assertArtefactsInSpace",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/assertArtefactsInSpace.ts",
+      "target": "file:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillId",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:isDefaultSkillId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:isDefaultSkillId",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:isDefaultSkillSlug",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:isDefaultSkillSlug",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillVersionId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillVersionId",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillAuthorUserId",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillAuthorUserId",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/defaultSkillIdUtils.ts",
+      "target": "file:packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "target": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:placementKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "target": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:placementKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "target": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:findPlacementConflicts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "target": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:findPlacementConflicts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/application/utils/findPlacementConflicts.ts",
+      "target": "file:packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts",
+      "target": "class:packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts:ArtefactAlreadyInAnotherPackageError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts",
+      "target": "class:packages/deployments/src/domain/errors/ArtefactAlreadyInAnotherPackageError.ts:ArtefactAlreadyInAnotherPackageError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts",
+      "target": "class:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts:ArtefactNotInSpaceError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts",
+      "target": "class:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts:ArtefactNotInSpaceError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts:ArtefactsMoveFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts:ArtefactsMoveFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/ArtifactVersionNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/ArtifactVersionNotFoundError.ts:ArtifactVersionNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/ArtifactVersionNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/ArtifactVersionNotFoundError.ts:ArtifactVersionNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts",
+      "target": "class:packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts:DefaultSkillIdMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts",
+      "target": "class:packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts:DefaultSkillIdMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts:AdapterPortsMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts:AdapterPortsMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts:DelayedJobNotCreatedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts:DelayedJobNotCreatedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "target": "file:packages/deployments/src/application/services/packageReleaseResolution.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/GitRepositoryNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/GitRepositoryNotFoundError.ts:GitRepositoryNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/GitRepositoryNotFoundError.ts",
+      "target": "class:packages/deployments/src/domain/errors/GitRepositoryNotFoundError.ts:GitRepositoryNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/InvalidPackageVersionSpecError.ts",
+      "target": "class:packages/deployments/src/domain/errors/InvalidPackageVersionSpecError.ts:InvalidPackageVersionSpecError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/InvalidPackageVersionSpecError.ts",
+      "target": "class:packages/deployments/src/domain/errors/InvalidPackageVersionSpecError.ts:InvalidPackageVersionSpecError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/InvalidRenderModeError.ts",
+      "target": "class:packages/deployments/src/domain/errors/InvalidRenderModeError.ts:InvalidRenderModeError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/InvalidRenderModeError.ts",
+      "target": "class:packages/deployments/src/domain/errors/InvalidRenderModeError.ts:InvalidRenderModeError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/InvalidTargetNameError.ts",
+      "target": "class:packages/deployments/src/domain/errors/InvalidTargetNameError.ts:InvalidTargetNameError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/InvalidTargetNameError.ts",
+      "target": "class:packages/deployments/src/domain/errors/InvalidTargetNameError.ts:InvalidTargetNameError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/InvalidTargetPathError.ts",
+      "target": "class:packages/deployments/src/domain/errors/InvalidTargetPathError.ts:InvalidTargetPathError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/InvalidTargetPathError.ts",
+      "target": "class:packages/deployments/src/domain/errors/InvalidTargetPathError.ts:InvalidTargetPathError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/NoFileUpdatesResolvedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/NoFileUpdatesResolvedError.ts:NoFileUpdatesResolvedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/NoFileUpdatesResolvedError.ts",
+      "target": "class:packages/deployments/src/domain/errors/NoFileUpdatesResolvedError.ts:NoFileUpdatesResolvedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/deployments/src/domain/errors/NoFileUpdatesResolvedError.ts",
+      "target": "file:packages/deployments/src/domain/errors/DeploymentsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/ArtefactsMoveFailedError.ts:ArtefactsMoveFailedError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts:DefaultSkillIdMissingError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts:AdapterPortsMissingError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/DeploymentsAdapterErrors.ts:DelayedJobNotCreatedError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/deployments/src/domain/errors/NoFileUpdatesResolvedError.ts:NoFileUpdatesResolvedError",
+      "target": "class:packages/deployments/src/domain/errors/DeploymentsInternalError.ts:DeploymentsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "function:packages/deployments/src/application/utils/assertArtefactsInSpace.ts:assertArtefactsInSpace",
+      "target": "class:packages/deployments/src/domain/errors/ArtefactNotInSpaceError.ts:ArtefactNotInSpaceError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/deployments/src/application/utils/defaultSkillIdUtils.ts:getDefaultSkillId",
+      "target": "class:packages/deployments/src/domain/errors/DefaultSkillIdMissingError.ts:DefaultSkillIdMissingError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:findPlacementConflicts",
+      "target": "function:packages/deployments/src/application/utils/findPlacementConflicts.ts:placementKey",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/deployments/src/application/utils/GitFileUtils.ts:fetchExistingFilesFromGit",
+      "target": "function:packages/deployments/src/application/utils/GitFileUtils.ts:getFilePathForAgent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/deployments/src/application/utils/GitFileUtils.ts:fetchExistingFilesFromGit",
+      "target": "function:packages/deployments/src/application/utils/GitFileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/deployments/src/application/utils/GitFileUtils.ts:applyTargetPrefixingToFileUpdates",
+      "target": "function:packages/deployments/src/application/utils/GitFileUtils.ts:getTargetPrefixedPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

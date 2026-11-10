@@ -1,0 +1,214 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardDetailsNavEntry.tsx",
+      "type": "file",
+      "name": "StandardDetailsNavEntry.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardDetailsNavEntry.tsx",
+      "summary": "Generic navigation entry for the standard details sidebar supporting plain text, icon+text and rule-entry labels with tooltips, truncation, WIP badges and active state.",
+      "tags": ["component", "react", "navigation", "standards", "generic"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardDetailsNavEntry.tsx:StandardDetailsNavEntry",
+      "type": "function",
+      "name": "StandardDetailsNavEntry",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardDetailsNavEntry.tsx",
+      "lineRange": [28, 166],
+      "summary": "Renders a selectable NavLink/text entry whose label variant determines icon, text or rule-content rendering.",
+      "tags": ["component", "react", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/components/StandardDetailsSidebar.tsx",
+      "type": "file",
+      "name": "StandardDetailsSidebar.tsx",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardDetailsSidebar.tsx",
+      "summary": "Sidebar for the standard details view listing sections and individual rules as navigation entries, with loading/error states.",
+      "tags": ["component", "react", "sidebar", "standards", "navigation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/components/StandardDetailsSidebar.tsx:StandardDetailsSidebar",
+      "type": "function",
+      "name": "StandardDetailsSidebar",
+      "filePath": "apps/frontend/src/domain/standards/components/StandardDetailsSidebar.tsx",
+      "lineRange": [31, 191],
+      "summary": "Renders section and rule nav entries using rule nav keys and highlights the active section.",
+      "tags": ["component", "react", "sidebar"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/hooks/useStandardSectionNavigation.ts",
+      "type": "file",
+      "name": "useStandardSectionNavigation.ts",
+      "filePath": "apps/frontend/src/domain/standards/hooks/useStandardSectionNavigation.ts",
+      "summary": "React hook managing which standard details section or rule is active, synchronizing it with the URL and handling invalid rule keys once rules load.",
+      "tags": ["hook", "react", "navigation", "routing", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/hooks/useStandardSectionNavigation.ts:useStandardSectionNavigation",
+      "type": "function",
+      "name": "useStandardSectionNavigation",
+      "filePath": "apps/frontend/src/domain/standards/hooks/useStandardSectionNavigation.ts",
+      "lineRange": [22, 152],
+      "summary": "Derives the active nav key from location, validates rule keys against loaded rules and navigates via route helpers on selection.",
+      "tags": ["hook", "navigation", "routing"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "type": "file",
+      "name": "standardNavigation.ts",
+      "filePath": "apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "summary": "Tiny utilities to build, detect and parse rule navigation keys (rule-prefixed IDs) for the standard details navigation.",
+      "tags": ["utility", "navigation", "standards"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/utils/standardNavigation.ts:makeRuleNavKey",
+      "type": "function",
+      "name": "makeRuleNavKey",
+      "filePath": "apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "lineRange": [5, 5],
+      "summary": "Builds a rule navigation key from a rule ID.",
+      "tags": ["utility", "navigation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/utils/standardNavigation.ts:isRuleNavKey",
+      "type": "function",
+      "name": "isRuleNavKey",
+      "filePath": "apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "lineRange": [7, 8],
+      "summary": "Type guard checking whether a navigation key refers to a rule.",
+      "tags": ["utility", "type-guard"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/standards/utils/standardNavigation.ts:extractRuleIdFromNavKey",
+      "type": "function",
+      "name": "extractRuleIdFromNavKey",
+      "filePath": "apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "lineRange": [10, 11],
+      "summary": "Extracts the rule ID from a rule navigation key.",
+      "tags": ["utility", "parsing"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsNavEntry.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardDetailsNavEntry.tsx:StandardDetailsNavEntry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsNavEntry.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardDetailsNavEntry.tsx:StandardDetailsNavEntry",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsSidebar.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardDetailsSidebar.tsx:StandardDetailsSidebar",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsSidebar.tsx",
+      "target": "function:apps/frontend/src/domain/standards/components/StandardDetailsSidebar.tsx:StandardDetailsSidebar",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/hooks/useStandardSectionNavigation.ts",
+      "target": "function:apps/frontend/src/domain/standards/hooks/useStandardSectionNavigation.ts:useStandardSectionNavigation",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/hooks/useStandardSectionNavigation.ts",
+      "target": "function:apps/frontend/src/domain/standards/hooks/useStandardSectionNavigation.ts:useStandardSectionNavigation",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "target": "function:apps/frontend/src/domain/standards/utils/standardNavigation.ts:makeRuleNavKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "target": "function:apps/frontend/src/domain/standards/utils/standardNavigation.ts:makeRuleNavKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "target": "function:apps/frontend/src/domain/standards/utils/standardNavigation.ts:isRuleNavKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "target": "function:apps/frontend/src/domain/standards/utils/standardNavigation.ts:isRuleNavKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "target": "function:apps/frontend/src/domain/standards/utils/standardNavigation.ts:extractRuleIdFromNavKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "target": "function:apps/frontend/src/domain/standards/utils/standardNavigation.ts:extractRuleIdFromNavKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsSidebar.tsx",
+      "target": "file:apps/frontend/src/domain/standards/components/StandardDetailsNavEntry.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/components/StandardDetailsSidebar.tsx",
+      "target": "file:apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/hooks/useStandardSectionNavigation.ts",
+      "target": "file:apps/frontend/src/domain/standards/utils/standardNavigation.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/hooks/useStandardSectionNavigation.ts",
+      "target": "file:apps/frontend/src/shared/utils/routes.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

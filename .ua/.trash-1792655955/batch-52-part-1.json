@@ -1,0 +1,954 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/app/root.tsx",
+      "type": "file",
+      "name": "root.tsx",
+      "filePath": "apps/frontend/app/root.tsx",
+      "summary": "React Router root module: initializes Sentry, defines document meta/links, layout and hydration fallback, and wraps the app in UI, query, auth, analytics and SSE providers with NProgress navigation feedback.",
+      "tags": [
+        "entry-point",
+        "component",
+        "provider",
+        "routing",
+        "react-router"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/root.tsx:meta",
+      "type": "function",
+      "name": "meta",
+      "filePath": "apps/frontend/app/root.tsx",
+      "lineRange": [36, 40],
+      "summary": "Declares document title and meta tags.",
+      "tags": ["entry-point", "component", "provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/root.tsx:links",
+      "type": "function",
+      "name": "links",
+      "filePath": "apps/frontend/app/root.tsx",
+      "lineRange": [42, 57],
+      "summary": "Declares document link tags such as fonts and stylesheets.",
+      "tags": ["entry-point", "component", "provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/root.tsx:Layout",
+      "type": "function",
+      "name": "Layout",
+      "filePath": "apps/frontend/app/root.tsx",
+      "lineRange": [59, 83],
+      "summary": "HTML document layout rendering head meta/links, body children, scroll restoration and scripts.",
+      "tags": ["entry-point", "component", "provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/root.tsx:HydrateFallback",
+      "type": "function",
+      "name": "HydrateFallback",
+      "filePath": "apps/frontend/app/root.tsx",
+      "lineRange": [85, 108],
+      "summary": "Loading spinner shown while the client app hydrates.",
+      "tags": ["entry-point", "component", "provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/root.tsx:AppContent",
+      "type": "function",
+      "name": "AppContent",
+      "filePath": "apps/frontend/app/root.tsx",
+      "lineRange": [110, 161],
+      "summary": "Main app shell that drives NProgress on navigation, recovers modal layers and mounts authenticated SSE subscriptions around the route outlet.",
+      "tags": ["entry-point", "component", "provider"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/app/root.tsx:App",
+      "type": "function",
+      "name": "App",
+      "filePath": "apps/frontend/app/root.tsx",
+      "lineRange": [163, 169],
+      "summary": "Default root component composing UI, query, auth, analytics and SSE providers around AppContent.",
+      "tags": ["entry-point", "component", "provider"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "type": "file",
+      "name": "org.$orgSlug._protected.error-demo.tsx",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "summary": "Protected demo route that deliberately triggers render, async and loader errors to exercise the frontend ErrorBoundary and route error handling.",
+      "tags": ["component", "routing", "error-handling", "demo"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx:clientLoader",
+      "type": "function",
+      "name": "clientLoader",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "lineRange": [20, 29],
+      "summary": "Client loader that can throw on demand to demonstrate loader error handling.",
+      "tags": ["component", "routing", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx:BuggyComponent",
+      "type": "function",
+      "name": "BuggyComponent",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "lineRange": [32, 41],
+      "summary": "Component that throws during render to trigger the error boundary.",
+      "tags": ["component", "routing", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx:ErrorDemoRouteModule",
+      "type": "function",
+      "name": "ErrorDemoRouteModule",
+      "filePath": "apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "lineRange": [58, 273],
+      "summary": "Demo page offering controls to trigger various error types against the ErrorBoundary.",
+      "tags": ["component", "routing", "error-handling"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "type": "file",
+      "name": "SkillsUploadPanel.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "summary": "Drag-and-drop/folder-picker panel that detects skills from dropped files, resolves SKILL.md names, flags conflicts and duplicates, uploads them sequentially and optionally attaches created skills to a package.",
+      "tags": ["component", "skills", "file-upload", "import"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "type": "function",
+      "name": "SkillsUploadPanel",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "lineRange": [47, 358],
+      "summary": "Skill import panel managing file detection, name resolution, conflict checks, sequential upload and package attachment.",
+      "tags": ["component", "skills", "file-upload"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx",
+      "type": "file",
+      "name": "SkillsUploadRow.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx",
+      "summary": "Renders one skill import row with a status indicator (pending, uploading, success, failed, cancelled) and error message.",
+      "tags": ["component", "skills", "status-indicator", "ui"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx:StatusIndicator",
+      "type": "function",
+      "name": "StatusIndicator",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx",
+      "lineRange": [9, 49],
+      "summary": "Displays an icon/spinner matching an import row status.",
+      "tags": ["component", "skills", "status-indicator"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx:SkillsUploadRow",
+      "type": "function",
+      "name": "SkillsUploadRow",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx",
+      "lineRange": [51, 74],
+      "summary": "Renders a skill import row with name, status indicator and error.",
+      "tags": ["component", "skills", "status-indicator"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts",
+      "type": "file",
+      "name": "useSequentialSkillImport.ts",
+      "filePath": "apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts",
+      "summary": "React hook that imports a batch of detected skills one at a time with abort support, exposing per-skill rows for progress and failure reporting.",
+      "tags": ["hook", "skills", "import", "async-queue"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts:useSequentialSkillImport",
+      "type": "function",
+      "name": "useSequentialSkillImport",
+      "filePath": "apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts",
+      "lineRange": [40, 141],
+      "summary": "Runs skill uploads sequentially with cancellation, tracking per-row status and notifying when the batch settles.",
+      "tags": ["hook", "skills", "import"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "type": "file",
+      "name": "collectSkillsFromFiles.ts",
+      "filePath": "apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "summary": "Groups browser File objects into detected skills by locating SKILL.md roots, filtering blacklisted paths and validating file count and size limits.",
+      "tags": ["utility", "skills", "validation", "file-upload"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts:validate",
+      "type": "function",
+      "name": "validate",
+      "filePath": "apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "lineRange": [64, 86],
+      "summary": "Validates a detected skill against per-file, total-size and file-count limits.",
+      "tags": ["utility", "skills", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts:collectSkillsFromFiles",
+      "type": "function",
+      "name": "collectSkillsFromFiles",
+      "filePath": "apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "lineRange": [98, 155],
+      "summary": "Groups files into detected skills rooted at SKILL.md and collects validation errors.",
+      "tags": ["utility", "skills", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts",
+      "type": "file",
+      "name": "findSkillNameConflicts.ts",
+      "filePath": "apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts",
+      "summary": "Helpers that detect skill names already existing in the space and duplicate names within an import batch.",
+      "tags": ["utility", "skills", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts:findSkillNameConflicts",
+      "type": "function",
+      "name": "findSkillNameConflicts",
+      "filePath": "apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts",
+      "lineRange": [20, 26],
+      "summary": "Returns names of detected skills that already exist in the space.",
+      "tags": ["utility", "skills", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts:findDuplicateSkillNames",
+      "type": "function",
+      "name": "findDuplicateSkillNames",
+      "filePath": "apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts",
+      "lineRange": [39, 47],
+      "summary": "Returns skill names appearing more than once in the batch.",
+      "tags": ["utility", "skills", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts",
+      "type": "file",
+      "name": "readDeclaredSkillName.ts",
+      "filePath": "apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts",
+      "summary": "Reads a detected skill's SKILL.md and parses its YAML frontmatter to obtain the declared skill name.",
+      "tags": ["utility", "skills", "parsing", "frontmatter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts:frontmatterOf",
+      "type": "function",
+      "name": "frontmatterOf",
+      "filePath": "apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts",
+      "lineRange": [21, 31],
+      "summary": "Extracts the YAML frontmatter block from SKILL.md text.",
+      "tags": ["utility", "skills", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts:readDeclaredSkillName",
+      "type": "function",
+      "name": "readDeclaredSkillName",
+      "filePath": "apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts",
+      "lineRange": [47, 73],
+      "summary": "Reads and parses SKILL.md frontmatter to return the declared skill name.",
+      "tags": ["utility", "skills", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "type": "file",
+      "name": "readDroppedEntries.ts",
+      "filePath": "apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "summary": "Recursively walks drag-and-drop DataTransfer entries (files and directories) into a flat list of Files with relative paths.",
+      "tags": ["utility", "file-upload", "drag-and-drop", "filesystem"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts:readFile",
+      "type": "function",
+      "name": "readFile",
+      "filePath": "apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "lineRange": [20, 31],
+      "summary": "Promisifies reading a File from a FileSystemFileEntry.",
+      "tags": ["utility", "file-upload", "drag-and-drop"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts:readDirectory",
+      "type": "function",
+      "name": "readDirectory",
+      "filePath": "apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "lineRange": [33, 57],
+      "summary": "Reads all entries of a directory, handling batched readEntries calls.",
+      "tags": ["utility", "file-upload", "drag-and-drop"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts:walk",
+      "type": "function",
+      "name": "walk",
+      "filePath": "apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "lineRange": [59, 69],
+      "summary": "Recursively walks entries collecting files with relative paths.",
+      "tags": ["utility", "file-upload", "drag-and-drop"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts:readDroppedEntries",
+      "type": "function",
+      "name": "readDroppedEntries",
+      "filePath": "apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "lineRange": [75, 87],
+      "summary": "Converts dropped DataTransfer items into a flat file list.",
+      "tags": ["utility", "file-upload", "drag-and-drop"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts",
+      "type": "file",
+      "name": "readSkillFileContents.ts",
+      "filePath": "apps/frontend/src/domain/skills/utils/readSkillFileContents.ts",
+      "summary": "Reads a skill's files into upload payloads, base64-encoding binaries, normalizing line endings and detecting payloads exceeding the upload size limit.",
+      "tags": ["utility", "skills", "serialization", "file-upload"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts:findOversizedPayload",
+      "type": "function",
+      "name": "findOversizedPayload",
+      "filePath": "apps/frontend/src/domain/skills/utils/readSkillFileContents.ts",
+      "lineRange": [33, 41],
+      "summary": "Returns an error message when the encoded payload exceeds the upload limit.",
+      "tags": ["utility", "skills", "serialization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts:readSkillFileContents",
+      "type": "function",
+      "name": "readSkillFileContents",
+      "filePath": "apps/frontend/src/domain/skills/utils/readSkillFileContents.ts",
+      "lineRange": [166, 185],
+      "summary": "Reads all files of a skill into text or base64 upload payloads.",
+      "tags": ["utility", "skills", "serialization"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:meta",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:meta",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:links",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:links",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:Layout",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:Layout",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:HydrateFallback",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:HydrateFallback",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:AppContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:App",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "function:apps/frontend/app/root.tsx:App",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/components/DistributionStatusChangeSubscription.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "file:apps/frontend/src/providers/AuthProvider.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "file:apps/frontend/src/providers/ErrorBoundary/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "file:apps/frontend/src/providers/QueryProvider.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "file:apps/frontend/src/services/sse/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "file:apps/frontend/src/services/vendors/SentryService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/root.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx:clientLoader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx:clientLoader",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx:BuggyComponent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx:ErrorDemoRouteModule",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "target": "function:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx:ErrorDemoRouteModule",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/app/routes/org.$orgSlug._protected.error-demo.tsx",
+      "target": "file:apps/frontend/src/providers/ErrorBoundary/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/skills/api/queryKeys.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "target": "file:apps/frontend/src/shared/hooks/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx:StatusIndicator",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx:SkillsUploadRow",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx:SkillsUploadRow",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx",
+      "target": "file:apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts",
+      "target": "function:apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts:useSequentialSkillImport",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts",
+      "target": "function:apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts:useSequentialSkillImport",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts",
+      "target": "file:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts:validate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts:collectSkillsFromFiles",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts:collectSkillsFromFiles",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts:findSkillNameConflicts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts:findSkillNameConflicts",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts:findDuplicateSkillNames",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts:findDuplicateSkillNames",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts:frontmatterOf",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts:readDeclaredSkillName",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts:readDeclaredSkillName",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts",
+      "target": "file:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts:readFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts:readDirectory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts:walk",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts:readDroppedEntries",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts:readDroppedEntries",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts:findOversizedPayload",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts:findOversizedPayload",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts:readSkillFileContents",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts",
+      "target": "function:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts:readSkillFileContents",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts",
+      "target": "file:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/skills/hooks/useSequentialSkillImport.ts:useSequentialSkillImport",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/skills/utils/collectSkillsFromFiles.ts:collectSkillsFromFiles",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts:readSkillFileContents",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/skills/utils/readSkillFileContents.ts:findOversizedPayload",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/skills/utils/readDeclaredSkillName.ts:readDeclaredSkillName",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/skills/utils/readDroppedEntries.ts:readDroppedEntries",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts:findSkillNameConflicts",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/skills/utils/findSkillNameConflicts.ts:findDuplicateSkillNames",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useGetSkillsQuery",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/skills/api/queries/SkillsQueries.ts:useUploadSkillMutation",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/deployments/hooks/useCreateIntoPackage.ts:useAttachToPackage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx:SkillsUploadPanel",
+      "target": "function:apps/frontend/src/domain/spaces/hooks/useCurrentSpace.ts:useCurrentSpace",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/root.tsx:App",
+      "target": "function:apps/frontend/src/services/sse/SSEProvider.tsx:SSEProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/root.tsx:App",
+      "target": "function:apps/frontend/src/providers/QueryProvider.tsx:QueryProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/root.tsx:App",
+      "target": "function:apps/frontend/src/providers/AuthProvider.tsx:AuthProvider",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/root.tsx:AppContent",
+      "target": "function:apps/frontend/src/domain/accounts/components/UserContextChangeSubscription.tsx:UserContextChangeSubscription",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/app/root.tsx:AppContent",
+      "target": "function:apps/frontend/src/domain/deployments/components/DistributionStatusChangeSubscription.tsx:DistributionStatusChangeSubscription",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsUploadRow.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    }
+  ]
+}

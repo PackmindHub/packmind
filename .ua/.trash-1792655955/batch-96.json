@@ -1,0 +1,145 @@
+{
+  "nodes": [
+    {
+      "id": "document:packages/commands/CLAUDE.md",
+      "type": "document",
+      "name": "CLAUDE.md",
+      "filePath": "packages/commands/CLAUDE.md",
+      "summary": "Agent guidance for the commands domain package explaining its incomplete rename from \"recipes\": public API uses Command* names while internals, logger origins and TypeORM relation names still say \"recipe\", with rules not to rename the residue opportunistically.",
+      "tags": [
+        "documentation",
+        "agent-instructions",
+        "naming-conventions",
+        "domain-commands"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "document:packages/commands/README.md",
+      "type": "document",
+      "name": "README.md",
+      "filePath": "packages/commands/README.md",
+      "summary": "Short Nx-generated README for the commands library describing the multi-step coding command domain and how to build and test it.",
+      "tags": ["documentation", "readme", "nx", "domain-commands"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/commands/package.json",
+      "type": "config",
+      "name": "package.json",
+      "filePath": "packages/commands/package.json",
+      "summary": "Package manifest for @packmind/commands, a private CommonJS workspace library depending on git, logger, node-utils, spaces and types packages plus TypeORM, BullMQ, uuid and slug.",
+      "tags": [
+        "configuration",
+        "dependencies",
+        "workspace-package",
+        "commonjs"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/commands/project.json",
+      "type": "config",
+      "name": "project.json",
+      "filePath": "packages/commands/project.json",
+      "summary": "Nx project definition for the commands library (env:node) with an SWC build target and a typecheck override that also checks tsconfig.spec.json so specs and test factories are type-checked.",
+      "tags": ["configuration", "nx", "build-system", "env-node"],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/commands/tsconfig.json",
+      "type": "config",
+      "name": "tsconfig.json",
+      "filePath": "packages/commands/tsconfig.json",
+      "summary": "Solution-style TypeScript config for the commands package that extends the effective base config with strict compiler flags and references the lib and spec projects without compiling files itself.",
+      "tags": [
+        "configuration",
+        "typescript",
+        "build-system",
+        "project-references"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "config:packages/commands/tsconfig.lib.json",
+      "type": "config",
+      "name": "tsconfig.lib.json",
+      "filePath": "packages/commands/tsconfig.lib.json",
+      "summary": "TypeScript library build config for the commands package: compiles src/**/*.ts with declarations into dist/out-tsc, excluding spec and test files.",
+      "tags": ["configuration", "typescript", "build-system", "library"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "document:packages/commands/CLAUDE.md",
+      "target": "file:packages/commands/src/application/services/CommandService.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/commands/CLAUDE.md",
+      "target": "file:packages/commands/src/infra/schemas/CommandSchema.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/commands/CLAUDE.md",
+      "target": "document:packages/CLAUDE.md",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "document:packages/commands/README.md",
+      "target": "file:packages/commands/src/index.ts",
+      "type": "documents",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "config:packages/commands/package.json",
+      "target": "file:packages/commands/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/commands/project.json",
+      "target": "config:packages/commands/package.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/commands/project.json",
+      "target": "file:packages/commands/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/commands/project.json",
+      "target": "config:packages/commands/tsconfig.lib.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/commands/tsconfig.lib.json",
+      "target": "config:packages/commands/tsconfig.json",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "config:packages/commands/tsconfig.lib.json",
+      "target": "file:packages/commands/src/index.ts",
+      "type": "configures",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

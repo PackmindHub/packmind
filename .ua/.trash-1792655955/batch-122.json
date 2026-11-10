@@ -1,0 +1,547 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/node-utils/src/nest/filters/describeCause.ts",
+      "type": "file",
+      "name": "describeCause.ts",
+      "filePath": "packages/node-utils/src/nest/filters/describeCause.ts",
+      "summary": "Normalizes a wrapped failure cause for logging, expanding Error instances into name/message/stack and passing other values through unchanged.",
+      "tags": ["utility", "error-handling", "logging", "nestjs"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/nest/filters/describeCause.ts:describeCause",
+      "type": "function",
+      "name": "describeCause",
+      "filePath": "packages/node-utils/src/nest/filters/describeCause.ts",
+      "lineRange": [6, 12],
+      "summary": "Converts an unknown cause into a loggable value, extracting name, message and stack from Error objects.",
+      "tags": ["utility", "error-handling", "logging"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/nest/filters/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/node-utils/src/nest/filters/index.ts",
+      "summary": "Barrel re-exporting the NestJS DomainExceptionFilter from the filters folder.",
+      "tags": ["barrel", "entry-point", "nestjs", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/nest/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/node-utils/src/nest/index.ts",
+      "summary": "Barrel for shared NestJS helpers, re-exporting the authenticated request type and the Public route decorator.",
+      "tags": ["barrel", "entry-point", "nestjs", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/security/EncryptionService.ts",
+      "type": "file",
+      "name": "EncryptionService.ts",
+      "filePath": "packages/node-utils/src/security/EncryptionService.ts",
+      "summary": "Symmetric encryption service used to encrypt and decrypt secrets (e.g. git tokens) at rest, deriving its key from configuration and detecting already-encrypted base64 payloads.",
+      "tags": ["security", "encryption", "service", "secrets"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/node-utils/src/security/EncryptionService.ts:EncryptionService",
+      "type": "class",
+      "name": "EncryptionService",
+      "filePath": "packages/node-utils/src/security/EncryptionService.ts",
+      "lineRange": [11, 159],
+      "summary": "Class providing encrypt/decrypt of strings with a configuration-derived key, plus helpers to check whether a value is already encrypted base64 ciphertext.",
+      "tags": ["security", "encryption", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/skillMd/parseSkillMd.ts",
+      "type": "file",
+      "name": "parseSkillMd.ts",
+      "filePath": "packages/node-utils/src/skillMd/parseSkillMd.ts",
+      "summary": "Parses a SKILL.md file into typed skill properties (name, description, license, compatibility, allowed tools, metadata) and Claude Code-specific additional fields, returning null on malformed content.",
+      "tags": ["parser", "skills", "frontmatter", "markdown"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/skillMd/parseSkillMd.ts:parseSkillMd",
+      "type": "function",
+      "name": "parseSkillMd",
+      "filePath": "packages/node-utils/src/skillMd/parseSkillMd.ts",
+      "lineRange": [51, 89],
+      "summary": "Builds a ParsedSkillMd from frontmatter properties, separating known fields from Claude Code additional properties and producing deterministic metadata JSON.",
+      "tags": ["parser", "skills", "frontmatter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/skillMd/parseSkillMdContent.ts",
+      "type": "file",
+      "name": "parseSkillMdContent.ts",
+      "filePath": "packages/node-utils/src/skillMd/parseSkillMdContent.ts",
+      "summary": "Low-level SKILL.md frontmatter splitter that parses the YAML header and body, with canonical JSON serialization helpers for deterministic metadata comparison.",
+      "tags": ["parser", "yaml", "skills", "serialization"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/skillMd/parseSkillMdContent.ts:serializeSkillMetadata",
+      "type": "function",
+      "name": "serializeSkillMetadata",
+      "filePath": "packages/node-utils/src/skillMd/parseSkillMdContent.ts",
+      "lineRange": [19, 23],
+      "summary": "Serializes skill metadata into canonical, key-sorted JSON so equivalent metadata compares equal.",
+      "tags": ["serialization", "skills", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/skillMd/parseSkillMdContent.ts:parseSkillMdContent",
+      "type": "function",
+      "name": "parseSkillMdContent",
+      "filePath": "packages/node-utils/src/skillMd/parseSkillMdContent.ts",
+      "lineRange": [32, 69],
+      "summary": "Splits SKILL.md content into YAML frontmatter properties and markdown body, returning null for missing/unclosed frontmatter or invalid YAML.",
+      "tags": ["parser", "yaml", "frontmatter"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/sse/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/node-utils/src/sse/index.ts",
+      "summary": "Barrel exposing the Server-Sent Events infrastructure: Redis SSE client, event publisher, message types and (de)serializers, subscription authorizer, errors and scope resolution.",
+      "tags": ["barrel", "entry-point", "sse", "redis", "realtime"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/text/MarkdownCleaner.ts",
+      "type": "file",
+      "name": "MarkdownCleaner.ts",
+      "filePath": "packages/node-utils/src/text/MarkdownCleaner.ts",
+      "summary": "Extracts raw code from a markdown string by stripping fenced code block delimiters.",
+      "tags": ["utility", "markdown", "text"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/text/MarkdownCleaner.ts:extractCodeFromMarkdown",
+      "type": "function",
+      "name": "extractCodeFromMarkdown",
+      "filePath": "packages/node-utils/src/text/MarkdownCleaner.ts",
+      "lineRange": [5, 14],
+      "summary": "Strips markdown code fences and returns the inner code content.",
+      "tags": ["utility", "markdown", "text"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/text/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/node-utils/src/text/index.ts",
+      "summary": "Barrel for text utilities: markdown code extraction, line-ending normalization, section merging and trailing-slash removal.",
+      "tags": ["barrel", "entry-point", "text", "utility"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/text/normalizeLineEndings.ts",
+      "type": "file",
+      "name": "normalizeLineEndings.ts",
+      "filePath": "packages/node-utils/src/text/normalizeLineEndings.ts",
+      "summary": "Single helper that converts CRLF/CR line endings to LF.",
+      "tags": ["utility", "text", "normalization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/text/normalizeLineEndings.ts:normalizeLineEndings",
+      "type": "function",
+      "name": "normalizeLineEndings",
+      "filePath": "packages/node-utils/src/text/normalizeLineEndings.ts",
+      "lineRange": [2, 4],
+      "summary": "Normalizes all line endings in a string to LF.",
+      "tags": ["utility", "text", "normalization"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/src/text/sectionMerge.ts",
+      "type": "file",
+      "name": "sectionMerge.ts",
+      "filePath": "packages/node-utils/src/text/sectionMerge.ts",
+      "summary": "Merges managed sections delimited by <!-- start/end: key --> markers into agent instruction files, preserving hand-edited content and removing blank sections cleanly.",
+      "tags": ["utility", "text", "deployment", "merge"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/src/text/sectionMerge.ts:mergeSectionsIntoFileContent",
+      "type": "function",
+      "name": "mergeSectionsIntoFileContent",
+      "filePath": "packages/node-utils/src/text/sectionMerge.ts",
+      "lineRange": [12, 66],
+      "summary": "Replaces or appends each keyed section between marker comments in existing file content, deleting sections whose content is blank without leaving stray blank lines.",
+      "tags": ["utility", "text", "merge"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/src/text/urlUtils.ts",
+      "type": "file",
+      "name": "urlUtils.ts",
+      "filePath": "packages/node-utils/src/text/urlUtils.ts",
+      "summary": "Tiny URL helper that removes a trailing slash from a string.",
+      "tags": ["utility", "url", "text"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/node-utils/src/text/urlUtils.ts:removeTrailingSlash",
+      "type": "function",
+      "name": "removeTrailingSlash",
+      "filePath": "packages/node-utils/src/text/urlUtils.ts",
+      "lineRange": [1, 3],
+      "summary": "Returns the input URL without its trailing slash.",
+      "tags": ["utility", "url"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/node-utils/test/sharedTests/itHandlesDuplicateKeys.ts",
+      "type": "file",
+      "name": "itHandlesDuplicateKeys.ts",
+      "filePath": "packages/node-utils/test/sharedTests/itHandlesDuplicateKeys.ts",
+      "summary": "Reusable Jest test suite generator verifying a repository rejects entities that duplicate unique key fields with the expected error message.",
+      "tags": ["test", "shared-tests", "repository", "jest"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/test/sharedTests/itHandlesDuplicateKeys.ts:itHandlesDuplicateKeys",
+      "type": "function",
+      "name": "itHandlesDuplicateKeys",
+      "filePath": "packages/node-utils/test/sharedTests/itHandlesDuplicateKeys.ts",
+      "lineRange": [10, 72],
+      "summary": "Registers a describe block asserting that saving entities with duplicated unique fields fails with a specific error.",
+      "tags": ["test", "repository", "validation"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/test/sharedTests/itHandlesSoftDelete.ts",
+      "type": "file",
+      "name": "itHandlesSoftDelete.ts",
+      "filePath": "packages/node-utils/test/sharedTests/itHandlesSoftDelete.ts",
+      "summary": "Reusable Jest test suite generator verifying soft-delete semantics of a repository (deleted entities hidden from queries but retrievable with deleted flag).",
+      "tags": ["test", "shared-tests", "repository", "soft-delete"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/node-utils/test/sharedTests/itHandlesSoftDelete.ts:itHandlesSoftDelete",
+      "type": "function",
+      "name": "itHandlesSoftDelete",
+      "filePath": "packages/node-utils/test/sharedTests/itHandlesSoftDelete.ts",
+      "lineRange": [11, 65],
+      "summary": "Registers a describe block checking that deleted entities disappear from standard lookups and remain queryable as soft-deleted records.",
+      "tags": ["test", "repository", "soft-delete"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/node-utils/types.ts",
+      "type": "file",
+      "name": "types.ts",
+      "filePath": "packages/node-utils/types.ts",
+      "summary": "Root-level re-export of @packmind/types for the node-utils package.",
+      "tags": ["barrel", "type-definition", "re-export"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/playbook-change-applier/.swcrc",
+      "type": "file",
+      "name": ".swcrc",
+      "filePath": "packages/playbook-change-applier/.swcrc",
+      "summary": "SWC compiler configuration for the playbook-change-applier package: TypeScript parsing, ES2022 target, CommonJS modules, kept class names and source maps.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/playbook-change-applier/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/playbook-change-applier/src/index.ts",
+      "summary": "Public entry point of the playbook-change-applier package re-exporting its hexa and adapter.",
+      "tags": ["barrel", "entry-point", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/.swcrc",
+      "type": "file",
+      "name": ".swcrc",
+      "filePath": "packages/skills/.swcrc",
+      "summary": "SWC compiler configuration for the skills package: TypeScript parsing, ES2022 target, CommonJS modules, kept class names and source maps.",
+      "tags": ["configuration", "build-system", "swc", "typescript"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/application/parser/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/skills/src/application/parser/index.ts",
+      "summary": "Barrel re-exporting the SkillParser.",
+      "tags": ["barrel", "parser", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/application/validator/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/skills/src/application/validator/index.ts",
+      "summary": "Barrel re-exporting the SkillValidator.",
+      "tags": ["barrel", "validation", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/skills/src/domain/index.ts",
+      "summary": "Barrel for the skills domain layer re-exporting SkillProperties and domain errors.",
+      "tags": ["barrel", "data-model", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/skills/src/index.ts",
+      "summary": "Public entry point of the skills package exposing domain, parser, validator, infra schemas and the SkillsHexa.",
+      "tags": ["barrel", "entry-point", "skills", "hexagonal-architecture"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/infra/schemas/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/skills/src/infra/schemas/index.ts",
+      "summary": "Barrel re-exporting the TypeORM schemas for skills persistence.",
+      "tags": ["barrel", "schema-definition", "skills", "typeorm"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/test/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/skills/test/index.ts",
+      "summary": "Barrel for skills test helpers, exposing skill, skill version and skill file factories.",
+      "tags": ["barrel", "test", "factory", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/test/skillFactory.ts",
+      "type": "file",
+      "name": "skillFactory.ts",
+      "filePath": "packages/skills/test/skillFactory.ts",
+      "summary": "Test factory producing a fully populated Skill entity with random IDs and overridable fields.",
+      "tags": ["test", "factory", "skills", "fixtures"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/skills/test/skillFactory.ts:skillFactory",
+      "type": "function",
+      "name": "skillFactory",
+      "filePath": "packages/skills/test/skillFactory.ts",
+      "lineRange": [10, 29],
+      "summary": "Factory returning a default Skill test fixture merged with partial overrides.",
+      "tags": ["test", "factory", "fixtures"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/node-utils/src/nest/filters/describeCause.ts",
+      "target": "function:packages/node-utils/src/nest/filters/describeCause.ts:describeCause",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/nest/filters/describeCause.ts",
+      "target": "function:packages/node-utils/src/nest/filters/describeCause.ts:describeCause",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/nest/filters/describeCause.ts",
+      "target": "file:packages/node-utils/src/nest/filters/DomainExceptionFilter.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/node-utils/src/security/EncryptionService.ts",
+      "target": "class:packages/node-utils/src/security/EncryptionService.ts:EncryptionService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/security/EncryptionService.ts",
+      "target": "class:packages/node-utils/src/security/EncryptionService.ts:EncryptionService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/skillMd/parseSkillMd.ts",
+      "target": "function:packages/node-utils/src/skillMd/parseSkillMd.ts:parseSkillMd",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/skillMd/parseSkillMd.ts",
+      "target": "function:packages/node-utils/src/skillMd/parseSkillMd.ts:parseSkillMd",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/skillMd/parseSkillMdContent.ts",
+      "target": "function:packages/node-utils/src/skillMd/parseSkillMdContent.ts:serializeSkillMetadata",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/skillMd/parseSkillMdContent.ts",
+      "target": "function:packages/node-utils/src/skillMd/parseSkillMdContent.ts:serializeSkillMetadata",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/skillMd/parseSkillMdContent.ts",
+      "target": "function:packages/node-utils/src/skillMd/parseSkillMdContent.ts:parseSkillMdContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/skillMd/parseSkillMdContent.ts",
+      "target": "function:packages/node-utils/src/skillMd/parseSkillMdContent.ts:parseSkillMdContent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/skillMd/parseSkillMd.ts",
+      "target": "file:packages/node-utils/src/skillMd/parseSkillMdContent.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:packages/node-utils/src/skillMd/parseSkillMd.ts:parseSkillMd",
+      "target": "function:packages/node-utils/src/skillMd/parseSkillMdContent.ts:parseSkillMdContent",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/text/MarkdownCleaner.ts",
+      "target": "function:packages/node-utils/src/text/MarkdownCleaner.ts:extractCodeFromMarkdown",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/text/MarkdownCleaner.ts",
+      "target": "function:packages/node-utils/src/text/MarkdownCleaner.ts:extractCodeFromMarkdown",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/text/normalizeLineEndings.ts",
+      "target": "function:packages/node-utils/src/text/normalizeLineEndings.ts:normalizeLineEndings",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/text/normalizeLineEndings.ts",
+      "target": "function:packages/node-utils/src/text/normalizeLineEndings.ts:normalizeLineEndings",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/text/sectionMerge.ts",
+      "target": "function:packages/node-utils/src/text/sectionMerge.ts:mergeSectionsIntoFileContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/text/sectionMerge.ts",
+      "target": "function:packages/node-utils/src/text/sectionMerge.ts:mergeSectionsIntoFileContent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/src/text/urlUtils.ts",
+      "target": "function:packages/node-utils/src/text/urlUtils.ts:removeTrailingSlash",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/src/text/urlUtils.ts",
+      "target": "function:packages/node-utils/src/text/urlUtils.ts:removeTrailingSlash",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/test/sharedTests/itHandlesDuplicateKeys.ts",
+      "target": "function:packages/node-utils/test/sharedTests/itHandlesDuplicateKeys.ts:itHandlesDuplicateKeys",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/test/sharedTests/itHandlesDuplicateKeys.ts",
+      "target": "function:packages/node-utils/test/sharedTests/itHandlesDuplicateKeys.ts:itHandlesDuplicateKeys",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/node-utils/test/sharedTests/itHandlesSoftDelete.ts",
+      "target": "function:packages/node-utils/test/sharedTests/itHandlesSoftDelete.ts:itHandlesSoftDelete",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/node-utils/test/sharedTests/itHandlesSoftDelete.ts",
+      "target": "function:packages/node-utils/test/sharedTests/itHandlesSoftDelete.ts:itHandlesSoftDelete",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/test/skillFactory.ts",
+      "target": "function:packages/skills/test/skillFactory.ts:skillFactory",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/test/skillFactory.ts",
+      "target": "function:packages/skills/test/skillFactory.ts:skillFactory",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/test/index.ts",
+      "target": "file:packages/skills/test/skillFactory.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

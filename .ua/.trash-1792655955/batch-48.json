@@ -1,0 +1,990 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/skills/src/domain/errors/SkillNotFoundError.ts",
+      "type": "file",
+      "name": "SkillNotFoundError.ts",
+      "filePath": "packages/skills/src/domain/errors/SkillNotFoundError.ts",
+      "summary": "Not-found domain error for skills that deliberately conflates missing skills and skills outside the requested space to avoid leaking existence.",
+      "tags": ["error-handling", "domain-error", "security", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/domain/errors/SkillNotFoundError.ts:SkillNotFoundError",
+      "type": "class",
+      "name": "SkillNotFoundError",
+      "filePath": "packages/skills/src/domain/errors/SkillNotFoundError.ts",
+      "lineRange": [12, 22],
+      "summary": "Error thrown when a skill does not exist or is not in the requested space; keeps the space id only in log context.",
+      "tags": ["error-handling", "domain-error", "security", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/errors/SkillParseError.ts",
+      "type": "file",
+      "name": "SkillParseError.ts",
+      "filePath": "packages/skills/src/domain/errors/SkillParseError.ts",
+      "summary": "Invalid-input domain error raised when parsing a SKILL.md file (frontmatter or YAML) fails.",
+      "tags": ["error-handling", "domain-error", "parsing", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/domain/errors/SkillParseError.ts:SkillParseError",
+      "type": "class",
+      "name": "SkillParseError",
+      "filePath": "packages/skills/src/domain/errors/SkillParseError.ts",
+      "lineRange": [7, 12],
+      "summary": "Error raised on SKILL.md frontmatter/YAML parse failures, mapped to invalid_input.",
+      "tags": ["error-handling", "domain-error", "parsing", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "type": "file",
+      "name": "SkillSpaceNotAccessibleError.ts",
+      "filePath": "packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "summary": "Not-found domain error for spaces that do not exist or belong to another organization, keeping the organization id only in log context.",
+      "tags": ["error-handling", "domain-error", "security", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts:SkillSpaceNotAccessibleError",
+      "type": "class",
+      "name": "SkillSpaceNotAccessibleError",
+      "filePath": "packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "lineRange": [15, 25],
+      "summary": "Error thrown when a space is missing or outside the caller organization.",
+      "tags": ["error-handling", "domain-error", "security", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/errors/SkillValidationError.ts",
+      "type": "file",
+      "name": "SkillValidationError.ts",
+      "filePath": "packages/skills/src/domain/errors/SkillValidationError.ts",
+      "summary": "Defines the SkillValidationErrorDetail type and an invalid-input error aggregating per-field skill validation failures.",
+      "tags": ["error-handling", "domain-error", "validation", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/domain/errors/SkillValidationError.ts:SkillValidationError",
+      "type": "class",
+      "name": "SkillValidationError",
+      "filePath": "packages/skills/src/domain/errors/SkillValidationError.ts",
+      "lineRange": [8, 22],
+      "summary": "Invalid-input error carrying a list of field-level validation failures joined into its message.",
+      "tags": ["error-handling", "domain-error", "validation", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/errors/SkillVersionMissingError.ts",
+      "type": "file",
+      "name": "SkillVersionMissingError.ts",
+      "filePath": "packages/skills/src/domain/errors/SkillVersionMissingError.ts",
+      "summary": "Internal error signalling the broken invariant of an existing skill having no version.",
+      "tags": ["error-handling", "internal-error", "invariant", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/domain/errors/SkillVersionMissingError.ts:SkillVersionMissingError",
+      "type": "class",
+      "name": "SkillVersionMissingError",
+      "filePath": "packages/skills/src/domain/errors/SkillVersionMissingError.ts",
+      "lineRange": [10, 19],
+      "summary": "Internal error for a skill that unexpectedly has no version.",
+      "tags": ["error-handling", "internal-error", "invariant", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts",
+      "type": "file",
+      "name": "SkillsAdapterPortsMissingError.ts",
+      "filePath": "packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts",
+      "summary": "Internal wiring error thrown when SkillsAdapter is initialized without the ports or services its use cases require.",
+      "tags": ["error-handling", "internal-error", "wiring", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts:SkillsAdapterPortsMissingError",
+      "type": "class",
+      "name": "SkillsAdapterPortsMissingError",
+      "filePath": "packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts",
+      "lineRange": [10, 19],
+      "summary": "Internal error listing the ports missing when the skills adapter is initialized.",
+      "tags": ["error-handling", "internal-error", "wiring", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/errors/SkillsError.ts",
+      "type": "file",
+      "name": "SkillsError.ts",
+      "filePath": "packages/skills/src/domain/errors/SkillsError.ts",
+      "summary": "Base class for client-facing skills domain errors carrying a DomainErrorKind (HTTP mapping), a literal reason union, and a typed context for logging.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "base-class",
+        "type-definition",
+        "skills"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/domain/errors/SkillsError.ts:SkillsError",
+      "type": "class",
+      "name": "SkillsError",
+      "filePath": "packages/skills/src/domain/errors/SkillsError.ts",
+      "lineRange": [28, 45],
+      "summary": "Base domain error with kind, reason and context fields implementing DomainError from @packmind/types.",
+      "tags": [
+        "error-handling",
+        "domain-error",
+        "base-class",
+        "type-definition"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts",
+      "type": "file",
+      "name": "SkillsHexaDependencyMissingError.ts",
+      "filePath": "packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts",
+      "summary": "Internal wiring error thrown when a dependency required by SkillsHexa at boot is missing from the registry.",
+      "tags": ["error-handling", "internal-error", "wiring", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts:SkillsHexaDependencyMissingError",
+      "type": "class",
+      "name": "SkillsHexaDependencyMissingError",
+      "filePath": "packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts",
+      "lineRange": [9, 18],
+      "summary": "Internal error naming a hexa dependency missing from the registry.",
+      "tags": ["error-handling", "internal-error", "wiring", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/errors/SkillsInternalError.ts",
+      "type": "file",
+      "name": "SkillsInternalError.ts",
+      "filePath": "packages/skills/src/domain/errors/SkillsInternalError.ts",
+      "summary": "Base class for skills broken-invariant errors (always 500, message withheld from clients), extending PackmindInternalError with a reason union and typed context.",
+      "tags": ["error-handling", "internal-error", "base-class", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/domain/errors/SkillsInternalError.ts:SkillsInternalError",
+      "type": "class",
+      "name": "SkillsInternalError",
+      "filePath": "packages/skills/src/domain/errors/SkillsInternalError.ts",
+      "lineRange": [28, 37],
+      "summary": "Base internal error for wiring and invariant failures in the skills domain.",
+      "tags": ["error-handling", "internal-error", "base-class", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts",
+      "type": "file",
+      "name": "SkillsPortNotAvailableError.ts",
+      "filePath": "packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts",
+      "summary": "Internal wiring error thrown when a use case reaches for a port its adapter was not wired with.",
+      "tags": ["error-handling", "internal-error", "wiring", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts:SkillsPortNotAvailableError",
+      "type": "class",
+      "name": "SkillsPortNotAvailableError",
+      "filePath": "packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts",
+      "lineRange": [9, 14],
+      "summary": "Internal error naming an unavailable port.",
+      "tags": ["error-handling", "internal-error", "wiring", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/errors/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/skills/src/domain/errors/index.ts",
+      "summary": "Barrel re-exporting every skills domain and internal error class.",
+      "tags": ["barrel", "entry-point", "error-handling", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/repositories/ISkillFileRepository.ts",
+      "type": "file",
+      "name": "ISkillFileRepository.ts",
+      "filePath": "packages/skills/src/domain/repositories/ISkillFileRepository.ts",
+      "summary": "Repository port for skill files, adding lookups by skill version id(s) and bulk insertion.",
+      "tags": ["repository", "port", "interface", "type-definition", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/repositories/ISkillRepository.ts",
+      "type": "file",
+      "name": "ISkillRepository.ts",
+      "filePath": "packages/skills/src/domain/repositories/ISkillRepository.ts",
+      "summary": "Repository port for skills: lookup by slug, space, and user, per-space counts, and marking a skill as moved to another space.",
+      "tags": ["repository", "port", "interface", "type-definition", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/repositories/ISkillVersionRepository.ts",
+      "type": "file",
+      "name": "ISkillVersionRepository.ts",
+      "filePath": "packages/skills/src/domain/repositories/ISkillVersionRepository.ts",
+      "summary": "Repository port for skill versions: history and latest-version lookups, space-scoped version fetch, and metadata updates.",
+      "tags": ["repository", "port", "interface", "type-definition", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/repositories/ISkillsRepositories.ts",
+      "type": "file",
+      "name": "ISkillsRepositories.ts",
+      "filePath": "packages/skills/src/domain/repositories/ISkillsRepositories.ts",
+      "summary": "Aggregate port exposing accessors for the skill, skill version, and skill file repositories.",
+      "tags": ["repository", "port", "interface", "type-definition", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/useCases/IGetLatestSkillVersion.ts",
+      "type": "file",
+      "name": "IGetLatestSkillVersion.ts",
+      "filePath": "packages/skills/src/domain/useCases/IGetLatestSkillVersion.ts",
+      "summary": "Type alias re-exposing the shared IGetLatestSkillVersionUseCase contract from @packmind/types.",
+      "tags": ["use-case", "interface", "type-definition", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/useCases/IGetSkillVersion.ts",
+      "type": "file",
+      "name": "IGetSkillVersion.ts",
+      "filePath": "packages/skills/src/domain/useCases/IGetSkillVersion.ts",
+      "summary": "Use case port for fetching a specific skill version, extending the shared IGetSkillVersionUseCase contract.",
+      "tags": ["use-case", "interface", "type-definition", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/domain/useCases/IUpdateSkill.ts",
+      "type": "file",
+      "name": "IUpdateSkill.ts",
+      "filePath": "packages/skills/src/domain/useCases/IUpdateSkill.ts",
+      "summary": "Use case port for updating a skill as an organization member via executeForMembers.",
+      "tags": ["use-case", "interface", "type-definition", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/infra/repositories/SkillFileRepository.ts",
+      "type": "file",
+      "name": "SkillFileRepository.ts",
+      "filePath": "packages/skills/src/infra/repositories/SkillFileRepository.ts",
+      "summary": "TypeORM repository for skill files, querying files belonging to one or several skill versions.",
+      "tags": ["repository", "persistence", "typeorm", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/infra/repositories/SkillFileRepository.ts:SkillFileRepository",
+      "type": "class",
+      "name": "SkillFileRepository",
+      "filePath": "packages/skills/src/infra/repositories/SkillFileRepository.ts",
+      "lineRange": [10, 86],
+      "summary": "TypeORM-backed AbstractRepository implementing ISkillFileRepository with skill-version-based queries.",
+      "tags": ["repository", "persistence", "typeorm", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/infra/repositories/SkillRepository.ts",
+      "type": "file",
+      "name": "SkillRepository.ts",
+      "filePath": "packages/skills/src/infra/repositories/SkillRepository.ts",
+      "summary": "TypeORM repository for skills providing slug/space/user lookups, per-space counts, and a transactional markAsMoved that soft-deletes the moved skill.",
+      "tags": ["repository", "persistence", "typeorm", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/infra/repositories/SkillRepository.ts:SkillRepository",
+      "type": "class",
+      "name": "SkillRepository",
+      "filePath": "packages/skills/src/infra/repositories/SkillRepository.ts",
+      "lineRange": [17, 194],
+      "summary": "TypeORM-backed AbstractRepository implementing ISkillRepository with query-builder lookups and transactional moves.",
+      "tags": ["repository", "persistence", "typeorm", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/infra/repositories/SkillVersionRepository.ts",
+      "type": "file",
+      "name": "SkillVersionRepository.ts",
+      "filePath": "packages/skills/src/infra/repositories/SkillVersionRepository.ts",
+      "summary": "TypeORM repository for skill versions with history, latest-per-skill, space-scoped version lookup, and metadata update queries.",
+      "tags": ["repository", "persistence", "typeorm", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/skills/src/infra/repositories/SkillVersionRepository.ts:SkillVersionRepository",
+      "type": "class",
+      "name": "SkillVersionRepository",
+      "filePath": "packages/skills/src/infra/repositories/SkillVersionRepository.ts",
+      "lineRange": [19, 219],
+      "summary": "TypeORM-backed AbstractRepository implementing ISkillVersionRepository.",
+      "tags": ["repository", "persistence", "typeorm", "skills"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "type": "file",
+      "name": "SkillsRepositories.ts",
+      "filePath": "packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "summary": "Aggregate implementation of ISkillsRepositories that builds the skill, version, and file repositories from a TypeORM DataSource.",
+      "tags": ["repository", "factory", "dependency-injection", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/skills/src/infra/repositories/SkillsRepositories.ts:SkillsRepositories",
+      "type": "class",
+      "name": "SkillsRepositories",
+      "filePath": "packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "lineRange": [14, 52],
+      "summary": "Wires and exposes the three skills TypeORM repositories.",
+      "tags": ["repository", "factory", "dependency-injection", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/skills/src/infra/schemas/SkillFileSchema.ts",
+      "type": "file",
+      "name": "SkillFileSchema.ts",
+      "filePath": "packages/skills/src/infra/schemas/SkillFileSchema.ts",
+      "summary": "TypeORM EntitySchema mapping skill files (path, content, permissions) to their parent skill version.",
+      "tags": [
+        "schema-definition",
+        "typeorm",
+        "data-model",
+        "persistence",
+        "skills"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/infra/schemas/SkillSchema.ts",
+      "type": "file",
+      "name": "SkillSchema.ts",
+      "filePath": "packages/skills/src/infra/schemas/SkillSchema.ts",
+      "summary": "TypeORM EntitySchema for the Skill entity with slug, version, space/user ownership, metadata, moved_to tracking, version relation, and indexes.",
+      "tags": [
+        "schema-definition",
+        "typeorm",
+        "data-model",
+        "persistence",
+        "skills"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/infra/schemas/SkillVersionSchema.ts",
+      "type": "file",
+      "name": "SkillVersionSchema.ts",
+      "filePath": "packages/skills/src/infra/schemas/SkillVersionSchema.ts",
+      "summary": "TypeORM EntitySchema for SkillVersion snapshots linked many-to-one to Skill with a unique (skill, version) index.",
+      "tags": [
+        "schema-definition",
+        "typeorm",
+        "data-model",
+        "persistence",
+        "skills"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/skills/src/infra/schemas/skillsSchemas.ts",
+      "type": "file",
+      "name": "skillsSchemas.ts",
+      "filePath": "packages/skills/src/infra/schemas/skillsSchemas.ts",
+      "summary": "Barrel collecting the skills TypeORM entity schemas into a skillsSchemas array for DataSource registration.",
+      "tags": ["barrel", "typeorm", "schema-definition", "skills"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillNotFoundError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillNotFoundError.ts:SkillNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillNotFoundError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillNotFoundError.ts:SkillNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillNotFoundError.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillParseError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillParseError.ts:SkillParseError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillParseError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillParseError.ts:SkillParseError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillParseError.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts:SkillSpaceNotAccessibleError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts:SkillSpaceNotAccessibleError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillValidationError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillValidationError.ts:SkillValidationError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillValidationError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillValidationError.ts:SkillValidationError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillValidationError.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillVersionMissingError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillVersionMissingError.ts:SkillVersionMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillVersionMissingError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillVersionMissingError.ts:SkillVersionMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillVersionMissingError.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts:SkillsAdapterPortsMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts:SkillsAdapterPortsMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillsError.ts:SkillsError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillsError.ts:SkillsError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsError.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillValidationError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts:SkillsHexaDependencyMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts:SkillsHexaDependencyMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsInternalError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillsInternalError.ts:SkillsInternalError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsInternalError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillsInternalError.ts:SkillsInternalError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts:SkillsPortNotAvailableError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts",
+      "target": "class:packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts:SkillsPortNotAvailableError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/repositories/ISkillsRepositories.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/repositories/ISkillsRepositories.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/domain/repositories/ISkillsRepositories.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillFileRepository.ts",
+      "target": "class:packages/skills/src/infra/repositories/SkillFileRepository.ts:SkillFileRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillFileRepository.ts",
+      "target": "class:packages/skills/src/infra/repositories/SkillFileRepository.ts:SkillFileRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillFileRepository.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillFileRepository.ts",
+      "target": "file:packages/skills/src/infra/schemas/SkillFileSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillRepository.ts",
+      "target": "class:packages/skills/src/infra/repositories/SkillRepository.ts:SkillRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillRepository.ts",
+      "target": "class:packages/skills/src/infra/repositories/SkillRepository.ts:SkillRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillRepository.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillRepository.ts",
+      "target": "file:packages/skills/src/infra/schemas/SkillSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillVersionRepository.ts",
+      "target": "class:packages/skills/src/infra/repositories/SkillVersionRepository.ts:SkillVersionRepository",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillVersionRepository.ts",
+      "target": "class:packages/skills/src/infra/repositories/SkillVersionRepository.ts:SkillVersionRepository",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillVersionRepository.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillVersionRepository.ts",
+      "target": "file:packages/skills/src/infra/schemas/SkillVersionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "class:packages/skills/src/infra/repositories/SkillsRepositories.ts:SkillsRepositories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "class:packages/skills/src/infra/repositories/SkillsRepositories.ts:SkillsRepositories",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "file:packages/skills/src/domain/repositories/ISkillsRepositories.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "file:packages/skills/src/infra/repositories/SkillFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "file:packages/skills/src/infra/repositories/SkillRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "file:packages/skills/src/infra/repositories/SkillVersionRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "file:packages/skills/src/infra/schemas/SkillFileSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "file:packages/skills/src/infra/schemas/SkillSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/repositories/SkillsRepositories.ts",
+      "target": "file:packages/skills/src/infra/schemas/SkillVersionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/schemas/skillsSchemas.ts",
+      "target": "file:packages/skills/src/infra/schemas/SkillFileSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/schemas/skillsSchemas.ts",
+      "target": "file:packages/skills/src/infra/schemas/SkillSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/skills/src/infra/schemas/skillsSchemas.ts",
+      "target": "file:packages/skills/src/infra/schemas/SkillVersionSchema.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/skills/src/domain/errors/SkillNotFoundError.ts:SkillNotFoundError",
+      "target": "class:packages/skills/src/domain/errors/SkillsError.ts:SkillsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/skills/src/domain/errors/SkillParseError.ts:SkillParseError",
+      "target": "class:packages/skills/src/domain/errors/SkillsError.ts:SkillsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts:SkillSpaceNotAccessibleError",
+      "target": "class:packages/skills/src/domain/errors/SkillsError.ts:SkillsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/skills/src/domain/errors/SkillValidationError.ts:SkillValidationError",
+      "target": "class:packages/skills/src/domain/errors/SkillsError.ts:SkillsError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/skills/src/domain/errors/SkillVersionMissingError.ts:SkillVersionMissingError",
+      "target": "class:packages/skills/src/domain/errors/SkillsInternalError.ts:SkillsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts:SkillsAdapterPortsMissingError",
+      "target": "class:packages/skills/src/domain/errors/SkillsInternalError.ts:SkillsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts:SkillsHexaDependencyMissingError",
+      "target": "class:packages/skills/src/domain/errors/SkillsInternalError.ts:SkillsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts:SkillsPortNotAvailableError",
+      "target": "class:packages/skills/src/domain/errors/SkillsInternalError.ts:SkillsInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsInternalError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillParseError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillValidationError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillSpaceNotAccessibleError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillNotFoundError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsPortNotAvailableError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillVersionMissingError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsAdapterPortsMissingError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillsHexaDependencyMissingError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillEditForbiddenError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillFileNotEditableError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "file:packages/skills/src/domain/errors/index.ts",
+      "target": "file:packages/skills/src/domain/errors/SkillFileNotFoundError.ts",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/infra/repositories/SkillsRepositories.ts:SkillsRepositories",
+      "target": "class:packages/skills/src/infra/repositories/SkillRepository.ts:SkillRepository",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/infra/repositories/SkillsRepositories.ts:SkillsRepositories",
+      "target": "class:packages/skills/src/infra/repositories/SkillVersionRepository.ts:SkillVersionRepository",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    },
+    {
+      "source": "class:packages/skills/src/infra/repositories/SkillsRepositories.ts:SkillsRepositories",
+      "target": "class:packages/skills/src/infra/repositories/SkillFileRepository.ts:SkillFileRepository",
+      "type": "depends_on",
+      "direction": "forward",
+      "weight": 0.6
+    }
+  ]
+}

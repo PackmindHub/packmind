@@ -1,0 +1,1311 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/addHandler.ts",
+      "type": "file",
+      "name": "addHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/addHandler.ts",
+      "summary": "Handler for `playbook add` that iterates over provided paths, stages each via stageSinglePath, and reports aggregated results.",
+      "tags": ["api-handler", "cli", "playbook", "staging"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/addHandler.ts:playbookAddHandler",
+      "type": "function",
+      "name": "playbookAddHandler",
+      "filePath": "apps/cli/src/infra/commands/playbook/addHandler.ts",
+      "lineRange": [21, 63],
+      "summary": "Stages each provided path and logs a summary of staged artefacts.",
+      "tags": ["api-handler", "cli", "playbook"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "type": "file",
+      "name": "diffArtefactsHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "summary": "Handler for `playbook diff` that collects git context, computes artefact diffs against deployed versions, groups them by artefact and renders formatted content diffs.",
+      "tags": ["api-handler", "cli", "diff", "git", "formatting"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:subGroupByChangeContent",
+      "type": "function",
+      "name": "subGroupByChangeContent",
+      "filePath": "apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "lineRange": [49, 58],
+      "summary": "Sub-groups diffs of an artefact by identical change content.",
+      "tags": ["api-handler", "cli", "diff"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:groupDiffsByArtefact",
+      "type": "function",
+      "name": "groupDiffsByArtefact",
+      "filePath": "apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "lineRange": [60, 71],
+      "summary": "Groups artefact diffs by artefact identity.",
+      "tags": ["api-handler", "cli", "diff"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:formatDiffPayload",
+      "type": "function",
+      "name": "formatDiffPayload",
+      "filePath": "apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "lineRange": [73, 152],
+      "summary": "Formats a diff payload into human-readable before/after output.",
+      "tags": ["api-handler", "cli", "diff"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:formatSubmittedDate",
+      "type": "function",
+      "name": "formatSubmittedDate",
+      "filePath": "apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "lineRange": [154, 167],
+      "summary": "Formats the submission date of already-submitted changes.",
+      "tags": ["api-handler", "cli", "diff"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:findTargetDirectories",
+      "type": "function",
+      "name": "findTargetDirectories",
+      "filePath": "apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "lineRange": [182, 220],
+      "summary": "Finds directories containing Packmind config files to analyze.",
+      "tags": ["api-handler", "cli", "diff"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:collectGitInfo",
+      "type": "function",
+      "name": "collectGitInfo",
+      "filePath": "apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "lineRange": [232, 264],
+      "summary": "Collects git remote, branch and relative path information.",
+      "tags": ["api-handler", "cli", "diff"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:extractUniqueAndSortedArtefacts",
+      "type": "function",
+      "name": "extractUniqueAndSortedArtefacts",
+      "filePath": "apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "lineRange": [266, 292],
+      "summary": "Extracts unique artefacts from diffs and sorts them.",
+      "tags": ["api-handler", "cli", "diff"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:displayDiffs",
+      "type": "function",
+      "name": "displayDiffs",
+      "filePath": "apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "lineRange": [294, 377],
+      "summary": "Renders grouped diffs to the console.",
+      "tags": ["api-handler", "cli", "diff"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:diffArtefactsHandler",
+      "type": "function",
+      "name": "diffArtefactsHandler",
+      "filePath": "apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "lineRange": [379, 563],
+      "summary": "Orchestrates diff computation across target directories and prints results.",
+      "tags": ["api-handler", "cli", "diff"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "type": "file",
+      "name": "rmHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "summary": "Handler for `playbook rm` that validates a path against the lock file and stages removal of deployed standards, commands or skills.",
+      "tags": ["api-handler", "cli", "playbook", "staging", "lock-file"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:isSkillSupportFile",
+      "type": "function",
+      "name": "isSkillSupportFile",
+      "filePath": "apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "lineRange": [26, 35],
+      "summary": "Checks whether a path is a supporting file inside a skill directory.",
+      "tags": ["api-handler", "cli", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "type": "function",
+      "name": "playbookRmHandler",
+      "filePath": "apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "lineRange": [37, 179],
+      "summary": "Validates a path against deployed artefacts and stages its removal.",
+      "tags": ["api-handler", "cli", "playbook"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts",
+      "type": "file",
+      "name": "safeOpenEditor.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/safeOpenEditor.ts",
+      "summary": "Wraps opening the user editor for a message, logging and returning null on failure instead of throwing.",
+      "tags": ["utility", "cli", "editor", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts:safeOpenEditor",
+      "type": "function",
+      "name": "safeOpenEditor",
+      "filePath": "apps/cli/src/infra/commands/playbook/safeOpenEditor.ts",
+      "lineRange": [4, 13],
+      "summary": "Opens the editor for a message, returning null on failure.",
+      "tags": ["utility", "cli", "editor"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "type": "file",
+      "name": "statusHandler.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "summary": "Handler for `playbook status` that groups staged changes and untracked modified deployed files, then prints a git-status-like report.",
+      "tags": ["api-handler", "cli", "playbook", "status", "lock-file"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:logGroupedChange",
+      "type": "function",
+      "name": "logGroupedChange",
+      "filePath": "apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "lineRange": [44, 53],
+      "summary": "Logs a single grouped change line.",
+      "tags": ["api-handler", "cli", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:findArtifactForFile",
+      "type": "function",
+      "name": "findArtifactForFile",
+      "filePath": "apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "lineRange": [55, 68],
+      "summary": "Finds the lock-file artifact that owns a given file.",
+      "tags": ["api-handler", "cli", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:groupStagedChanges",
+      "type": "function",
+      "name": "groupStagedChanges",
+      "filePath": "apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "lineRange": [70, 99],
+      "summary": "Groups staged entries by artefact for display.",
+      "tags": ["api-handler", "cli", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:groupUntrackedChanges",
+      "type": "function",
+      "name": "groupUntrackedChanges",
+      "filePath": "apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "lineRange": [101, 118],
+      "summary": "Groups modified deployed files that are not staged.",
+      "tags": ["api-handler", "cli", "playbook"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:playbookStatusHandler",
+      "type": "function",
+      "name": "playbookStatusHandler",
+      "filePath": "apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "lineRange": [120, 362],
+      "summary": "Computes and prints staged and untracked playbook changes.",
+      "tags": ["api-handler", "cli", "playbook"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "type": "file",
+      "name": "duplicateNameChecker.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "summary": "Detects duplicate artefact names among staged create proposals and against existing space artefacts before submission.",
+      "tags": ["validation", "cli", "change-proposal", "playbook"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts:duplicateNameKey",
+      "type": "function",
+      "name": "duplicateNameKey",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "lineRange": [24, 30],
+      "summary": "Builds a normalized key for duplicate-name detection.",
+      "tags": ["validation", "cli", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts:checkForDuplicateNames",
+      "type": "function",
+      "name": "checkForDuplicateNames",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "lineRange": [32, 106],
+      "summary": "Reports duplicate artefact names among proposals and existing space artefacts.",
+      "tags": ["validation", "cli", "change-proposal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "type": "file",
+      "name": "proposalBuilder.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "summary": "Builds change proposals from staged playbook entries: create, update (field-level comparisons) and removal proposals for standards, commands and skills.",
+      "tags": [
+        "service",
+        "cli",
+        "change-proposal",
+        "serialization",
+        "playbook"
+      ],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:resolveArtifactIdFromLockFile",
+      "type": "function",
+      "name": "resolveArtifactIdFromLockFile",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "lineRange": [39, 58],
+      "summary": "Looks up the artifact id for a path in the lock file.",
+      "tags": ["service", "cli", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildCreatedStandardProposals",
+      "type": "function",
+      "name": "buildCreatedStandardProposals",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "lineRange": [60, 100],
+      "summary": "Builds create proposals for new standards.",
+      "tags": ["service", "cli", "change-proposal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildCreatedCommandProposals",
+      "type": "function",
+      "name": "buildCreatedCommandProposals",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "lineRange": [102, 120],
+      "summary": "Builds create proposals for new commands.",
+      "tags": ["service", "cli", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildCreatedSkillProposals",
+      "type": "function",
+      "name": "buildCreatedSkillProposals",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "lineRange": [122, 147],
+      "summary": "Builds create proposals for new skills.",
+      "tags": ["service", "cli", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedStandardProposals",
+      "type": "function",
+      "name": "buildUpdatedStandardProposals",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "lineRange": [149, 189],
+      "summary": "Builds update proposals by comparing standard fields with deployed content.",
+      "tags": ["service", "cli", "change-proposal"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedCommandProposals",
+      "type": "function",
+      "name": "buildUpdatedCommandProposals",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "lineRange": [191, 215],
+      "summary": "Builds update proposals by comparing command fields.",
+      "tags": ["service", "cli", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedSkillProposals",
+      "type": "function",
+      "name": "buildUpdatedSkillProposals",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "lineRange": [224, 384],
+      "summary": "Builds update proposals for skills including file-level changes.",
+      "tags": ["service", "cli", "change-proposal"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildRemovedProposals",
+      "type": "function",
+      "name": "buildRemovedProposals",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "lineRange": [386, 414],
+      "summary": "Builds removal proposals for staged deletions.",
+      "tags": ["service", "cli", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:toSkippedEntry",
+      "type": "function",
+      "name": "toSkippedEntry",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "lineRange": [443, 454],
+      "summary": "Converts an entry into a skipped-result record.",
+      "tags": ["service", "cli", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildProposals",
+      "type": "function",
+      "name": "buildProposals",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "lineRange": [456, 608],
+      "summary": "Builds all create, update and removal proposals from staged entries.",
+      "tags": ["service", "cli", "change-proposal"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts",
+      "type": "file",
+      "name": "skillDescriptionValidator.ts",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts",
+      "summary": "Validates that skill descriptions in proposals do not exceed the maximum allowed length before submission.",
+      "tags": ["validation", "cli", "skills", "change-proposal"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts:validateProposalSkillDescriptions",
+      "type": "function",
+      "name": "validateProposalSkillDescriptions",
+      "filePath": "apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts",
+      "lineRange": [16, 43],
+      "summary": "Throws when a skill description in proposals exceeds the max length.",
+      "tags": ["validation", "cli", "skills"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/addHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/addHandler.ts:playbookAddHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/addHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/addHandler.ts:playbookAddHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/addHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/addHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/addHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/addHandler.ts:playbookAddHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/addHandler.ts:playbookAddHandler",
+      "target": "function:apps/cli/src/infra/commands/playbook/add/stageSinglePath.ts:stageSinglePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/addHandler.ts:playbookAddHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/addHandler.ts:playbookAddHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:subGroupByChangeContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:groupDiffsByArtefact",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:formatDiffPayload",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:formatSubmittedDate",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:findTargetDirectories",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:collectGitInfo",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:extractUniqueAndSortedArtefacts",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:displayDiffs",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:diffArtefactsHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:diffArtefactsHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "file:apps/cli/src/domain/useCases/ICheckDiffsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "file:apps/cli/src/domain/useCases/IDiffArtefactsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "file:apps/cli/src/infra/commands/formatAdditionalPropertyDiff.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/diffFormatter.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:formatDiffPayload",
+      "target": "function:apps/cli/src/infra/commands/formatAdditionalPropertyDiff.ts:formatAdditionalPropertyDiff",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:formatDiffPayload",
+      "target": "function:apps/cli/src/infra/utils/diffFormatter.ts:formatContentDiff",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:collectGitInfo",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logWarningConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:collectGitInfo",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:displayDiffs",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatHeader",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:displayDiffs",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatBold",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:displayDiffs",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatFilePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:displayDiffs",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logWarningConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:displayDiffs",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:diffArtefactsHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/diffArtefactsHandler.ts:diffArtefactsHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logInfoConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:isSkillSupportFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "file:apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "file:apps/cli/src/application/utils/lockFileUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "file:apps/cli/src/application/utils/resolveDeployedContext.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "file:apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/rmHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "target": "function:apps/cli/src/application/utils/findNearestConfigDir.ts:findNearestConfigDir",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "target": "function:apps/cli/src/application/utils/lockFileUtils.ts:findLockFileEntryAndFileForPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:resolveSkillDirPath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logSuccessConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/rmHandler.ts:playbookRmHandler",
+      "target": "function:apps/cli/src/application/utils/resolveDeployedContext.ts:resolveDeployedContext",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts:safeOpenEditor",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts:safeOpenEditor",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts",
+      "target": "file:apps/cli/src/infra/utils/editorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts:safeOpenEditor",
+      "target": "function:apps/cli/src/infra/utils/editorMessage.ts:openEditorForMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/safeOpenEditor.ts:safeOpenEditor",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logErrorConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:logGroupedChange",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:findArtifactForFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:groupStagedChanges",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:groupUntrackedChanges",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:playbookStatusHandler",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:playbookStatusHandler",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/PackmindCliHexa.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/application/utils/findNearestConfigDir.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/domain/repositories/ILockFileRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/domain/repositories/PackmindLockFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/deployedFilesUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/permissions.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/statusHandler.ts",
+      "target": "file:apps/cli/src/infra/utils/stringUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:logGroupedChange",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:logGroupedChange",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:formatLabel",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:findArtifactForFile",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:groupStagedChanges",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:playbookStatusHandler",
+      "target": "function:apps/cli/src/application/utils/findNearestConfigDir.ts:findNearestConfigDir",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:playbookStatusHandler",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:playbookStatusHandler",
+      "target": "function:apps/cli/src/infra/utils/deployedFilesUtils.ts:fetchDeployedFiles",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:playbookStatusHandler",
+      "target": "function:apps/cli/src/infra/utils/permissions.ts:modeToPermissionStringOrDefault",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:playbookStatusHandler",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/statusHandler.ts:playbookStatusHandler",
+      "target": "function:apps/cli/src/infra/utils/stringUtils.ts:capitalize",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts:duplicateNameKey",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts:duplicateNameKey",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts:checkForDuplicateNames",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts:checkForDuplicateNames",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/duplicateNameChecker.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:resolveArtifactIdFromLockFile",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:resolveArtifactIdFromLockFile",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildCreatedStandardProposals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildCreatedCommandProposals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildCreatedSkillProposals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedStandardProposals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedCommandProposals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedSkillProposals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildRemovedProposals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:toSkippedEntry",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildProposals",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildProposals",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "file:apps/cli/src/application/utils/artifactComparison.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "file:apps/cli/src/application/utils/parseCommandFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "file:apps/cli/src/application/utils/parseLenientStandard.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "file:apps/cli/src/application/utils/parseStandardMd.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "file:apps/cli/src/application/utils/pathUtils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "file:apps/cli/src/domain/repositories/IPlaybookLocalRepository.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "file:apps/cli/src/domain/repositories/PackmindLockFile.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/submit/targetContextResolver.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "file:apps/cli/src/infra/utils/consoleLogger.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "target": "file:apps/cli/src/infra/utils/execName.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:resolveArtifactIdFromLockFile",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildCreatedStandardProposals",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMd",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildCreatedStandardProposals",
+      "target": "function:apps/cli/src/application/utils/parseLenientStandard.ts:parseLenientStandard",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildCreatedCommandProposals",
+      "target": "function:apps/cli/src/application/utils/parseCommandFile.ts:parseCommandFile",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedStandardProposals",
+      "target": "function:apps/cli/src/application/utils/artifactComparison.ts:compareStandardFields",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedStandardProposals",
+      "target": "function:apps/cli/src/application/utils/parseStandardMd.ts:parseStandardMd",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedCommandProposals",
+      "target": "function:apps/cli/src/application/utils/artifactComparison.ts:compareCommandFields",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedSkillProposals",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logWarningConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedSkillProposals",
+      "target": "function:apps/cli/src/application/utils/pathUtils.ts:normalizePath",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildUpdatedSkillProposals",
+      "target": "function:apps/cli/src/application/utils/artifactComparison.ts:compareSkillDefinitionFields",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts:buildProposals",
+      "target": "function:apps/cli/src/infra/utils/consoleLogger.ts:logWarningConsole",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts:validateProposalSkillDescriptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts",
+      "target": "function:apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts:validateProposalSkillDescriptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/cli/src/infra/commands/playbook/submit/skillDescriptionValidator.ts",
+      "target": "file:apps/cli/src/infra/commands/playbook/submit/proposalBuilder.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    }
+  ]
+}

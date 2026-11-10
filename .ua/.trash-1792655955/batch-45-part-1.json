@@ -1,0 +1,986 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/git/src/domain/errors/GithubRateLimitedError.ts",
+      "type": "file",
+      "name": "GithubRateLimitedError.ts",
+      "filePath": "packages/git/src/domain/errors/GithubRateLimitedError.ts",
+      "summary": "Upstream error raised when the GitHub API rate limit is hit, carrying retry/reset information for callers.",
+      "tags": ["error-handling", "github", "rate-limiting", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubRateLimitedError.ts:GithubRateLimitedError",
+      "type": "class",
+      "name": "GithubRateLimitedError",
+      "filePath": "packages/git/src/domain/errors/GithubRateLimitedError.ts",
+      "lineRange": [13, 29],
+      "summary": "GitHub rate-limit upstream error with retry metadata.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "type": "file",
+      "name": "GithubTokenResolverFactoryErrors.ts",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "summary": "Collection of twelve internal errors thrown while resolving GitHub credentials (PAT or GitHub App installation), covering missing tokens, app IDs, private keys, installation IDs and unsupported auth methods.",
+      "tags": [
+        "error-handling",
+        "github",
+        "authentication",
+        "domain-error",
+        "github-app"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubProviderTokenEmptyError",
+      "type": "class",
+      "name": "GithubProviderTokenEmptyError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [12, 21],
+      "summary": "Internal error raised by GitHub token resolution: github provider token empty.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppProviderNotSavedError",
+      "type": "class",
+      "name": "GithubAppProviderNotSavedError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [23, 32],
+      "summary": "Internal error raised by GitHub token resolution: github app provider not saved.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppInstallationIdMissingError",
+      "type": "class",
+      "name": "GithubAppInstallationIdMissingError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [34, 43],
+      "summary": "Internal error raised by GitHub token resolution: github app installation id missing.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppInstallationIdInvalidError",
+      "type": "class",
+      "name": "GithubAppInstallationIdInvalidError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [45, 54],
+      "summary": "Internal error raised by GitHub token resolution: github app installation id invalid.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppIdNotConfiguredError",
+      "type": "class",
+      "name": "GithubAppIdNotConfiguredError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [56, 65],
+      "summary": "Internal error raised by GitHub token resolution: github app id not configured.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppPrivateKeyNotConfiguredError",
+      "type": "class",
+      "name": "GithubAppPrivateKeyNotConfiguredError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [67, 76],
+      "summary": "Internal error raised by GitHub token resolution: github app private key not configured.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppRepositoryNotProvidedError",
+      "type": "class",
+      "name": "GithubAppRepositoryNotProvidedError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [78, 87],
+      "summary": "Internal error raised by GitHub token resolution: github app repository not provided.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppOrganizationAppIdMissingError",
+      "type": "class",
+      "name": "GithubAppOrganizationAppIdMissingError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [89, 98],
+      "summary": "Internal error raised by GitHub token resolution: github app organization app id missing.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubOrganizationAppNotFoundError",
+      "type": "class",
+      "name": "GithubOrganizationAppNotFoundError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [100, 109],
+      "summary": "Internal error raised by GitHub token resolution: github organization app not found.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppIdInvalidError",
+      "type": "class",
+      "name": "GithubAppIdInvalidError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [111, 120],
+      "summary": "Internal error raised by GitHub token resolution: github app id invalid.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppPrivateKeyMissingError",
+      "type": "class",
+      "name": "GithubAppPrivateKeyMissingError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [122, 131],
+      "summary": "Internal error raised by GitHub token resolution: github app private key missing.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubUnsupportedAuthMethodError",
+      "type": "class",
+      "name": "GithubUnsupportedAuthMethodError",
+      "filePath": "packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "lineRange": [133, 142],
+      "summary": "Internal error raised by GitHub token resolution: github unsupported auth method.",
+      "tags": ["error-handling", "domain-error", "github", "authentication"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts",
+      "type": "file",
+      "name": "GitlabApiOperationFailedError.ts",
+      "filePath": "packages/git/src/domain/errors/GitlabApiOperationFailedError.ts",
+      "summary": "Upstream error wrapping a failed GitLab API operation, building its message from the provider response body via providerErrorMessage.",
+      "tags": ["error-handling", "gitlab", "domain-error", "upstream"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts:GitlabApiOperationFailedError",
+      "type": "class",
+      "name": "GitlabApiOperationFailedError",
+      "filePath": "packages/git/src/domain/errors/GitlabApiOperationFailedError.ts",
+      "lineRange": [12, 26],
+      "summary": "Wraps a failed GitLab API operation with status and extracted provider message.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GitlabAvailableRepositoriesFailedError.ts",
+      "type": "file",
+      "name": "GitlabAvailableRepositoriesFailedError.ts",
+      "filePath": "packages/git/src/domain/errors/GitlabAvailableRepositoriesFailedError.ts",
+      "summary": "Upstream error raised when listing the repositories available to a GitLab token fails.",
+      "tags": ["error-handling", "gitlab", "domain-error", "upstream"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitlabAvailableRepositoriesFailedError.ts:GitlabAvailableRepositoriesFailedError",
+      "type": "class",
+      "name": "GitlabAvailableRepositoriesFailedError",
+      "filePath": "packages/git/src/domain/errors/GitlabAvailableRepositoriesFailedError.ts",
+      "lineRange": [9, 19],
+      "summary": "Raised when listing GitLab repositories fails.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts",
+      "type": "file",
+      "name": "GitlabBranchExistenceCheckFailedError.ts",
+      "filePath": "packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts",
+      "summary": "Upstream error raised when checking whether a branch exists on a GitLab repository fails, preserving HTTP status and provider message.",
+      "tags": ["error-handling", "gitlab", "domain-error", "branches"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts:GitlabBranchExistenceCheckFailedError",
+      "type": "class",
+      "name": "GitlabBranchExistenceCheckFailedError",
+      "filePath": "packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts",
+      "lineRange": [12, 29],
+      "summary": "Raised when a GitLab branch existence check fails.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GitlabRateLimitedError.ts",
+      "type": "file",
+      "name": "GitlabRateLimitedError.ts",
+      "filePath": "packages/git/src/domain/errors/GitlabRateLimitedError.ts",
+      "summary": "Upstream error signalling that GitLab throttled a request, exposing retry-after timing.",
+      "tags": ["error-handling", "gitlab", "rate-limiting", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitlabRateLimitedError.ts:GitlabRateLimitedError",
+      "type": "class",
+      "name": "GitlabRateLimitedError",
+      "filePath": "packages/git/src/domain/errors/GitlabRateLimitedError.ts",
+      "lineRange": [10, 26],
+      "summary": "GitLab rate-limit upstream error with retry-after info.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts",
+      "type": "file",
+      "name": "GitlabResponseShapeErrors.ts",
+      "filePath": "packages/git/src/domain/errors/GitlabResponseShapeErrors.ts",
+      "summary": "Upstream errors for GitLab responses that carry an API error payload or have an unexpected format.",
+      "tags": ["error-handling", "gitlab", "domain-error", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts:GitlabApiErrorResponseError",
+      "type": "class",
+      "name": "GitlabApiErrorResponseError",
+      "filePath": "packages/git/src/domain/errors/GitlabResponseShapeErrors.ts",
+      "lineRange": [13, 23],
+      "summary": "Raised when GitLab returns an error payload in its response.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts:GitlabUnexpectedResponseFormatError",
+      "type": "class",
+      "name": "GitlabUnexpectedResponseFormatError",
+      "filePath": "packages/git/src/domain/errors/GitlabResponseShapeErrors.ts",
+      "lineRange": [25, 35],
+      "summary": "Raised when a GitLab response does not match the expected shape.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts",
+      "type": "file",
+      "name": "UnsupportedGitProviderSourceError.ts",
+      "filePath": "packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts",
+      "summary": "Internal error thrown by provider/repo factories when a git provider source (e.g. not GitHub or GitLab) is unsupported.",
+      "tags": ["error-handling", "domain-error", "git-provider", "factory"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts:UnsupportedGitProviderSourceError",
+      "type": "class",
+      "name": "UnsupportedGitProviderSourceError",
+      "filePath": "packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts",
+      "lineRange": [13, 22],
+      "summary": "Raised when a git provider source is not supported by a factory.",
+      "tags": ["error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "packages/git/src/domain/errors/index.ts",
+      "summary": "Barrel re-exporting every git domain error class (upstream, internal, GitHub and GitLab specific errors) for the git package.",
+      "tags": ["barrel", "entry-point", "error-handling", "domain-error"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "type": "file",
+      "name": "providerErrorMessage.ts",
+      "filePath": "packages/git/src/domain/errors/providerErrorMessage.ts",
+      "summary": "Helpers that extract a human-readable message and HTTP status from heterogeneous GitHub/GitLab error response bodies (message, errors, field errors, error_description).",
+      "tags": ["utility", "error-handling", "parsing", "git-provider"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:packages/git/src/domain/errors/providerErrorMessage.ts:fieldErrors",
+      "type": "function",
+      "name": "fieldErrors",
+      "filePath": "packages/git/src/domain/errors/providerErrorMessage.ts",
+      "lineRange": [15, 25],
+      "summary": "Flattens a field-to-errors object into a single \"field msg; field msg\" string.",
+      "tags": ["utility", "error-handling", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/domain/errors/providerErrorMessage.ts:details",
+      "type": "function",
+      "name": "details",
+      "filePath": "packages/git/src/domain/errors/providerErrorMessage.ts",
+      "lineRange": [28, 41],
+      "summary": "Collects string details from an errors array in a provider response.",
+      "tags": ["utility", "error-handling", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/domain/errors/providerErrorMessage.ts:bodyMessage",
+      "type": "function",
+      "name": "bodyMessage",
+      "filePath": "packages/git/src/domain/errors/providerErrorMessage.ts",
+      "lineRange": [43, 52],
+      "summary": "Picks the best message from a provider error body (message, error, error_description, details).",
+      "tags": ["utility", "error-handling", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/domain/errors/providerErrorMessage.ts:providerErrorMessage",
+      "type": "function",
+      "name": "providerErrorMessage",
+      "filePath": "packages/git/src/domain/errors/providerErrorMessage.ts",
+      "lineRange": [60, 71],
+      "summary": "Returns a human-readable message from an unknown provider error, falling back to a default.",
+      "tags": ["utility", "error-handling", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/git/src/domain/errors/providerErrorMessage.ts:statusOf",
+      "type": "function",
+      "name": "statusOf",
+      "filePath": "packages/git/src/domain/errors/providerErrorMessage.ts",
+      "lineRange": [73, 80],
+      "summary": "Extracts an HTTP status code from an unknown provider error object.",
+      "tags": ["utility", "error-handling", "parsing"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/jobs/FetchFileContent.ts",
+      "type": "file",
+      "name": "FetchFileContent.ts",
+      "filePath": "packages/git/src/domain/jobs/FetchFileContent.ts",
+      "summary": "Type definitions for the input and output payloads of the fetch-file-content background job.",
+      "tags": ["type-definition", "background-job", "bullmq", "data-model"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/jobs/IGitDelayedJobs.ts",
+      "type": "file",
+      "name": "IGitDelayedJobs.ts",
+      "filePath": "packages/git/src/domain/jobs/IGitDelayedJobs.ts",
+      "summary": "Port interface grouping the delayed jobs exposed by the git domain, currently the FetchFileContent delayed job.",
+      "tags": [
+        "type-definition",
+        "port",
+        "background-job",
+        "hexagonal-architecture"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/repositories/IGitCommitRepository.ts",
+      "type": "file",
+      "name": "IGitCommitRepository.ts",
+      "filePath": "packages/git/src/domain/repositories/IGitCommitRepository.ts",
+      "summary": "Repository port for persisting and retrieving GitCommit records.",
+      "tags": ["type-definition", "port", "repository", "git-commit"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/domain/repositories/IGitProvider.ts",
+      "type": "file",
+      "name": "IGitProvider.ts",
+      "filePath": "packages/git/src/domain/repositories/IGitProvider.ts",
+      "summary": "Port describing a git hosting provider (list available repositories, check/search branches, check auth) plus auth-check result types.",
+      "tags": [
+        "type-definition",
+        "port",
+        "git-provider",
+        "hexagonal-architecture"
+      ],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/git/src/domain/errors/GithubRateLimitedError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubRateLimitedError.ts:GithubRateLimitedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubRateLimitedError.ts",
+      "target": "class:packages/git/src/domain/errors/GithubRateLimitedError.ts:GithubRateLimitedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubRateLimitedError.ts:GithubRateLimitedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubRateLimitedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubProviderTokenEmptyError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubProviderTokenEmptyError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubProviderTokenEmptyError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppProviderNotSavedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppProviderNotSavedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppProviderNotSavedError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppInstallationIdMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppInstallationIdMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppInstallationIdMissingError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppInstallationIdInvalidError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppInstallationIdInvalidError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppInstallationIdInvalidError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppIdNotConfiguredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppIdNotConfiguredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppIdNotConfiguredError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppPrivateKeyNotConfiguredError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppPrivateKeyNotConfiguredError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppPrivateKeyNotConfiguredError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppRepositoryNotProvidedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppRepositoryNotProvidedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppRepositoryNotProvidedError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppOrganizationAppIdMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppOrganizationAppIdMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppOrganizationAppIdMissingError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubOrganizationAppNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubOrganizationAppNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubOrganizationAppNotFoundError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppIdInvalidError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppIdInvalidError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppIdInvalidError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppPrivateKeyMissingError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppPrivateKeyMissingError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubAppPrivateKeyMissingError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubUnsupportedAuthMethodError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubUnsupportedAuthMethodError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts:GithubUnsupportedAuthMethodError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GithubTokenResolverFactoryErrors.ts",
+      "target": "file:packages/git/src/domain/errors/GitInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts:GitlabApiOperationFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts:GitlabApiOperationFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts:GitlabApiOperationFailedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabAvailableRepositoriesFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabAvailableRepositoriesFailedError.ts:GitlabAvailableRepositoriesFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabAvailableRepositoriesFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabAvailableRepositoriesFailedError.ts:GitlabAvailableRepositoriesFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitlabAvailableRepositoriesFailedError.ts:GitlabAvailableRepositoriesFailedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabAvailableRepositoriesFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts:GitlabBranchExistenceCheckFailedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts:GitlabBranchExistenceCheckFailedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts:GitlabBranchExistenceCheckFailedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts",
+      "target": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabRateLimitedError.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabRateLimitedError.ts:GitlabRateLimitedError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabRateLimitedError.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabRateLimitedError.ts:GitlabRateLimitedError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitlabRateLimitedError.ts:GitlabRateLimitedError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabRateLimitedError.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts:GitlabApiErrorResponseError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts:GitlabApiErrorResponseError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts:GitlabApiErrorResponseError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts:GitlabUnexpectedResponseFormatError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts",
+      "target": "class:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts:GitlabUnexpectedResponseFormatError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts:GitlabUnexpectedResponseFormatError",
+      "target": "class:packages/git/src/domain/errors/GitUpstreamError.ts:GitUpstreamError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/GitlabResponseShapeErrors.ts",
+      "target": "file:packages/git/src/domain/errors/GitUpstreamError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts",
+      "target": "class:packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts:UnsupportedGitProviderSourceError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts",
+      "target": "class:packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts:UnsupportedGitProviderSourceError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts:UnsupportedGitProviderSourceError",
+      "target": "class:packages/git/src/domain/errors/GitInternalError.ts:GitInternalError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/UnsupportedGitProviderSourceError.ts",
+      "target": "file:packages/git/src/domain/errors/GitInternalError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:fieldErrors",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:details",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:bodyMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:providerErrorMessage",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:providerErrorMessage",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:statusOf",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/domain/errors/providerErrorMessage.ts",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:statusOf",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/domain/jobs/IGitDelayedJobs.ts",
+      "target": "file:packages/git/src/application/jobs/FetchFileContentDelayedJob.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts:GitlabApiOperationFailedError",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:providerErrorMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitlabBranchExistenceCheckFailedError.ts:GitlabBranchExistenceCheckFailedError",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:providerErrorMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/domain/errors/GitlabApiOperationFailedError.ts:GitlabApiOperationFailedError",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:statusOf",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/git/src/domain/errors/providerErrorMessage.ts:providerErrorMessage",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:bodyMessage",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/git/src/domain/errors/providerErrorMessage.ts:bodyMessage",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:details",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:packages/git/src/domain/errors/providerErrorMessage.ts:bodyMessage",
+      "target": "function:packages/git/src/domain/errors/providerErrorMessage.ts:fieldErrors",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

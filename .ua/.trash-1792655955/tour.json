@@ -1,0 +1,170 @@
+[
+  {
+    "order": 1,
+    "title": "Project Overview",
+    "description": "Start with the README to see what Packmind is for: one engineering playbook of standards, commands and skills, written once and synced to every AI coding agent. It explains how Packmind differs from plain marketplaces or Git-hosted prompt files. Every component on this tour serves one job: author the playbook centrally, then generate the instruction files each agent needs.",
+    "nodeIds": ["document:README.md"]
+  },
+  {
+    "order": 2,
+    "title": "Monorepo Layout and Tooling",
+    "description": "Packmind is an Nx monorepo. Deployable apps (API, frontend, CLI) live in apps/ and reusable domain and infrastructure packages live in packages/. CLAUDE.md lists the core technologies (TypeScript, PostgreSQL/TypeORM, Redis, BullMQ, Jest) and the daily Nx commands. tsconfig.base.json maps every @packmind/* alias to its source entry, and nx.json plus pnpm-workspace.yaml define caching, target defaults and the workspace packages.",
+    "nodeIds": [
+      "document:CLAUDE.md",
+      "config:nx.json",
+      "config:tsconfig.base.json",
+      "config:pnpm-workspace.yaml"
+    ],
+    "languageLesson": "TypeScript 'paths' in tsconfig.base.json let every app import a package as '@packmind/standards' and resolve it straight to its source. Nx's project graph then knows which projects an edit affects, so only those are rebuilt and retested."
+  },
+  {
+    "order": 3,
+    "title": "Hexagonal Building Blocks",
+    "description": "Before you open any domain, learn the two classes they all depend on. Every domain package has a <Name>Hexa class that extends BaseHexa, owns its services and repositories, and exposes a single adapter port to the rest of the system. HexaRegistry is the lifecycle owner: it records hexa and infrastructure-service constructors, then creates and initializes them in order against the shared data source. This is how Packmind applies ports and adapters across the codebase.",
+    "nodeIds": [
+      "file:packages/node-utils/src/hexa/BaseHexa.ts",
+      "file:packages/node-utils/src/hexa/HexaRegistry.ts"
+    ],
+    "languageLesson": "Ports and adapters (hexagonal architecture): domain code depends only on interfaces (ports), and the concrete TypeORM, HTTP or git implementations (adapters) are plugged in at composition time. Other domains talk to a hexa only through its port, never through its internals."
+  },
+  {
+    "order": 4,
+    "title": "API Bootstrap",
+    "description": "The NestJS API is where the hexas from Step 3 come together for HTTP traffic. main.ts bootstraps the application: CORS, cache, middleware, body limits, database pool warm-up, then listening. app.module.ts is the root module. It configures TypeORM/Postgres, Redis/BullMQ and JWT, and it imports every feature module, nesting their routes under organizations and spaces.",
+    "nodeIds": [
+      "file:apps/api/src/main.ts",
+      "file:apps/api/src/app/app.module.ts"
+    ],
+    "languageLesson": "NestJS modules declare controllers and providers, and its dependency-injection container wires them together. Nested route registration keeps URLs such as /organizations/:orgId/spaces/:spaceId/standards in line with the module tree."
+  },
+  {
+    "order": 5,
+    "title": "Standards Domain Model",
+    "description": "The standards package is a full example of one domain. StandardsHexa is its entry point, wiring repositories, services and the adapter on top of BaseHexa. IStandardRepository is the domain-side port (slug, space and user lookups, moving a standard to another space). StandardSchema and StandardRepository are the TypeORM adapter that persists the Standard table, its versions and its git-commit relations.",
+    "nodeIds": [
+      "file:packages/standards/src/StandardsHexa.ts",
+      "file:packages/standards/src/domain/repositories/IStandardRepository.ts",
+      "file:packages/standards/src/infra/schemas/StandardSchema.ts",
+      "file:packages/standards/src/infra/repositories/StandardRepository.ts"
+    ],
+    "languageLesson": "A TypeORM EntitySchema defines the table mapping apart from the domain type, so domain entities stay plain TypeScript with no persistence decorators."
+  },
+  {
+    "order": 6,
+    "title": "Standards Use Cases",
+    "description": "Business behaviour lives in use cases, one class per operation. CreateStandardUseCase creates a standard with its first version and rules inside a space, and emits rule-added domain events that other packages can react to. StandardsAdapter implements IStandardsPort: it creates every standards use case and forwards port calls to them. This adapter is the only surface the API and other domains see.",
+    "nodeIds": [
+      "file:packages/standards/src/application/adapter/StandardsAdapter.ts",
+      "file:packages/standards/src/application/useCases/createStandard/CreateStandardUseCase.ts"
+    ]
+  },
+  {
+    "order": 7,
+    "title": "Exposing Standards over HTTP",
+    "description": "StandardsController is the HTTP edge of the standards domain. Its space-scoped endpoints list, create, update, version and delete standards by calling the port from Step 6. OrganizationAccessGuard is one of the most depended-on API files: it checks that the caller belongs to the organization in the URL before any domain code runs.",
+    "nodeIds": [
+      "file:apps/api/src/app/organizations/spaces/standards/standards.controller.ts",
+      "file:apps/api/src/app/organizations/guards/organization-access.guard.ts"
+    ],
+    "languageLesson": "NestJS guards run before the route handler and return true or false (or throw) to allow or reject the request, which keeps authorization rules out of the controller methods."
+  },
+  {
+    "order": 8,
+    "title": "Standards in the Web App",
+    "description": "On the frontend, root.tsx is the React Router root: it initializes Sentry and wraps the app in the UI, query and auth providers. StandardsQueries.ts provides TanStack Query hooks over the endpoints from Step 7. The route modules render the standards list and the detail page, and the detail page's clientLoader prefetches the user, space, standard and rules into the query cache before rendering.",
+    "nodeIds": [
+      "file:apps/frontend/app/root.tsx",
+      "file:apps/frontend/src/domain/standards/api/queries/StandardsQueries.ts",
+      "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards._index.tsx",
+      "file:apps/frontend/app/routes/org.$orgSlug._protected.space.$spaceSlug._space-protected.standards.$standardId.tsx"
+    ],
+    "languageLesson": "TanStack Query caches server state by query key. Prefetching in a React Router clientLoader fills that cache before the component mounts, so the useQuery hooks on the page start with data and do not trigger loading spinners."
+  },
+  {
+    "order": 9,
+    "title": "Deployments and Distribution",
+    "description": "Once a playbook exists, the deployments domain sends it to repositories. DeploymentsAdapter has one of the largest fan-outs in the codebase: it resolves the standards, commands, skills and git ports and handles every distribution operation. PublishArtifactsUseCase computes artifact change sets for the selected versions and target repositories. PublishArtifactsDelayedJob then commits them asynchronously through BullMQ and updates each distribution's status.",
+    "nodeIds": [
+      "file:packages/deployments/src/DeploymentsHexa.ts",
+      "file:packages/deployments/src/application/adapter/DeploymentsAdapter.ts",
+      "file:packages/deployments/src/application/useCases/PublishArtifactsUseCase.ts",
+      "file:packages/deployments/src/application/jobs/PublishArtifactsDelayedJob.ts",
+      "file:apps/api/src/app/organizations/deployments/deployments.controller.ts"
+    ]
+  },
+  {
+    "order": 10,
+    "title": "Rendering for Coding Agents",
+    "description": "The coding-agent package turns playbook versions into each agent's native format. ICodingAgentDeployer is the port every agent implements, CodingAgentDeployerRegistry creates and caches one deployer per supported agent, and DeployerService merges their output into file updates. ClaudeDeployer writes .claude/rules files with path globs, while CursorDeployer writes .cursor/rules .mdc files with globs/alwaysApply frontmatter. The playbook is the same, only the output format differs.",
+    "nodeIds": [
+      "file:packages/coding-agent/src/domain/repository/ICodingAgentDeployer.ts",
+      "file:packages/coding-agent/src/infra/repositories/CodingAgentDeployerRegistry.ts",
+      "file:packages/coding-agent/src/application/services/DeployerService.ts",
+      "file:packages/coding-agent/src/infra/repositories/claude/ClaudeDeployer.ts",
+      "file:packages/coding-agent/src/infra/repositories/cursor/CursorDeployer.ts"
+    ],
+    "languageLesson": "This is the Strategy pattern behind a registry: adding a new agent means writing one class that implements ICodingAgentDeployer and registering it, without touching DeployerService."
+  },
+  {
+    "order": 11,
+    "title": "Git Provider Integration",
+    "description": "The rendered files from Step 10 reach repositories through the git domain. GitHexa wires the repositories, GitHub token resolution and GitServices, and GitAdapter exposes IGitPort to the deployments domain. GithubRepository and GitlabRepository implement the same repo port with each provider's API: committing files, managing branches and pull or merge requests, and reading files. The git-providers controller handles provider CRUD and the GitHub App install flow.",
+    "nodeIds": [
+      "file:packages/git/src/GitHexa.ts",
+      "file:packages/git/src/application/adapter/GitAdapter.ts",
+      "file:packages/git/src/infra/repositories/github/GithubRepository.ts",
+      "file:packages/git/src/infra/repositories/gitlab/GitlabRepository.ts",
+      "file:apps/api/src/app/organizations/git/providers/git-providers.controller.ts"
+    ]
+  },
+  {
+    "order": 12,
+    "title": "The Packmind CLI",
+    "description": "packmind-cli is the developer-side way to get the playbook, built with the same hexagonal approach. main.ts loads .env, extracts the embedded WASM parsers and registers every command. PackmindCliHexaFactory is the composition root with the highest fan-out in the graph, and PackmindCliHexa is the facade most commands depend on. InstallCommand (alias 'pull') installs or upgrades packages, using PackmindGateway to call the API from Step 4.",
+    "nodeIds": [
+      "file:apps/cli/src/main.ts",
+      "file:apps/cli/src/PackmindCliHexaFactory.ts",
+      "file:apps/cli/src/PackmindCliHexa.ts",
+      "file:apps/cli/src/infra/commands/InstallCommand.ts",
+      "file:apps/cli/src/infra/repositories/PackmindGateway.ts"
+    ],
+    "languageLesson": "A composition root is the one place where concrete implementations are created and injected. Keeping all 'new' calls in PackmindCliHexaFactory leaves commands and use cases testable against interfaces."
+  },
+  {
+    "order": 13,
+    "title": "Linting Against Standards",
+    "description": "Standards are also enforced in code, not just rendered as text. The CLI 'lint' command fetches the standard's detection programs and runs them on local files. ExecuteLinterProgramsUseCase filters those programs by language and executes them. Underneath, ParserRegistry maps each language key to one of 16 tree-sitter parsers, which it creates lazily and caches, and LinterAstAdapter turns source code into ASTNodes for the programs to check.",
+    "nodeIds": [
+      "file:apps/cli/src/infra/commands/LinterCommand.ts",
+      "file:packages/linter-execution/src/application/useCases/ExecuteLinterProgramsUseCase.ts",
+      "file:packages/linter-ast/src/core/ParserRegistry.ts",
+      "file:packages/linter-ast/src/application/LinterAstAdapter.ts"
+    ],
+    "languageLesson": "tree-sitter parsers compiled to WASM run inside Node with no native dependencies. That is why the CLI's main.ts extracts embedded WASM parser files at startup."
+  },
+  {
+    "order": 14,
+    "title": "Shared Infrastructure",
+    "description": "Every layer you have seen relies on a few shared packages. Configuration is the central singleton that reads secrets from environment variables, with Infisical as a fallback. Code is expected to use it instead of reading process.env directly. JobsService registers the BullMQ queue factories behind async work such as artifact publishing. The llm package offers provider adapters for OpenAI, Anthropic, Gemini and Azure OpenAI, and the logger provides PackmindLogger.",
+    "nodeIds": [
+      "file:packages/node-utils/src/config/config/Configuration.ts",
+      "file:packages/node-utils/src/jobs/JobsService.ts",
+      "file:packages/node-utils/src/index.ts",
+      "file:packages/llm/src/index.ts",
+      "file:packages/logger/src/index.ts"
+    ]
+  },
+  {
+    "order": 15,
+    "title": "Running, Shipping and CI",
+    "description": "The local docker-compose.yml runs the full stack: the API and frontend dev servers, PostgreSQL, Redis, an OpenTelemetry LGTM stack, nginx, and a one-shot migrations job that runs before the API starts. Dockerfile.api builds the Alpine Node 24 production image, and dockerfile/prod/docker-compose.yml is the self-hosted stack of postgres, redis, api and frontend. On GitHub, main.yml orchestrates reusable workflows, and quality.yml adds GitGuardian secret scanning, Nx lint and format checks.",
+    "nodeIds": [
+      "service:docker-compose.yml",
+      "service:dockerfile/Dockerfile.api",
+      "service:dockerfile/prod/docker-compose.yml",
+      "pipeline:.github/workflows/main.yml",
+      "pipeline:.github/workflows/quality.yml"
+    ],
+    "languageLesson": "In GitHub Actions, reusable workflows (on: workflow_call) let a top-level pipeline like main.yml compose build, quality, docker and release stages as jobs. In Compose, a one-shot migration service combined with depends_on makes sure the schema is current before the API container starts."
+  }
+]

@@ -1,0 +1,736 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts",
+      "type": "file",
+      "name": "CheckProviderBranchExistsUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts",
+      "summary": "Member use case checking whether a branch exists on a provider for an arbitrary owner/repo, delegating to CheckBranchExistsUseCase.",
+      "tags": ["use-case", "branch", "git-provider"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts:CheckProviderBranchExistsUseCase",
+      "type": "class",
+      "name": "CheckProviderBranchExistsUseCase",
+      "filePath": "packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts",
+      "lineRange": [15, 56],
+      "summary": "Use case validating provider ownership then reusing CheckBranchExistsUseCase for an owner/repo/branch triple.",
+      "tags": ["use-case", "branch"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts",
+      "type": "file",
+      "name": "CheckTrackedBranchExistsUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts",
+      "summary": "Member use case checking whether a tracked repository's recorded branch still exists on its provider, cached for 5 minutes to save provider API calls.",
+      "tags": ["use-case", "branch", "cache", "git-repo"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts:CheckTrackedBranchExistsUseCase",
+      "type": "class",
+      "name": "CheckTrackedBranchExistsUseCase",
+      "filePath": "packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts",
+      "lineRange": [37, 123],
+      "summary": "Use case loading the stored repo, caching results via Cache, and delegating live checks to CheckBranchExistsUseCase.",
+      "tags": ["use-case", "cache", "branch"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts",
+      "type": "file",
+      "name": "CommitToGitUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts",
+      "summary": "Use case committing a set of file modifications and deletions to a git repository and recording the resulting commit.",
+      "tags": ["use-case", "git-commit", "git", "distribution"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts:CommitToGitUseCase",
+      "type": "class",
+      "name": "CommitToGitUseCase",
+      "filePath": "packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts",
+      "lineRange": [18, 156],
+      "summary": "Use case resolving the repo client, splitting changes into writes and deletions, committing them and persisting the GitCommit via GitCommitService.",
+      "tags": ["use-case", "git-commit"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts",
+      "type": "file",
+      "name": "DeleteGitProviderUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts",
+      "summary": "Admin use case deleting a git provider within its organization, refusing when repositories depend on it unless forced.",
+      "tags": ["use-case", "git-provider", "authorization", "deletion"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts:DeleteGitProviderUseCase",
+      "type": "class",
+      "name": "DeleteGitProviderUseCase",
+      "filePath": "packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts",
+      "lineRange": [18, 83],
+      "summary": "Admin-only use case checking organization ownership and dependent repos before deleting the provider.",
+      "tags": ["use-case", "authorization", "deletion"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts",
+      "type": "file",
+      "name": "DeleteGitRepoUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts",
+      "summary": "Admin use case deleting a git repository after verifying it belongs to the caller's organization.",
+      "tags": ["use-case", "git-repo", "authorization", "deletion"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts:DeleteGitRepoUseCase",
+      "type": "class",
+      "name": "DeleteGitRepoUseCase",
+      "filePath": "packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts",
+      "lineRange": [18, 70],
+      "summary": "Admin-only use case validating repo/provider ownership then deleting the repo via GitRepoService.",
+      "tags": ["use-case", "authorization", "deletion"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase.ts",
+      "type": "file",
+      "name": "FindGitRepoByOwnerAndRepoUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase.ts",
+      "summary": "Simple query use case finding a git repository by owner and repo name.",
+      "tags": ["use-case", "query", "git-repo"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase.ts:FindGitRepoByOwnerAndRepoUseCase",
+      "type": "class",
+      "name": "FindGitRepoByOwnerAndRepoUseCase",
+      "filePath": "packages/git/src/application/useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase.ts",
+      "lineRange": [11, 29],
+      "summary": "Query use case delegating to GitRepoService.findGitRepoByOwnerAndRepo.",
+      "tags": ["use-case", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts",
+      "type": "file",
+      "name": "FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts",
+      "summary": "Query use case finding a git repository by owner, repo and branch scoped to an organization.",
+      "tags": ["use-case", "query", "git-repo"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts:FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase",
+      "type": "class",
+      "name": "FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase",
+      "filePath": "packages/git/src/application/useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts",
+      "lineRange": [9, 42],
+      "summary": "Query use case delegating to GitRepoService with organization scoping.",
+      "tags": ["use-case", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts",
+      "type": "file",
+      "name": "FindOrCreateGitRepoUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts",
+      "summary": "Member use case finding the git repo for an owner/repo/branch in an organization or creating it, auto-creating a tokenless provider when no token provider can host it; shared with the deployments domain's target resolution.",
+      "tags": ["use-case", "git-repo", "git-provider", "idempotent"],
+      "complexity": "complex"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts:FindOrCreateGitRepoUseCase",
+      "type": "class",
+      "name": "FindOrCreateGitRepoUseCase",
+      "filePath": "packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts",
+      "lineRange": [32, 255],
+      "summary": "Use case that parses the remote vendor, searches existing providers and repos through the git port, and creates provider and repo records as needed.",
+      "tags": ["use-case", "git-repo", "factory"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts",
+      "type": "file",
+      "name": "GetAvailableRemoteDirectoriesUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts",
+      "summary": "Use case listing available remote directories (deployment targets) in a git repository path, with caching.",
+      "tags": ["use-case", "git-repo", "cache", "query"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts:GetAvailableRemoteDirectoriesUseCase",
+      "type": "class",
+      "name": "GetAvailableRemoteDirectoriesUseCase",
+      "filePath": "packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts",
+      "lineRange": [17, 117],
+      "summary": "Use case validating inputs, checking cache, and listing directories via GitProviderService.listAvailableTargets, wrapping errors.",
+      "tags": ["use-case", "cache", "query"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts",
+      "type": "file",
+      "name": "GetFileFromRepoUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts",
+      "summary": "Use case fetching a single file's content from a git repository on an optional branch.",
+      "tags": ["use-case", "git-repo", "file-access"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts:GetFileFromRepoUseCase",
+      "type": "class",
+      "name": "GetFileFromRepoUseCase",
+      "filePath": "packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts",
+      "lineRange": [7, 57],
+      "summary": "Use case resolving the repo client via ResolvedGitRepoService and retrieving a file, returning null when absent.",
+      "tags": ["use-case", "file-access"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase.ts",
+      "type": "file",
+      "name": "GetOrganizationRepositoriesUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase.ts",
+      "summary": "Query use case listing all git repositories of an organization.",
+      "tags": ["use-case", "query", "git-repo"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase.ts:GetOrganizationRepositoriesUseCase",
+      "type": "class",
+      "name": "GetOrganizationRepositoriesUseCase",
+      "filePath": "packages/git/src/application/useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase.ts",
+      "lineRange": [9, 23],
+      "summary": "Query use case delegating to GitRepoService.findGitReposByOrganizationId.",
+      "tags": ["use-case", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/getRepositoryById/GetRepositoryByIdUseCase.ts",
+      "type": "file",
+      "name": "GetRepositoryByIdUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/getRepositoryById/GetRepositoryByIdUseCase.ts",
+      "summary": "Query use case fetching a git repository by its id.",
+      "tags": ["use-case", "query", "git-repo"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/getRepositoryById/GetRepositoryByIdUseCase.ts:GetRepositoryByIdUseCase",
+      "type": "class",
+      "name": "GetRepositoryByIdUseCase",
+      "filePath": "packages/git/src/application/useCases/getRepositoryById/GetRepositoryByIdUseCase.ts",
+      "lineRange": [8, 20],
+      "summary": "Query use case delegating to GitRepoService.findGitRepoById.",
+      "tags": ["use-case", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts",
+      "type": "file",
+      "name": "GetTrackedRepositoryUseCase.ts",
+      "filePath": "packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts",
+      "summary": "Member use case finding the tracked repository for an owner/repo in an organization, trying owner readings with and without host path prefixes.",
+      "tags": ["use-case", "git-repo", "tracking", "query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts:GetTrackedRepositoryUseCase",
+      "type": "class",
+      "name": "GetTrackedRepositoryUseCase",
+      "filePath": "packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts",
+      "lineRange": [15, 54],
+      "summary": "Use case combining GitProviderService.ownerReadings with findByOwnerReadings to locate a tracked repo.",
+      "tags": ["use-case", "query", "tracking"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts:CheckProviderBranchExistsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts:CheckProviderBranchExistsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts",
+      "target": "file:packages/git/src/application/useCases/checkBranchExists/CheckBranchExistsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts:CheckTrackedBranchExistsUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts:CheckTrackedBranchExistsUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts",
+      "target": "file:packages/git/src/application/useCases/checkBranchExists/CheckBranchExistsUseCase.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts:CommitToGitUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts:CommitToGitUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts",
+      "target": "file:packages/git/src/application/services/GitCommitService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts",
+      "target": "file:packages/git/src/application/services/ResolvedGitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts",
+      "target": "file:packages/git/src/domain/repositories/IGitRepo.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts:DeleteGitProviderUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts:DeleteGitProviderUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts:DeleteGitRepoUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts:DeleteGitRepoUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase.ts:FindGitRepoByOwnerAndRepoUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase.ts:FindGitRepoByOwnerAndRepoUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts:FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts:FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts:FindOrCreateGitRepoUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts:FindOrCreateGitRepoUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts",
+      "target": "file:packages/git/src/application/services/providerHostUrl.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts",
+      "target": "file:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts:GetAvailableRemoteDirectoriesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts:GetAvailableRemoteDirectoriesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts",
+      "target": "file:packages/git/src/domain/errors/AvailableRemoteDirectoriesFailedError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts",
+      "target": "file:packages/git/src/domain/errors/GitRepoProviderNotConfiguredError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts:GetFileFromRepoUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts:GetFileFromRepoUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts",
+      "target": "file:packages/git/src/application/services/ResolvedGitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase.ts:GetOrganizationRepositoriesUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase.ts:GetOrganizationRepositoriesUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getRepositoryById/GetRepositoryByIdUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/getRepositoryById/GetRepositoryByIdUseCase.ts:GetRepositoryByIdUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getRepositoryById/GetRepositoryByIdUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/getRepositoryById/GetRepositoryByIdUseCase.ts:GetRepositoryByIdUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getRepositoryById/GetRepositoryByIdUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts:GetTrackedRepositoryUseCase",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts",
+      "target": "class:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts:GetTrackedRepositoryUseCase",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts",
+      "target": "file:packages/git/src/application/GitProviderService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts",
+      "target": "file:packages/git/src/application/GitRepoService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts",
+      "target": "file:packages/git/src/application/useCases/shared/findByOwnerReadings.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts:FindOrCreateGitRepoUseCase",
+      "target": "function:packages/git/src/application/services/providerHostUrl.ts:providerHostUrl",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/findOrCreateGitRepo/FindOrCreateGitRepoUseCase.ts:FindOrCreateGitRepoUseCase",
+      "target": "function:packages/git/src/application/useCases/shared/probeCandidateCredentials.ts:isProbeableSource",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts:GetTrackedRepositoryUseCase",
+      "target": "function:packages/git/src/application/useCases/shared/findByOwnerReadings.ts:findByOwnerReadings",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/checkTrackedBranchExists/CheckTrackedBranchExistsUseCase.ts:CheckTrackedBranchExistsUseCase",
+      "target": "class:packages/git/src/application/useCases/checkBranchExists/CheckBranchExistsUseCase.ts:CheckBranchExistsUseCase",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/checkProviderBranchExists/CheckProviderBranchExistsUseCase.ts:CheckProviderBranchExistsUseCase",
+      "target": "class:packages/git/src/application/useCases/checkBranchExists/CheckBranchExistsUseCase.ts:CheckBranchExistsUseCase",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts:CommitToGitUseCase",
+      "target": "class:packages/git/src/application/services/GitCommitService.ts:GitCommitService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/commitToGit/CommitToGitUseCase.ts:CommitToGitUseCase",
+      "target": "class:packages/git/src/application/services/ResolvedGitRepoService.ts:ResolvedGitRepoService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/getFileFromRepo/GetFileFromRepoUseCase.ts:GetFileFromRepoUseCase",
+      "target": "class:packages/git/src/application/services/ResolvedGitRepoService.ts:ResolvedGitRepoService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts:DeleteGitProviderUseCase",
+      "target": "class:packages/git/src/application/GitRepoService.ts:GitRepoService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/deleteGitRepo/DeleteGitRepoUseCase.ts:DeleteGitRepoUseCase",
+      "target": "class:packages/git/src/application/GitRepoService.ts:GitRepoService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts:GetTrackedRepositoryUseCase",
+      "target": "class:packages/git/src/application/GitRepoService.ts:GitRepoService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/findGitRepoByOwnerAndRepo/FindGitRepoByOwnerAndRepoUseCase.ts:FindGitRepoByOwnerAndRepoUseCase",
+      "target": "class:packages/git/src/application/GitRepoService.ts:GitRepoService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/findGitRepoByOwnerRepoAndBranchInOrganization/FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase.ts:FindGitRepoByOwnerRepoAndBranchInOrganizationUseCase",
+      "target": "class:packages/git/src/application/GitRepoService.ts:GitRepoService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/getOrganizationRepositories/GetOrganizationRepositoriesUseCase.ts:GetOrganizationRepositoriesUseCase",
+      "target": "class:packages/git/src/application/GitRepoService.ts:GitRepoService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/getRepositoryById/GetRepositoryByIdUseCase.ts:GetRepositoryByIdUseCase",
+      "target": "class:packages/git/src/application/GitRepoService.ts:GitRepoService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/deleteGitProvider/DeleteGitProviderUseCase.ts:DeleteGitProviderUseCase",
+      "target": "class:packages/git/src/application/GitProviderService.ts:GitProviderService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/getAvailableRemoteDirectories/GetAvailableRemoteDirectoriesUseCase.ts:GetAvailableRemoteDirectoriesUseCase",
+      "target": "class:packages/git/src/application/GitProviderService.ts:GitProviderService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:packages/git/src/application/useCases/getTrackedRepository/GetTrackedRepositoryUseCase.ts:GetTrackedRepositoryUseCase",
+      "target": "class:packages/git/src/application/GitProviderService.ts:GitProviderService",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

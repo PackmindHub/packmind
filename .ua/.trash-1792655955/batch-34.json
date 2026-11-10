@@ -1,0 +1,622 @@
+{
+  "nodes": [
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.ts",
+      "type": "file",
+      "name": "completion-summary.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.ts",
+      "summary": "Prompt-template string constant describing the onboarding completion summary banner (created standards/commands counts, next steps, failure reporting) for CLI 0.16.0 (packmind-cli binary, no spaces support).",
+      "tags": ["prompt-template", "onboarding", "skill-content", "versioned"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/create-items.ts",
+      "type": "file",
+      "name": "create-items.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/create-items.ts",
+      "summary": "Prompt-template constant defining standard/command draft Markdown formats and the JSON-conversion creation flow (standards create, commands create, packages add, local install) for CLI 0.16.0 (packmind-cli binary, no spaces support).",
+      "tags": ["prompt-template", "onboarding", "draft-format", "versioned"],
+      "complexity": "moderate",
+      "languageNotes": "Skill content is stored as TypeScript template literals with escaped backticks so Markdown with nested code fences can be shipped inside the compiled package."
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/create-package.ts",
+      "type": "file",
+      "name": "create-package.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/create-package.ts",
+      "summary": "Tiny prompt-template constant giving the packages create command for CLI 0.16.0 (packmind-cli binary, no spaces support).",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "package-management",
+        "versioned"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.ts",
+      "type": "file",
+      "name": "list-packages.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.ts",
+      "summary": "Tiny prompt-template constant giving the command to list available packages for CLI 0.16.0 (packmind-cli binary, no spaces support).",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "package-management",
+        "versioned"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/select-package.ts",
+      "type": "file",
+      "name": "select-package.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/select-package.ts",
+      "summary": "Tiny prompt-template constant noting spaces are unsupported and the package slug is used directly for CLI 0.16.0 (packmind-cli binary, no spaces support).",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "package-management",
+        "versioned"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.ts",
+      "type": "file",
+      "name": "completion-summary.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.ts",
+      "summary": "Prompt-template string constant describing the onboarding completion summary banner (created standards/commands counts, next steps, failure reporting) for CLI 0.23.0 (packmind-cli binary with spaces).",
+      "tags": ["prompt-template", "onboarding", "skill-content", "versioned"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/create-items.ts",
+      "type": "file",
+      "name": "create-items.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/create-items.ts",
+      "summary": "Prompt-template constant defining simplified standard/command draft formats (rules without examples) and the CLI creation, review and cancel flows plus local deployment for CLI 0.23.0 (packmind-cli binary with spaces).",
+      "tags": ["prompt-template", "onboarding", "draft-format", "versioned"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/create-package.ts",
+      "type": "file",
+      "name": "create-package.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/create-package.ts",
+      "summary": "Prompt-template constant instructing the agent to pick a space via spaces list and then create a package in it for CLI 0.23.0 (packmind-cli binary with spaces).",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "package-management",
+        "versioned"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.ts",
+      "type": "file",
+      "name": "list-packages.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.ts",
+      "summary": "Tiny prompt-template constant giving the command to list available packages for CLI 0.23.0 (packmind-cli binary with spaces).",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "package-management",
+        "versioned"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/select-package.ts",
+      "type": "file",
+      "name": "select-package.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/select-package.ts",
+      "summary": "Prompt-template constant instructing the agent to resolve the selected package's space slug via spaces list for CLI 0.23.0 (packmind-cli binary with spaces).",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "package-management",
+        "versioned"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/completion-summary.ts",
+      "type": "file",
+      "name": "completion-summary.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/completion-summary.ts",
+      "summary": "Prompt-template string constant describing the onboarding completion summary banner (created standards/commands counts, next steps, failure reporting) for CLI 0.35.0 (renamed packmind binary with spaces).",
+      "tags": ["prompt-template", "onboarding", "skill-content", "versioned"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/create-items.ts",
+      "type": "file",
+      "name": "create-items.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/create-items.ts",
+      "summary": "Prompt-template constant defining simplified standard/command draft formats (rules without examples) and the CLI creation, review and cancel flows plus local deployment for CLI 0.35.0 (renamed packmind binary with spaces).",
+      "tags": ["prompt-template", "onboarding", "draft-format", "versioned"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/create-package.ts",
+      "type": "file",
+      "name": "create-package.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/create-package.ts",
+      "summary": "Prompt-template constant instructing the agent to pick a space via spaces list and then create a package in it for CLI 0.35.0 (renamed packmind binary with spaces).",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "package-management",
+        "versioned"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/list-packages.ts",
+      "type": "file",
+      "name": "list-packages.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/list-packages.ts",
+      "summary": "Tiny prompt-template constant giving the command to list available packages for CLI 0.35.0 (renamed packmind binary with spaces).",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "package-management",
+        "versioned"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/select-package.ts",
+      "type": "file",
+      "name": "select-package.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/select-package.ts",
+      "summary": "Prompt-template constant instructing the agent to resolve the selected package's space slug via spaces list for CLI 0.35.0 (renamed packmind binary with spaces).",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "package-management",
+        "versioned"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/readme.ts",
+      "type": "file",
+      "name": "readme.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/readme.ts",
+      "summary": "README string constant for the packmind-onboard default skill, describing what the read-only onboarding analysis does and its outputs.",
+      "tags": [
+        "documentation",
+        "skill-content",
+        "onboarding",
+        "prompt-template"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/ci-local-workflow-parity.ts",
+      "type": "file",
+      "name": "ci-local-workflow-parity.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/ci-local-workflow-parity.ts",
+      "summary": "Reference prompt constant for the CI/local workflow parity analysis: CI config search patterns, detection heuristics and a \"Pre-PR Quality Check\" command insight template.",
+      "tags": ["prompt-template", "onboarding", "analysis-reference", "ci-cd"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/file-template-consistency.ts",
+      "type": "file",
+      "name": "file-template-consistency.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/file-template-consistency.ts",
+      "summary": "Reference prompt constant for the file template consistency analysis: role-based file glob patterns, thresholds and \"Create X\" scaffolding command insight templates.",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "analysis-reference",
+        "scaffolding"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/role-taxonomy-drift.ts",
+      "type": "file",
+      "name": "role-taxonomy-drift.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/role-taxonomy-drift.ts",
+      "summary": "Reference prompt constant for the role taxonomy drift analysis: inferring what Controller/Service/UseCase/Repository mean in practice and flagging misnamed or mixed-responsibility files as standard insights.",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "analysis-reference",
+        "architecture"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/test-data-construction.ts",
+      "type": "file",
+      "name": "test-data-construction.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/test-data-construction.ts",
+      "summary": "Reference prompt constant for the test data construction analysis: test file locations, factory/builder/fixture patterns and standard insight templates.",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "analysis-reference",
+        "testing"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "type": "file",
+      "name": "skill.md.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "summary": "Defines the packmind-onboard SkillMD (front matter, supported CLI versions 0.16.0/0.23.0/0.35.0) whose getPrompt assembles the full onboarding skill from the step and edge-case prompt fragments.",
+      "tags": [
+        "skill-definition",
+        "onboarding",
+        "prompt-template",
+        "entry-point"
+      ],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/edge-cases.ts",
+      "type": "file",
+      "name": "edge-cases.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/edge-cases.ts",
+      "summary": "Exports EDGE_CASES, a prompt fragment builder parameterized by CLI executable name covering package creation failures, unauthenticated CLI and other onboarding edge cases.",
+      "tags": ["prompt-template", "onboarding", "error-handling", "skill-step"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-0-introduction.ts",
+      "type": "file",
+      "name": "step-0-introduction.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-0-introduction.ts",
+      "summary": "Step 0 prompt fragment telling the agent to print the exact onboarding introduction message.",
+      "tags": ["prompt-template", "onboarding", "skill-step"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-1-get-repository-name.ts",
+      "type": "file",
+      "name": "step-1-get-repository-name.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-1-get-repository-name.ts",
+      "summary": "Step 1 prompt fragment builder that has the agent read the git repository name and the Packmind host via whoami.",
+      "tags": ["prompt-template", "onboarding", "skill-step"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-10-completion-summary.ts",
+      "type": "file",
+      "name": "step-10-completion-summary.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-10-completion-summary.ts",
+      "summary": "Step 10 prompt fragment delegating to the version-specific completion-summary reference.",
+      "tags": ["prompt-template", "onboarding", "skill-step"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-2-package-handling.ts",
+      "type": "file",
+      "name": "step-2-package-handling.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-2-package-handling.ts",
+      "summary": "Step 2 prompt fragment handling package listing, auto-creation when none exist, and user selection otherwise, via version-specific references.",
+      "tags": [
+        "prompt-template",
+        "onboarding",
+        "skill-step",
+        "package-management"
+      ],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-3-announce.ts",
+      "type": "file",
+      "name": "step-3-announce.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-3-announce.ts",
+      "summary": "Step 3 prompt fragment printing the read-only analysis announcement with the target package.",
+      "tags": ["prompt-template", "onboarding", "skill-step"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-4-detect-existing-config.ts",
+      "type": "file",
+      "name": "step-4-detect-existing-config.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-4-detect-existing-config.ts",
+      "summary": "Step 4 prompt fragment for globbing and classifying existing Packmind and agent configuration (standards, commands, skills, agent docs) before analysis.",
+      "tags": ["prompt-template", "onboarding", "skill-step", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-5-detect-project-stack.ts",
+      "type": "file",
+      "name": "step-5-detect-project-stack.ts",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-5-detect-project-stack.ts",
+      "summary": "Step 5 prompt fragment for evidence-based detection of language, monorepo and architecture markers.",
+      "tags": ["prompt-template", "onboarding", "skill-step", "detection"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/edge-cases.ts:EDGE_CASES",
+      "type": "function",
+      "name": "EDGE_CASES",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/edge-cases.ts",
+      "lineRange": [1, 38],
+      "summary": "Arrow function returning the Edge Cases Markdown section with the CLI executable name interpolated into recovery commands.",
+      "tags": ["prompt-template", "template-literal", "onboarding"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-1-get-repository-name.ts:STEP_1_GET_REPOSITORY_NAME",
+      "type": "function",
+      "name": "STEP_1_GET_REPOSITORY_NAME",
+      "filePath": "packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-1-get-repository-name.ts",
+      "lineRange": [1, 14],
+      "summary": "Arrow function returning the Step 1 Markdown instructions, interpolating the CLI executable name for the whoami call.",
+      "tags": ["prompt-template", "template-literal", "onboarding"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/AbstractDefaultSkillDeployer.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/edge-cases.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-0-introduction.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-1-get-repository-name.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-10-completion-summary.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-2-package-handling.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-3-announce.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-4-detect-existing-config.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-5-detect-project-stack.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-6-run-analyses.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-7-generate-drafts.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-8-present-summary.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-9-create-items.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/edge-cases.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/edge-cases.ts:EDGE_CASES",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/edge-cases.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/edge-cases.ts:EDGE_CASES",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-1-get-repository-name.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-1-get-repository-name.ts:STEP_1_GET_REPOSITORY_NAME",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-1-get-repository-name.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-1-get-repository-name.ts:STEP_1_GET_REPOSITORY_NAME",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/completion-summary.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/completion-summary.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/completion-summary.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/create-items.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/create-items.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/create-items.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/create-items.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/create-package.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/create-package.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/create-package.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/create-package.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/list-packages.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/list-packages.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/list-packages.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/select-package.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.16.0/select-package.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/select-package.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.23.0/select-package.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-2-package-handling.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/list-packages.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-2-package-handling.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/create-package.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-2-package-handling.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/select-package.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-10-completion-summary.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/packmind-versions/0.35.0/completion-summary.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-6-run-analyses.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/ci-local-workflow-parity.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-6-run-analyses.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/file-template-consistency.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-6-run-analyses.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/role-taxonomy-drift.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-6-run-analyses.ts",
+      "target": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/references/test-data-construction.ts",
+      "type": "related",
+      "direction": "forward",
+      "weight": 0.5
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/edge-cases.ts:EDGE_CASES",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/skill.md.ts",
+      "target": "function:packages/coding-agent/src/infra/repositories/defaultSkillsDeployer/skills/packmind-onboard/steps/step-1-get-repository-name.ts:STEP_1_GET_REPOSITORY_NAME",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}

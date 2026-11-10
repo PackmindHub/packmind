@@ -1,0 +1,772 @@
+{
+  "nodes": [
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx",
+      "type": "file",
+      "name": "SkillsCreateButton.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx",
+      "summary": "Dropdown button exposing skill creation options provided by useSkillCreationOptions.",
+      "tags": ["component", "button", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx:SkillsCreateButton",
+      "type": "function",
+      "name": "SkillsCreateButton",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx",
+      "lineRange": [8, 31],
+      "summary": "Menu button listing skill creation options.",
+      "tags": ["component", "react", "skills"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "type": "file",
+      "name": "SkillsImportContent.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "summary": "Accordion content guiding users to import existing skills via CLI commands or direct upload, with auth-aware install instructions.",
+      "tags": ["component", "skills", "import", "cli-onboarding"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx:InstallSection",
+      "type": "function",
+      "name": "InstallSection",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "lineRange": [40, 66],
+      "summary": "Renders CLI install instructions within the import flow.",
+      "tags": ["component", "react", "import"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx:AccordionItemHeader",
+      "type": "function",
+      "name": "AccordionItemHeader",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "lineRange": [75, 93],
+      "summary": "Accordion header with icon, title and description.",
+      "tags": ["component", "react", "import"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx:SkillsImportContent",
+      "type": "function",
+      "name": "SkillsImportContent",
+      "filePath": "apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "lineRange": [95, 364],
+      "summary": "Accordion guiding skill import via CLI or upload.",
+      "tags": ["component", "react", "import"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx",
+      "type": "file",
+      "name": "useSkillCreationOptions.tsx",
+      "filePath": "apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx",
+      "summary": "Hook building the list of skill creation options and the dialogs (import, create from code) they open.",
+      "tags": ["hook", "skills", "react", "dialog"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx:useSkillCreationOptions",
+      "type": "function",
+      "name": "useSkillCreationOptions",
+      "filePath": "apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx",
+      "lineRange": [33, 162],
+      "summary": "Builds creation option entries and associated dialogs for skills.",
+      "tags": ["hook", "react", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/spaces/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/domain/spaces/index.ts",
+      "summary": "Barrel re-exporting the spaces domain API, settings page component, hooks and types.",
+      "tags": ["barrel", "entry-point", "spaces"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/api/gateways/IStandardsGateway.ts",
+      "type": "file",
+      "name": "IStandardsGateway.ts",
+      "filePath": "apps/frontend/src/domain/standards/api/gateways/IStandardsGateway.ts",
+      "summary": "Interface for the standards gateway: versions, rules, create, update, deploy to Git, delete and batch delete.",
+      "tags": ["type-definition", "gateway", "interface", "standards"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts",
+      "type": "file",
+      "name": "StandardsGatewayApi.ts",
+      "filePath": "apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts",
+      "summary": "HTTP gateway implementing IStandardsGateway against the standards REST endpoints via PackmindGateway.",
+      "tags": ["gateway", "api-client", "standards", "service"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts:StandardsGatewayApi",
+      "type": "class",
+      "name": "StandardsGatewayApi",
+      "filePath": "apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts",
+      "lineRange": [27, 151],
+      "summary": "Gateway class calling standards REST endpoints.",
+      "tags": ["class", "gateway", "api-client"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/services/api/ApiService.ts",
+      "type": "file",
+      "name": "ApiService.ts",
+      "filePath": "apps/frontend/src/services/api/ApiService.ts",
+      "summary": "Axios-based HTTP client wrapper providing versioned base URLs, CRUD verbs and normalized error handling into PackmindError types.",
+      "tags": ["service", "api-client", "http", "error-handling"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "class:apps/frontend/src/services/api/ApiService.ts:ApiService",
+      "type": "class",
+      "name": "ApiService",
+      "filePath": "apps/frontend/src/services/api/ApiService.ts",
+      "lineRange": [18, 146],
+      "summary": "Axios wrapper exposing get/post/put/patch/delete with error normalization.",
+      "tags": ["class", "service", "api-client"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/services/api/PackmindApiService.ts",
+      "type": "file",
+      "name": "PackmindApiService.ts",
+      "filePath": "apps/frontend/src/services/api/PackmindApiService.ts",
+      "summary": "Instantiates the shared packmindApiService ApiService singleton pointed at /api.",
+      "tags": ["singleton", "service", "api-client"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "type": "file",
+      "name": "PackmindConflictError.ts",
+      "filePath": "apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "summary": "PackmindError subclass for HTTP 409 conflicts, with a type guard.",
+      "tags": ["error-handling", "data-model", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/services/api/errors/PackmindConflictError.ts:isPackmindConflictError",
+      "type": "function",
+      "name": "isPackmindConflictError",
+      "filePath": "apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "lineRange": [17, 21],
+      "summary": "Type guard for PackmindConflictError.",
+      "tags": ["utility", "function", "validation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/frontend/src/services/api/errors/PackmindConflictError.ts:PackmindConflictError",
+      "type": "class",
+      "name": "PackmindConflictError",
+      "filePath": "apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "lineRange": [7, 15],
+      "summary": "Error class for 409 conflict responses.",
+      "tags": ["class", "error-handling", "data-model"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "file",
+      "name": "PackmindError.ts",
+      "filePath": "apps/frontend/src/services/api/errors/PackmindError.ts",
+      "summary": "Base frontend error type carrying the server error response, plus type guards for Packmind, not-found and server error shapes.",
+      "tags": ["error-handling", "data-model", "type-guard"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindError",
+      "type": "function",
+      "name": "isPackmindError",
+      "filePath": "apps/frontend/src/services/api/errors/PackmindError.ts",
+      "lineRange": [25, 33],
+      "summary": "Type guard for PackmindError instances.",
+      "tags": ["utility", "function", "type-guard"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindNotFoundError",
+      "type": "function",
+      "name": "isPackmindNotFoundError",
+      "filePath": "apps/frontend/src/services/api/errors/PackmindError.ts",
+      "lineRange": [42, 44],
+      "summary": "Checks whether an error is a Packmind 404.",
+      "tags": ["utility", "function", "type-guard"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isServerErrorResponse",
+      "type": "function",
+      "name": "isServerErrorResponse",
+      "filePath": "apps/frontend/src/services/api/errors/PackmindError.ts",
+      "lineRange": [46, 58],
+      "summary": "Type guard for server error response payloads.",
+      "tags": ["utility", "function", "type-guard"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/frontend/src/services/api/errors/PackmindError.ts:PackmindError",
+      "type": "class",
+      "name": "PackmindError",
+      "filePath": "apps/frontend/src/services/api/errors/PackmindError.ts",
+      "lineRange": [15, 23],
+      "summary": "Base error class wrapping a server error response.",
+      "tags": ["class", "error-handling", "data-model"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "file",
+      "name": "PackmindGateway.ts",
+      "filePath": "apps/frontend/src/shared/PackmindGateway.ts",
+      "summary": "Abstract base class for domain gateways holding the API service and building full endpoint paths.",
+      "tags": ["gateway", "base-class", "api-client"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "class",
+      "name": "PackmindGateway",
+      "filePath": "apps/frontend/src/shared/PackmindGateway.ts",
+      "lineRange": [4, 19],
+      "summary": "Abstract base for gateways building endpoint URLs.",
+      "tags": ["class", "gateway", "base-class"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/StartProductTour.tsx",
+      "type": "file",
+      "name": "StartProductTour.tsx",
+      "filePath": "apps/frontend/src/shared/components/StartProductTour.tsx",
+      "summary": "Button component that launches an in-app product tour using the PM design system.",
+      "tags": ["component", "onboarding", "product-tour", "react"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/StartProductTour.tsx:StartProductTour",
+      "type": "function",
+      "name": "StartProductTour",
+      "filePath": "apps/frontend/src/shared/components/StartProductTour.tsx",
+      "lineRange": [32, 122],
+      "summary": "Button that starts the product tour on click.",
+      "tags": ["component", "react", "product-tour"],
+      "complexity": "moderate"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "type": "file",
+      "name": "CreateFromCodeContent.tsx",
+      "filePath": "apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "summary": "Shared accordion content explaining how to create standards, commands or skills from existing code via CLI and AI agents, with install and login steps.",
+      "tags": ["component", "cli-onboarding", "artifact-creation", "react"],
+      "complexity": "complex"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx:AccordionItemHeader",
+      "type": "function",
+      "name": "AccordionItemHeader",
+      "filePath": "apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "lineRange": [111, 129],
+      "summary": "Accordion header with icon, title and description.",
+      "tags": ["component", "react", "artifact-creation"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx:CreateFromCodeContent",
+      "type": "function",
+      "name": "CreateFromCodeContent",
+      "filePath": "apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "lineRange": [131, 434],
+      "summary": "Accordion guiding artifact creation from code via the CLI.",
+      "tags": ["component", "react", "artifact-creation"],
+      "complexity": "complex"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "file",
+      "name": "index.ts",
+      "filePath": "apps/frontend/src/shared/components/inputs/index.ts",
+      "summary": "Barrel exporting copiable text field and textarea input components.",
+      "tags": ["barrel", "component", "inputs"],
+      "complexity": "simple"
+    },
+    {
+      "id": "file:apps/frontend/src/shared/data/retryPolicy.ts",
+      "type": "file",
+      "name": "retryPolicy.ts",
+      "filePath": "apps/frontend/src/shared/data/retryPolicy.ts",
+      "summary": "TanStack Query retry predicate that retries network/5xx failures once and surfaces 4xx errors immediately.",
+      "tags": ["utility", "retry-policy", "react-query", "error-handling"],
+      "complexity": "simple"
+    },
+    {
+      "id": "function:apps/frontend/src/shared/data/retryPolicy.ts:shouldRetryTransient",
+      "type": "function",
+      "name": "shouldRetryTransient",
+      "filePath": "apps/frontend/src/shared/data/retryPolicy.ts",
+      "lineRange": [26, 37],
+      "summary": "Retry predicate allowing one retry for network/5xx errors only.",
+      "tags": ["utility", "function", "react-query"],
+      "complexity": "simple"
+    },
+    {
+      "id": "class:apps/frontend/src/domain/standards/api/gateways/IStandardsGateway.ts:IStandardsGateway",
+      "type": "class",
+      "name": "IStandardsGateway",
+      "filePath": "apps/frontend/src/domain/standards/api/gateways/IStandardsGateway.ts",
+      "lineRange": [15, 64],
+      "summary": "Contract for standards data access operations.",
+      "tags": ["interface", "gateway", "type-definition"],
+      "complexity": "simple"
+    }
+  ],
+  "edges": [
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx:SkillsCreateButton",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx:SkillsCreateButton",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/api/queries/AuthQueries.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillsUploadPanel.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx:InstallSection",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx:AccordionItemHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx:SkillsImportContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx:SkillsImportContent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx",
+      "target": "file:apps/frontend/src/domain/skills/components/SkillsImportContent.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx",
+      "target": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx:useSkillCreationOptions",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx",
+      "target": "function:apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx:useSkillCreationOptions",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts",
+      "target": "file:apps/frontend/src/domain/standards/api/gateways/IStandardsGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts",
+      "target": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts:StandardsGatewayApi",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts",
+      "target": "class:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts:StandardsGatewayApi",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/ApiService.ts",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/ApiService.ts",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/ApiService.ts",
+      "target": "class:apps/frontend/src/services/api/ApiService.ts:ApiService",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/ApiService.ts",
+      "target": "class:apps/frontend/src/services/api/ApiService.ts:ApiService",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/PackmindApiService.ts",
+      "target": "file:apps/frontend/src/services/api/ApiService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/PackmindApiService.ts",
+      "target": "file:apps/frontend/src/shared/utils/getEnvVar.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindConflictError.ts:isPackmindConflictError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindConflictError.ts:isPackmindConflictError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "target": "class:apps/frontend/src/services/api/errors/PackmindConflictError.ts:PackmindConflictError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindConflictError.ts",
+      "target": "class:apps/frontend/src/services/api/errors/PackmindConflictError.ts:PackmindConflictError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindNotFoundError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindNotFoundError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isServerErrorResponse",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isServerErrorResponse",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "target": "class:apps/frontend/src/services/api/errors/PackmindError.ts:PackmindError",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "target": "class:apps/frontend/src/services/api/errors/PackmindError.ts:PackmindError",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "target": "file:apps/frontend/src/services/api/ApiService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "target": "file:apps/frontend/src/services/api/PackmindApiService.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/PackmindGateway.ts",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/StartProductTour.tsx",
+      "target": "function:apps/frontend/src/shared/components/StartProductTour.tsx:StartProductTour",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/StartProductTour.tsx",
+      "target": "function:apps/frontend/src/shared/components/StartProductTour.tsx:StartProductTour",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/components/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/types.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "target": "file:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/utils.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "target": "file:apps/frontend/src/shared/components/inputs/index.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "target": "function:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx:AccordionItemHeader",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "target": "function:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx:CreateFromCodeContent",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx",
+      "target": "function:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx:CreateFromCodeContent",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/retryPolicy.ts",
+      "target": "file:apps/frontend/src/services/api/errors/PackmindError.ts",
+      "type": "imports",
+      "direction": "forward",
+      "weight": 0.7
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/retryPolicy.ts",
+      "target": "function:apps/frontend/src/shared/data/retryPolicy.ts:shouldRetryTransient",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/shared/data/retryPolicy.ts",
+      "target": "function:apps/frontend/src/shared/data/retryPolicy.ts:shouldRetryTransient",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/gateways/IStandardsGateway.ts",
+      "target": "class:apps/frontend/src/domain/standards/api/gateways/IStandardsGateway.ts:IStandardsGateway",
+      "type": "contains",
+      "direction": "forward",
+      "weight": 1
+    },
+    {
+      "source": "file:apps/frontend/src/domain/standards/api/gateways/IStandardsGateway.ts",
+      "target": "class:apps/frontend/src/domain/standards/api/gateways/IStandardsGateway.ts:IStandardsGateway",
+      "type": "exports",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "class:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts:StandardsGatewayApi",
+      "target": "class:apps/frontend/src/shared/PackmindGateway.ts:PackmindGateway",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/frontend/src/domain/standards/api/gateways/StandardsGatewayApi.ts:StandardsGatewayApi",
+      "target": "class:apps/frontend/src/domain/standards/api/gateways/IStandardsGateway.ts:IStandardsGateway",
+      "type": "implements",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "class:apps/frontend/src/services/api/errors/PackmindConflictError.ts:PackmindConflictError",
+      "target": "class:apps/frontend/src/services/api/errors/PackmindError.ts:PackmindError",
+      "type": "inherits",
+      "direction": "forward",
+      "weight": 0.9
+    },
+    {
+      "source": "function:apps/frontend/src/shared/data/retryPolicy.ts:shouldRetryTransient",
+      "target": "function:apps/frontend/src/services/api/errors/PackmindError.ts:isPackmindError",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/domain/skills/components/SkillsCreateButton.tsx:SkillsCreateButton",
+      "target": "function:apps/frontend/src/domain/skills/components/useSkillCreationOptions.tsx:useSkillCreationOptions",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    },
+    {
+      "source": "function:apps/frontend/src/shared/components/cli/CreateFromCodeContent.tsx:CreateFromCodeContent",
+      "target": "function:apps/frontend/src/domain/accounts/components/LocalEnvironmentSetup/hooks/useCliLoginCode.ts:useCliLoginCode",
+      "type": "calls",
+      "direction": "forward",
+      "weight": 0.8
+    }
+  ]
+}
