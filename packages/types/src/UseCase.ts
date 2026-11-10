@@ -65,8 +65,21 @@ export type Gateway<U extends IUseCase<any, any>> = (
   params: PackmindCommandBody<CommandType<U>>,
 ) => Promise<ResultType<U>>;
 
+/**
+ * Transport-level options for one call, kept beside the command rather than
+ * inside it: they steer the HTTP request and never reach the use case.
+ *
+ * `signal` is what lets a caller abandon a request that is no longer wanted —
+ * notably query-core, which only arms its own cancellation once the query
+ * function has read the signal it was handed.
+ */
+export type GatewayRequestOptions = {
+  signal?: AbortSignal;
+};
+
 export type NewGateway<U extends IUseCase<any, any>> = (
   params: NewPackmindCommandBody<CommandType<U>>,
+  options?: GatewayRequestOptions,
 ) => Promise<ResultType<U>>;
 
 type PublicCommandType<U> = U extends IPublicUseCase<infer C, any> ? C : never;
